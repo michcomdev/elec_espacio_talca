@@ -2,6 +2,11 @@ import Products from '../../models/Products'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 
+const fs = require("fs")
+const { promisify } = require("util");
+const writeFile = promisify(fs.writeFile)
+const readFile = promisify(fs.readFile)
+
 dotEnv.config()
 
 export default [
@@ -89,15 +94,11 @@ export default [
                 try {
                     let payload = request.payload   
 
-                    console.log(payload)
-                    /*purchases: [{
-                        cost: payload.purchases.cost,
-                        quantity: payload.purchases.quantity
-                    }]*/
+                    //console.log(payload)
 
                     let product = new Products({
                         name: payload.name,
-                        image: payload.image,
+                        //image: payload.image,
                         stock: payload.stock,
                         price: payload.price,
                         status: payload.status,
@@ -105,8 +106,32 @@ export default [
                         purchases: payload.purchases
                     })
 
-                    console.log(product)
                     const response = await product.save()
+
+                    let format = payload.image.split(';base64,')[0].split('/')[1]
+                    let route = 'public/img/products/'+response._id+'.'+format
+
+                    product.image = route
+                    product.save()
+
+                    new Promise(resolve => {
+                        try {
+                            async function main() {
+                                //await writeFile('public/img/products/'+response._id+'.txt', payload.image);
+                               
+                                let base64Image = payload.image.split(';base64,').pop()
+                                await writeFile(route, base64Image, {encoding: 'base64'}, function(err) {
+                                    console.log('File created')
+                                   // let productUpdate = await Products.findById(response._id)
+                                })
+
+                            }
+                            main().catch(error => console.error(error));
+                            resolve({ ok: "Foto subida" });
+                        } catch (error) {
+                            resolve({ err: "error en la subida" });
+                        }
+                    })
 
                     return response
 
@@ -148,8 +173,6 @@ export default [
                 try {
                     let payload = request.payload   
 
-                    console.log(payload)
-
                     let product = await Products.findById(payload.id)
                    
                     product.name = payload.name
@@ -160,8 +183,32 @@ export default [
                     product.description = payload.description
                     product.purchases = payload.purchases
 
-                    console.log(product)
                     const response = await product.save()
+
+                    let format = payload.image.split(';base64,')[0].split('/')[1]
+                    let route = 'public/img/products/'+response._id+'.'+format
+
+                    product.image = route
+                    product.save()
+
+                    new Promise(resolve => {
+                        try {
+                            async function main() {
+                                //await writeFile('public/img/products/'+response._id+'.txt', payload.image);
+
+                                let base64Image = payload.image.split(';base64,').pop()
+                                await writeFile(route, base64Image, {encoding: 'base64'}, function(err) {
+                                    console.log('File created')
+                                   // let productUpdate = await Products.findById(response._id)
+                                })
+
+                            }
+                            main().catch(error => console.error(error));
+                            resolve({ ok: "Imagen subida" });
+                        } catch (error) {
+                            resolve({ err: "error en la subida" });
+                        }
+                    })
 
                     return response
 

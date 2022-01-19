@@ -65,7 +65,10 @@ function chargeInventoryTable() {
           }
         })
 
+        $('#tableInventory tbody').off("click");
+
         $('#tableInventory tbody').on('click', 'tr', function () {
+            console.log($(this).hasClass('selected'))
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected')
                 $('#updateProduct').prop('disabled', true)
@@ -102,10 +105,16 @@ async function getInventoryEnabled() {
     }
 }
 
+$('#searchProduct').on('click', async function () {
+    chargeInventoryTable()
+})
+
 $('#createProduct').on('click', function () { // CREAR MOVIMIENTO
     $('#productModal').modal('show');
     $('#modalProd_title').html(`Nuevo Ingreso`)
     $('#modalProd_body').html(createModalBody())
+
+    document.getElementById('fileToUpload').addEventListener('change', handleFileSelect, false);
 
     $('#modalProd_footer').html(`
         <button class="btn btn-dark" data-dismiss="modal">
@@ -116,6 +125,8 @@ $('#createProduct').on('click', function () { // CREAR MOVIMIENTO
             <i ="color:#3498db;" class="fas fa-check"></i> GUARDAR
         </button>
     `)
+
+    getSold(0)
 
     $('#saveProduct').on('click', async function () {
 
@@ -146,7 +157,8 @@ $('#createProduct').on('click', function () { // CREAR MOVIMIENTO
         
         let productData = {
             name: $('#productName').val(),
-            image: $('#productImage').prop('src'),
+            //image: $('#productImage').prop('src'),
+            image: b64img,
             stock: stockTotal,
             price: $('#productPrice').val(),
             status: $('#productStatus').val(),
@@ -188,6 +200,8 @@ $('#updateProduct').on('click', async function () {
     $('#productModal').modal('show');
     $('#modalProd_title').html(`Modifica Producto`)
     $('#modalProd_body').html(createModalBody())
+    
+    document.getElementById('fileToUpload').addEventListener('change', handleFileSelect, false);
 
     $('#modalProd_footer').html(`
          <button class="btn btn-dark" data-dismiss="modal">
@@ -206,11 +220,13 @@ $('#updateProduct').on('click', async function () {
     $('#productStatus').val(product.status)
     $('#productDescription').val(product.description)
 
+    getSold(internals.dataRowSelected._id)
+
     for(i=0;i<product.purchases.length;i++){
         $('#tableProductBody').append(`
             <tr>
                 <td><input type="text" class="form-control border-input" style="text-align: center" value="${moment(product.purchases[i].date).format('DD/MM/YYYY')}" disabled></td>
-                <td><input type="text" class="form-control border-input" style="text-align: right" value="${product.purchases[i].quantity}"></td>
+                <td><input type="text" class="form-control border-input" style="text-align: right" onkeyup="calculateStock()" value="${product.purchases[i].quantity}"></td>
                 <td><input type="text" class="form-control border-input" style="text-align: right" value="${product.purchases[i].cost}"></td>
                 <td><button class="btn btn-danger" onclick="deletePurchase(this)"><i class="fas fa-times"></i></button></td>
             </tr>
@@ -321,8 +337,10 @@ function createModalBody(){
     let body = `
     <div class="row">
 
-        <div class="col-md-12">
+        <div class="col-md-6">
             <h6>DATOS GENERALES</h6>
+        </div>
+        <div class="col-md-6">
             <button class="btn btn-primary" onclick="testing()">Rellenar</button>
         </div>
         <div class="col-md-8">
@@ -345,11 +363,12 @@ function createModalBody(){
                 </div>
 
                 <div class="col-md-12">
-                    <button class="btn btn-primary" onclick="addStock()">Agregar stock</button>
-        
-                    
-                    <table id="tableProduct" class="display nowrap table table-condensed" cellspacing="0" width="100%">
-                        <thead>
+                    <br/>
+                    <button class="btn btn-primary" onclick="addStock()"><i class="fas fa-plus-circle"></i> Agregar stock</button>
+                </div>
+                <div class="col-md-12" style="height:300px; overflow-y:scroll;">
+                    <table id="tableProduct" class="display nowrap table table-condensed" cellspacing="0">
+                        <thead id="tableProductHead">
                             <tr class="table-info">
                                 <th style="text-align: center">Fecha</th>
                                 <th style="text-align: center">Cantidad</th>
@@ -366,7 +385,13 @@ function createModalBody(){
         <div class="col-md-4">
             <div class="row">
                 <div class="col-md-12">
-                    <img id="productImage" src="" style="width: 200px; height: 200px;"/>
+                    <div class="card" style="width: 350px;">
+                        <img id="productImage" class="card-img-top" src="/public/img/no_available.png" style="height: 262px;"/>
+                        <div class="card-body">
+                            <input class="btn btn-primary" type="file" name="fileToUpload" id="fileToUpload">
+                            <!--<input class="btn btn-primary" type="file" name="fileToUpload" id="fileToUpload" onchange="readURL(this)">-->
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-12">
                     <table>
@@ -394,6 +419,17 @@ function createModalBody(){
     return body
 }
 
+function readURL(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+            $('#productImage').attr('src', e.target.result);
+        };
+
+        reader.readAsDataURL(input.files[0]);
+    }
+}
 
 
 function addStock(){
@@ -401,7 +437,7 @@ function addStock(){
     $('#tableProductBody').append(`
         <tr>
             <td><input type="text" class="form-control border-input" style="text-align: center" value="${moment().format('DD/MM/YYYY')}" disabled></td>
-            <td><input type="text" class="form-control border-input" style="text-align: right"></td>
+            <td><input type="text" class="form-control border-input" style="text-align: right" onkeyup="calculateStock()"></td>
             <td><input type="text" class="form-control border-input" style="text-align: right"></td>
             <td><button class="btn btn-danger" onclick="deletePurchase(this)"><i class="fas fa-times"></i></button></td>
         </tr>
@@ -412,6 +448,83 @@ function deletePurchase(btn){
     $(btn).parent().parent().remove()
 }
 
+function calculateStock(){
+    let sold = 0
+    let stock = 0
+
+    if($.isNumeric($("#productSold").val())){
+        sold = parseInt($("#productSold").val())
+    }
+
+    $("#tableProductBody tr").each(function(){
+        if($.isNumeric($($($(this).children()[1]).children()[0]).val())){
+            stock+=parseInt($($($(this).children()[1]).children()[0]).val())
+        }
+    });
+
+    $("#productStock").val(stock-sold)
+}
+
+async function getSold(id){
+    if(id==0){
+        $("#productSold").val(0)
+    }else{
+        $("#productSold").val(0)
+    }
+}
+
+function handleFileSelect(evt) {
+
+    console.log(evt)
+       
+    if (check_multifile_extension(evt.target.files[0].type)) {
+        let files = evt.target.files;
+        var reader = new FileReader();
+
+        let tam = (evt.target.files[0].size)/1024
+
+        if (tam > 10000){
+
+           
+            b64img = ''
+            var span = document.createElement('span');
+            span.innerHTML = ['<span class="badge badge-pill badge-danger">Error: Tamaño supera 10MB </span>'].join('');
+            
+            $('#list').html(span)
+            toastr.error("Foto supera tamaño máximo, favor reducir tamaño")
+            b64img = ''
+
+        }else{
+
+            reader.onload = (function(theFile) {
+                return function(e) {
+                    console.log("here",e.result)
+                    b64img = e.target.result
+                    $('#productImage').attr('src', e.target.result);
+                };
+            })(files[0]);
+
+            // Read in the image file as a data URL.
+            reader.readAsDataURL(files[0]);
+        }
+      
+    } else {
+        var span = document.createElement('span');
+        span.innerHTML = ['<span class="badge badge-pill badge-danger">Error: Debe subir una imagen</span>'].join('');
+        
+        $('#list').html(span)
+        toastr.warning('Debe subir una imagen')
+        b64img = ''
+    }  
+}
+
+function check_multifile_extension(extension) {
+    if (extension === 'image/jpeg' || extension === 'image/jpg' || extension === 'image/png') {
+        return true;
+    } else {
+        return false;
+    }
+}
 
 function testing(){
 
@@ -422,7 +535,7 @@ function testing(){
     $('#tableProductBody').append(`
     <tr>
         <td><input type="text" class="form-control border-input" style="text-align: center" value="${moment().format('DD/MM/YYYY')}" disabled></td>
-        <td><input type="text" class="form-control border-input" style="text-align: right" value="20"></td>
+        <td><input type="text" class="form-control border-input" style="text-align: right" onkeyup="calculateStock()" value="20"></td>
         <td><input type="text" class="form-control border-input" style="text-align: right" value="3000"></td>
         <td><button class="btn btn-danger" onclick="deletePurchase(this)"><i class="fas fa-times"></i></button></td>
     </tr>

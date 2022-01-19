@@ -17,3 +17,21 @@
 #inputEmailPasswordSeller::placeholder {
     font-family: 'Arial' !important
 }
+
+#tableProductHead tr:nth-child(1) th{
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+@media (min-width: 992px) {
+    .modal-lg, .modal-xl {
+        max-width: 80%;
+    }
+}
+  
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: 80%;
+    }
+}
