@@ -40,7 +40,7 @@ internals.server = async () => {
                         host: process.env.REDIS_HOST || '127.0.0.1',
                         port: 6379,
                         password: process.env.REDIS_PASSWORD,
-                        db: 7
+                        db: 8
                     }
                 }
             }
@@ -63,7 +63,7 @@ internals.server = async () => {
                         host: process.env.REDIS_HOST || '127.0.0.1',
                         family: 4,
                         password: process.env.REDIS_PASSWORD,
-                        db: 7
+                        db: 8
                     },
                     decorate: true
                 }

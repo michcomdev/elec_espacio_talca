@@ -65,7 +65,7 @@ function chargeInventoryTable() {
           }
         })
 
-        $('#tableInventory tbody').off("click");
+        $('#tableInventory tbody').off("click")
 
         $('#tableInventory tbody').on('click', 'tr', function () {
             console.log($(this).hasClass('selected'))
@@ -301,12 +301,15 @@ function validateProductData(productData) {
     if(productData.name==''){
         errorMessage += '<br>Nombre'
     }
-    if(productData.price.length==0){
+
+    if(productData.price.length!=0){
         if(!$.isNumeric(productData.price)){
             errorMessage += '<br>Precio'
         }else{
             productData.price = parseInt(productData.price)
         }
+    }else{
+        errorMessage += '<br>Precio'
     }
 
     if(productData.purchases.length==0){

@@ -1,46 +1,43 @@
 {{!< layout/default}}
 {{#extend "css" }}
-    <link rel="stylesheet" type="text/css" href="/public/modules/inventory/inventory.css">
+    <link rel="stylesheet" type="text/css" href="/public/modules/services/services.css">
 {{/extend}}
 
-<h2 class="text-center">INVENTARIO ACTUAL</h2>
+<h2 class="text-center">SERVICIOS</h2>
 
 <br>
 
 <div class="row">
     <div class="col-md-3">
-        <button class="btn btn-info btn-block" id="createProduct">
-            <i class="fas fa-plus-circle"></i> NUEVO PRODUCTO
+        <button class="btn btn-info btn-block" id="createService">
+            <i class="fas fa-plus-circle"></i> NUEVO SERVICIO
         </button>
     </div>
     <div class="col-md-3">
-        <button class="btn btn-warning btn-block" id="updateProduct" disabled>
-            <i class="fas fa-edit"></i> MODIFICAR PRODUCTO
+        <button class="btn btn-warning btn-block" id="updateService" disabled>
+            <i class="fas fa-edit"></i> MODIFICAR SERVICIO
         </button>
     </div>
     <div class="col-md-3">
         
     </div>
     <div class="col-md-3">
-        <button class="btn btn-primary btn-block" id="searchProduct">
+        <button class="btn btn-primary btn-block" id="searchService">
             <i class="fas fa-search"></i> FILTRAR
         </button>
     </div>
     <div class="col-md-12 table-responsive">
         <br/>
-        <table id="tableInventory" class="display nowrap table table-condensed" cellspacing="0" width="100%">
+        <table id="tableServices" class="display nowrap table table-condensed" cellspacing="0" width="100%">
             <thead>
                 <tr class="table-info">
-                    <th>IMAGEN</th>
-                    <th>PRODUCTO</th>
-                    <th>STOCK</th>
-                    <th>COSTO UNITARIO (ÚLT)</th>
-                    <th>PRECIO</th>
+                    <th>SERVICIO</th>
+                    <th>VALOR</th>
                     <th>ESTADO</th>
                 </tr>
             </thead>
         </table>
-        <div id="loadingInventory">
+        <div id="loadingServices">
             <center>
                 <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
                 <span class="sr-only">Cargando...</span>
@@ -49,17 +46,17 @@
     </div>
 </div>
 
-<div class="modal fade" id="productModal" role="dialog" aria-labelledby="modal">
+<div class="modal fade" id="serviceModal" role="dialog" aria-labelledby="modal">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="modalProd_title"></h4>
+                <h4 class="modal-title" id="modalService_title"></h4>
                 <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true"></span>
                 </button>
             </div>
-            <div class="modal-body" id="modalProd_body"></div>
-            <div class="modal-footer" id="modalProd_footer"></div>
+            <div class="modal-body" id="modalService_body"></div>
+            <div class="modal-footer" id="modalService_footer"></div>
         </div>
     </div>
 </div>
@@ -79,5 +76,5 @@
     </div>
 </div>
 {{#extend "js"}}
-    <script src="/public/modules/inventory/inventory.js"></script>
+    <script src="/public/modules/services/services.js"></script>
 {{/extend}}
