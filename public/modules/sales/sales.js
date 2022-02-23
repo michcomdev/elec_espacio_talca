@@ -67,8 +67,8 @@ function chargeSalesTable() {
             order: [[ 0, 'desc' ]],
             ordering: true,
             rowCallback: function( row, data ) {
-                $(row).find('td:eq(0)').html(moment.utc(data.date).format('DD/MM/YYYY'));
-                $(row).find('td:eq(2)').html(dot_separators(data.total));
+                $(row).find('td:eq(0)').html(moment.utc(data.date).format('DD/MM/YYYY'))
+                $(row).find('td:eq(2)').html(dot_separators(data.total))
           },
           columns: [
             { data: 'date' },
@@ -89,8 +89,8 @@ function chargeSalesTable() {
                 $(this).removeClass('selected')
                 $('#updateSale').prop('disabled', true)
             } else {
-                internals.sales.table.$('tr.selected').removeClass('selected');
-                $(this).addClass('selected');
+                internals.sales.table.$('tr.selected').removeClass('selected')
+                $(this).addClass('selected')
                 $('#updateSale').prop('disabled', false)
                 //internals.sales.data = internals.sales.table.row($(this)).data()
                 internals.dataRowSelected = internals.sales.table.row($(this)).data()
@@ -115,7 +115,7 @@ async function getSalesEnabled() {
         internals.sales.table.rows.add(formatData).draw()
         $('#loadingSales').empty()
     } else {
-        //console.log('vacio', salesData);
+        //console.log('vacio', salesData)
         //toastr.warning('No se han encontrado ventas en el rango seleccionado')
         $('#loadingSales').empty()
     }
@@ -126,7 +126,7 @@ $('#searchSales').on('click', async function () {
 })
 
 $('#createSale').on('click', function () { // CREAR MOVIMIENTO
-    $('#saleModal').modal('show');
+    $('#saleModal').modal('show')
     $('#modalSale_title').html(`Nueva venta`)
     $('#modalSale_body').html(createModalBody())
 
@@ -181,7 +181,7 @@ $('#createSale').on('click', function () { // CREAR MOVIMIENTO
                     value: parseInt($($($(this).children()[3]).children()[0]).val())
                 })
             }
-        });
+        })
 
         $("#tableServicesBody tr").each(function(){
             if($($($(this).children()[0]).children()[1])){
@@ -195,7 +195,7 @@ $('#createSale').on('click', function () { // CREAR MOVIMIENTO
                     value: parseInt($($($(this).children()[3]).children()[0]).val())
                 })
             }
-        });
+        })
 
         if(!goSave){
             toastr.warning('Debe ingresar productos con valores correctos')
@@ -211,7 +211,8 @@ $('#createSale').on('click', function () { // CREAR MOVIMIENTO
             net: replaceAll($('#saleNet').val(), '.', '').replace(' ', ''),
             iva: replaceAll($('#saleIVA').val(), '.', '').replace(' ', ''),
             total: replaceAll($('#saleTotal').val(), '.', '').replace(' ', ''),
-            payment: $('#salePayment').val()
+            payment: $('#salePayment').val(),
+            paymentVoucher: $('#salePaymentVoucher').val()
         }
 
         if(products.length>0){
@@ -241,7 +242,7 @@ $('#createSale').on('click', function () { // CREAR MOVIMIENTO
                 $('#modal_title').html(`Error`)
                 $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
             }
-            $('#modal').modal('show');
+            $('#modal').modal('show')
         }
 
     })
@@ -256,12 +257,12 @@ $('#updateSale').on('click', async function () {
 
     console.log(sale)
 
-    $('#saleModal').modal('show');
+    $('#saleModal').modal('show')
     $('#modalSale_title').html(`Modifica Venta`)
     $('#modalSale_body').html(createModalBody())
     
     $('#modalSale_footer').html(`
-         <button class="btn btn-dark" data-dismiss="modal">
+        <button class="btn btn-dark" data-dismiss="modal">
             <i ="color:#E74C3C;" class="fas fa-times"></i> CERRAR
         </button>
 
@@ -278,6 +279,7 @@ $('#updateSale').on('click', async function () {
     $('#saleAddress').val(sale.address)
     $('#saleStatus').val(sale.status)
     $('#salePayment').val(sale.payment)
+    $('#salePaymentVoucher').val(sale.paymentVoucher)
     $('#saleNet').val(dot_separators(sale.net))
     $('#saleIVA').val(dot_separators(sale.iva))
     $('#saleTotal').val(dot_separators(sale.total))
@@ -355,7 +357,7 @@ $('#updateSale').on('click', async function () {
                     value: parseInt($($($(this).children()[3]).children()[0]).val())
                 })
             }
-        });
+        })
 
         $("#tableServicesBody tr").each(function(){
             if($($($(this).children()[0]).children()[1])){
@@ -369,7 +371,7 @@ $('#updateSale').on('click', async function () {
                     value: parseInt($($($(this).children()[3]).children()[0]).val())
                 })
             }
-        });
+        })
 
         if(!goSave){
             toastr.warning('Debe ingresar productos con valores correctos')
@@ -386,7 +388,8 @@ $('#updateSale').on('click', async function () {
             net: replaceAll($('#saleNet').val(), '.', '').replace(' ', ''),
             iva: replaceAll($('#saleIVA').val(), '.', '').replace(' ', ''),
             total: replaceAll($('#saleTotal').val(), '.', '').replace(' ', ''),
-            payment: $('#salePayment').val()
+            payment: $('#salePayment').val(),
+            paymentVoucher: $('#salePaymentVoucher').val()
         }
 
         
@@ -418,7 +421,7 @@ $('#updateSale').on('click', async function () {
                 $('#modal_title').html(`Error`)
                 $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
             }
-            $('#modal').modal('show');
+            $('#modal').modal('show')
         }
 
     })
@@ -443,10 +446,10 @@ function validateSaleData(productData) {
         return { ok: productData }
     } else {
         $(document).on('hidden.bs.modal', '.modal', function () { //Soluciona problema de scroll
-            $('.modal:visible').length && $(document.body).addClass('modal-open');
-        });
+            $('.modal:visible').length && $(document.body).addClass('modal-open')
+        })
 
-        $('#modal').modal('show');
+        $('#modal').modal('show')
         $('#modal_title').html(`Error al almacenar Ingreso`)
         $('#modal_body').html(`<h6 class="alert-heading">Falta ingresar los siguientes datos:</h6>
                                     <p class="mb-0">${errorMessage}</p>`)
@@ -528,6 +531,8 @@ function createModalBody(){
                 <option value="TRANSFERENCIA">TRANSFERENCIA</option>
                 <option value="WEBPAY">WEBPAY</option>
             </select>
+            N° Documento
+            <input id="salePaymentVoucher" type="text" class="form-control border-input">
         </div>
         <div class="col-md-4">
             <table>
@@ -632,7 +637,7 @@ function calculateTotal(){
             $($($(this).children()[4]).children()[0]).val(qty * price)
             net += qty * price
         }
-    });
+    })
 
     $("#tableServicesBody tr").each(function(){
         let price = $($($(this).children()[3]).children()[0]).val()
@@ -641,7 +646,7 @@ function calculateTotal(){
             $($($(this).children()[4]).children()[0]).val(price)
             net += parseInt(price)
         }
-    });
+    })
 
     let iva = Math.round(net * 0.19)
 
@@ -706,10 +711,10 @@ async function selectProduct(btn) {
                     order: [[ 0, 'desc' ]],
                     ordering: true,
                     rowCallback: function( row, data ) {
-                        $(row).find('td:eq(0)').html('<img src="'+data.image+'" style="width: 100px; height: 100px;">');
-                        $(row).find('td:eq(2)').html(dot_separators(data.stock));
-                        $(row).find('td:eq(3)').html(dot_separators(data.cost));
-                        $(row).find('td:eq(4)').html(dot_separators(data.price));
+                        $(row).find('td:eq(0)').html('<img src="'+data.image+'" style="width: 100px; height: 100px;">')
+                        $(row).find('td:eq(2)').html(dot_separators(data.stock))
+                        $(row).find('td:eq(3)').html(dot_separators(data.cost))
+                        $(row).find('td:eq(4)').html(dot_separators(data.price))
                     },
                     columns: [
                         { data: 'image' },
@@ -730,8 +735,8 @@ async function selectProduct(btn) {
                     if ($(this).hasClass('selected')) {
                         $(this).removeClass('selected')
                     } else {
-                        internals.products.table.$('tr.selected').removeClass('selected');
-                        $(this).addClass('selected');
+                        internals.products.table.$('tr.selected').removeClass('selected')
+                        $(this).addClass('selected')
                         internals.productRowSelected = internals.products.table.row($(this)).data()
                     }
 
@@ -831,7 +836,7 @@ async function selectService(btn) {
                     order: [[ 0, 'desc' ]],
                     ordering: true,
                     rowCallback: function( row, data ) {
-                        $(row).find('td:eq(1)').html(dot_separators(data.value));
+                        $(row).find('td:eq(1)').html(dot_separators(data.value))
                     },
                     columns: [
                         { data: 'name' },
@@ -849,8 +854,8 @@ async function selectService(btn) {
                     if ($(this).hasClass('selected')) {
                         $(this).removeClass('selected')
                     } else {
-                        internals.services.table.$('tr.selected').removeClass('selected');
-                        $(this).addClass('selected');
+                        internals.services.table.$('tr.selected').removeClass('selected')
+                        $(this).addClass('selected')
                         internals.serviceRowSelected = internals.services.table.row($(this)).data()
                     }
 

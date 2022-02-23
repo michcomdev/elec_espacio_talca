@@ -12,6 +12,7 @@ const salesSchema = new Schema({
     iva: { type: Number },
     total: { type: Number },
     payment: { type: String },
+    paymentVoucher: { type: String },
     products: [{
         products: { type: Schema.Types.ObjectId, ref: 'products' },
         quantity: { type: Number },
