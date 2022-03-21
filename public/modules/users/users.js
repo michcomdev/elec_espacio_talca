@@ -8,6 +8,7 @@ let internals = {
 
 $(document).ready(async function () {
     chargeUsersTable()
+    disAbleButt(true)
 })
 
 function chargeUsersTable() {
@@ -30,6 +31,7 @@ function chargeUsersTable() {
                 columns: [
                     { data: 'rut' },
                     { data: 'name' },
+                    { data: 'lastname' },
                     { data: 'email' },
                     { data: 'scope' },
                     { data: 'status' }
@@ -42,13 +44,11 @@ function chargeUsersTable() {
         $('#tableUsers tbody').on('click', 'tr', function () {
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected')
-                $('#optionModUser').prop('disabled', true)
-                $('#optionDeleteUser').prop('disabled', true)
+                disAbleButt(true)
             } else {
                 internals.users.table.$('tr.selected').removeClass('selected')
                 $(this).addClass('selected')
-                $('#optionModUser').prop('disabled', false)
-                $('#optionDeleteUser').prop('disabled', false)
+                disAbleButt(false)
                 internals.users.data = internals.users.table.row($(this)).data()
                 internals.rowSelected = internals.users.table.row($(this))
             }
@@ -56,6 +56,11 @@ function chargeUsersTable() {
     } catch (error) {
         console.log(error)
     }
+}
+
+function disAbleButt (actionDis) {
+    $('#updateUser').prop('disabled', actionDis)
+    $('#deleteUser').prop('disabled', actionDis)
 }
 
 async function getUsersEnabled() {
@@ -92,7 +97,7 @@ async function getUsersEnabled() {
     }
 }
 
-$('#optionCreateUser').on('click', async function () { // CREAR USUARIO
+$('#createUser').on('click', async function () { // CREAR USUARIO
     handleModal()
 
     $('#userRut').on('keyup', function () {
@@ -159,7 +164,7 @@ $('#optionCreateUser').on('click', async function () { // CREAR USUARIO
     })
 })
 
-$('#optionModUser').on('click', function () { //MODIFICAR USUARIO
+$('#updateUser').on('click', function () { //MODIFICAR USUARIO
     handleModal(internals.users.data)
     console.log('adas', internals);
 
@@ -301,8 +306,8 @@ $('#optionModUser').on('click', function () { //MODIFICAR USUARIO
                             res.ok.rut = res.ok._id
                         }
 
-                        $('#optionModUser').prop('disabled', true)
-                        $('#optionDeleteUser').prop('disabled', true)
+                        $('#updateUser').prop('disabled', true)
+                        $('#deleteUser').prop('disabled', true)
 
                         datatableUsers
                             .row(userRowSelected)
@@ -329,7 +334,7 @@ $('#optionModUser').on('click', function () { //MODIFICAR USUARIO
     })
 })
 
-$('#optionDeleteUser').on('click', function () { //ELIMINAR USUARIO
+$('#deleteUser').on('click', function () { //ELIMINAR USUARIO
     swal.fire({
         title: '{{ lang.deleteUser.swalDeleteTitle }}',
         type: 'warning',
@@ -353,8 +358,8 @@ $('#optionDeleteUser').on('click', function () { //ELIMINAR USUARIO
                 if (res.err) {
                     toastr.warning(res.err)
                 } else if (res.ok) {
-                    $('#optionModUser').prop('disabled', true)
-                    $('#optionDeleteUser').prop('disabled', true)
+                    $('#updateUser').prop('disabled', true)
+                    $('#deleteUser').prop('disabled', true)
 
                     toastr.success('{{ lang.deleteUser.swalToastrOK }}')
 
@@ -397,7 +402,7 @@ function handleModal(userSelected) {
 
             <div class="col-md-4" style="margin-top:10px;">
                 Rol
-                <select id="userRole" class="custom-select">
+                <select id="userRole" class="form-control custom-select">
                     <option value="user">Usuario</option>
                     <option value="admin">Administrador</option>
                 </select>

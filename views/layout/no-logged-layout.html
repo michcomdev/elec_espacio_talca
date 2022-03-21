@@ -11,23 +11,129 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/modules/no-logged-layout/no-logged.css">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/public/DataTables/datatables.min.css">
+    <link rel="stylesheet" href="/public/css/toastr.min.css">
+    <link rel="stylesheet" href="/public/css/select2.min.css">
+    <link rel="stylesheet" href="/public/css/daterangepicker.css">
     {{#block "css"}}
     {{/block}}
 </head>
 
+<script>
+    let auxCart = JSON.parse(localStorage.getItem('cartIn')) || []
+    let bodyCartHTML = ''
+    chargeCart()
+    function chargeCart() {
+        bodyCartHTML = auxCart.reduce((txt, el, i) => {
+        return txt += `
+            <tr>
+                <td><img src="${el.image}" alt="" border=3 height=50 width=50></img></th>
+                <td><center>${el.name}</center></td>
+                <td><center>$ ${new Intl.NumberFormat("de-DE").format(el.price)}</center></td>
+                <td><center><input id="qty-${i}" class="qty" type="number" value="${el.qty}" min="1" max="99" data-producto="${el._id}" style="width:40px"></center></td>
+            </tr>
+            `
+        }, '')
+    }
+</script>
+
 <body>
+    {{#if publico}}
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#"><img src="/public/img/logo.png" alt="" width="100" height="50"></a>
+        <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarColor03"
+            aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="navbar-collapse collapse" id="navbarColor03">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <!--<a class="nav-link" href="/inventory"><i class="fas fa-layer-group"></i>Inventario</a>-->
+                </li>
+            </ul>
+            <div class="my-2 my-lg-0">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item dropdown mainNav" id="cart"></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {{/if}}
     {{{ content }}}
     <script src="/public/js/jquery-3.5.1.min.js"></script>
     <script src="/public/bootstrap-4.5.3-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/public/js/moment.js"></script>
     <script src="/public/js/rut.min.js"></script>
-    <script src="/public/modules/no-logged-layout/no-logged.js"></script>
+    <script src="/public/js/axios.min.js"></script>
+    <script src="/public/DataTables/datatables.min.js"></script>
+    <script src="/public/js/select2.min.js"></script>
+    <script src="/public/js/cleave.min.js"></script>
+    <script src="/public/js/popper.min.js"></script>
+    <script src="/public/js/sweetalert2.all.min.js"></script>
+    <script src="/public/js/toastr.min.js"></script>
     <script src="https://kit.fontawesome.com/48178f0b46.js" crossorigin="anonymous"></script>
+    <!--Update From Web-->
+    <script src="/public/js/daterangepicker.js"></script>
+    <script src="/public/js/jspdf.min.js"></script>
+    <script src="/public/modules/default/jspdfcenter_plugin.js"></script>
+    <script src="/public/modules/default/tools.js"></script>
+    <script src="/public/js/nes.js"></script>
+    <!-- <script src="/public/modules/default/default.js"></script> -->
     <!--Update From Web-->
     {{#block "js"}}
     {{/block}}
-    <script>
-
-    </script>
 </body>
+
+<script>
+    $('#cart').html(`
+        <a style="background:#6BA539;" class="badge badge-pill badge-primary nav-link dropdown-toggle dos" href="#" id="cartInfo"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-shopping-cart"></i> <span>${auxCart.length}</span>
+        </a>
+
+        <div id="cartData" style="right:0;" class="dropdown-menu dropdown-menu-left"
+            aria-labelledby="userCredentialsDropdown">
+            <table class="table">
+                <thead>
+                    <th>#</th>
+                    <th>PRODUCTO</th>
+                    <th>PRECIO</th>
+                    <th>CANTIDAD</th>
+                </thead>
+                <tbody>
+                    ${bodyCartHTML}
+                </tbody>
+            </table>
+            <center>
+                <button style="background:#ee8f42;" id="cartBuy" type="button">
+                    <i class="fas fa-shopping-basket"> Confirmar compra</i>
+                </button>
+            </center>
+        </div>
+    `)
+
+    $(document).on('click', '.dropdown-menu', function (e) { //evita que se cierre al hacer click
+        e.stopPropagation();
+    });
+
+    $(`#cartData`).on('change', '.qty', function (o) {
+        auxCart.forEach(el=> {
+            if (el._id == this.getAttribute("data-producto")) {
+                el.qty = $(`#${this.id}`).val()
+                localStorage.clear()
+                localStorage.setItem('cartIn', JSON.stringify(auxCart))
+            }
+        });
+    })
+
+    $(`#cartBuy`).on('click', function (o) {
+        window.location.href = '/carrito';
+    })
+
+</script>
 
 </html>
