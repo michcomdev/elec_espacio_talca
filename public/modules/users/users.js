@@ -183,7 +183,7 @@ $('#updateUser').on('click', function () { //MODIFICAR USUARIO
 
     $('#saveUser').on('click', async function () {
 
-        internals.users.data.rut = removeSpecials($('#userRut').val())
+        internals.users.data.rut = $('#userRut').val()
         internals.users.data.name = $('#userName').val().trim()
         internals.users.data.lastname = $('#userLastname').val().trim()
         internals.users.data.password = $('#userPassword').val().trim()
@@ -252,146 +252,6 @@ $('#updateUser').on('click', function () { //MODIFICAR USUARIO
 
 
 
-    $('#saveUser').on('click', function () {
-        let userData = {
-            status: 'mod',
-            rut: removeExtraSpaces($('#modUserRut').val()),
-            name: $('#modUserName').val(),
-            lastname: $('#modUserLastname').val(),
-            changePassword: $('#changePassword').is(':checked'),
-            password: $('#modUserPassword').val(),
-            role: $('#modUserRole').val(),
-            charge: $('#modUserCharge').val(),
-            phone: $('#modUserPhone').val(),
-            email: removeExtraSpaces($('#modUserEmail').val()),
-            changeEmailPassword: $('#changeEmailPassword').is(':checked'),
-            emailPassword: $('#modUserEmailPassword').val()
-        }
-
-        validateUserData(userData).then(res => {
-            if (res.ok) {
-
-                let changePassword = ''
-                let changeEmailPassword = ''
-
-                if ($('#changePassword').is(':checked')) {
-                    changePassword = 'yes'
-                } else {
-                    changePassword = 'no'
-                }
-
-                if ($('#changeEmailPassword').is(':checked')) {
-                    changeEmailPassword = 'yes'
-                } else {
-                    changeEmailPassword = 'no'
-                }
-
-                ajax({
-                    url: 'api/modUser',
-                    type: 'POST',
-                    data: {
-                        rut: userData.rut,
-                        name: userData.name,
-                        lastname: userData.lastname,
-                        changePassword: changePassword,
-                        changeEmailPassword: changeEmailPassword,
-                        password: userData.password,
-                        emailPassword: userData.emailPassword,
-                        role: userData.role,
-                        charge: userData.charge,
-                        phone: userData.phone,
-                        email: userData.email,
-                        checkPer: JSON.stringify(userData.checkPer)
-                    }
-                }).then(res => {
-                    if (res.err) {
-                        toastr.warning(res.err)
-                    } else if (res.ok) {
-                        toastr.success('{{ lang.modUser.saveUserToastrOK }}')
-
-                        if (isRut(res.ok._id)) {
-                            res.ok.rut = `${rutFunc(res.ok._id)}`
-                        } else {
-                            res.ok.rut = res.ok._id
-                        }
-
-                        $('#updateUser').prop('disabled', true)
-                        $('#deleteUser').prop('disabled', true)
-
-                        datatableUsers
-                            .row(userRowSelected)
-                            .remove()
-                            .draw()
-
-                        let modUserAdded = datatableUsers
-                            .row.add(res.ok)
-                            .draw()
-                            .node()
-
-                        //datatableUsers.search('').draw()
-
-                        $(modUserAdded).css('color', '#1abc9c')
-                        setTimeout(() => {
-                            $(modUserAdded).css('color', '#484848')
-                        }, 5000)
-
-                        $('#modal').modal('hide')
-                    }
-                })
-            }
-        })
-    })
-})
-
-$('#deleteUser').on('click', function () { //ELIMINAR USUARIO
-    swal.fire({
-        title: '¿Está seguro de eliminar a este usuario?',
-        type: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonClass: 'btn btn-primary',
-        cancelButtonClass: 'btn btn-danger',
-        buttonsStyling: false,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'Cancelar',
-    }).then((result) => {
-        if (result.value) {
-<<<<<<< HEAD
-=======
-            ajax({
-                url: 'api/user',
-                type: 'DELETE',
-                data: {
-                    _id: internals.rowSelected._id
-                }
-            }).then(res => {
-                if (res.err) {
-                    toastr.warning(res.err)
-                } else if (res.ok) {
-                    $('#updateUser').prop('disabled', true)
-                    $('#deleteUser').prop('disabled', true)
->>>>>>> ce8c97582478827385437775ef343b72baab6131
-
-            //let res = await axios.post('api/usersDelete', { _id: internals.rowSelected._id})
-            console.log(res)
-            if (res.err) {
-                toastr.warning(res.err)
-            } else if (res.ok) {
-                $('#optionModUser').prop('disabled', true)
-                $('#optionDeleteUser').prop('disabled', true)
-
-                toastr.success('{{ lang.deleteUser.swalToastrOK }}')
-
-                datatableUsers
-                    .row(userRowSelected)
-                    .remove()
-                    .draw()
-
-                // console.log(res.ok)
-            }
-        }
-    })
 })
 
 function handleModal(userSelected) {
@@ -421,11 +281,7 @@ function handleModal(userSelected) {
 
             <div class="col-md-4" style="margin-top:10px;">
                 Rol
-<<<<<<< HEAD
-                <select id="userRole" class="form-select">
-=======
                 <select id="userRole" class="form-control custom-select">
->>>>>>> ce8c97582478827385437775ef343b72baab6131
                     <option value="user">Usuario</option>
                     <option value="admin">Administrador</option>
                 </select>
