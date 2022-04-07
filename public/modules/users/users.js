@@ -12,6 +12,11 @@ $(document).ready(async function () {
 
 function chargeUsersTable() {
     try {
+        if($.fn.DataTable.isDataTable('#tableUsers')){
+            internals.users.table.clear().destroy()
+        }
+
+
         internals.users.table = $('#tableUsers')
             .DataTable({
                 dom: 'Bfrtip',
@@ -179,12 +184,15 @@ $('#optionModUser').on('click', function () { //MODIFICAR USUARIO
         internals.users.data.password = $('#userPassword').val().trim()
         internals.users.data.scope = $('#userRole').val()
         internals.users.data.email = ($('#userEmail').val()).trim()
+        internals.users.data.status = 'enabled'
 
 
         let validate = await validateUserData(internals.users.data)
 
+        console.log(validate)
+
         if (validate.ok) {
-            let newUserData = await axios.post('api/users', userData)
+            let newUserData = await axios.post('api/users', validate.ok)
             if (newUserData.data.error) {
                 toastr.warning(newUserData.data.error)
             } else {
@@ -208,7 +216,7 @@ $('#optionModUser').on('click', function () { //MODIFICAR USUARIO
                     newUserData.data.status = 'Desactivado'
                 }
 
-                let userAdded = internals.users.table.row
+                /*let userAdded = internals.users.table.row
                     .add(newUserData.data)
                     .draw()
                     .node()
@@ -216,122 +224,19 @@ $('#optionModUser').on('click', function () { //MODIFICAR USUARIO
                 $(userAdded).css('color', '#1abc9c')
                 setTimeout(() => {
                     $(userAdded).css('color', '#484848')
-                }, 5000)
+                }, 5000)*/
+                chargeUsersTable()
 
                 $('#modal').modal('hide')
             }
         }
     })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    $('#saveUser').on('click', function () {
-        let userData = {
-            status: 'mod',
-            rut: removeExtraSpaces($('#modUserRut').val()),
-            name: $('#modUserName').val(),
-            lastname: $('#modUserLastname').val(),
-            changePassword: $('#changePassword').is(':checked'),
-            password: $('#modUserPassword').val(),
-            role: $('#modUserRole').val(),
-            charge: $('#modUserCharge').val(),
-            phone: $('#modUserPhone').val(),
-            email: removeExtraSpaces($('#modUserEmail').val()),
-            changeEmailPassword: $('#changeEmailPassword').is(':checked'),
-            emailPassword: $('#modUserEmailPassword').val()
-        }
-
-        validateUserData(userData).then(res => {
-            if (res.ok) {
-
-                let changePassword = ''
-                let changeEmailPassword = ''
-
-                if ($('#changePassword').is(':checked')) {
-                    changePassword = 'yes'
-                } else {
-                    changePassword = 'no'
-                }
-
-                if ($('#changeEmailPassword').is(':checked')) {
-                    changeEmailPassword = 'yes'
-                } else {
-                    changeEmailPassword = 'no'
-                }
-
-                ajax({
-                    url: 'api/modUser',
-                    type: 'POST',
-                    data: {
-                        rut: userData.rut,
-                        name: userData.name,
-                        lastname: userData.lastname,
-                        changePassword: changePassword,
-                        changeEmailPassword: changeEmailPassword,
-                        password: userData.password,
-                        emailPassword: userData.emailPassword,
-                        role: userData.role,
-                        charge: userData.charge,
-                        phone: userData.phone,
-                        email: userData.email,
-                        checkPer: JSON.stringify(userData.checkPer)
-                    }
-                }).then(res => {
-                    if (res.err) {
-                        toastr.warning(res.err)
-                    } else if (res.ok) {
-                        toastr.success('{{ lang.modUser.saveUserToastrOK }}')
-
-                        if (isRut(res.ok._id)) {
-                            res.ok.rut = `${rutFunc(res.ok._id)}`
-                        } else {
-                            res.ok.rut = res.ok._id
-                        }
-
-                        $('#optionModUser').prop('disabled', true)
-                        $('#optionDeleteUser').prop('disabled', true)
-
-                        datatableUsers
-                            .row(userRowSelected)
-                            .remove()
-                            .draw()
-
-                        let modUserAdded = datatableUsers
-                            .row.add(res.ok)
-                            .draw()
-                            .node()
-
-                        //datatableUsers.search('').draw()
-
-                        $(modUserAdded).css('color', '#1abc9c')
-                        setTimeout(() => {
-                            $(modUserAdded).css('color', '#484848')
-                        }, 5000)
-
-                        $('#modal').modal('hide')
-                    }
-                })
-            }
-        })
-    })
 })
 
 $('#optionDeleteUser').on('click', function () { //ELIMINAR USUARIO
     swal.fire({
-        title: '{{ lang.deleteUser.swalDeleteTitle }}',
+        title: '¿Está seguro de eliminar a este usuario?',
         type: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
@@ -339,33 +244,28 @@ $('#optionDeleteUser').on('click', function () { //ELIMINAR USUARIO
         confirmButtonClass: 'btn btn-primary',
         cancelButtonClass: 'btn btn-danger',
         buttonsStyling: false,
-        confirmButtonText: '{{ lang.deleteUser.swalConfirmButtonText }}',
-        cancelButtonText: '{{ lang.deleteUser.swalCancelButtonText }}',
+        confirmButtonText: 'Sí',
+        cancelButtonText: 'Cancelar',
     }).then((result) => {
         if (result.value) {
-            ajax({
-                url: 'api/user',
-                type: 'DELETE',
-                data: {
-                    _id: internals.rowSelected._id
-                }
-            }).then(res => {
-                if (res.err) {
-                    toastr.warning(res.err)
-                } else if (res.ok) {
-                    $('#optionModUser').prop('disabled', true)
-                    $('#optionDeleteUser').prop('disabled', true)
 
-                    toastr.success('{{ lang.deleteUser.swalToastrOK }}')
+            //let res = await axios.post('api/usersDelete', { _id: internals.rowSelected._id})
+            console.log(res)
+            if (res.err) {
+                toastr.warning(res.err)
+            } else if (res.ok) {
+                $('#optionModUser').prop('disabled', true)
+                $('#optionDeleteUser').prop('disabled', true)
 
-                    datatableUsers
-                        .row(userRowSelected)
-                        .remove()
-                        .draw()
+                toastr.success('{{ lang.deleteUser.swalToastrOK }}')
 
-                    // console.log(res.ok)
-                }
-            })
+                datatableUsers
+                    .row(userRowSelected)
+                    .remove()
+                    .draw()
+
+                // console.log(res.ok)
+            }
         }
     })
 })
@@ -397,7 +297,7 @@ function handleModal(userSelected) {
 
             <div class="col-md-4" style="margin-top:10px;">
                 Rol
-                <select id="userRole" class="custom-select">
+                <select id="userRole" class="form-select">
                     <option value="user">Usuario</option>
                     <option value="admin">Administrador</option>
                 </select>

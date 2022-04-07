@@ -33,7 +33,7 @@ function chargeInventoryTable() {
             buttons: [
               'excel'
             ],
-            iDisplayLength: 50,
+            iDisplayLength: 10,
             oLanguage: {
               sSearch: 'buscar: '
             },
@@ -44,7 +44,7 @@ function chargeInventoryTable() {
             responsive: false,
             columnDefs: [{targets: [1,2,3], className: 'dt-right'},
                         {targets: [4], className: 'dt-center'}],
-            order: [[ 0, 'desc' ]],
+            order: [[ 0, 'asc' ]],
             ordering: true,
             rowCallback: function( row, data ) {
                 $(row).find('td:eq(0)').html('<img src="'+data.image+'" style="width: 100px; height: 100px;">');
@@ -233,7 +233,7 @@ $('#updateProduct').on('click', async function () {
         `)
     }
 
-    
+        
     $('#saveProduct').on('click', async function () {
         let purchases = []
         let stockTotal = 0
@@ -344,7 +344,7 @@ function createModalBody(){
             <h6>DATOS GENERALES</h6>
         </div>
         <div class="col-md-6">
-            <button class="btn btn-primary" onclick="testing()">Rellenar</button>
+            
         </div>
         <div class="col-md-8">
             <div class="row">
@@ -472,7 +472,11 @@ async function getSold(id){
     if(id==0){
         $("#productSold").val(0)
     }else{
-        $("#productSold").val(0)
+        let sales = await axios.post('api/productSales', {id: id})
+        console.log(sales)
+        $("#productSold").val(sales.data)
+
+        calculateStock()
     }
 }
 

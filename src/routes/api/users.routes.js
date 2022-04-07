@@ -52,7 +52,9 @@ export default [
                         findUser.email = payload.email
                         findUser.status = payload.status
                         findUser.scope = payload.scope
-                        findUser.password = payload.password
+                        if(payload.password){
+                            findUser.password = payload.password
+                        }
                         // findUser.permissions = {
                         //     superadmin: payload.permissions.superadmin
                         // }
@@ -89,6 +91,36 @@ export default [
         }
     },
     {
+        method: 'POST',
+        path: '/api/usersDelete',
+        options: {
+            description: 'delete user',
+            notes: 'delete user',
+            tags: ['api'],
+            handler: async (request) => {
+                try {
+                    let payload = request.payload
+
+                    console.log(payload)
+                    if (payload._id) { // modificar usuario
+                        await User.deleteOne(payload._id)
+
+
+                        return true
+
+                    }
+
+                } catch (error) {
+                    console.log(error)
+
+                    return {
+                        error: 'Ha ocurrido un error al guardar datos de usuario'
+                    }
+                }
+            }
+        }
+    },
+    {
         method: 'GET',
         path: '/api/usersEnabled',
         options: {
@@ -110,49 +142,5 @@ export default [
                 }
             }
         }
-    },
-    {
-        method: 'POST',
-        path: '/api/usersfdsf',
-        options: {
-            description: 'create user',
-            notes: 'create user (seller or admin)',
-            tags: ['api'],
-            handler: async (request, h) => {
-                try {
-                    // let payload = request.payload
-
-
-
-                } catch (error) {
-                    console.log(error)
-
-                    return h.response({
-                        error: 'Internal Server Error'
-                    }).code(500)
-                }
-            },
-            validate: {
-                payload: Joi.object().keys({
-                    _id: Joi.string(),
-                    cod: Joi.string(),
-                    name: Joi.string().required().min(1).lowercase().trim(),
-                    email: Joi.string().required().email().lowercase().trim(),
-                    emailPassword: Joi.string().optional(),
-                    store: Joi.string(),
-                    status: Joi.string().required().valid('enabled', 'disabled'),
-                    scope: Joi.string().required().valid('seller', 'admin', 'assistant'),
-                    permissions: Joi.object().optional().keys({
-                        superadmin: Joi.boolean().required(),
-                        commercial: Joi.boolean().required(),
-                        collections: Joi.boolean().required()
-                    }),
-                    sellers: Joi.array().optional().items(Joi.object().keys({
-                        codVendedor: Joi.string().required(),
-                        nombreVendedor: Joi.string().required()
-                    }))
-                })
-            }
-        }
-    },
+    }
 ]

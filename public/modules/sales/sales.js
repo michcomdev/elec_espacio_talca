@@ -62,15 +62,16 @@ function chargeSalesTable() {
                 url: spanishDataTableLang
             },
             responsive: false,
-            columnDefs: [{targets: [1,2,3], className: 'dt-right'},
-                        {targets: [4], className: 'dt-center'}],
+            columnDefs: [{targets: [2,3], className: 'dt-right'},
+                        {targets: [0,1,4,5], className: 'dt-center'}],
             order: [[ 0, 'desc' ]],
             ordering: true,
             rowCallback: function( row, data ) {
-                $(row).find('td:eq(0)').html(moment.utc(data.date).format('DD/MM/YYYY'))
-                $(row).find('td:eq(2)').html(dot_separators(data.total))
+                $(row).find('td:eq(1)').html(moment.utc(data.date).format('DD/MM/YYYY'))
+                $(row).find('td:eq(3)').html(dot_separators(data.total))
           },
           columns: [
+            { data: 'type' },
             { data: 'date' },
             { data: 'name' },
             { data: 'total' },

@@ -11,6 +11,7 @@ const salesSchema = new Schema({
     net: { type: Number },
     iva: { type: Number },
     total: { type: Number },
+    type: { type: String },
     payment: { type: String },
     paymentVoucher: { type: String },
     products: [{

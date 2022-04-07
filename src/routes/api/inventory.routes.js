@@ -1,4 +1,5 @@
 import Products from '../../models/Products'
+import Sales from '../../models/Sales'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 
@@ -61,8 +62,6 @@ export default [
             handler: async (request, h) => {
                 try {
                     let payload = request.payload   
-
-                    console.log(payload)
 
                     let product = await Products.findById(payload.id)
                 
@@ -236,6 +235,51 @@ export default [
                             quantity: Joi.number().allow(0).optional()
                         })
                     )
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/productSales',
+        options: {
+            description: 'get sales',
+            notes: 'get sales',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+                    let query = {
+                        products: {
+                            $elemMatch: {
+                                products: payload.id
+                            }
+                        }
+                    }
+
+                    let sales = await Sales.find(query).lean()
+                    let total = 0
+                    for(let i=0; i<sales.length; i++){
+                        for(let j=0; j<sales[i].products.length; j++){
+                            if(sales[i].products[j].products==payload.id){
+                                total += sales[i].products[j].quantity
+                            }
+                        }
+                    }
+                
+                    return total
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    id: Joi.string().optional().allow('')
                 })
             }
         }
