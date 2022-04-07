@@ -146,7 +146,7 @@ internals.server = async () => {
             },
             path: 'views',
             layoutPath: 'views/layout',
-            layout: 'default'
+            layout: 'default' //agregar nologg
         })
 
         // TODO ANTES DE ESTO

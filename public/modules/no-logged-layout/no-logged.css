@@ -12,6 +12,8 @@ html {
 }
 
 body {
+    background: url(/public/img/wall.jpg) no-repeat center center fixed;
+    background-size: cover;
     margin: 0;
     padding: 0;
     background-color: white;

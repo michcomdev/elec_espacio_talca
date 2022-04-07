@@ -8,6 +8,7 @@ let internals = {
 
 $(document).ready(async function () {
     chargeUsersTable()
+    disAbleButt(true)
 })
 
 function chargeUsersTable() {
@@ -35,6 +36,7 @@ function chargeUsersTable() {
                 columns: [
                     { data: 'rut' },
                     { data: 'name' },
+                    { data: 'lastname' },
                     { data: 'email' },
                     { data: 'scope' },
                     { data: 'status' }
@@ -47,13 +49,11 @@ function chargeUsersTable() {
         $('#tableUsers tbody').on('click', 'tr', function () {
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected')
-                $('#optionModUser').prop('disabled', true)
-                $('#optionDeleteUser').prop('disabled', true)
+                disAbleButt(true)
             } else {
                 internals.users.table.$('tr.selected').removeClass('selected')
                 $(this).addClass('selected')
-                $('#optionModUser').prop('disabled', false)
-                $('#optionDeleteUser').prop('disabled', false)
+                disAbleButt(false)
                 internals.users.data = internals.users.table.row($(this)).data()
                 internals.rowSelected = internals.users.table.row($(this))
             }
@@ -61,6 +61,11 @@ function chargeUsersTable() {
     } catch (error) {
         console.log(error)
     }
+}
+
+function disAbleButt (actionDis) {
+    $('#updateUser').prop('disabled', actionDis)
+    $('#deleteUser').prop('disabled', actionDis)
 }
 
 async function getUsersEnabled() {
@@ -97,7 +102,7 @@ async function getUsersEnabled() {
     }
 }
 
-$('#optionCreateUser').on('click', async function () { // CREAR USUARIO
+$('#createUser').on('click', async function () { // CREAR USUARIO
     handleModal()
 
     $('#userRut').on('keyup', function () {
@@ -164,7 +169,7 @@ $('#optionCreateUser').on('click', async function () { // CREAR USUARIO
     })
 })
 
-$('#optionModUser').on('click', function () { //MODIFICAR USUARIO
+$('#updateUser').on('click', function () { //MODIFICAR USUARIO
     handleModal(internals.users.data)
     console.log('adas', internals);
 
@@ -232,9 +237,113 @@ $('#optionModUser').on('click', function () { //MODIFICAR USUARIO
         }
     })
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    $('#saveUser').on('click', function () {
+        let userData = {
+            status: 'mod',
+            rut: removeExtraSpaces($('#modUserRut').val()),
+            name: $('#modUserName').val(),
+            lastname: $('#modUserLastname').val(),
+            changePassword: $('#changePassword').is(':checked'),
+            password: $('#modUserPassword').val(),
+            role: $('#modUserRole').val(),
+            charge: $('#modUserCharge').val(),
+            phone: $('#modUserPhone').val(),
+            email: removeExtraSpaces($('#modUserEmail').val()),
+            changeEmailPassword: $('#changeEmailPassword').is(':checked'),
+            emailPassword: $('#modUserEmailPassword').val()
+        }
+
+        validateUserData(userData).then(res => {
+            if (res.ok) {
+
+                let changePassword = ''
+                let changeEmailPassword = ''
+
+                if ($('#changePassword').is(':checked')) {
+                    changePassword = 'yes'
+                } else {
+                    changePassword = 'no'
+                }
+
+                if ($('#changeEmailPassword').is(':checked')) {
+                    changeEmailPassword = 'yes'
+                } else {
+                    changeEmailPassword = 'no'
+                }
+
+                ajax({
+                    url: 'api/modUser',
+                    type: 'POST',
+                    data: {
+                        rut: userData.rut,
+                        name: userData.name,
+                        lastname: userData.lastname,
+                        changePassword: changePassword,
+                        changeEmailPassword: changeEmailPassword,
+                        password: userData.password,
+                        emailPassword: userData.emailPassword,
+                        role: userData.role,
+                        charge: userData.charge,
+                        phone: userData.phone,
+                        email: userData.email,
+                        checkPer: JSON.stringify(userData.checkPer)
+                    }
+                }).then(res => {
+                    if (res.err) {
+                        toastr.warning(res.err)
+                    } else if (res.ok) {
+                        toastr.success('{{ lang.modUser.saveUserToastrOK }}')
+
+                        if (isRut(res.ok._id)) {
+                            res.ok.rut = `${rutFunc(res.ok._id)}`
+                        } else {
+                            res.ok.rut = res.ok._id
+                        }
+
+                        $('#updateUser').prop('disabled', true)
+                        $('#deleteUser').prop('disabled', true)
+
+                        datatableUsers
+                            .row(userRowSelected)
+                            .remove()
+                            .draw()
+
+                        let modUserAdded = datatableUsers
+                            .row.add(res.ok)
+                            .draw()
+                            .node()
+
+                        //datatableUsers.search('').draw()
+
+                        $(modUserAdded).css('color', '#1abc9c')
+                        setTimeout(() => {
+                            $(modUserAdded).css('color', '#484848')
+                        }, 5000)
+
+                        $('#modal').modal('hide')
+                    }
+                })
+            }
+        })
+    })
 })
 
-$('#optionDeleteUser').on('click', function () { //ELIMINAR USUARIO
+$('#deleteUser').on('click', function () { //ELIMINAR USUARIO
     swal.fire({
         title: '¿Está seguro de eliminar a este usuario?',
         type: 'warning',
@@ -248,6 +357,21 @@ $('#optionDeleteUser').on('click', function () { //ELIMINAR USUARIO
         cancelButtonText: 'Cancelar',
     }).then((result) => {
         if (result.value) {
+<<<<<<< HEAD
+=======
+            ajax({
+                url: 'api/user',
+                type: 'DELETE',
+                data: {
+                    _id: internals.rowSelected._id
+                }
+            }).then(res => {
+                if (res.err) {
+                    toastr.warning(res.err)
+                } else if (res.ok) {
+                    $('#updateUser').prop('disabled', true)
+                    $('#deleteUser').prop('disabled', true)
+>>>>>>> ce8c97582478827385437775ef343b72baab6131
 
             //let res = await axios.post('api/usersDelete', { _id: internals.rowSelected._id})
             console.log(res)
@@ -297,7 +421,11 @@ function handleModal(userSelected) {
 
             <div class="col-md-4" style="margin-top:10px;">
                 Rol
+<<<<<<< HEAD
                 <select id="userRole" class="form-select">
+=======
+                <select id="userRole" class="form-control custom-select">
+>>>>>>> ce8c97582478827385437775ef343b72baab6131
                     <option value="user">Usuario</option>
                     <option value="admin">Administrador</option>
                 </select>

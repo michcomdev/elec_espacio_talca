@@ -2,6 +2,7 @@ html {
     height: 100%;
 }
 body{
+    background-image: url(/public/img/wall.jpg);
     background: #ffffff;;
     padding: 0px;
     margin: 0px;
