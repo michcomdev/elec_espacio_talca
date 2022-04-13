@@ -103,7 +103,8 @@ export default [
                         iva: payload.iva,
                         total: payload.total,
                         payment: payload.payment,
-                        paymentVoucher: payload.paymentVoucher
+                        paymentVoucher: payload.paymentVoucher,
+                        type: payload.type
                     }
 
                     if(payload.products){
@@ -139,6 +140,7 @@ export default [
                     total: Joi.number().allow(0).optional(),
                     payment: Joi.string().optional().allow(''),
                     paymentVoucher: Joi.string().optional().allow(''),
+                    type: Joi.string().optional().allow(''),
                     products: Joi.array().items(
                         Joi.object().keys({
                             products: Joi.string().optional(),
@@ -180,6 +182,7 @@ export default [
                     sales.total = payload.total
                     sales.payment = payload.payment
                     sales.paymentVoucher = payload.paymentVoucher
+                    sales.type = payload.type
 
                     if(payload.products){
                         sales.products = payload.products
@@ -214,6 +217,7 @@ export default [
                     total: Joi.number().allow(0).optional(),
                     payment: Joi.string().optional().allow(''),
                     paymentVoucher: Joi.string().optional().allow(''),
+                    type: Joi.string().optional().allow(''),
                     products: Joi.array().items(
                         Joi.object().keys({
                             products: Joi.string().optional(),

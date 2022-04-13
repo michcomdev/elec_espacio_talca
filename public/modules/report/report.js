@@ -71,7 +71,6 @@ function chargeReportTable() {
         $('#tableReport tbody').off("click")
 
         $('#tableReport tbody').on('click', 'tr', function () {
-            console.log($(this).hasClass('selected'))
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected')
                 $('#updateProduct').prop('disabled', true)
@@ -91,7 +90,6 @@ function chargeReportTable() {
 
 async function getReportEnabled() {
     let reportData = await axios.get('api/report')
-    console.log(reportData.data)
     if (reportData.data.length > 0) {
         let formatData= reportData.data.map(el => {
             el.datetime = moment(el.datetime).format('DD/MM/YYYY HH:mm')
@@ -102,7 +100,6 @@ async function getReportEnabled() {
         internals.report.table.rows.add(formatData).draw()
         $('#loadingReport').empty()
     } else {
-        console.log('vacio', reportData);
         toastr.warning('No se han encontrado datos de usuarios')
         $('#loadingReport').empty()
     }

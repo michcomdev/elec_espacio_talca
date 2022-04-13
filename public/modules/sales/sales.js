@@ -116,7 +116,6 @@ async function getSalesEnabled() {
         internals.sales.table.rows.add(formatData).draw()
         $('#loadingSales').empty()
     } else {
-        //console.log('vacio', salesData)
         //toastr.warning('No se han encontrado ventas en el rango seleccionado')
         $('#loadingSales').empty()
     }
@@ -170,7 +169,6 @@ $('#createSale').on('click', function () { // CREAR MOVIMIENTO
             goSave = true
         }
         $("#tableProductsBody tr").each(function(){
-            console.log($($($(this).children()[0]).children()[1]).val())
             if($($($(this).children()[0]).children()[1])){
 
                 if($($($(this).children()[0]).children()[1]).val()==0 || !$.isNumeric($($($(this).children()[2]).children()[1]).val()) || !$.isNumeric($($($(this).children()[3]).children()[0]).val())){
@@ -213,7 +211,8 @@ $('#createSale').on('click', function () { // CREAR MOVIMIENTO
             iva: replaceAll($('#saleIVA').val(), '.', '').replace(' ', ''),
             total: replaceAll($('#saleTotal').val(), '.', '').replace(' ', ''),
             payment: $('#salePayment').val(),
-            paymentVoucher: $('#salePaymentVoucher').val()
+            paymentVoucher: $('#salePaymentVoucher').val(),
+            type: 'MANUAL'
         }
 
         if(products.length>0){
@@ -223,8 +222,6 @@ $('#createSale').on('click', function () { // CREAR MOVIMIENTO
             saleData.services = services
         }
         
-        console.log(saleData)
-
         const res = validateSaleData(saleData)
         if(res.ok){
             let saveSale = await axios.post('/api/saleSave', res.ok)
@@ -256,8 +253,6 @@ $('#updateSale').on('click', async function () {
     let saleData = await axios.post('/api/saleSingle', {id: internals.dataRowSelected._id})
     let sale = saleData.data
 
-    console.log(sale)
-
     $('#saleModal').modal('show')
     $('#modalSale_title').html(`Modifica Venta`)
     $('#modalSale_body').html(createModalBody())
@@ -271,8 +266,6 @@ $('#updateSale').on('click', async function () {
             <i ="color:#3498db;" class="fas fa-check"></i> GUARDAR
         </button>
     `)
-
-    console.log(moment(sale.date).format('DD/MM/YYYY'))
 
     $('#saleDate').val(moment.utc(sale.date).format('DD/MM/YYYY'))
     $('#saleRUT').val(sale.rut)
@@ -390,7 +383,8 @@ $('#updateSale').on('click', async function () {
             iva: replaceAll($('#saleIVA').val(), '.', '').replace(' ', ''),
             total: replaceAll($('#saleTotal').val(), '.', '').replace(' ', ''),
             payment: $('#salePayment').val(),
-            paymentVoucher: $('#salePaymentVoucher').val()
+            paymentVoucher: $('#salePaymentVoucher').val(),
+            type: 'MANUAL'
         }
 
         
@@ -401,8 +395,6 @@ $('#updateSale').on('click', async function () {
             saleData.services = services
         }
         
-
-        console.log(saleData)
         
         const res = validateSaleData(saleData)
         if(res.ok){
@@ -537,11 +529,11 @@ function createModalBody(){
         </div>
         <div class="col-md-4">
             <table>
-                <tr>
+                <tr style="display: none;">
                     <td>Neto</td>
                     <td><input id="saleNet" type="text" class="form-control border-input" style="text-align: right" disabled></td>
                 </tr>
-                <tr>
+                <tr style="display: none;">
                     <td>IVA</td>
                     <td><input id="saleIVA" type="text" class="form-control border-input" style="text-align: right" disabled></td>
                 </tr>
@@ -631,8 +623,6 @@ function calculateTotal(){
 
         let qty = $($($(this).children()[2]).children()[1]).val()
         let price = $($($(this).children()[3]).children()[0]).val()
-
-        console.log(qty,price)
         
         if($.isNumeric(qty,price)){
             $($($(this).children()[4]).children()[0]).val(qty * price)
@@ -649,11 +639,15 @@ function calculateTotal(){
         }
     })
 
-    let iva = Math.round(net * 0.19)
+    /*let iva = Math.round(net * 0.19)
 
     $("#saleNet").val(dot_separators(net))
     $("#saleIVA").val(dot_separators(iva))
-    $("#saleTotal").val(dot_separators(net + iva))
+    $("#saleTotal").val(dot_separators(net + iva))*/
+    $("#saleNet").val(dot_separators(net))
+    $("#saleIVA").val(dot_separators(0))
+    $("#saleTotal").val(dot_separators(net))
+    
 }
 
 async function getSold(id){
@@ -741,7 +735,6 @@ async function selectProduct(btn) {
                         internals.productRowSelected = internals.products.table.row($(this)).data()
                     }
 
-                    console.log(internals.productRowSelected)
                 })
 
             } catch (error) {
@@ -754,7 +747,6 @@ async function selectProduct(btn) {
             try {
                 let productSelected = internals.productRowSelected
 
-                console.log("selected", productSelected)
                 if (productSelected) {
                     return {
                         ...productSelected
@@ -860,7 +852,6 @@ async function selectService(btn) {
                         internals.serviceRowSelected = internals.services.table.row($(this)).data()
                     }
 
-                    console.log(internals.serviceRowSelected)
                 })
 
             } catch (error) {
@@ -873,7 +864,6 @@ async function selectService(btn) {
             try {
                 let serviceSelected = internals.serviceRowSelected
 
-                console.log("selected", serviceSelected)
                 if (serviceSelected) {
                     return {
                         ...serviceSelected

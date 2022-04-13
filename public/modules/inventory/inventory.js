@@ -68,7 +68,6 @@ function chargeInventoryTable() {
         $('#tableInventory tbody').off("click")
 
         $('#tableInventory tbody').on('click', 'tr', function () {
-            console.log($(this).hasClass('selected'))
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected')
                 $('#updateProduct').prop('disabled', true)
@@ -99,7 +98,6 @@ async function getInventoryEnabled() {
         internals.inventory.table.rows.add(formatData).draw()
         $('#loadingInventory').empty()
     } else {
-        console.log('vacio', inventoryData);
         toastr.warning('No se han encontrado datos de usuarios')
         $('#loadingInventory').empty()
     }
@@ -473,7 +471,6 @@ async function getSold(id){
         $("#productSold").val(0)
     }else{
         let sales = await axios.post('api/productSales', {id: id})
-        console.log(sales)
         $("#productSold").val(sales.data)
 
         calculateStock()
@@ -482,8 +479,6 @@ async function getSold(id){
 
 function handleFileSelect(evt) {
 
-    console.log(evt)
-       
     if (check_multifile_extension(evt.target.files[0].type)) {
         let files = evt.target.files;
         var reader = new FileReader();

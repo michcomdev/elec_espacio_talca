@@ -45,6 +45,7 @@ export default [
                         if(sells>0){
                             price = parseInt(price / sells)
                             profitValue = parseInt(price - cost)
+                            if(cost==0) cost=1
                             profitPercentage = parseInt((price - cost) * 100 / cost)
 
                         }else{

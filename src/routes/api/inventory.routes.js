@@ -22,14 +22,27 @@ export default [
             handler: async (request, h) => {
                 try {
                     let inventory = await Products.find().lean()
+
+                    let sales = await Sales.find().lean()
                     
                     inventory = inventory.reduce((acc, el, i) => {
                         let lastPurchase = el.purchases.length - 1
+
+                        let sells = 0
+
+                        for(let j=0; j<sales.length; j++){
+                            for(let k=0; k<sales[j].products.length; k++){
+                                if(sales[j].products[k].products.toString()==el._id.toString()){
+                                    sells += sales[j].products[k].quantity
+                                }
+                            }
+                        }
+
                         acc.push({
                             _id: el._id,
                             image: el.image,
                             name: el.name,
-                            stock: el.stock,
+                            stock: el.stock - sells,
                             cost: el.purchases[lastPurchase].cost,
                             price: el.price,
                             status: el.status,
