@@ -1,0 +1,31 @@
+h2{
+    display: flex;
+    justify-content: center;
+}
+
+#filterBtn {
+    margin-top: 14px;
+    background-color:#1C508A;
+    color: beige;
+}
+
+.membersFilters {
+    text-transform:uppercase;
+}
+
+#membersTable thead tr {
+    background-color:#1C508A;
+}
+#membersTable thead th {
+    color: beige;
+}
+
+@media (min-width: 992px) {
+    .modal-lg, .modal-xl {
+        max-width: 80%;
+    }
+}
+
+#modalMember {
+    font-size: 14px;
+}

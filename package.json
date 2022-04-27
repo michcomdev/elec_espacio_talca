@@ -1,5 +1,5 @@
 {
-  "name": "maki",
+  "name": "agua",
   "version": "0.0.1",
   "description": "",
   "main": "app.js",
@@ -7,8 +7,8 @@
     "dev": "nodemon --ignore 'public/' src/app.js --exec babel-node",
     "build": "babel src --out-dir dist",
     "start": "node dist/app.js",
-    "start:production": "pm2 start ./dist/app.js --name maki",
-    "stop:production": "pm2 stop maki",
+    "start:production": "pm2 start ./dist/app.js --name agua",
+    "stop:production": "pm2 stop agua",
     "restart:production": "npm run stop:production && npm run start:production"
   },
   "author": "",
