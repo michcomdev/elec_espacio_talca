@@ -7,7 +7,7 @@ export default {
             credentials[credentials.scope] = true
 
             //return h.view('inventory', { credentials })
-            return h.redirect('/inventory')
+            return h.redirect('/lectures')
             return h.view('home', { credentials })
         }
     }

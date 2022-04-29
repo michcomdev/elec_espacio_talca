@@ -1,28 +1,14 @@
 @font-face {font-family: "Password"; src: url("/public/fonts/password.ttf") format("truetype") /* chrome firefox opera Safari, Android, iOS 4.2+*/ }
 
-.inputUserForm {
-    text-align: center;
-    font-size: 25px;
-}
-
 .swal-wide {
     min-width: 70%;
 }
 
-
-#inputEmailPasswordSeller {
-    font-family: 'Password' !important;
-}
-
-#inputEmailPasswordSeller::placeholder {
-    font-family: 'Arial' !important
-}
-
-#tableProductHead tr:nth-child(1) th{
+/*#tableProductHead tr:nth-child(1) th{
     position: sticky;
     top: 0;
     z-index: 10;
-}
+}*/
 
 @media (min-width: 992px) {
     .modal-lg, .modal-xl {
@@ -30,8 +16,26 @@
     }
 }
   
+
 /*@media (min-width: 576px) {
     .modal-dialog {
         max-width: 80%;
     }
 }*/
+
+
+.row {
+    font-size: 14px;
+}
+
+#tableLectures {
+    font-size: 14px;
+}
+
+.form-control {
+    font-size: 14px;
+}
+
+#tableInvoice td, #tableInvoice input{
+    text-align: right;
+}

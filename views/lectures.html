@@ -1,46 +1,46 @@
 {{!< layout/default}}
 {{#extend "css" }}
-    <link rel="stylesheet" type="text/css" href="/public/modules/inventory/inventory.css">
+    <link rel="stylesheet" type="text/css" href="/public/modules/lectures/lectures.css">
 {{/extend}}
 
-<h2 class="text-center">INVENTARIO ACTUAL</h2>
+<h2 class="text-center">CONSUMOS</h2>
 
 <br>
 
 <div class="row">
     <div class="col-md-3">
-        <button class="btn btn-info btn-block" id="createProduct">
-            <i class="fas fa-plus-circle"></i> NUEVO PRODUCTO
+        <!--<button class="btn btn-info btn-block" id="createSale">
+            <i class="fas fa-plus-circle"></i> NUEVA LECTURA
+        </button>-->
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-info btn-block" id="updateLectures" disabled>
+            <i class="far fa-eye"></i> VER LECTURAS
         </button>
     </div>
     <div class="col-md-3">
-        <button class="btn btn-warning btn-block" id="updateProduct" disabled>
-            <i class="fas fa-edit"></i> MODIFICAR PRODUCTO
-        </button>
+        Desde - Hasta
+        <input id="searchDate" type="text" placeholder="Ej: ABC123" class="form-control border-input">
     </div>
-    <div class="col-md-6">
-        
-    </div>
-    <!--<div class="col-md-3">
-        <button class="btn btn-primary btn-block" id="searchProduct">
+    <div class="col-md-3">
+        <button class="btn btn-primary btn-block" id="searchMembers">
             <i class="fas fa-search"></i> FILTRAR
         </button>
-    </div>-->
+    </div>
     <div class="col-md-12 table-responsive">
         <br/>
-        <table id="tableInventory" class="display nowrap table table-condensed" cellspacing="0" width="100%">
+        <table id="tableMembers" class="display nowrap table table-condensed" cellspacing="0" width="100%">
             <thead>
                 <tr class="table-info">
-                    <th>IMAGEN</th>
-                    <th>PRODUCTO</th>
-                    <th>STOCK</th>
-                    <th>COSTO UNITARIO (ÚLT)</th>
-                    <th>PRECIO</th>
-                    <th>ESTADO</th>
+                    <th>N° SOCIO</th>
+                    <th>TIPO</th>
+                    <th>NOMBRE</th>
+                    <th>ÚLTIMA LECTURA</th>
+                    <th>ESTADO DEUDA</th>
                 </tr>
             </thead>
         </table>
-        <div id="loadingInventory">
+        <div id="loadingMembers">
             <center>
                 <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
                 <span class="sr-only">Cargando...</span>
@@ -49,17 +49,17 @@
     </div>
 </div>
 
-<div class="modal fade" id="productModal" role="dialog" aria-labelledby="modal">
+<div class="modal fade" id="lectureModal" role="dialog" aria-labelledby="modal">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="modalProd_title"></h4>
+                <h6 class="modal-title" id="modalLecture_title"></h6>
                 <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true"></span>
                 </button>
             </div>
-            <div class="modal-body" id="modalProd_body"></div>
-            <div class="modal-footer" id="modalProd_footer"></div>
+            <div class="modal-body" id="modalLecture_body"></div>
+            <div class="modal-footer" id="modalLecture_footer"></div>
         </div>
     </div>
 </div>
@@ -79,5 +79,5 @@
     </div>
 </div>
 {{#extend "js"}}
-    <script src="/public/modules/inventory/inventory.js"></script>
+    <script src="/public/modules/lectures/lectures.js"></script>
 {{/extend}}

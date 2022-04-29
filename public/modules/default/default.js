@@ -39,3 +39,48 @@ function loadingHandler(status) {
         console.log('LOADING STOPPED')
     }
 }
+
+function getMonthString(month){
+    let result = ''
+    switch(month) {
+        case '01':
+            result = 'Enero'
+        break
+        case '02':
+            result = 'Febrero'
+        break
+        case '03':
+            result = 'Marzo'
+        break
+        case '04':
+            result = 'Abril'
+        break
+        case '05':
+            result = 'Mayo'
+        break
+        case '06':
+            result = 'Junio'
+        break
+        case '07':
+            result = 'Julio'
+        break
+        case '08':
+            result = 'Agosto'
+        break
+        case '09':
+            result = 'Septiembre'
+        break
+        case '10':
+            result = 'Octubre'
+        break
+        case '11':
+            result = 'Noviembre'
+        break
+        case '12':
+            result = 'Diciembre'
+        break
+        default:
+            result = 'No Válido'    
+    }
+    return result
+}

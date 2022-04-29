@@ -1,5 +1,3 @@
-import Products from '../../models/Products'
-import Sales from '../../models/Sales'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 
