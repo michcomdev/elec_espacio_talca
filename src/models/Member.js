@@ -23,16 +23,21 @@ const memberSchema = new Schema({
         village: { type: Schema.Types.ObjectId, ref: 'villages' },
         town: { type: Schema.Types.ObjectId, ref: 'towns' }
     },
-    waterMeters: {
-        waterMeter: { type: Schema.Types.ObjectId, ref: 'watermeters' },
-    },
+    waterMeters: [{
+        /*waterMeter: { type: Schema.Types.ObjectId, ref: 'watermeters' },*/
+        number: { type: Number },
+        diameter: { type: String },
+        state: { type: String },
+        dateStart: { type: Date },
+        dateEnd: { type: Date }
+    }],
     subsidies: {
         subsidy: { type: Schema.Types.ObjectId, ref: 'subsidies' },
     },
     email: { type: String },
     phone: { type: String },
     dateStart: { type: Date },
-    dateEnd: { type: Date }
+    dateEnd: { type: Date },
 }, {
     versionKey: false
 })

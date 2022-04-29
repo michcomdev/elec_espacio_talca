@@ -38,9 +38,24 @@ export default [
             handler: async (request, h) => {
                 try {
 
-                    let payload = request.payload   
-                    let member = await Member.findById(payload.id)
-                    return member
+                    let payload = request.payload
+
+                    let query = {
+                        waterMeters: {
+                            $elemMatch: {
+                                number: payload.number,
+                                state: 'Activo'
+                            }
+                        }
+                    }
+
+                    console.log(query)
+
+                    let member = await Member.find(query).lean()
+                    
+                    let memberData = member[0]
+                    
+                    return memberData
 
                 } catch (error) {
                     console.log(error)
@@ -52,7 +67,7 @@ export default [
             },
             validate: {
                 payload: Joi.object().keys({
-                    id: Joi.string()
+                    number: Joi.number()
                 })
             }
         }
