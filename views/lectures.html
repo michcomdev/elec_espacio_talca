@@ -12,6 +12,9 @@
         <!--<button class="btn btn-info btn-block" id="createSale">
             <i class="fas fa-plus-circle"></i> NUEVA LECTURA
         </button>-->
+        <button class="btn btn-danger btn-block" onclick="printInvoice('personal','62631b789666da52dcc90718','627053bddd02285fb84f0ebe')">
+            <i class="far fa-file-pdf"></i> TEST BOLETA
+        </button>
     </div>
     <div class="col-md-3">
         <button class="btn btn-info btn-block" id="updateLectures" disabled>
@@ -78,6 +81,12 @@
         </div>
     </div>
 </div>
+
+
 {{#extend "js"}}
+    <script src="/public/modules/default/logoWallImg.js"></script>
+    <script src="/public/modules/default/logoImg.js"></script>
+    <script src="/public/modules/default/test2D.js"></script>
+    <script src="/public/js/jspdf.plugin.autotable.js"></script>
     <script src="/public/modules/lectures/lectures.js"></script>
 {{/extend}}

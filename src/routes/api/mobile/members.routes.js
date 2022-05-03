@@ -26,7 +26,7 @@ export default [
                 }
             }
         }
-    },    
+    },
     {
         method: 'POST',
         path: '/api/mobile/memberSingle',

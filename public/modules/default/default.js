@@ -43,44 +43,89 @@ function loadingHandler(status) {
 function getMonthString(month){
     let result = ''
     switch(month) {
-        case '01':
+        case 1:
             result = 'Enero'
         break
-        case '02':
+        case 2:
             result = 'Febrero'
         break
-        case '03':
+        case 3:
             result = 'Marzo'
         break
-        case '04':
+        case 4:
             result = 'Abril'
         break
-        case '05':
+        case 5:
             result = 'Mayo'
         break
-        case '06':
+        case 6:
             result = 'Junio'
         break
-        case '07':
+        case 7:
             result = 'Julio'
         break
-        case '08':
+        case 8:
             result = 'Agosto'
         break
-        case '09':
+        case 9:
             result = 'Septiembre'
         break
-        case '10':
+        case 10:
             result = 'Octubre'
         break
-        case '11':
+        case 11:
             result = 'Noviembre'
         break
-        case '12':
+        case 12:
             result = 'Diciembre'
         break
         default:
             result = 'No Válido'    
+    }
+    return result
+}
+
+function getMonthShortString(month){
+    let result = ''
+    switch(month) {
+        case 1:
+            result = 'Ene'
+        break
+        case 2:
+            result = 'Feb'
+        break
+        case 3:
+            result = 'Mar'
+        break
+        case 4:
+            result = 'Abr'
+        break
+        case 5:
+            result = 'May'
+        break
+        case 6:
+            result = 'Jun'
+        break
+        case 7:
+            result = 'Jul'
+        break
+        case 8:
+            result = 'Ago'
+        break
+        case 9:
+            result = 'Sep'
+        break
+        case 10:
+            result = 'Oct'
+        break
+        case 11:
+            result = 'Nov'
+        break
+        case 12:
+            result = 'Dic'
+        break
+        default:
+            result = 'N/A'    
     }
     return result
 }

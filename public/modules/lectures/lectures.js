@@ -155,7 +155,7 @@ $('#updateLectures').on('click', async function () {
     $('#memberType').val(type)
     $('#memberRUT').val(member.rut)
     $('#memberName').val(name)
-    $('#memberWaterMeter').val(250663) //TEST
+    $('#memberWaterMeter').val(member.waterMeters.find(x => x.state === 'Activo').number)
     $('#memberAddress').val(member.address.address)
     //$('#saleDate').val(moment.utc(sale.date).format('DD/MM/YYYY'))
     //$('#saleNet').val(dot_separators(sale.net))
@@ -272,6 +272,8 @@ async function loadLectures(member){
     let lectureData = await axios.post('/api/lecturesSingleMember', {member: internals.dataRowSelected._id})
     let lectures = lectureData.data
 
+    console.log(lectures)
+
     $('#tableLecturesBody').html('')
 
     for(i=0;i<lectures.length;i++){
@@ -281,7 +283,7 @@ async function loadLectures(member){
         let invoiceID = 0
         if(lectures[i].invoice){
             total = dot_separators(lectures[i].invoice.invoiceTotal)
-            btn = `<button class="btn btn-sm btn-danger" onclick="printInvoice('${member.type}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+            btn = `<button class="btn btn-sm btn-danger" onclick="printInvoice('${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
             invoiceID = lectures[i].invoice._id
         }else{
             total = 'NO CALCULADO'
@@ -291,13 +293,13 @@ async function loadLectures(member){
         $('#tableLecturesBody').append(`
             <tr id="${lectures[i]._id}" data-invoice="${invoiceID}">
                 <td style="text-align: center;">
-                    ${getMonthString(moment.utc(lectures[i].date).format('MM'))}
+                    ${getMonthString(lectures[i].month)}
                 </td>
                 <td style="text-align: center;">
-                    ${moment.utc(lectures[i].date).format('DD/MM/YYYY')}
+                    ${moment.utc(lectures[i].logs[lectures[i].logs.length-1].date).format('DD/MM/YYYY')}
                 </td>
                 <td style="text-align: center;">
-                    ${dot_separators(lectures[i].lecture)}
+                    ${dot_separators(lectures[i].logs[lectures[i].logs.length-1].lecture)}
                 </td>
                 <td style="text-align: center;">
                     ${total}
@@ -331,6 +333,9 @@ async function loadLectures(member){
 function validateInvoiceData(productData) {
     let errorMessage = ''
     
+    if(!$.isNumeric(productData.number)){
+        errorMessage += '<br>Número de Boleta/Factura'
+    }
     if(!$.isNumeric(productData.charge)){
         errorMessage += '<br>Cargo Fijo'
     }
@@ -427,7 +432,12 @@ function createModalBody(){
                             </tr>
                             <tr>
                                 <td>Fecha</td>
-                                <td><input id="invoiceDate" type="text" class="form-control form-control-sm border-input" value="${moment.utc().format('DD/MM/YYYY')}"></td>
+                                <td><input id="invoiceDate" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().format('DD/MM/YYYY')}"></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Fecha Vencimiento</td>
+                                <td><input id="invoiceDateExpire" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().add(15, 'days').format('DD/MM/YYYY')}"></td>
                                 <td></td>
                             </tr>
                             <tr>
@@ -738,19 +748,29 @@ async function getProducts(){
 
 async function createInvoice(lectureID,invoiceID,member){
     if(invoiceID==0){
+        
+        let parametersData = await axios.get('/api/parameters')
+        let parameters = parametersData.data
+        let charge = parameters.charge
+        let meterValue = parameters.meterValue
+        let subsidyLimit = parameters.subsidyLimit
+        
         let lectureData = await axios.post('/api/lectureSingle', {id: lectureID})
         let lecture = lectureData.data
     
+        console.log("lecture",lecture)
         //Definir parámetros
-        let charge=950, meterValue=440, subsidyLimit = 15
+
         let subsidy=50, debt=0
 
         $("#invoiceTitle").text("Nueva Boleta/Factura")
-        //$("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
+        $("#invoiceNumber").val('')
+        $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
+        $("#invoiceDateExpire").val(moment.utc().add(15,'days').format('DD/MM/YYYY'))
         $("#invoiceCharge").val(charge) 
-        $("#invoiceLectureActual").val(lecture.lecture)
+        $("#invoiceLectureActual").val(lecture.logs[lecture.logs.length-1].lecture)
         $("#invoiceLectureLast").val(lecture.lastLecture)
-        let lectureValue = lecture.lecture-lecture.lastLecture
+        let lectureValue = lecture.logs[lecture.logs.length-1].lecture-lecture.lastLecture
         $("#invoiceLectureResult").val(lectureValue)
         $("#invoiceMeterValue").val(meterValue)
         let consumptionValue = lectureValue * meterValue
@@ -761,7 +781,7 @@ async function createInvoice(lectureID,invoiceID,member){
             if(lectureValue<=subsidyLimit){
                 subsidyValue = Math.round(consumptionValue * (subsidy / 100))
             }else{
-                subsidyValue = Math.round(subsidyLimit * (subsidy / 100))
+                subsidyValue = Math.round((subsidyLimit * meterValue) * (subsidy / 100))
             }
         }
         $("#invoiceSubsidyPercentage").val(subsidy)
@@ -770,15 +790,16 @@ async function createInvoice(lectureID,invoiceID,member){
         $("#invoiceConsumption2").val(lastConsumptionValue)
         $("#invoiceConsumption2b").val(lastConsumptionValue)
         $("#invoiceDebt").val(debt) //A asignar
-        $("#invoiceTotal").val(lastConsumptionValue+debt+charge)
+        $("#invoiceTotal").val(parseInt(lastConsumptionValue)+parseInt(debt)+parseInt(charge))
      
-        $('#invoiceDate').daterangepicker({
+        $('.invoiceDateClass').daterangepicker({
             opens: 'right',
             locale: dateRangePickerDefaultLocale,
             singleDatePicker: true,
             autoApply: true
         })
 
+        $('#invoiceSave').off("click")
 
         $("#invoiceSave").on('click', async function () {
 
@@ -813,6 +834,7 @@ async function createInvoice(lectureID,invoiceID,member){
                 member: internals.dataRowSelected._id,
                 number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
                 date: $("#invoiceDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+                dateExpire: $("#invoiceDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', ''),
                 lectureActual: replaceAll($("#invoiceLectureActual").val(), '.', '').replace(' ', ''),
                 lectureLast: replaceAll($("#invoiceLectureLast").val(), '.', '').replace(' ', ''),
@@ -856,7 +878,9 @@ async function createInvoice(lectureID,invoiceID,member){
         let invoice = invoiceData.data
         
         $("#invoiceTitle").text("Boleta/Factura N° " + invoice.number)
+        $("#invoiceNumber").val(invoice.number)
         $("#invoiceDate").val(moment(invoice.date).utc().format('DD/MM/YYYY'))
+        $("#invoiceDateExpire").val(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'))
         $("#invoiceCharge").val(invoice.charge) 
         $("#invoiceLectureActual").val(invoice.lectureActual)
         $("#invoiceLectureLast").val(invoice.lectureLast)
@@ -871,13 +895,14 @@ async function createInvoice(lectureID,invoiceID,member){
         $("#invoiceDebt").val(invoice.invoiceDebt) 
         $("#invoiceTotal").val(invoice.invoiceTotal)
      
-        $('#invoiceDate').daterangepicker({
+        $('.invoiceDateClass').daterangepicker({
             opens: 'right',
             locale: dateRangePickerDefaultLocale,
             singleDatePicker: true,
             autoApply: true
         })
 
+        $('#invoiceSave').off("click")
 
         $("#invoiceSave").on('click', async function () {
 
@@ -906,12 +931,14 @@ async function createInvoice(lectureID,invoiceID,member){
                 toastr.warning('Debe ingresar productos con valores correctos')
                 return
             }*/
-    
+
+   
             let invoiceData = {
                 id: invoiceID,
                 lectures: lectureID,
                 member: internals.dataRowSelected._id,
                 date: $("#invoiceDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+                dateExpire: $("#invoiceDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', ''),
                 lectureActual: replaceAll($("#invoiceLectureActual").val(), '.', '').replace(' ', ''),
                 lectureLast: replaceAll($("#invoiceLectureLast").val(), '.', '').replace(' ', ''),
@@ -922,6 +949,10 @@ async function createInvoice(lectureID,invoiceID,member){
                 consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '')
+            }
+
+            if($.isNumeric($("#invoiceNumber").val())){
+                invoiceData.number = $("#invoiceNumber").val()
             }
 
             /*if(services.length>0){
@@ -952,171 +983,333 @@ async function createInvoice(lectureID,invoiceID,member){
     }
 }
 
-async function printInvoice(type,id) {
+async function printInvoice(type,memberID,invoiceID) {
 
-    console.log(type,id)
+    let memberData = await axios.post('/api/memberSingle', {id: memberID})
+    let member = memberData.data
 
-    return
+    let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
+    let invoice = invoiceData.data
+    console.log(invoice)
 
-    let movement = await axios.post('api/movementVoucher', {id: id, type: type})
-    let voucher = movement.data
+    let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
+    let lectures = lecturesData.data
 
-    //TESTING//
-    if(!voucher.driverGuide) voucher.driverGuide='0'
-    if(!voucher.driverSeal) voucher.driverSeal='0'
+    let parametersData = await axios.get('/api/parameters')
+    let parameters = parametersData.data
 
-    //let doc = new jsPDF('p', 'pt', 'letter')
-    let doc = new jsPDF('p', 'pt', [302, 451])
 
-    let pdfX = 20
+    let docName = '', memberName = ''
+    if(type=='personal'){
+        docName = 'BOLETA ELECTRÓNICA'
+        memberName = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
+    }else{
+        docName = 'FACTURA ELECTRÓNICA'
+        memberName = member.enterprise.name
+    }
+
+    let doc = new jsPDF('p', 'pt', 'letter')
+    //let doc = new jsPDF('p', 'pt', [302, 451])
+
+    let pdfX = 150
     let pdfY = 20
 
-    doc.setFontSize(10)
+    doc.setFontSize(12)
+    doc.addImage(logoWallImg, 'PNG', 0, 0, doc.internal.pageSize.getWidth() , doc.internal.pageSize.getHeight() ) //Fondo
 
-    doc.addImage(logoImg, 'PNG', 90, pdfY, 120, 60, 'center')
+    doc.addImage(logoImg, 'PNG', 112, pdfY, 77, 60)
     pdfY += 60
-    doc.text(`DEPÓSITO CONTENEDORES DDMC LTDA.`, doc.internal.pageSize.width/2, pdfY + 20, 'center')
-    doc.text(`Los Aromos 451 Aguas Buenas - San Antonio`, doc.internal.pageSize.width/2, pdfY + 30, 'center')
+    doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX, pdfY + 23, 'center')
+    doc.text(`Y SERVICIOS SANITARIOS LOS CRISTALES`, pdfX, pdfY + 36, 'center')
+    doc.text(`Los Cristales S/N`, pdfX, pdfY + 49, 'center')
 
-    doc.setFontSize(12)
+
+    pdfY = 35
+    doc.setDrawColor(249, 51, 6)
+    doc.setLineWidth(3)
+    doc.line(pdfX + 209, pdfY - 10, pdfX + 411, pdfY - 10)//Línea Superior
+    doc.line(pdfX + 209, pdfY + 60, pdfX + 411, pdfY + 60)//Línea Inferior
+    doc.line(pdfX + 210, pdfY - 10, pdfX + 210, pdfY + 60)//Línea Izquierda
+    doc.line(pdfX + 410, pdfY - 10, pdfX + 410, pdfY + 60)//Línea Derecha
+
+    doc.setFontSize(13)
+    doc.setTextColor(249, 51, 6)
+    doc.text('R.U.T: 71.569.700-9', pdfX + 310, pdfY + 5, 'center')
+    doc.text(docName, pdfX + 310, pdfY + 20, 'center')
+
     doc.setFontType('bold')
+    doc.text('N° '+invoice.number, pdfX + 310, pdfY + 50, 'center')
+    doc.setFontSize(11)
+    doc.text('S.I.I. - CURICO', pdfX + 310, pdfY + 75, 'center')
 
-    if(type=="in"){
-        doc.text(`INGRESO N°: ${(voucher.numberIn) ? (voucher.numberIn) : '-----'}`, doc.internal.pageSize.width/2, pdfY + 45, 'center')
-    }else if(type=="out"){
-        doc.text(`SALIDA N°: ${(voucher.numberOut) ? (voucher.numberOut) : '-----'}`, doc.internal.pageSize.width/2, pdfY + 45, 'center')
-    }else if(type=="transferIn"){
-        doc.text(`ENTRADA TRASPASO N°: ${(voucher.transferIn) ? (voucher.transferIn) : '-----'}`, doc.internal.pageSize.width/2, pdfY + 45, 'center')
-    }else if(type=="transferOut"){
-        doc.text(`SALIDA TRASPASO N°: ${(voucher.transferOut) ? (voucher.transferOut) : '-----'}`, doc.internal.pageSize.width/2, pdfY + 45, 'center')
-    }
-
-    pdfY += 72
-
-    doc.text(voucher.containerNumber, pdfX + 90, pdfY + 2)
+    doc.setDrawColor(0, 0, 0)
+    doc.setTextColor(0, 0, 0)
 
     doc.setFontSize(10)
     doc.setFontType('normal')
-    doc.text(`Contenedor`, pdfX, pdfY)
-    doc.text(`Tipo`, pdfX, pdfY + 15)
-    doc.text(`Llegada`, pdfX, pdfY + 27)
-    doc.text(`Salida`, pdfX, pdfY + 39)
-    doc.text(`Tracto`, pdfX, pdfY + 51)
-    doc.text(`Guía`, pdfX, pdfY + 63)
-    doc.text(`Sello`, pdfX, pdfY + 75)
-    doc.text(`RUT Conductor`, pdfX, pdfY + 87)
-    doc.text(`Nombre Conductor`, pdfX, pdfY + 99)
-    doc.text(`RUT Cliente`, pdfX, pdfY + 111)
-    //doc.text(`Cliente`, pdfX, pdfY + 95)
+    doc.text('Fecha Emisión ', pdfX + 220, pdfY + 100)
+    doc.text('Mes de Pago ', pdfX + 220, pdfY + 113)
+
     doc.setFontType('bold')
-    //doc.text(voucher.clientName.toUpperCase(), pdfX, pdfY + 127)
-    doc.text(voucher.clientName.toUpperCase(), doc.internal.pageSize.width/2, pdfY + 127, 'center')
-    doc.setFontType('normal')
-    //doc.text(`Ubicación`, pdfX, pdfY + 105)
-
-    doc.text(voucher.containerLarge, pdfX + 90, pdfY + 15)
-
-    console.log("voucher",voucher)
-
-    if(type=="transferIn" || type=="transferOut"){
-        doc.text(moment(voucher.datetimeOut).format('DD/MM/YYYY HH:mm'), pdfX + 90, pdfY + 27)
-    }else{
-        doc.text(moment(voucher.datetimeIn).format('DD/MM/YYYY HH:mm'), pdfX + 90, pdfY + 27)
-    }
-
-    if(type=="in"){
-        doc.text('-', pdfX + 90, pdfY + 35)
-    }else{
-        doc.text(moment(voucher.datetimeOut).format('DD/MM/YYYY HH:mm'), pdfX + 90, pdfY + 39)
-    }
-    
-    doc.text(voucher.driverPlate, pdfX + 90, pdfY + 51)
-    doc.text(voucher.driverGuide, pdfX + 90, pdfY + 63)
-    doc.text(voucher.driverSeal, pdfX + 90, pdfY + 75)
-    doc.text(voucher.driverRUT, pdfX + 90, pdfY + 87)
-    doc.text(voucher.driverName, pdfX + 90, pdfY + 99)
-    doc.text(voucher.clientRUT, pdfX + 90, pdfY + 111)
-
-    
-    //doc.text(voucher.clientName.toUpperCase(), pdfX + 90, pdfY + 95)
-    //doc.text('', pdfX + 90, pdfY + 105)
+    doc.text(moment(invoice.date).utc().format('DD / MM / YYYY'), pdfX + 300, pdfY + 100)
+    doc.text(getMonthString(invoice.lectures.month) + ' / ' + invoice.lectures.year, pdfX + 300, pdfY + 113)
 
 
-    //doc.text(pdfX + 230, pdfY + 30, `Estado: ${internals.newSale.status}`, { align: 'center' }) // status right
-    //doc.text(pdfX + 230, pdfY + 45, `Fecha: ${moment(auxHourPdf).format('DD/MM/YYYY HH:mm')}`, { align: 'center' }) // creationDate right
-    pdfY += 139
-
-    doc.setLineWidth(0.5)
-    doc.line(pdfX, pdfY, pdfX + 220, pdfY)
-
-    if(!voucher.extraDayNet || type=="in"){
-        doc.text(`NETO`, pdfX, pdfY + 27)
-        doc.text(`IVA`, pdfX, pdfY + 39)
-        doc.setFontType('bold')
-        doc.text(`TOTAL`, pdfX, pdfY + 51)
-        doc.setFontType('normal')
-
-        doc.text(`$`, pdfX + 150, pdfY + 27)
-        doc.text(`$`, pdfX + 150, pdfY + 39)
-        doc.setFontType('bold')
-        doc.text(`$`, pdfX + 150, pdfY + 51)
-        doc.setFontType('normal')
-
-        doc.text(voucher.service, pdfX, pdfY + 15)
-        doc.text(dot_separators(voucher.net), pdfX + 210, pdfY + 27, 'right')
-        doc.text(dot_separators(voucher.iva), pdfX + 210, pdfY + 39, 'right')
-        doc.setFontType('bold')
-        doc.text(dot_separators(voucher.total), pdfX + 210, pdfY + 51, 'right')
-        doc.setFontType('normal')
-        pdfY += 63
-
-    }else{
-
-        let extraDays = moment(voucher.datetimeOut).diff(moment(voucher.datetimeIn), 'days')-5
-
-        doc.text(`NETO`, pdfX, pdfY + 27)
-        doc.text(`DÍAS EXTRA (${extraDays} x $${dot_separators(voucher.extraDayServiceNet)})`, pdfX, pdfY + 39)
-        doc.text(`IVA`, pdfX, pdfY + 51)
-        doc.setFontType('bold')
-        doc.text(`TOTAL`, pdfX, pdfY + 63)
-        doc.setFontType('normal')
-
-
-        doc.text(`$`, pdfX + 150, pdfY + 27)
-        doc.text(`$`, pdfX + 150, pdfY + 39)
-        doc.text(`$`, pdfX + 150, pdfY + 51)
-        doc.setFontType('bold')
-        doc.text(`$`, pdfX + 150, pdfY + 63)
-        doc.setFontType('normal')
-
-        doc.text(voucher.service, pdfX, pdfY + 15)
-        doc.text(dot_separators(voucher.net), pdfX + 210, pdfY + 27, 'right')
-        doc.text(dot_separators(voucher.extraDayNet), pdfX + 210, pdfY + 39, 'right')
-        doc.text(dot_separators(voucher.iva+voucher.extraDayIva), pdfX + 210, pdfY + 51, 'right')
-        doc.setFontType('bold')
-        doc.text(dot_separators(voucher.total+voucher.extraDayTotal), pdfX + 210, pdfY + 63, 'right')
-        doc.setFontType('normal')
-        pdfY += 75
-    }
-
-
-    doc.setLineWidth(0.5)
-    doc.line(pdfX, pdfY, pdfX + 220, pdfY)
-
-
-    /*doc.setFontType('normal')
-    doc.text(pdfX + 380, pdfY + 60, 'TOTAL:')
-    doc.text(pdfX + 450, pdfY + 60, '$')
-    doc.setFontType('bold')
+    pdfX = 30
+    pdfY += 120
     doc.setFontSize(12)
-    //doc.text(pdfX + 470, pdfY + 60, dot_separators(internals.newSale.total))
-    var subtotalvar =  dot_separators(internals.newSale.total) 
-    var textWidth = doc.getStringUnitWidth(subtotalvar) * doc.internal.getFontSize() / doc.internal.scaleFactor;
-    var textOffset = doc.internal.pageSize.width - textWidth - 50;
-    doc.text(textOffset, pdfY + 60, subtotalvar)
-*/
+    doc.text('SOCIO N° ' + member.number, pdfX, pdfY)
+    doc.text('R.U.T ' + member.rut, pdfX, pdfY + 13)
+    doc.setFontSize(13)
+    doc.text(memberName.toUpperCase(), pdfX, pdfY + 28)
 
-    doc.autoPrint()
+
+   
+
+    pdfY += 60
+
+
+    //////////////TABLA CONSUMOS//////////////
+    doc.setFillColor(26, 117, 187)
+    doc.rect(pdfX - 3, pdfY - 10, 265, 13, 'F')
+
+    doc.setFontSize(9)
+    doc.setFontType('bold')
+    doc.setTextColor(255, 255, 255)
+    doc.text('Su consumo en m3 de este mes (1m3 = 1.000 lts de agua)', pdfX, pdfY)
+
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Lectura Actual ' + moment(invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 20)
+    doc.text('Lectura Anterior ' + moment(invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 33)
+    doc.text('Límite Sobreconsumo (m3)', pdfX, pdfY + 46)
+    doc.text('Consumo Calculado', pdfX, pdfY + 59)
+    doc.setFontType('bold')
+    doc.text('Consumo Facturado', pdfX, pdfY + 85)
+
+
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+
+    doc.text(dot_separators(invoice.lectureActual), pdfX + 250, pdfY + 20, 'right')
+    doc.text(dot_separators(invoice.lectureLast), pdfX + 250, pdfY + 33, 'right')
+    doc.text(dot_separators(parameters.consumptionLimit), pdfX + 250, pdfY + 46, 'right')
+    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 59, 'right')
+    doc.setFontType('bold')
+    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 85, 'right') //Consultar diferencia facturado vs calculado
+
+
+
+    //////////////TABLA VALORES//////////////
+    pdfX += 300
+
+    doc.setFillColor(26, 117, 187)
+    doc.rect(pdfX - 3, pdfY - 10, 265, 13, 'F')
+
+    doc.setFontSize(9)
+    doc.setFontType('bold')
+    doc.setTextColor(255, 255, 255)
+    doc.text('Detalle de consumos y servicios en pesos de este mes', pdfX, pdfY)
+
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Cargo Fijo', pdfX, pdfY + 20)
+    doc.text('Consumo Agua Potable ', pdfX, pdfY + 33)
+    if(invoice.subsidyPercentage>0){
+        doc.text('Subsidio (' + invoice.subsidyPercentage.toString() + '%)', pdfX, pdfY + 46)
+    }
+    doc.text('SubTotal Consumo Mes', pdfX, pdfY + 72)
+    doc.text('Saldo Anterior', pdfX, pdfY + 85)
+    doc.setFontType('bold')
+    doc.text('Monto Total', pdfX, pdfY + 111)
+
+
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+
+    doc.text(dot_separators(invoice.charge), pdfX + 250, pdfY + 20, 'right')
+    doc.text(dot_separators(invoice.lectureResult * invoice.meterValue), pdfX + 250, pdfY + 33, 'right')
+    if(invoice.subsidyPercentage>0){
+        doc.text('-' + dot_separators(invoice.subsidyValue), pdfX + 250, pdfY + 46, 'right')
+    }
+    doc.text(dot_separators(invoice.charge + invoice.consumption), pdfX + 250, pdfY + 72, 'right')
+    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + 85, 'right')
+    doc.setFontType('bold')
+    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 111, 'right')
+    
+    doc.setFontSize(12)
+
+    doc.setFillColor(23, 162, 184)
+    doc.rect(pdfX - 3, pdfY + 137, 260, 35, 'F')
+
+    doc.setTextColor(255, 255, 255)
+    doc.text('TOTAL A PAGAR', pdfX, pdfY + 150)
+    doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 165)
+    doc.text('$ ' + dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 150, 'right')
+    doc.text(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 165, 'right')
+    
+    
+    doc.setFontSize(8)
+    doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+    let net = parseInt(invoice.invoiceTotal / 1.19)
+    let iva = invoice.invoiceTotal - net
+    doc.text('Datos Tributarios: ', pdfX + 100, pdfY + 180)
+    doc.text('Neto ', pdfX + 190, pdfY + 180)
+    doc.text('IVA ', pdfX + 190, pdfY + 190)
+    doc.text(dot_separators(net), pdfX + 250, pdfY + 180, 'right')
+    doc.text(dot_separators(iva), pdfX + 250, pdfY + 190, 'right')
+
+    doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 200, 260, 106)
+
+    ///////GRÁFICO CONSUMOS/////
+
+    pdfX = 30
+    pdfY += 200
+    doc.setFontSize(9)
+    doc.setFontType('bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Su consumo en m3 durante los últimos 13 meses fue:', pdfX, pdfY)
+
+
+    doc.setDrawColor(0, 0, 0)
+    doc.setLineWidth(1)
+    pdfX += 10
+    doc.line(pdfX, pdfY + 10, pdfX, pdfY + 120)//Línea Izquierda
+    doc.line(pdfX, pdfY + 120, pdfX + 250, pdfY + 120)//Línea Inferior
+
+    //DEFINICIÓN DE LECTURAS A MOSTRAR (MÁXIMO 13)
+    let lastInvoices = [], flag = 0, maxValue = 0
+    for(let j=0; j<lectures.length; j++){
+        if(lectures[j]._id==invoice.lectures._id){
+            flag++
+        }
+
+        if(flag>0 && flag<=13){
+            lastInvoices.push(lectures[j].invoice)
+            flag++
+
+            if(lectures[j].invoice.lectureResult>maxValue){
+                maxValue = lectures[j].invoice.lectureResult
+            }
+        }
+    }
+    
+    let meterPoints = parseInt(100 / maxValue) //Puntos en PDF por mt3
+
+    pdfY += 25
+    doc.setFontSize(7)
+    doc.setFontType('normal')
+        
+    doc.setDrawColor(199, 199, 199)
+
+    if(maxValue < 5) {
+        pdfY -= 5
+        //Línea límite según lectura máxima
+        doc.text(maxValue.toString(), pdfX - 2, pdfY, 'right')
+        doc.line(pdfX, pdfY, pdfX + 250, pdfY)
+        
+        if(maxValue == 4){
+            doc.text('3', pdfX - 2, (pdfY + 2) + 25, 'right')
+            doc.text('2', pdfX - 2, (pdfY + 2) + 50, 'right')
+            doc.text('1', pdfX - 2, (pdfY + 2) + 77, 'right')
+            doc.line(pdfX, pdfY + 25, pdfX + 250, pdfY + 25)
+            doc.line(pdfX, pdfY + 50, pdfX + 250, pdfY + 50)
+            doc.line(pdfX, pdfY + 75, pdfX + 250, pdfY + 75)
+        
+        }else if(maxValue == 3){
+            doc.text('2', pdfX - 2, pdfY + 34, 'right')
+            doc.text('1', pdfX - 2, pdfY + 69, 'right')
+            doc.line(pdfX, pdfY + 34, pdfX + 250, pdfY + 34)
+            doc.line(pdfX, pdfY + 69, pdfX + 250, pdfY + 69)
+        }else if(maxValue == 2) {
+            doc.text('1', pdfX - 2, pdfY + 51, 'right')
+            doc.line(pdfX, pdfY + 51, pdfX + 250, pdfY + 51)
+        }
+        
+        pdfY += 102
+    
+    }else if(maxValue % 4 == 0){
+
+        //Línea límite según lectura máxima
+        doc.text(maxValue.toString(), pdfX - 2, pdfY, 'right')
+        doc.line(pdfX, pdfY, pdfX + 250, pdfY)
+
+        let min = parseInt(maxValue / 4)
+        doc.text((min * 3).toString(), pdfX - 2, pdfY + (min * meterPoints), 'right')
+        doc.text((min * 2).toString(), pdfX - 2, pdfY + (min * 2 * meterPoints), 'right')
+        doc.text((min).toString(), pdfX - 2, pdfY + (min * 3 * meterPoints), 'right')
+
+        doc.line(pdfX, pdfY + (min * meterPoints), pdfX + 250, pdfY + (min * meterPoints))
+        doc.line(pdfX, pdfY + (min * 2 * meterPoints), pdfX + 250, pdfY + (min * 2 * meterPoints))
+        doc.line(pdfX, pdfY + (min * 3 * meterPoints), pdfX + 250, pdfY + (min * 3 * meterPoints))
+        
+        pdfY += 102
+    
+    }else{
+        pdfY -= 5
+        //Línea límite según lectura máxima
+        doc.text(maxValue.toString(), pdfX - 2, pdfY + (102 - (maxValue * meterPoints)), 'right')
+        doc.line(pdfX, pdfY + (100 - (maxValue * meterPoints)), pdfX + 250, pdfY + (100 - (maxValue * meterPoints)))
+        
+        let min = parseInt(maxValue / 4)
+        
+        pdfY += 102
+
+        doc.text((min * 4).toString(), pdfX - 2, (pdfY + 2) - (min * 4 * meterPoints), 'right')
+        doc.text((min * 3).toString(), pdfX - 2, (pdfY + 2) - (min * 3 * meterPoints), 'right')
+        doc.text((min * 2).toString(), pdfX - 2, (pdfY + 2) - (min * 2 * meterPoints), 'right')
+        doc.text((min).toString(), pdfX - 2, (pdfY + 2) - (min * meterPoints), 'right')
+
+        doc.line(pdfX, pdfY - (min * meterPoints), pdfX + 250, pdfY - (min * meterPoints))//Línea Inferior
+        doc.line(pdfX, pdfY - (min * 2 * meterPoints), pdfX + 250, pdfY - (min * 2 * meterPoints))//Línea Inferior
+        doc.line(pdfX, pdfY - (min * 3 * meterPoints), pdfX + 250, pdfY - (min * 3 * meterPoints))//Línea Inferior
+        doc.line(pdfX, pdfY - (min * 4 * meterPoints), pdfX + 250, pdfY - (min * 4 * meterPoints))//Línea Inferior
+    }
+   
+    doc.text('0', pdfX - 2, pdfY, 'right')
+
+    //GRÁFICO DE CONSUMOS
+    pdfY = 435
+    pdfX = 263
+    //for(let i=lastInvoices.length; i>0; i--){
+    //for(let i=13; i>0; i--){ Max month test
+    doc.setFontSize(8)
+
+
+
+    
+    for(let i=0; i<lastInvoices.length; i++){
+
+        if(i==0){
+            doc.setFillColor(23, 162, 184)
+        }else{
+            doc.setFillColor(82, 82, 82)
+        }
+
+        let offset = 100 - (lastInvoices[i].lectureResult * meterPoints) //Determina posición inicial respecto al máximo del gráfico
+        
+        doc.rect(pdfX, pdfY + offset, 11, 99 - offset, 'F')
+        //Posición X (descendente)
+        //Posición Y suma offset según lectura
+        //11 = Ancho ~ 99 - offset = Largo
+        doc.text(lastInvoices[i].lectureResult.toString(), pdfX + 5, pdfY + offset - 5, 'center')
+        doc.text(getMonthShortString(lastInvoices[i].lectures.month), pdfX + 7, pdfY + 108, 'center')
+        pdfX -= 18
+    }
+
+    pdfX = 30
+    doc.setFillColor(26, 117, 187)
+    doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
+
+    doc.setFontSize(10)
+    doc.setFontType('bold')
+    doc.setTextColor(255, 255, 255)
+    doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight()-48)
+
+    //doc.autoPrint()
     window.open(doc.output('bloburl'), '_blank')
     //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
 }

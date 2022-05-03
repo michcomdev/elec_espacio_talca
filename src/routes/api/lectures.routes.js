@@ -90,10 +90,12 @@ export default [
                         member: payload.member
                     }
 
-                    let lectures = await Lectures.find(query).sort({'date' : 'descending'}).lean()
-                    let invoices = await Invoices.find(query).sort({'date' : 'descending'}).lean()
+                    let lectures = await Lectures.find(query).sort({'year' : 'descending', 'month' : 'descending'}).lean()
+                    //let invoices = await Invoices.find(query).sort({'date' : 'descending'}).populate(['lectures']).lean()
+                    let invoices = await Invoices.find(query).sort({'date' : 'descending'}).lean().populate(['lectures'])
+
                     for(let i=0;i<lectures.length;i++){
-                        lectures[i].invoice = invoices.find(x => x.lectures.toString() === lectures[i]._id.toString())
+                        lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
                     }
                 
                     return lectures
@@ -124,14 +126,14 @@ export default [
                 try {
                     let payload = request.payload   
 
-                    let lecture = await Lectures.findById(payload.id).lean().populate()
-                    let lecturesLast = await Lectures.find({member: lecture.member}).sort({'date' : 'ascending'}).lean()
+                    let lecture = await Lectures.findById(payload.id).lean()
+                    let lecturesLast = await Lectures.find({member: lecture.member}).sort({'year' : 'ascending', 'month' : 'ascending'}).lean()
                     let lastLecture = 0
-
+                    
                     for(let i=0;i<lecturesLast.length;i++){
                         if(lecturesLast[i]._id.toString()===lecture._id.toString()){
                             if(i>0){
-                                lastLecture = lecturesLast[i-1].lecture
+                                lastLecture = lecturesLast[i-1].logs[lecturesLast[i-1].logs.length-1].lecture
                             }
                             i = lecturesLast.length
                         }
@@ -167,18 +169,36 @@ export default [
                 try {
                     let payload = request.payload   
                     let date = new Date(payload.date)
-                    let query = {
-                        users: payload.users,
-                        date: date,
-                        member: payload.member,
-                        lecture: payload.lecture
+
+                    let lectures = await Lectures.find({member: payload.member, month: date.getMonth() + 1, year: date.getFullYear()}).lean()
+
+                    if(lectures[0]){
+                        let lecture = await Lectures.findById(lectures[0]._id)
+                        lecture.logs.push({
+                            users: payload.users,
+                            date: date,
+                            lecture: payload.lecture
+                        })
+                        const response = await lecture.save()
+                        return response
+
+                    }else{
+                        let query = {
+                            member: payload.member,
+                            month: date.getMonth() + 1,
+                            year: date.getFullYear(),
+                            logs: [{
+                                users: payload.users,
+                                date: date,
+                                lecture: payload.lecture
+                            }]
+                        }
+                        let lecture = new Lectures(query)
+                        const response = await lecture.save()
+                        return response
                     }
 
-                    let lecture = new Lectures(query)
-                    const response = await lecture.save()
-
-                    return response
-
+    
                 } catch (error) {
                     console.log(error)
 

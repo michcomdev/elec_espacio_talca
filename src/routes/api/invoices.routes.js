@@ -45,7 +45,7 @@ export default [
                 try {
                     let payload = request.payload   
 
-                    let invoice = await Invoices.findById(payload.id).lean()
+                    let invoice = await Invoices.findById(payload.id).lean().populate(['lectures'])
 
                     return invoice
 
@@ -75,13 +75,12 @@ export default [
                 try {
                     let payload = request.payload
 
-                    console.log('payload',payload)
-
                     let date = new Date(payload.date)
 
                     let query = {
                         lectures: payload.lectures,
                         member: payload.member,
+                        dateExpire: payload.dateExpire,
                         date: payload.date,
                         charge: payload.charge,
                         lectureActual: payload.lectureActual,
@@ -95,7 +94,9 @@ export default [
                         invoiceTotal: payload.invoiceTotal
                     }
 
-                    console.log('query',query)
+                    if(payload.number){
+                        query.number = payload.number
+                    }
 
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
@@ -112,9 +113,11 @@ export default [
             },
             validate: {
                 payload: Joi.object().keys({
+                    number: Joi.number().allow(0).optional(),
                     lectures: Joi.string().allow(''),
                     member: Joi.string().allow(''),
                     date: Joi.string().allow(''),
+                    dateExpire: Joi.string().allow(''),
                     charge: Joi.number().allow(0),
                     lectureActual: Joi.number().allow(0),
                     lectureLast: Joi.number().allow(0),
@@ -138,16 +141,17 @@ export default [
             tags: ['api'],
             handler: async (request, h) => {
                 try {
-                    let payload = request.payload   
+                    let payload = request.payload
 
                     let invoices = await Invoices.findById(payload.id)
 
-                    console.log('payload', payload)
-                    console.log('invoices', invoices)
-                   
                     invoices.lectures = payload.lectures
+                    if(payload.number){
+                        invoices.number = payload.number
+                    }
                     invoices.member = payload.member
                     invoices.date = payload.date
+                    invoices.dateExpire = payload.dateExpire
                     invoices.charge = payload.charge
                     invoices.lectureActual = payload.lectureActual
                     invoices.lectureLast = payload.lectureLast
@@ -174,9 +178,11 @@ export default [
             validate: {
                 payload: Joi.object().keys({
                     id: Joi.string().allow(''),
+                    number: Joi.number().allow(0).optional(),
                     lectures: Joi.string().allow(''),
                     member: Joi.string().allow(''),
                     date: Joi.string().allow(''),
+                    dateExpire: Joi.string().allow(''),
                     charge: Joi.number().allow(0),
                     lectureActual: Joi.number().allow(0),
                     lectureLast: Joi.number().allow(0),

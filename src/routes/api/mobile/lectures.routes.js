@@ -10,7 +10,7 @@ export default [
         method: 'POST',
         path: '/api/mobile/lectureSave',
         options: {
-            auth: false,
+            auth: 'jwt',
             description: 'create lecture',
             notes: 'create lecture',
             tags: ['api'],
