@@ -507,7 +507,7 @@ function createModalBody(){
             <div class="row">
                 <div class="col-md-6">
                     <br/>
-                    <button class="btn btn-primary" onclick="addLecture()"><i class="fas fa-plus-circle"></i> Agregar Lectura Manual</button>
+                    <button class="btn btn-primary" onclick="addLecture()" disabled><i class="fas fa-plus-circle"></i> Agregar Lectura Manual</button>
                     <br/>
                     <br/>
                 </div>

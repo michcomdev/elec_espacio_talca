@@ -156,14 +156,12 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
 
     $('#saveMember').on('click', async function () {
 
-        $("#memberRUT").val('17.172.852-5')
-        $("#memberName").val('Enzo')
-        $("#memberLastname1").val('Latorre')
-        $("#memberLastname2").val('Barra')
-        $("#memberAddress").val('Calle Uno 2301')
-        $("#memberVillage").val('6263065165a0afa3096a6a6f')
-
-        let waterMeters = []
+        let waterMeters = [{
+            number: $('#memberWaterNumber').val(),
+            diameter: $('#memberWaterDiameter').val(),
+            state: $('#memberWaterState').val(),
+            dateStart: $('#memberWaterDate').data('daterangepicker').startDate.format('YYYY-MM-DD')
+        }]
         let subsidies = []
 
         let memberData = {
@@ -191,8 +189,8 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             subsidies: subsidies,
             email: $('#memberEmail').val(),
             phone: $('#memberPhone').val(),
-            dateStart: $('#memberDateStart').val(),
-            dateEnd: $('#memberDateEnd').val()
+            dateStart: $('#memberDateStart').data('daterangepicker').startDate.format('YYYY-MM-DD'),
+            dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD')
         }
 
         
@@ -288,6 +286,13 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     $('#memberDateStart').val(moment(member.dateStart).utc().format('DD/MM/YYYY'))
     $('#memberDateEnd').val(moment(member.dateEnd).utc().format('DD/MM/YYYY'))
 
+    if(member.waterMeters.length>0){
+        $('#memberWaterNumber').val(member.waterMeters[0].number)
+        $('#memberWaterDiameter').val(member.waterMeters[0].diameter)
+        $('#memberWaterState').val(member.waterMeters[0].state)
+        $('#memberWaterDate').val(moment(member.waterMeters[0].dateStart).utc().format('DD/MM/YYYY'))
+    }
+
     $('.datepicker').daterangepicker({
         opens: 'left',
         locale: dateRangePickerDefaultLocale,
@@ -302,7 +307,12 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     }, 500)
 
     $('#saveMember').on('click', async function () {
-        let waterMeters = []
+        let waterMeters = [{
+            number: $('#memberWaterNumber').val(),
+            diameter: $('#memberWaterDiameter').val(),
+            state: $('#memberWaterState').val(),
+            dateStart: $('#memberWaterDate').data('daterangepicker').startDate.format('YYYY-MM-DD')
+        }]
         let subsidies = []
         let memberData = {
             id: internals.dataRowSelected._id,
@@ -575,6 +585,41 @@ function setModal(){
                                     Teléfono
                                     <input id="memberPhone" type="text" class="form-control form-control-sm border-input">
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="divPersonal" class="col-md-6">
+                    <div class="card border-primary">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h6>MEDIDOR</h6>
+                                </div>
+                                <div class="col-md-3">
+                                    Número de Medidor
+                                    <input id="memberWaterNumber" type="text" class="form-control form-control-sm border-input">
+                                </div>
+                                <div class="col-md-3">
+                                    Diámetro
+                                    <select id="memberWaterDiameter" class="form-select form-select-sm custom-select">
+                                        <option value="UnCuarto">UN CUARTO</option>
+                                        <option value="Medio">MEDIO</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    Diámetro
+                                    <select id="memberWaterState" class="form-select form-select-sm custom-select">
+                                        <option value="Activo">ACTIVO</option>
+                                        <option value="Inactivo">INACTIVO</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    Fecha Ingreso
+                                    <input id="memberWaterDate" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
+                                </div>
+                                
                             </div>
                         </div>
                     </div>

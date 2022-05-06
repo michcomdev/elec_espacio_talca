@@ -1,4 +1,5 @@
 import Member from '../../models/Member'
+import Parameters from '../../models/Parameters'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 
@@ -89,8 +90,11 @@ export default [
 
                     console.log(address)
 
+                    let parameters = await Parameters.findById('6263033665a0afa3096a6a62')
+                    let number = parameters.memberNumber
+
                     let member = new Member({
-                        number: payload.number,
+                        number: number,
                         rut: payload.rut,
                         type: payload.type,
                         personal: {
@@ -104,6 +108,7 @@ export default [
                             category: payload.enterprise.category,
                             address: payload.enterprise.address
                         },
+                        waterMeters: payload.waterMeters,
                         address: address,
                         //FALTA WATERMETER & SUBSIDIES
                         email: payload.email,
@@ -113,6 +118,9 @@ export default [
                     })
 
                     const response = await member.save()
+
+                    parameters.memberNumber++
+                    await parameters.save()
 
                     return response
 
@@ -148,7 +156,10 @@ export default [
                         town: Joi.string().optional().allow('')
                     }),
                     waterMeters: Joi.array().items(Joi.object().keys({
-                        waterMeter: Joi.string().optional().allow('')
+                        number: Joi.string().optional().allow(''),
+                        diameter: Joi.string().optional().allow(''),
+                        state: Joi.string().optional().allow(''),
+                        dateStart: Joi.string().optional().allow('')
                     })),
                     subsidies: Joi.array().items(Joi.object().keys({
                         subsidy: Joi.string().optional().allow('')
@@ -212,6 +223,8 @@ export default [
                         address.town = payload.address.town
                     }
 
+                    member.waterMeters = payload.waterMeters
+
                     member.address = address
                     //FALTA WATERMETER & SUBSIDIES
                     member.email = payload.email
@@ -255,7 +268,10 @@ export default [
                         town: Joi.string().optional().allow('')
                     }),
                     waterMeters: Joi.array().items(Joi.object().keys({
-                        waterMeter: Joi.string().optional().allow('')
+                        number: Joi.string().optional().allow(''),
+                        diameter: Joi.string().optional().allow(''),
+                        state: Joi.string().optional().allow(''),
+                        dateStart: Joi.string().optional().allow('')
                     })),
                     subsidies: Joi.array().items(Joi.object().keys({
                         subsidy: Joi.string().optional().allow('')
