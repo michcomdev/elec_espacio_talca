@@ -1197,8 +1197,8 @@ async function printInvoice(type,memberID,invoiceID) {
         }
     }
     
-    let meterPoints = parseInt(100 / maxValue) //Puntos en PDF por mt3
-
+    let meterPoints = 100 / maxValue //Puntos en PDF por mt3
+    
     pdfY += 25
     doc.setFontSize(7)
     doc.setFontType('normal')
