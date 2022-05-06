@@ -17,6 +17,7 @@ export default [
             handler: async (request, h) => {
                 try {
                     let payload = request.payload
+                    let credentials = request.auth.credentials
 
                     let queryMember = {
                         waterMeters: {
@@ -32,17 +33,43 @@ export default [
                         return 'Medidor no registrado'
                     }
                     
-                    let query = {
-                        users: payload.users,
+                    /*let query = {
+                        users: credentials.id,
                         //date: date,
                         member: member[0]._id,
                         lecture: payload.lecture
+                    }*/
+
+                    let date = new Date()
+                    let lectures = await Lectures.find({member: member[0]._id, month: date.getMonth() + 1, year: date.getFullYear()}).lean()
+
+                    if(lectures[0]){
+                        let lecture = await Lectures.findById(lectures[0]._id)
+                        lecture.logs.push({
+                            users: credentials.id,
+                            date: date,
+                            lecture: payload.lecture
+                        })
+                        const response = await lecture.save()
+                        return response
+
+                    }else{
+                        let query = {
+                            member: member[0]._id,
+                            month: date.getMonth() + 1,
+                            year: date.getFullYear(),
+                            logs: [{
+                                users: credentials.id,
+                                date: date,
+                                lecture: payload.lecture
+                            }]
+                        }
+                        let lecture = new Lectures(query)
+                        const response = await lecture.save()
+                        return response
                     }
 
-                    let lecture = new Lectures(query)
-                    const response = await lecture.save()
-
-                    return response
+                    return 'Error'
 
                 } catch (error) {
                     console.log(error)
@@ -54,7 +81,6 @@ export default [
             },
             validate: {
                 payload: Joi.object().keys({
-                    users: Joi.string(),
                     number: Joi.number(),
                     lecture: Joi.number()
                 })
