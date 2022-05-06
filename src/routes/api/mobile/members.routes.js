@@ -49,10 +49,12 @@ export default [
                         }
                     }
 
-                    console.log(query)
-
                     let member = await Member.find(query).lean()
                     
+                    if(member.length==0){
+                        return 'Medidor no registrado'
+                    }
+
                     let memberData = member[0]
                     
                     return memberData
