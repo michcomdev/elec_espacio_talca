@@ -25,17 +25,25 @@
 
 
 .row {
-    font-size: 14px;
+    font-size: 12px;
 }
 
 #tableLectures {
-    font-size: 14px;
+    font-size: 12px;
+}
+
+#tableMembers {
+    font-size: 12px;
 }
 
 .form-control {
-    font-size: 14px;
+    font-size: 12px;
 }
 
 #tableInvoice td, #tableInvoice input{
     text-align: right;
+}
+
+.btn {
+    font-size: 12px;
 }

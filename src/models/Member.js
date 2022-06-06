@@ -19,9 +19,7 @@ const memberSchema = new Schema({
     },
     address: {
         address: { type: String },
-        sector: { type: Schema.Types.ObjectId, ref: 'sectors' },
-        village: { type: Schema.Types.ObjectId, ref: 'villages' },
-        town: { type: Schema.Types.ObjectId, ref: 'towns' }
+        sector: { type: Schema.Types.ObjectId, ref: 'sectors' }
     },
     waterMeters: [{
         /*waterMeter: { type: Schema.Types.ObjectId, ref: 'watermeters' },*/

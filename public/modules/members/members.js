@@ -6,7 +6,7 @@ let internals = {
     dataRowSelected: {}
 }
 
-let sectors, villages, towns
+let sectors
 
 $(document).ready(async function () {
     getParameters()
@@ -81,11 +81,6 @@ async function getParameters() {
     let sectorsData = await axios.get('api/sectors')
     sectors = sectorsData.data
 
-    let villagesData = await axios.get('api/villages')
-    villages = villagesData.data
-
-    let townsData = await axios.get('api/towns')
-    towns = townsData.data
 }
 
 async function getMembersEnabled() {
@@ -181,9 +176,7 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             },
             address: {
                 address: $('#memberAddress').val(),
-                sector: $('#memberSector').val(),
-                village: $('#memberVillage').val(),
-                town: $('#memberTown').val()
+                sector: $('#memberSector').val()
             },
             waterMeters: waterMeters,
             subsidies: subsidies,
@@ -277,8 +270,6 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     $('#memberEnterpriseAddress').val(member.enterprise.address)
     $('#memberAddress').val(member.address.address)
     if(member.address.sector) $('#memberSector').val(member.address.sector)
-    if(member.address.village) $('#memberVillage').val(member.address.village)
-    if(member.address.town) $('#memberTown').val(member.address.town)
     //waterMeters: waterMeters,
     //subsidies: subsidies,
     $('#memberEmail').val(member.email)
@@ -331,9 +322,7 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             },
             address: {
                 address: $('#memberAddress').val(),
-                sector: $('#memberSector').val(),
-                village: $('#memberVillage').val(),
-                town: $('#memberTown').val()
+                sector: $('#memberSector').val()
             },
             waterMeters: waterMeters,
             subsidies: subsidies,
@@ -409,11 +398,11 @@ function validateMemberData(memberData) {
         $('#memberLastname1').css('border', '1px solid #e74c3c')
     }
 
-    if (memberData.address.address != '' && (memberData.address.sector != 0 || memberData.address.village != 0 || memberData.address.town != 0)) {
+    if (memberData.address.address != '' && memberData.address.sector != 0) {
         validationCounter++
         $('.address').css('border', '1px solid #E5E5E5')
     } else {
-        errorMessage += `<br>Sector, Villa o Población</b>`
+        errorMessage += `<br>Sector</b>`
         $('.address').css('border', '1px solid #e74c3c')
     }
     
@@ -454,7 +443,7 @@ function setModal(){
                                     RUT
                                     <input id="memberRUT" type="text" class="form-control form-control-sm border-input">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     Tipo
                                     <select id="memberType" class="form-select form-select-sm custom-select">
                                         <option value="personal">PERSONA</option>
@@ -551,31 +540,6 @@ function setModal(){
                                         }
                                     </select>
                                 </div>
-                                <div class="col-md-3">
-                                    Villa
-                                    <select id="memberVillage" class="form-select form-select-sm custom-select address">
-                                        <option value="0">-</option>
-                                        ${                      
-                                            villages.reduce((acc,el)=>{
-                                                acc += '<option value="'+el._id+'">'+el.name+'</option>'
-                                                return acc
-                                            },'')
-                                        }
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    Población
-                                    <select id="memberTown" class="form-select form-select-sm custom-select address">
-                                        <option value="0">-</option>
-                                        ${                      
-                                            towns.reduce((acc,el)=>{
-                                                acc += '<option value="'+el._id+'">'+el.name+'</option>'
-                                                return acc
-                                            },'')
-                                        }
-                                    </select>
-                                </div>
-
                                 <div class="col-md-4">
                                     Correo Electrónico
                                     <input id="memberEmail" type="text" class="form-control form-control-sm border-input">

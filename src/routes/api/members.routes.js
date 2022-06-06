@@ -81,12 +81,6 @@ export default [
                     if(payload.address.sector!=0){
                         address.sector = payload.address.sector
                     }
-                    if(payload.address.village!=0){
-                        address.village = payload.address.village
-                    }
-                    if(payload.address.town!=0){
-                        address.town = payload.address.town
-                    }
 
                     console.log(address)
 
@@ -151,9 +145,7 @@ export default [
                     }),
                     address: Joi.object().keys({
                         address: Joi.string().optional().allow(''),
-                        sector: Joi.string().optional().allow(''),
-                        village: Joi.string().optional().allow(''),
-                        town: Joi.string().optional().allow('')
+                        sector: Joi.string().optional().allow('')
                     }),
                     waterMeters: Joi.array().items(Joi.object().keys({
                         number: Joi.string().optional().allow(''),
@@ -216,13 +208,6 @@ export default [
                     if(payload.address.sector!=0){
                         address.sector = payload.address.sector
                     }
-                    if(payload.address.village!=0){
-                        address.village = payload.address.village
-                    }
-                    if(payload.address.town!=0){
-                        address.town = payload.address.town
-                    }
-
                     member.waterMeters = payload.waterMeters
 
                     member.address = address
@@ -263,9 +248,7 @@ export default [
                     }),
                     address: Joi.object().keys({
                         address: Joi.string().optional().allow(''),
-                        sector: Joi.string().optional().allow(''),
-                        village: Joi.string().optional().allow(''),
-                        town: Joi.string().optional().allow('')
+                        sector: Joi.string().optional().allow('')
                     }),
                     waterMeters: Joi.array().items(Joi.object().keys({
                         number: Joi.string().optional().allow(''),

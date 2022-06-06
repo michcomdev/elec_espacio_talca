@@ -1,10 +1,5 @@
-h2{
-    display: flex;
-    justify-content: center;
-}
-
 #filterBtn {
-    margin-top: 14px;
+    margin-top: 12px;
     background-color:#1C508A;
     color: beige;
 }
@@ -27,5 +22,21 @@ h2{
 }
 
 #modalMember {
-    font-size: 14px;
+    font-size: 12px;
+}
+
+#tableMembers {
+    font-size: 12px;
+}
+
+.btn {
+    font-size: 12px;
+}
+
+.form-control {
+    font-size: 12px;
+}
+
+.form-select {
+    font-size: 12px;
 }
