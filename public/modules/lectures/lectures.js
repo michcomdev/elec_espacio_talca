@@ -279,15 +279,25 @@ async function loadLectures(member){
     for(i=0;i<lectures.length;i++){
 
         let total = 0
-        let btn = ''
+        let btn = '', btnGenerate = '', btnSII = ''
         let invoiceID = 0
         if(lectures[i].invoice){
             total = dot_separators(lectures[i].invoice.invoiceTotal)
-            btn = `<button class="btn btn-sm btn-danger" onclick="printInvoice('${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+            btn = `<button class="btn btn-sm btn-info" onclick="printInvoice('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
             invoiceID = lectures[i].invoice._id
+            
+            if(lectures[i].invoice.number){
+                btnGenerate = `<button class="btn btn-sm btn-danger" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+            }else{
+                btnGenerate = `<button class="btn btn-sm btn-info" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+            }
+            if(lectures[i].invoice.token){
+                btnSII = `<button class="btn btn-sm btn-warning" onclick="showSIIPDF('${lectures[i].invoice.token}')"><img src="/public/img/logo_sii.png" style="width: 24px"/></button>`
+            }
         }else{
             total = 'NO CALCULADO'
-            btn = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+            btn = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+            btnGenerate = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
         }
         
         $('#tableLecturesBody').append(`
@@ -309,6 +319,12 @@ async function loadLectures(member){
                 </td>
                 <td style="text-align: center;">
                     ${btn}
+                </td>
+                <td style="text-align: center;">
+                    ${btnGenerate}
+                </td>
+                <td style="text-align: center;">
+                    ${btnSII}
                 </td>
             </tr>
         `)
@@ -333,9 +349,9 @@ async function loadLectures(member){
 function validateInvoiceData(productData) {
     let errorMessage = ''
     
-    if(!$.isNumeric(productData.number)){
+    /*if(!$.isNumeric(productData.number)){
         errorMessage += '<br>Número de Boleta/Factura'
-    }
+    }*/
     if(!$.isNumeric(productData.charge)){
         errorMessage += '<br>Cargo Fijo'
     }
@@ -424,13 +440,13 @@ function createModalBody(){
                                 <th colspan="3" style="text-align: center" id="invoiceTitle">Registro de Boleta/Factura</th>
                             </tr>
                         </thead>
-                        <tbody id="tableInvoiceBody">
-                            <tr>
+                        <tbody id="tableInvoiceBody">`
+                            /*<tr>
                                 <td>N° Documento</td>
                                 <td><input id="invoiceNumber" type="text" class="form-control form-control-sm border-input"></td>
                                 <td></td>
-                            </tr>
-                            <tr>
+                            </tr>*/
+                    body +=`<tr>
                                 <td>Fecha</td>
                                 <td><input id="invoiceDate" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().format('DD/MM/YYYY')}"></td>
                                 <td></td>
@@ -507,7 +523,7 @@ function createModalBody(){
             <div class="row">
                 <div class="col-md-6">
                     <br/>
-                    <button class="btn btn-primary" onclick="addLecture()" disabled><i class="fas fa-plus-circle"></i> Agregar Lectura Manual</button>
+                    <button class="btn btn-primary" onclick="addLecture()"><i class="fas fa-plus-circle"></i> Agregar Lectura Manual</button>
                     <br/>
                     <br/>
                 </div>
@@ -520,7 +536,9 @@ function createModalBody(){
                                 <th style="text-align: center">Lectura</th>
                                 <th style="text-align: center">Valor Total</th>
                                 <th style="text-align: center">Estado Pago</th>
-                                <th style="text-align: center">Ver Boleta/Factura</th>
+                                <th style="text-align: center">Vista Previa</th>
+                                <th style="text-align: center">Boleta/Factura</th>
+                                <th style="text-align: center">PDF SII</th>
                             </tr>
                         </thead>
                         <tbody id="tableLecturesBody">
@@ -547,7 +565,7 @@ async function addLecture(){
         users: userCredentials._id,
         date: moment().format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]'),
         member: internals.dataRowSelected._id,
-        lecture: 3300
+        lecture: 3513
     }
    
     let saveLecture = await axios.post('/api/lectureSave', lecture)
@@ -832,7 +850,7 @@ async function createInvoice(lectureID,invoiceID,member){
             let invoiceData = {
                 lectures: lectureID,
                 member: internals.dataRowSelected._id,
-                number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
+                //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
                 date: $("#invoiceDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 dateExpire: $("#invoiceDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', ''),
@@ -877,8 +895,12 @@ async function createInvoice(lectureID,invoiceID,member){
         let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
         let invoice = invoiceData.data
         
-        $("#invoiceTitle").text("Boleta/Factura N° " + invoice.number)
-        $("#invoiceNumber").val(invoice.number)
+        if(invoice.number){
+            $("#invoiceTitle").text("Boleta/Factura N° " + invoice.number)
+        }else{
+            $("#invoiceTitle").text("Boleta/Factura por generar")
+        }
+        //$("#invoiceNumber").val(invoice.number)
         $("#invoiceDate").val(moment(invoice.date).utc().format('DD/MM/YYYY'))
         $("#invoiceDateExpire").val(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'))
         $("#invoiceCharge").val(invoice.charge) 
@@ -983,14 +1005,13 @@ async function createInvoice(lectureID,invoiceID,member){
     }
 }
 
-async function printInvoice(type,memberID,invoiceID) {
-
+async function printInvoice(docType,type,memberID,invoiceID) {
+    
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
     let member = memberData.data
 
     let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
     let invoice = invoiceData.data
-    console.log(invoice)
 
     let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
     let lectures = lecturesData.data
@@ -1162,7 +1183,19 @@ async function printInvoice(type,memberID,invoiceID) {
     doc.text(dot_separators(net), pdfX + 250, pdfY + 180, 'right')
     doc.text(dot_separators(iva), pdfX + 250, pdfY + 190, 'right')
 
-    doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 200, 260, 106)
+    if(docType=='preview'){
+        doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 200, 260, 106)
+    }else if(docType=='pdf'){
+        doc.setFillColor(255, 255, 255)
+        doc.rect(pdfX, pdfY + 200, 260, 106, 'F')
+        if(invoice.seal){
+            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
+
+            doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
+            doc.text('Res. 80 del 22-08-2014 Verifique Documento: www.sii.cl', pdfX + 130, pdfY + 330, 'center')
+        }
+    }
+
 
     ///////GRÁFICO CONSUMOS/////
 
@@ -1312,4 +1345,176 @@ async function printInvoice(type,memberID,invoiceID) {
     //doc.autoPrint()
     window.open(doc.output('bloburl'), '_blank')
     //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
+}
+
+async function showSIIPDF(token) {
+    loadingHandler('start')
+    
+    let parametersData = await axios.get('/api/parameters')
+    let parameters = parametersData.data
+
+    var settings = {
+        "url": "https://dev-api.haulmer.com/v2/dte/document/"+token+"/pdf",
+        "method": "GET",
+        "timeout": 0,
+        "headers": {
+          "apikey": parameters.apikey
+        }
+    }
+      
+    $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
+    
+        console.log('ERROR', jqXHR.responseJSON.error.message)
+        console.log('ERROR', jqXHR.responseJSON.error.details)
+
+        loadingHandler('stop')
+
+    }).done(function (response) {
+        console.log(response)
+
+        let pdfWindow = window.open("")
+        pdfWindow.document.write("<iframe width='100%' height='100%' src='data:application/pdf;base64, " +encodeURI(response.pdf) + "'></iframe>")
+        loadingHandler('stop')
+    })
+
+    
+}
+
+async function sendData(type,memberID,invoiceID) {
+
+    loadingHandler('start')
+    
+    let memberData = await axios.post('/api/memberSingle', {id: memberID})
+    let member = memberData.data
+
+    let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
+    let invoice = invoiceData.data
+
+    let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
+    let lectures = lecturesData.data
+
+    let parametersData = await axios.get('/api/parameters')
+    let parameters = parametersData.data
+
+    console.log('member',member)
+    console.log('invoice',invoice)
+    console.log('parameters',parameters)
+
+    //console.log(JSON.stringify(invoice))
+    
+    let dteType = 33 //Factura
+    let name = '', category = ''
+    if(type=='personal'){
+        //dteType = 35 //Boleta
+        name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+        category = 'TEST'
+    }else{
+        name = member.enterprise.fullName
+        category = member.enterprise.category
+    }
+
+    let net = parseInt(invoice.invoiceTotal / 1.19)
+    let iva = invoice.invoiceTotal - net
+
+    /*let Emisor = {
+        RUTEmisor: parameters.committee.rut.split('.').join(''),
+        RznSoc: parameters.committee.name,
+        GiroEmis: parameters.committee.category,
+        Acteco: parameters.committee.acteco,
+        DirOrigen: parameters.committee.address,
+        CmnaOrigen: parameters.committee.commune,
+        Telefono: parameters.committee.phone,
+        CdgSIISucur: parameters.committee.siiCode
+    }*/
+
+
+    let Emisor = {
+        RUTEmisor: "76795561-8",
+        RznSoc: "HAULMER SPA",
+        GiroEmis: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
+        Acteco: "479100",
+        DirOrigen: "ARTURO PRAT 527   CURICO",
+        CmnaOrigen: "Curicó",
+        Telefono: "0 0",
+        CdgSIISucur: "81303347"
+    }
+
+
+
+    let document = {
+        response: ["TIMBRE","FOLIO"],
+        dte: {
+            Encabezado: {
+                IdDoc:{
+                    TipoDTE: dteType,
+                    Folio: 0,
+                    FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
+                    TpoTranCompra:"1",
+                    TpoTranVenta:"1",
+                    FmaPago:"2"
+                },
+                Emisor: Emisor,
+                Receptor:{
+                    RUTRecep: member.rut.split('.').join(''),
+                    RznSocRecep: name,
+                    GiroRecep: category,
+                    DirRecep: member.address.address,
+                    CmnaRecep: parameters.committee.commune,
+                },
+                Totales:{
+                    MntNeto: net,
+                    TasaIVA: "19",
+                    IVA: iva,
+                    MntTotal: invoice.invoiceTotal,
+                    MontoPeriodo: invoice.invoiceTotal, //Consultar si se separa monto adeudado anterior
+                    VlrPagar: invoice.invoiceTotal
+                }
+            },
+            Detalle:[
+                {
+                    NroLinDet: 1,
+                    NmbItem: "Servicio de Agua",
+                    QtyItem: 1,
+                    PrcItem: net,
+                    MontoItem: net
+                }
+            ]
+        }
+    }
+
+    console.log(document)
+
+    var settings = {
+        "url": "https://dev-api.haulmer.com/v2/dte/document",
+        "method": "POST",
+        "timeout": 0,
+        "headers": {
+          "apikey": parameters.apikey
+        },
+        "data": JSON.stringify(document)
+    };  
+    
+    $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
+    
+        console.log('ERROR', jqXHR.responseJSON.error.message)
+        console.log('ERROR', jqXHR.responseJSON.error.details)
+        loadingHandler('stop')
+
+    }).done(async function (response) {
+        
+        console.log(response)
+        
+        let dteData = {
+            id: invoiceID,
+            type: dteType,
+            number: response.FOLIO,
+            seal: response.TIMBRE,
+            token: response.TOKEN
+        }
+
+        let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
+        loadingHandler('stop')
+    })
+
+
 }

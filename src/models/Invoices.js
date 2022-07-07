@@ -17,10 +17,14 @@ const invoicesSchema = new Schema({
     consumption: { type: Number },
     invoiceDebt: { type: Number },
     invoiceTotal: { type: Number },
-    number: { type: Number }
     /*Add Extra Services*/
     /*Add Payment Data*/
     /*Add Invoice data: number - type */
+    //DTE data
+    type: { type: Number },
+    number: { type: Number },
+    seal: { type: String },
+    token: { type: String }
 }, {
     versionKey: false
 })

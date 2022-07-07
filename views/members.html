@@ -8,6 +8,23 @@
 <br>
 
 <div class="row">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-1">
+        Sector
+    </div>
+    <div class="col-md-2">
+        <select id="searchSector" class="form-select form-select-sm custom-select">
+            <option value="0">Todos</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-sm btn-primary btn-block" id="searchMembers">
+            <i class="fas fa-search"></i> FILTRAR
+        </button>
+    </div>
+    <div class="col-md-3">
+    </div>
     <div class="col-md-12">
         <div class="row">
             <div class="col-md-2 col-xs-12">
@@ -32,8 +49,9 @@
                             <th>RUT</th>
                             <th>TIPO</th>
                             <th>NOMBRE</th>
+                            <th>SECTOR</th>
                             <th>DIRECCIÓN</th>
-                            <th>FECHA INGRESO</th>
+                            <th>ESTADO</th>
                         </tr>
                     </thead>
                 </table>
@@ -53,6 +71,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="modalMember_title"></h4>
+                &nbsp;&nbsp;&nbsp;
+                <span id="spanStatus" class="badge" style="font-size: 11px"></span>
                 <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true"></span>
                 </button>

@@ -11,6 +11,12 @@ let sectors
 $(document).ready(async function () {
     getParameters()
     chargeMembersTable()
+    
+
+    $('#searchMembers').on('click', async function () {
+        chargeMembersTable()
+    })
+    
 })
 
 function chargeMembersTable() {
@@ -40,8 +46,10 @@ function chargeMembersTable() {
             { data: 'rut' },
             { data: 'type' },
             { data: 'name' },
+            { data: 'sector' },
             { data: 'address' },
-            { data: 'dateStart' }
+            //{ data: 'dateStart' },
+            { data: 'status' }
           ],
           initComplete: function (settings, json) {
             getMembersEnabled()
@@ -81,19 +89,40 @@ async function getParameters() {
     let sectorsData = await axios.get('api/sectors')
     sectors = sectorsData.data
 
+    $("#searchSector").append(
+        sectors.reduce((acc,el)=>{
+            acc += '<option value="'+el._id+'">'+el.name+'</option>'
+            return acc
+        },'')
+    )
 }
 
 async function getMembersEnabled() {
-    let memberData = await axios.get('api/members')
+    let memberData = await axios.post('api/members', {sector: $("#searchSector").val()})
     
     if (memberData.data.length > 0) {
         let formatData = memberData.data.map(el => {
             el.number = el.number
             el.rut = el.rut
             el.name = el.personal.name + ' ' + el.personal.lastname1 + ' ' + el.personal.lastname2
-            el.type = el.type.toUpperCase()
+            if(el.type=='personal'){
+                el.type = 'PERSONA'
+                el.name = el.personal.name + ' ' + el.personal.lastname1 + ' ' + el.personal.lastname2
+            }else{
+                el.type = 'EMPRESA'
+                el.name = el.enterprise.name
+            }
+            //el.type = el.type.toUpperCase()
+
+            el.sector = el.address.sector.name
             el.address = el.address.address
             el.dateStart = moment(el.dateStart).utc().format('DD/MM/YYYY')
+
+            if(el.status=='active'){
+                el.status = 'ACTIVO'
+            }else if(el.status=='inactive'){
+                el.status = 'INACTIVO'
+            }
             return el
         })
 
@@ -107,13 +136,13 @@ async function getMembersEnabled() {
 
 $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
 
-    $('#modalMember').modal('show');
+    $('#modalMember').modal('show')
     $('#modalMember_title').html(`Nuevo Socio`)
     setModal()
     
     $('#modalMember_footer').html(`
         <button class="btn btn-dark" data-dismiss="modal">
-            <i ="color:#e74c3c;" class="fas fa-times"></i> Cancelar
+            <i ="color:#e74c3c;" class="fas fa-times"></i> Cerrar
         </button>
 
         <button class="btn btn-primary" id="saveMember">
@@ -227,13 +256,13 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
 
     let memberData = await axios.post('/api/memberSingle', {id: internals.dataRowSelected._id})
     let member = memberData.data
-    $('#modalMember').modal('show');
+    $('#modalMember').modal('show')
     $('#modalMember_title').html(`Modifica Socio`)
     $('#modalMember_body').html(setModal())
 
     $('#modalMember_footer').html(`
         <button class="btn btn-dark" data-dismiss="modal">
-            <i ="color:#e74c3c;" class="fas fa-times"></i> Cancelar
+            <i ="color:#e74c3c;" class="fas fa-times"></i> Cerrar
         </button>
 
         <button class="btn btn-primary" id="saveMember">
@@ -261,6 +290,10 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     $('#memberNumber').val(member.number)
     $('#memberRUT').val(member.rut)
     $('#memberType').val(member.type)
+    if(member.type=='enterprise'){
+        $('#divPersonal').css('display','none')
+        $('#divEnterprise').css('display','block')
+    }
     $('#memberName').val(member.personal.name)
     $('#memberLastname1').val(member.personal.lastname1)
     $('#memberLastname2').val(member.personal.lastname2)
@@ -276,6 +309,14 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     $('#memberPhone').val(member.phone)
     $('#memberDateStart').val(moment(member.dateStart).utc().format('DD/MM/YYYY'))
     $('#memberDateEnd').val(moment(member.dateEnd).utc().format('DD/MM/YYYY'))
+    if(member.status=='active'){
+        $("#spanStatus").text('Activo')
+        $("#spanStatus").addClass('bg-primary')
+        $("#divDateEnd").css('visibility','hidden')
+    }else{
+        $("#spanStatus").text('Inactivo')
+        $("#spanStatus").addClass('bg-danger')
+    }
 
     if(member.waterMeters.length>0){
         $('#memberWaterNumber').val(member.waterMeters[0].number)
@@ -329,7 +370,8 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             email: $('#memberEmail').val(),
             phone: $('#memberPhone').val(),
             dateStart: $('#memberDateStart').data('daterangepicker').startDate.format('YYYY-MM-DD'),
-            dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD')
+            dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD'),
+            status: ($("#spanStatus").text()=='Activo') ? 'active' : 'inactive'
         }
 
         console.log(memberData)
@@ -428,7 +470,7 @@ function setModal(){
 
     $('#modalMember_body').html(`
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <div class="card border-primary">
                         <div class="card-body">
                             <div class="row">
@@ -454,7 +496,7 @@ function setModal(){
                                     Fecha Ingreso
                                     <input id="memberDateStart" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
                                 </div>
-                                <div class="col-md-6">
+                                <div id="divDateEnd" class="col-md-6">
                                     Fecha Baja
                                     <input id="memberDateEnd" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
                                 </div>
@@ -463,7 +505,7 @@ function setModal(){
                     </div>
                 </div>
 
-                <div id="divPersonal" class="col-md-6">
+                <div id="divPersonal" class="col-md-7">
                     <div class="card border-primary">
                         <div class="card-body">
                             <div class="row">
@@ -488,7 +530,7 @@ function setModal(){
                     </div>
                 </div>
                         
-                <div id="divEnterprise" class="col-md-8" style="display: none;">
+                <div id="divEnterprise" class="col-md-7" style="display: none;">
                     <div class="card border-danger">
                         <div class="card-body">
                             <div class="row">
@@ -516,7 +558,8 @@ function setModal(){
                     </div>
                 </div>
 
-                <div class="col-md-12">
+                <div class="col-md-6">
+                    <br/>
                     <div class="card border-primary">
                         <div class="card-body">
                             <div class="row">
@@ -554,7 +597,8 @@ function setModal(){
                     </div>
                 </div>
 
-                <div id="divPersonal" class="col-md-6">
+                <div class="col-md-6">
+                    <br/>
                     <div class="card border-primary">
                         <div class="card-body">
                             <div class="row">
@@ -573,7 +617,7 @@ function setModal(){
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    Diámetro
+                                    Estado
                                     <select id="memberWaterState" class="form-select form-select-sm custom-select">
                                         <option value="Activo">ACTIVO</option>
                                         <option value="Inactivo">INACTIVO</option>

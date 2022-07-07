@@ -6,7 +6,7 @@ import dotEnv from 'dotenv'
 dotEnv.config()
 
 export default [
-    {
+    /*{
         method: 'GET',
         path: '/api/members',
         options: {
@@ -26,7 +26,43 @@ export default [
                 }
             }
         }
-    },    
+    },*/    
+    {
+        method: 'POST',
+        path: '/api/members',
+        options: {
+            description: 'get one member',
+            notes: 'get one member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+
+                    let payload = request.payload   
+                    let query = {}
+                    if(payload.sector!=0){
+                        query = {
+                            'address.sector': payload.sector
+                        }
+                    }
+
+                    let members = await Member.find(query).populate(['address.sector'])
+                    return members
+                                        
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    sector: Joi.string()
+                })
+            }
+        }
+    },
     {
         method: 'POST',
         path: '/api/memberSingle',
@@ -108,7 +144,8 @@ export default [
                         email: payload.email,
                         phone: payload.phone,
                         dateStart: payload.dateStart,
-                        dateEnd: payload.dateEnd
+                        dateEnd: payload.dateEnd,
+                        status: 'active'
                     })
 
                     const response = await member.save()
@@ -216,6 +253,7 @@ export default [
                     member.phone = payload.phone
                     member.dateStart = payload.dateStart
                     member.dateEnd = payload.dateEnd
+                    member.status = payload.status
 
                     const response = await member.save()
 
@@ -262,7 +300,8 @@ export default [
                     email: Joi.string().optional().allow(''),
                     phone: Joi.string().optional().allow(''),
                     dateStart: Joi.string().optional().allow(''),
-                    dateEnd: Joi.string().optional().allow('')
+                    dateEnd: Joi.string().optional().allow(''),
+                    status: Joi.string()
                 })
             }
         }

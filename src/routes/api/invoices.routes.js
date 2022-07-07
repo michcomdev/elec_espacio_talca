@@ -196,5 +196,46 @@ export default [
                 })
             }
         }
+    },
+    {
+        method: 'POST',
+        path: '/api/invoiceUpdateDTE',
+        options: {
+            description: 'update invoice',
+            notes: 'update invoice',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let invoices = await Invoices.findById(payload.id)
+
+                    invoices.type = payload.type
+                    invoices.number = payload.number
+                    invoices.seal = payload.seal
+                    invoices.token = payload.token
+
+                    const response = await invoices.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    id: Joi.string(),
+                    type: Joi.number(),
+                    number: Joi.number(),
+                    seal: Joi.string(),
+                    token: Joi.string()
+                })
+            }
+        }
     }
 ]
