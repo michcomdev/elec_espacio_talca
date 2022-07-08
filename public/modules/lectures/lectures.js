@@ -268,11 +268,12 @@ $('#updateLectures').on('click', async function () {
 
 
 async function loadLectures(member){
+    console.log("member",member)
 
     let lectureData = await axios.post('/api/lecturesSingleMember', {member: internals.dataRowSelected._id})
     let lectures = lectureData.data
 
-    console.log(lectures)
+    console.log("lectures",lectures)
 
     $('#tableLecturesBody').html('')
 
@@ -289,7 +290,7 @@ async function loadLectures(member){
             if(lectures[i].invoice.number){
                 btnGenerate = `<button class="btn btn-sm btn-danger" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
             }else{
-                btnGenerate = `<button class="btn btn-sm btn-info" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+                btnGenerate = `<button class="btn btn-sm btn-info" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')">Generar DTE</button>`
             }
             if(lectures[i].invoice.token){
                 btnSII = `<button class="btn btn-sm btn-warning" onclick="showSIIPDF('${lectures[i].invoice.token}')"><img src="/public/img/logo_sii.png" style="width: 24px"/></button>`
@@ -1382,139 +1383,161 @@ async function showSIIPDF(token) {
 
 async function sendData(type,memberID,invoiceID) {
 
-    loadingHandler('start')
-    
-    let memberData = await axios.post('/api/memberSingle', {id: memberID})
-    let member = memberData.data
-
-    let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
-    let invoice = invoiceData.data
-
-    let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
-    let lectures = lecturesData.data
-
-    let parametersData = await axios.get('/api/parameters')
-    let parameters = parametersData.data
-
-    console.log('member',member)
-    console.log('invoice',invoice)
-    console.log('parameters',parameters)
-
-    //console.log(JSON.stringify(invoice))
-    
-    let dteType = 33 //Factura
-    let name = '', category = ''
-    if(type=='personal'){
-        //dteType = 35 //Boleta
-        name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
-        category = 'TEST'
-    }else{
-        name = member.enterprise.fullName
-        category = member.enterprise.category
-    }
-
-    let net = parseInt(invoice.invoiceTotal / 1.19)
-    let iva = invoice.invoiceTotal - net
-
-    /*let Emisor = {
-        RUTEmisor: parameters.committee.rut.split('.').join(''),
-        RznSoc: parameters.committee.name,
-        GiroEmis: parameters.committee.category,
-        Acteco: parameters.committee.acteco,
-        DirOrigen: parameters.committee.address,
-        CmnaOrigen: parameters.committee.commune,
-        Telefono: parameters.committee.phone,
-        CdgSIISucur: parameters.committee.siiCode
-    }*/
-
-
-    let Emisor = {
-        RUTEmisor: "76795561-8",
-        RznSoc: "HAULMER SPA",
-        GiroEmis: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
-        Acteco: "479100",
-        DirOrigen: "ARTURO PRAT 527   CURICO",
-        CmnaOrigen: "Curicó",
-        Telefono: "0 0",
-        CdgSIISucur: "81303347"
-    }
-
-
-
-    let document = {
-        response: ["TIMBRE","FOLIO"],
-        dte: {
-            Encabezado: {
-                IdDoc:{
-                    TipoDTE: dteType,
-                    Folio: 0,
-                    FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
-                    TpoTranCompra:"1",
-                    TpoTranVenta:"1",
-                    FmaPago:"2"
-                },
-                Emisor: Emisor,
-                Receptor:{
-                    RUTRecep: member.rut.split('.').join(''),
-                    RznSocRecep: name,
-                    GiroRecep: category,
-                    DirRecep: member.address.address,
-                    CmnaRecep: parameters.committee.commune,
-                },
-                Totales:{
-                    MntNeto: net,
-                    TasaIVA: "19",
-                    IVA: iva,
-                    MntTotal: invoice.invoiceTotal,
-                    MontoPeriodo: invoice.invoiceTotal, //Consultar si se separa monto adeudado anterior
-                    VlrPagar: invoice.invoiceTotal
-                }
-            },
-            Detalle:[
-                {
-                    NroLinDet: 1,
-                    NmbItem: "Servicio de Agua",
-                    QtyItem: 1,
-                    PrcItem: net,
-                    MontoItem: net
-                }
-            ]
-        }
-    }
-
-    console.log(document)
-
-    var settings = {
-        "url": "https://dev-api.haulmer.com/v2/dte/document",
-        "method": "POST",
-        "timeout": 0,
-        "headers": {
-          "apikey": parameters.apikey
-        },
-        "data": JSON.stringify(document)
-    };  
-    
-    $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
-    
-        console.log('ERROR', jqXHR.responseJSON.error.message)
-        console.log('ERROR', jqXHR.responseJSON.error.details)
-        loadingHandler('stop')
-
-    }).done(async function (response) {
-        
-        console.log(response)
-        
-        let dteData = {
-            id: invoiceID,
-            type: dteType,
-            number: response.FOLIO,
-            seal: response.TIMBRE,
-            token: response.TOKEN
-        }
-
-        let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
-        loadingHandler('stop')
+    let generateDTE = await Swal.fire({
+        title: '¿Está seguro de generar documento?',
+        customClass: 'swal-wide',
+        html: ``,
+        showCloseButton: true,
+        showCancelButton: true,
+        showConfirmButton: true,
+        focusConfirm: false,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar'
     })
+
+    if (generateDTE.value) {
+        
+        loadingHandler('start')
+        
+        let memberData = await axios.post('/api/memberSingle', {id: memberID})
+        let member = memberData.data
+
+        let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
+        let invoice = invoiceData.data
+
+        let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
+        let lectures = lecturesData.data
+
+        let parametersData = await axios.get('/api/parameters')
+        let parameters = parametersData.data
+
+        console.log('member',member)
+        console.log('invoice',invoice)
+        console.log('parameters',parameters)
+
+        //console.log(JSON.stringify(invoice))
+
+        let dteType = 33 //Factura
+        let name = '', category = ''
+        if(type=='personal'){
+            //dteType = 35 //Boleta
+            name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+            category = 'TEST'
+        }else{
+            name = member.enterprise.fullName
+            category = member.enterprise.category
+        }
+
+        let net = parseInt(invoice.invoiceTotal / 1.19)
+        let iva = invoice.invoiceTotal - net
+
+        /*let Emisor = {
+            RUTEmisor: parameters.committee.rut.split('.').join(''),
+            RznSoc: parameters.committee.name,
+            GiroEmis: parameters.committee.category,
+            Acteco: parameters.committee.acteco,
+            DirOrigen: parameters.committee.address,
+            CmnaOrigen: parameters.committee.commune,
+            Telefono: parameters.committee.phone,
+            CdgSIISucur: parameters.committee.siiCode
+        }*/
+
+
+        let Emisor = { //EMISOR DE PRUEBA
+            RUTEmisor: "76795561-8",
+            RznSoc: "HAULMER SPA",
+            GiroEmis: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
+            Acteco: "479100",
+            DirOrigen: "ARTURO PRAT 527   CURICO",
+            CmnaOrigen: "Curicó",
+            Telefono: "0 0",
+            CdgSIISucur: "81303347"
+        }
+
+
+
+        let document = {
+            response: ["TIMBRE","FOLIO"],
+            dte: {
+                Encabezado: {
+                    IdDoc:{
+                        TipoDTE: dteType,
+                        Folio: 0,
+                        FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
+                        TpoTranCompra:"1",
+                        TpoTranVenta:"1",
+                        FmaPago:"2"
+                    },
+                    Emisor: Emisor,
+                    Receptor:{
+                        RUTRecep: member.rut.split('.').join(''),
+                        RznSocRecep: name,
+                        GiroRecep: category,
+                        DirRecep: member.address.address,
+                        CmnaRecep: parameters.committee.commune,
+                    },
+                    Totales:{
+                        MntNeto: net,
+                        TasaIVA: "19",
+                        IVA: iva,
+                        MntTotal: invoice.invoiceTotal,
+                        MontoPeriodo: invoice.invoiceTotal, //Consultar si se separa monto adeudado anterior
+                        VlrPagar: invoice.invoiceTotal
+                    }
+                },
+                Detalle:[
+                    {
+                        NroLinDet: 1,
+                        NmbItem: "Servicio de Agua",
+                        QtyItem: 1,
+                        PrcItem: net,
+                        MontoItem: net
+                    }
+                ]
+            }
+        }
+
+        console.log(document)
+
+        var settings = {
+            "url": "https://dev-api.haulmer.com/v2/dte/document",
+            "method": "POST",
+            "timeout": 0,
+            "headers": {
+            "apikey": parameters.apikey
+            },
+            "data": JSON.stringify(document)
+        };  
+        
+        $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
+        
+            console.log('ERROR', jqXHR.responseJSON.error.message)
+            console.log('ERROR', jqXHR.responseJSON.error.details)
+            loadingHandler('stop')
+
+        }).done(async function (response) {
+            
+            console.log(response)
+            
+            let dteData = {
+                id: invoiceID,
+                type: dteType,
+                number: response.FOLIO,
+                seal: response.TIMBRE,
+                token: response.TOKEN
+            }
+
+            let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
+            loadingHandler('stop')
+
+            $('#modal_title').html(`Almacenado`)
+            $('#modal_body').html(`<h5 class="alert-heading">Documento generado correctamente</h5>`)
+            $('#modal').modal('show')
+
+            loadLectures(member)
+            
+        })
+    }
 
 
 }
