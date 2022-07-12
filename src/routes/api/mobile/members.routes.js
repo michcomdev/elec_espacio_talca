@@ -44,6 +44,48 @@ export default [
                     let payload = request.payload
 
                     let query = {
+                        number: payload.number
+                    }
+
+                    let member = await Member.find(query).lean()
+
+                    if (member.length == 0) {
+                        return 'Socio no registrado'
+                    }
+
+                    let memberData = member[0]
+
+                    return memberData
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    number: Joi.number()
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/mobile/memberSingleByWatermeter',
+        options: {
+            auth: 'jwt',
+            description: 'get one member',
+            notes: 'get one member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+
+                    let payload = request.payload
+
+                    let query = {
                         waterMeters: {
                             $elemMatch: {
                                 number: payload.number,
@@ -53,13 +95,13 @@ export default [
                     }
 
                     let member = await Member.find(query).lean()
-                    
-                    if(member.length==0){
+
+                    if (member.length == 0) {
                         return 'Medidor no registrado'
                     }
 
                     let memberData = member[0]
-                    
+
                     return memberData
 
                 } catch (error) {
@@ -89,12 +131,12 @@ export default [
                 try {
                     let sectors = await Sectors.find().lean()
 
-                    for(let i=0; i<sectors.length; i++){
-                        let query = {'address.sector': sectors[0]._id}
+                    for (let i = 0; i < sectors.length; i++) {
+                        let query = { 'address.sector': sectors[0]._id }
 
                         let members = await Member.find(query).lean()
 
-                        
+
                         sectors[i].members = members
                     }
 
@@ -108,7 +150,7 @@ export default [
                 }
             }
         }
-    },    
+    },
     {
         method: 'POST',
         path: '/api/mobile/lecturesMember',
@@ -124,13 +166,13 @@ export default [
                         member: payload.member
                     }
 
-                    let lectures = await Lectures.find(query).sort({'year' : 'descending', 'month' : 'descending'}).lean()
+                    let lectures = await Lectures.find(query).sort({ 'year': 'descending', 'month': 'descending' }).lean()
                     /*let invoices = await Invoices.find(query).sort({'date' : 'descending'}).lean().populate(['lectures'])
 
                     for(let i=0;i<lectures.length;i++){
                         lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
                     }*/
-                
+                    console.log(lectures);
                     return lectures
 
                 } catch (error) {

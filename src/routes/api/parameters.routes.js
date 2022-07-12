@@ -5,27 +5,27 @@ import Parameters from '../../models/Parameters'
 dotEnv.config()
 
 export default [
-    {
-        method: 'GET',
-        path: '/api/sectors',
-        options: {
-            description: 'get all container types data',
-            notes: 'return all data from container types',
-            tags: ['api'],
-            handler: async (request, h) => {
-                try {
-                    let sectors = await Sectors.find().lean()
-                    return sectors
-                } catch (error) {
-                    console.log(error)
+    // {
+    //     method: 'GET',
+    //     path: '/api/sectors',
+    //     options: {
+    //         description: 'get all container types data',
+    //         notes: 'return all data from container types',
+    //         tags: ['api'],
+    //         handler: async (request, h) => {
+    //             try {
+    //                 let sectors = await Sectors.find().lean()
+    //                 return sectors
+    //             } catch (error) {
+    //                 console.log(error)
 
-                    return h.response({
-                        error: 'Internal Server Error'
-                    }).code(500)
-                }
-            }
-        }
-    },
+    //                 return h.response({
+    //                     error: 'Internal Server Error'
+    //                 }).code(500)
+    //             }
+    //         }
+    //     }
+    // },
     {
         method: 'GET',
         path: '/api/parameters',

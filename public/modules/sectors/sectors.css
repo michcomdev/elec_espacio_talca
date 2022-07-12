@@ -29,6 +29,10 @@
         max-width: 80%;
     }
 }
+
+.modal-sectors {
+    width: 60%;
+  }
   
 @media (min-width: 576px) {
     .modal-dialog {

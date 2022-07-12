@@ -1,0 +1,120 @@
+{{!<layout/no-logged-layout}}
+
+    {{#extend "css" }}
+<link rel="stylesheet" type="text/css"
+    href="/public/modules/members-view/members-view.css">
+{{/extend}}
+
+<!-- <h2 class="text-center">Datos</h2>
+<br> -->
+<div style="background-image:url(/public/img/wall.jpg); background-size: cover;
+    height: 100vh;">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-2">
+            <img src="/public/img/logopng3.png" alt="logo" width="70"
+                height="50">
+            <br/>
+                <br/>
+                    <h5>Hola, Javier</h5>
+                </div>
+                <div class="col-md-6"></div>
+                <div class="col-md-2">
+                    <br>
+                    <center>
+                        <h6>Cerrar sesión</h6>
+                    </center>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div style="border-radius: 10px; background:
+                    linear-gradient(45deg,
+                    #14588D, #1FADEF); height: 120px; width: 200px;">
+                    <center>
+                        <br/>
+                            <h6 style="color: white;">Última lectura:</h6>
+                            <h3 style="color: white;">3500</h3>
+                            <h7 style="color: white;">Realizada el 31-06</h7>
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                    <div style="border-radius: 10px; background:
+                        linear-gradient(45deg,
+                        #14588D, #1FADEF); height: 120px; width: 200px;">
+                        <center>
+                            <br/>
+                                <h6 style="color: white;">% de subsidio:</h6>
+                                <h2 style="color: white;">50%</h2>
+                            </center>
+                        </div>
+                        <!-- <div class="col-md-2">
+            <label style="font-size: 17px;">Selecciona el año</label>
+            <select id="yearLectures" class="form-select form-select-sm
+                custom-select">
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+            </select>
+        </div> -->
+                    </div>
+
+
+                    <!-- 
+    <div class="col-md-12 table-responsive">
+        <br/>
+            <table id="tableLecturesMember" class="display nowrap table
+                table-condensed" cellspacing="0" width="100%">
+                <thead>
+                    <tr class="table-info">
+                        <th style="background-color: #3B6FC9;
+                            border-top-left-radius: 5px;">MONTH</th>
+                        <th style="background-color: #3B6FC9;">_ID</th>
+                        <th style="background-color: #3B6FC9;">YEAR</th>
+                        <th style="background-color: #3B6FC9;
+                            border-top-right-radius: 5px;">YEAR</th>
+                    </tr>
+                </thead>
+            </table>
+            <div id="loadingLectureMembers">
+                <center>
+                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+                    <span class="sr-only">Cargando...</span>
+                </center>
+            </div>
+        </div>
+    </div> -->
+                    <div class="modal fade" id="modal" role="dialog"
+                        aria-labelledby="modal"
+                        data-backdrop="static" data-keyboard="false">
+                        <div class="modal-dialog modal-xl" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title" id="modal_title"></h4>
+                                    <button type="button" class="close"
+                                        data-dismiss="modal"
+                                        aria-label="Close">
+                                        <span aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="modal-body" id="modal_body"></div>
+                                <div class="modal-footer" id="modal_footer"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="height: 200px;"></div>
+                    <footer>
+                        <div style="width: 100vw; height: 100px;
+                            background-color: #14588D;">
+                        <label>a</label>    
+                        </div>
+                    </footer>
+
+                    {{#extend "js"}}
+                    <script src="/public/modules/members-view/members-view.js"></script>
+                    {{/extend}}

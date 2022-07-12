@@ -1,64 +1,84 @@
-{{!< layout/no-logged-layout}} <!--<title>Iniciar Sesión Agua</title>-->
+{{!<layout/no-logged-layout}}
 
-  {{#extend "css"}}
-  <link rel="stylesheet" type="text/css" href="/public/modules/login/style.css">
+{{#extend "css"}}
+<link rel="stylesheet" type="text/css" href="/public/modules/login/login.css">
+{{/extend}}
 
-  {{/extend}}
-
-  <div id="loginCardContainer" style="background-image: url('/public/img/background.jpg'); background-repeat: no-repeat; background-attachment: fixed;
-background-size: 100% 100%;">
-    <div class="row">
-      <div class="col-md-12">
-        <form method="post" action="/login">
-          <div id="loginCard" class="card bg-primary mb-3 center">
-
-            <div style="text-align: center;" class="card-body">
-
-              <img class="logo" src="/public/img/logo.png" alt="">
-
+<div style="background-image:url('/public/img/wall.jpg') ;
+  background-size: cover;
+  height: 100vh;">
+  <div class="body animate__animated animate__fadeIn">
+    <form method="post" action="/login">
+      <div class="container main-content">
+        <div class="login-card d-flex rounded-lg overflow-hidden"
+          style="background:rgba(255, 255, 255, 0.95)">
+          <div class="login-message d-none d-sm-none d-md-flex flex-column
+            justify-content-center p-5">
+            <!-- "/public/img/hello.svg" -->
+            <img src="/public/img/logo.png" style="border-radius: 10px;"
+              alt="logo"
+              class="img-fluid mb-3 animate__animated animate__fadeIn" />
+            <h2 style="font-size: 30px; font-weight: bold">Bienvenido(a)</h2>
+            <p>Ingresa tu rut y tu contraseña para acceder al sistema.</p>
+          </div>
+          <div class="login-body">
+            <div class="login-body-wrapper mx-auto">
+              <div class="mobileShow">
+                <center><img src="/public/img/logopng3.png"
+                    style="border-radius:
+                    10px; width: 30vw;"
+                    alt="logo"
+                    class="img-fluid mb-3 animate__animated animate__fadeIn" />
+                </center>
+              </div>
+              <h1 style="font-weight: bold; text-align: center;"
+                class="text-uppercase mb-3
+                text-primary">INICIAR SESIÓN</h1>
               <div class="form-group">
                 <div class="form-group">
                   <label for="rut"><i class="fas fa-user"></i> RUT</label>
-                  <div class="input-group mb-3">
-                    <input name="rut" id="rut" type="text" class="form-control" aria-label="rut" placeholder="11.111.111-1">
+                  <div class="input-group mb-2">
+                    <input name="rut" id="rut" type="text" class="form-control"
+                      aria-label="rut" placeholder="11.111.111-1">
                   </div>
                 </div>
-
                 <div class="form-group">
                   <label for="passtext"><i class="fas fa-key"></i> Contraseña</label>
                   <div class="input-group mb-3">
-                    <input name="password" type="password" class="form-control" aria-label="password"
+                    <input name="password" type="password" class="form-control"
+                      aria-label="password"
                       placeholder="*********">
                   </div>
                 </div>
-
-                <!-- <a href="/restore-password">¿Olvidó su contraseña?</a> -->
-
+                {{#if message}}
+                <div class="alert alert-warning alert-dismissible fade show
+                  animate__animated animate__bounceIn animate__duration-2s">
+                  <button type="button" class="close" data-dismiss="alert"
+                    aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                  {{message}}
+                </div>
+                {{/if}}
+                <button style="border-radius: 5px;" type="submit" class="btn
+                  btn-primary btn-block mb-3
+                  input-group btn-lg">Ingresar</button>
+                <br />
+                <br />
+                <center class="animate__animated animate__fadeInRight">
+                  <a style="text-align: center">Desarrollado por <img
+                      src="/public/img/logo_michcom.png" alt="logo_michcom"
+                      style="width: 200px;" /></a>
+                </center>
+                <!-- <a style="cursor:pointer; color:#0B69D9" href="##">¿Olvidaste tu
+              contraseña?</a> -->
               </div>
             </div>
-
-            {{#if message}}
-            <div class="alert alert-dismissible alert-light">
-              <button type="button" class="close" data-dismiss="alert">&times;</button>
-              {{message}}
-            </div>
-            {{/if}}
-            <div id="loginCardFooter">
-              <button type="submit" class="btn btn-block" style="text-decoration: none; text-align: center;">Iniciar sesión</button>
-            </div>
-
           </div>
-
-        </form>
-      </div>
-      <div class="col-md-12" style=" border-radius:10px; padding:10px; text-align: center;">
-        <div id="loginMichcom" class="card bg-primary mb-3 center">
-          <p>Desarrollado por</p>
-          <a href="https://michcom.cl/" target="_blank"><img src="/public/img/logo_michcom.png" alt="" style="max-width:150px"></a>
         </div>
-      </div>
+      </form>
     </div>
   </div>
   {{#extend "js"}}
   <script src="/public/modules/login/default.js"></script>
-  {{/extend}}
+  {{/extend }}

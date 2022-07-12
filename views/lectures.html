@@ -1,101 +1,114 @@
-{{!< layout/default}}
-{{#extend "css" }}
-    <link rel="stylesheet" type="text/css" href="/public/modules/lectures/lectures.css">
-{{/extend}}
+{{!<layout/default}}
+    {{#extend "css" }}
+<link rel="stylesheet" type="text/css"
+    href="/public/modules/lectures/lectures.css">
 
-<h4 class="text-center">CONSUMOS</h4>
+{{/extend}}
+<br />
+<h3 class="text-center animate__animated animate__fadeIn">CONSUMOS</h3>
 
 <br>
 
-<div class="row">
+<div class="row animate__animated animate__fadeIn">
     <div class="col-md-3">
         <!--<button class="btn btn-info btn-block" id="createSale">
             <i class="fas fa-plus-circle"></i> NUEVA LECTURA
         </button>-->
-        <button class="btn btn-danger btn-block" onclick="printInvoice('personal','62631b789666da52dcc90718','627053bddd02285fb84f0ebe')">
-            <i class="far fa-file-pdf"></i> BOLETA
+        <button style="border-radius: 5px;" class="btn btn-danger btn-block"
+            onclick="printInvoice('personal','62631b789666da52dcc90718','627053bddd02285fb84f0ebe')">
+            <i class="far fa-file-pdf"></i> TEST BOLETA
         </button>
 
-        <button class="btn btn-secondary btn-block" onclick="sendData('personal','62759b895b56a741a10c70e0','62c6e2a97c59ce12c4597ac1')">
+        <button style="border-radius: 5px;" class="btn btn-secondary btn-block" onclick="sendData('personal','62759b895b56a741a10c70e0','62c6e2a97c59ce12c4597ac1')">
             <i class="far fa-file-pdf"></i> CREACIÓN
         </button>
 
-        <button class="btn btn-secondary btn-block" onclick="showSIIPDF('1dcad2ce3138124888dcd51bc3f9a16e908ecbf5d6bb29ea96e83b01c712dd23')">
+        <button style="border-radius: 5px;" class="btn btn-secondary btn-block" onclick="showSIIPDF('1dcad2ce3138124888dcd51bc3f9a16e908ecbf5d6bb29ea96e83b01c712dd23')">
             <i class="far fa-file-pdf"></i> OBTENCIÓN
         </button>
 
     </div>
     <div class="col-md-3">
-        <button class="btn btn-info btn-block" id="updateLectures" disabled>
+        <button style="border-radius: 5px;" class="btn btn-info btn-block"
+            id="updateLectures" disabled>
             <i class="far fa-eye"></i> VER LECTURAS
         </button>
     </div>
     <div class="col-md-3">
         Desde - Hasta
-        <input id="searchDate" type="text" placeholder="Ej: ABC123" class="form-control border-input">
+        <input id="searchDate" type="text" placeholder="Ej: ABC123"
+            class="form-control border-input">
     </div>
     <div class="col-md-3">
-        <button class="btn btn-primary btn-block" id="searchMembers">
+        <button style="border-radius: 5px;" class="btn btn-primary btn-block"
+            id="searchMembers">
             <i class="fas fa-search"></i> FILTRAR
         </button>
     </div>
     <div class="col-md-12 table-responsive">
         <br/>
-        <table id="tableMembers" class="display nowrap table table-condensed" cellspacing="0" width="100%">
-            <thead>
-                <tr class="table-info">
-                    <th>N° SOCIO</th>
-                    <th>TIPO</th>
-                    <th>NOMBRE</th>
-                    <th>ÚLTIMA LECTURA</th>
-                    <th>ESTADO DEUDA</th>
-                </tr>
-            </thead>
-        </table>
-        <div id="loadingMembers">
-            <center>
-                <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
-                <span class="sr-only">Cargando...</span>
-            </center>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="lectureModal" role="dialog" aria-labelledby="modal">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h6 class="modal-title" id="modalLecture_title"></h6>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true"></span>
-                </button>
+            <table id="tableMembers" class="display nowrap cell-border
+                table-condensed" cellspacing="0" width="100%">
+                <thead>
+                    <tr class="table-info">
+                        <th style="background-color: #3B6FC9;
+                            border-top-left-radius: 5px;">N° SOCIO</th>
+                        <th style="background-color: #3B6FC9">TIPO</th>
+                        <th style="background-color: #3B6FC9">NOMBRE</th>
+                        <th style="background-color: #3B6FC9">ÚLTIMA LECTURA</th>
+                        <th style="background-color: #3B6FC9;
+                            border-top-right-radius: 5px;">ESTADO DEUDA</th>
+                    </tr>
+                </thead>
+            </table>
+            <div id="loadingMembers">
+                <center>
+                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+                    <span class="sr-only">Cargando...</span>
+                </center>
             </div>
-            <div class="modal-body" id="modalLecture_body"></div>
-            <div class="modal-footer" id="modalLecture_footer"></div>
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="modal"  role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="modal_title"></h4>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true"></span>
-                </button>
+    <div class="modal fade" id="lectureModal" role="dialog"
+        aria-labelledby="modal">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="modalLecture_title"></h6>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                        aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalLecture_body"></div>
+                <div class="modal-footer" id="modalLecture_footer"></div>
             </div>
-            <div class="modal-body" id="modal_body"></div>
-            <div class="modal-footer" id="modal_footer"></div>
         </div>
     </div>
-</div>
+
+    <div class="modal fade" id="modal" role="dialog" aria-labelledby="modal"
+        data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modal_title"></h4>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                        aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal_body"></div>
+                <div class="modal-footer" id="modal_footer"></div>
+            </div>
+        </div>
+    </div>
 
 
-{{#extend "js"}}
+    {{#extend "js"}}
     <script src="/public/modules/default/logoWallImg.js"></script>
     <script src="/public/modules/default/logoImg.js"></script>
     <script src="/public/modules/default/test2D.js"></script>
     <script src="/public/js/jspdf.plugin.autotable.js"></script>
     <script src="/public/modules/lectures/lectures.js"></script>
-{{/extend}}
+    {{/extend}}

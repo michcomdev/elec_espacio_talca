@@ -20,19 +20,20 @@ export default [
                     let credentials = request.auth.credentials
 
                     let queryMember = {
-                        waterMeters: {
-                            $elemMatch: {
-                                number: payload.number,
-                                state: 'Activo'
-                            }
-                        }
+                        number: payload.number
+                        // waterMeters: {
+                        //     $elemMatch: {
+                        //         number: payload.number,
+                        //         state: 'Activo'
+                        //     }
+                        // }
                     }
                     let member = await Member.find(queryMember).lean()
 
-                    if(member.length==0){
+                    if (member.length == 0) {
                         return 'Medidor no registrado'
                     }
-                    
+
                     /*let query = {
                         users: credentials.id,
                         //date: date,
@@ -41,19 +42,20 @@ export default [
                     }*/
 
                     let date = new Date()
-                    let lectures = await Lectures.find({member: member[0]._id, month: date.getMonth() + 1, year: date.getFullYear()}).lean()
+                    let lectures = await Lectures.find({ member: member[0]._id, month: date.getMonth() + 1, year: date.getFullYear() }).lean()
 
-                    if(lectures[0]){
+                    if (lectures[0]) {
                         let lecture = await Lectures.findById(lectures[0]._id)
                         lecture.logs.push({
                             users: credentials.id,
                             date: date,
-                            lecture: payload.lecture
+                            lecture: payload.lecture,
+                            observation: payload.observation
                         })
                         const response = await lecture.save()
                         return response
 
-                    }else{
+                    } else {
                         let query = {
                             member: member[0]._id,
                             month: date.getMonth() + 1,
@@ -82,7 +84,8 @@ export default [
             validate: {
                 payload: Joi.object().keys({
                     number: Joi.number(),
-                    lecture: Joi.number()
+                    lecture: Joi.number(),
+                    observation: Joi.string().optional().allow('')
                 })
             }
         }

@@ -86,9 +86,13 @@ export default [
             handler: async (request, h) => {
                 try {
                     let payload = request.payload
+                    console.log("call api");
+                    console.log(payload);
+
                     let query = {
                         member: payload.member
                     }
+
 
                     let lectures = await Lectures.find(query).sort({'year' : 'descending', 'month' : 'descending'}).lean()
                     //let invoices = await Invoices.find(query).sort({'date' : 'descending'}).populate(['lectures']).lean()
@@ -97,7 +101,8 @@ export default [
                     for(let i=0;i<lectures.length;i++){
                         lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
                     }
-                
+
+                    console.log(lectures);
                     return lectures
 
                 } catch (error) {

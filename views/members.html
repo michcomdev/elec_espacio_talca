@@ -1,9 +1,10 @@
-{{!< layout/default}}
-{{#extend "css" }}
-    <link rel="stylesheet" type="text/css" href="/public/modules/members/members.css">
+{{!<layout/default}}
+    {{#extend "css" }}
+<link rel="stylesheet" type="text/css"
+    href="/public/modules/members/members.css">
 {{/extend}}
-
-<h4 class="text-center">SOCIOS</h4>
+<br />
+<h3 class="text-center animate__animated animate__fadeIn">SOCIOS</h3>
 
 <br>
 
@@ -11,15 +12,17 @@
     <div class="col-md-3">
     </div>
     <div class="col-md-1">
-        Sector
+        <label style="font-size: 14px;">Selecciona el sector</label>
     </div>
     <div class="col-md-2">
-        <select id="searchSector" class="form-select form-select-sm custom-select">
+        <select id="searchSector" class="form-select form-select-sm
+            custom-select">
             <option value="0">Todos</option>
         </select>
     </div>
     <div class="col-md-3">
-        <button class="btn btn-sm btn-primary btn-block" id="searchMembers">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-primary
+            btn-block" id="searchMembers">
             <i class="fas fa-search"></i> FILTRAR
         </button>
     </div>
@@ -29,11 +32,13 @@
         <div class="row">
             <div class="col-md-2 col-xs-12">
                 <br>
-                <button class="btn btn-info btn-block" id="optionCreateMember">
+                <button style="border-radius: 5px;" class="btn btn-info
+                    btn-block" id="optionCreateMember">
                     <i class="fas fa-user-plus"></i> NUEVO SOCIO
                 </button>
                 <hr>
-                <button class="btn btn-primary btn-block" id="optionModMember" disabled>
+                <button style="border-radius: 5px;" class="btn btn-primary
+                    btn-block" id="optionModMember" disabled>
                     <i class="fas fa-user-edit"></i> MODIFICAR SOCIO
                 </button>
                 <!--<button class="btn btn-dark btn-block" id="optionDeleteMember" disabled>
@@ -42,16 +47,19 @@
             </div>
             <br>
             <div class="col-md-10 col-xs-12 table-responsive">
-                <table id="tableMembers" class="display nowrap table table-condensed" cellspacing="0" width="100%">
+                <table id="tableMembers" class="display nowrap cell-border
+                    table-condensed" cellspacing="0" width="100%">
                     <thead>
                         <tr class="table-info">
-                            <th>N°</th>
-                            <th>RUT</th>
-                            <th>TIPO</th>
-                            <th>NOMBRE</th>
-                            <th>SECTOR</th>
-                            <th>DIRECCIÓN</th>
-                            <th>ESTADO</th>
+                            <th style="background-color: #3B6FC9;
+                                border-top-left-radius: 5px;">N° SOCIO</th>
+                            <th style="background-color: #3B6FC9;">RUT</th>
+                            <th style="background-color: #3B6FC9;">TIPO</th>
+                            <th style="background-color: #3B6FC9;">NOMBRE</th>
+                            <th style="background-color: #3B6FC9;">SECTOR</th>
+                            <th style="background-color: #3B6FC9;">DIRECCIÓN</th>
+                            <th style="background-color: #3B6FC9;
+                                border-top-right-radius: 5px;">ESTADO</th>
                         </tr>
                     </thead>
                 </table>
@@ -71,9 +79,8 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="modalMember_title"></h4>
-                &nbsp;&nbsp;&nbsp;
-                <span id="spanStatus" class="badge" style="font-size: 11px"></span>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="btn-close" data-dismiss="modal"
+                    aria-label="Close">
                     <span aria-hidden="true"></span>
                 </button>
             </div>
@@ -88,8 +95,9 @@
     <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title" id="modal_title"></h6>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
+                <h4 class="modal-title" id="modal_title"></h4>
+                <button type="button" class="btn-close" data-dismiss="modal"
+                    aria-label="Close">
                     <span aria-hidden="true"></span>
                 </button>
             </div>
@@ -99,5 +107,5 @@
     </div>
 </div>
 {{#extend "js"}}
-    <script src="/public/modules/members/members.js"></script>
+<script src="/public/modules/members/members.js"></script>
 {{/extend}}

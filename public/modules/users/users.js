@@ -13,16 +13,24 @@ $(document).ready(async function () {
 
 function chargeUsersTable() {
     try {
-        if($.fn.DataTable.isDataTable('#tableUsers')){
+        if ($.fn.DataTable.isDataTable('#tableUsers')) {
             internals.users.table.clear().destroy()
         }
 
 
         internals.users.table = $('#tableUsers')
             .DataTable({
+
                 dom: 'Bfrtip',
                 buttons: [
-                    'excel'
+                    {
+                        extend: 'excel',
+                        className: 'btn-excel'
+                    },
+                    {
+                        extend: 'pdf',
+                        className: 'btn-pdf'
+                    },
                 ],
                 iDisplayLength: 50,
                 oLanguage: {
@@ -32,6 +40,9 @@ function chargeUsersTable() {
                 order: [[0, 'desc']],
                 ordering: true,
                 rowCallback: function (row, data) {
+                },
+                language: {
+                    url: spanishDataTableLang
                 },
                 columns: [
                     { data: 'rut' },
@@ -63,7 +74,7 @@ function chargeUsersTable() {
     }
 }
 
-function disAbleButt (actionDis) {
+function disAbleButt(actionDis) {
     $('#updateUser').prop('disabled', actionDis)
     $('#deleteUser').prop('disabled', actionDis)
 }
@@ -236,28 +247,12 @@ $('#updateUser').on('click', function () { //MODIFICAR USUARIO
             }
         }
     })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 })
 
 function handleModal(userSelected) {
     $('#modal').modal('show');
     $('#modal_title').html(`${(userSelected) ? 'Modificar usuario ' : 'Nuevo Usuario'}`)
-    $('#modal_body').html(`
+    $('#modal_body').html( /*html*/`
         <div class="row">
             <div class="col-md-4" style="margin-top:10px;">
                 Rut
@@ -317,11 +312,11 @@ function handleModal(userSelected) {
     `)
 
     $('#modal_footer').html(`
-        <button class="btn btn-dark" data-dismiss="modal">
+        <button style="border-radius: 5px;" class="btn btn-dark" data-dismiss="modal">
             <i style="color:#e74c3c;" class="fas fa-times"></i> CANCELAR
         </button>
 
-        <button class="btn btn-dark" id="saveUser">
+        <button style="border-radius:5px;" class="btn btn-dark" id="saveUser">
             <i style="color:#3498db;" class="fas fa-check"></i> GUARDAR
         </button>
     `)

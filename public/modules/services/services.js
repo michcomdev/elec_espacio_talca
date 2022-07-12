@@ -20,7 +20,14 @@ function chargeServiceTable() {
         .DataTable( {
             dom: 'Bfrtip',
             buttons: [
-              'excel'
+              {
+                extend: 'excel',
+                className: 'btn-excel'
+              },
+              {
+                extend: 'pdf',
+                className: 'btn-pdf'
+              }
             ],
             iDisplayLength: 50,
             oLanguage: {

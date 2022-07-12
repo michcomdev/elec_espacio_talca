@@ -23,7 +23,7 @@ $(document).ready(async function () {
 function chargeMembersTable() {
     try {
 
-        if($.fn.DataTable.isDataTable('#tableMembers')){
+        if ($.fn.DataTable.isDataTable('#tableMembers')) {
             internals.members.table.clear().destroy()
         }
 
@@ -31,7 +31,14 @@ function chargeMembersTable() {
         .DataTable( {
             dom: 'Bfrtip',
             buttons: [
-              'excel'
+                {
+                    extend: 'excel',
+                    className: 'btn-excel'
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn-pdf'
+                },
             ],
             iDisplayLength: 50,
             language: {
@@ -53,6 +60,7 @@ function chargeMembersTable() {
             { data: 'status' }
           ],
           initComplete: function (settings, json) {
+            console.log("ready go go");
             getMembersEnabled()
           }
         })
@@ -73,9 +81,9 @@ function chargeMembersTable() {
                 internals.dataRowSelected = internals.members.table.row($(this)).data()
             }
         })
-      } catch (error) {
+    } catch (error) {
         console.log(error)
-      }
+    }
 
 }
 
@@ -145,12 +153,12 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
     setModal('create')
     
     $('#modalMember_footer').html(`
-        <button class="btn btn-dark" data-dismiss="modal">
+        <button style="border-radius:5px;" class="btn btn-dark" data-dismiss="modal">
             <i ="color:#e74c3c;" class="fas fa-times"></i> Cerrar
         </button>
 
-        <button class="btn btn-primary" id="saveMember">
-            <i ="color:#3498db;" class="fas fa-check"></i> Almacenar
+        <button style="border-radius:5px;" class="btn btn-primary" id="saveMember">
+            <i ="color:#3498db;" class="fas fa-check"></i> Guardar
         </button>
     `)
 
@@ -162,18 +170,18 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
     $('#memberNumber').val(parameters.memberNumber)
     $('#memberRUT').on('keyup', function () {
         let rut = validateRut($(this).val())
-        if(rut){
+        if (rut) {
             $(this).val(rut)
         }
     })
 
     $('#memberType').change(function () {
-        if($(this).val()=='personal'){
-            $('#divPersonal').css('display','block')
-            $('#divEnterprise').css('display','none')
-        }else{
-            $('#divPersonal').css('display','none')
-            $('#divEnterprise').css('display','block')
+        if ($(this).val() == 'personal') {
+            $('#divPersonal').css('display', 'block')
+            $('#divEnterprise').css('display', 'none')
+        } else {
+            $('#divPersonal').css('display', 'none')
+            $('#divEnterprise').css('display', 'block')
         }
     })
 
@@ -219,22 +227,22 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD')
         }
 
-        
+
 
         console.log(memberData)
 
         const res = validateMemberData(memberData)
         if (res.ok) {
             let saveMember = await axios.post('/api/memberSave', memberData)
-            if(saveMember.data){
-                if(saveMember.data._id){
+            if (saveMember.data) {
+                if (saveMember.data._id) {
                     $('#modalMember').modal('hide')
 
                     $('#modal_title').html(`Almacenado`)
                     $('#modal_body').html(`<h6 class="alert-heading">Socio almacenado correctamente</h6>`)
                     chargeMembersTable()
-                
-                }else if(saveMember.data=='created'){
+
+                } else if (saveMember.data == 'created') {
                     $('#modal_title').html(`Error`)
                     $('#modal_body').html(`<h6 class="alert-heading">RUT ya registrado, favor corroborar</h6>`)
                 
@@ -242,13 +250,13 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
                     $('#modal_title').html(`Error`)
                     $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
                 }
-            }else{
+            } else {
                 $('#modal_title').html(`Error`)
                 $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
             }
             $('#modal').modal('show')
 
-        }else{
+        } else {
 
         }
 
@@ -258,36 +266,36 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
 
 $('#optionModMember').on('click', async function () { // CREAR SOCIO
 
-    let memberData = await axios.post('/api/memberSingle', {id: internals.dataRowSelected._id})
+    let memberData = await axios.post('/api/memberSingle', { id: internals.dataRowSelected._id })
     let member = memberData.data
     $('#modalMember').modal('show')
     $('#modalMember_title').html(`Modifica Socio`)
     setModal('update')
 
     $('#modalMember_footer').html(`
-        <button class="btn btn-dark" data-dismiss="modal">
+        <button style="border-radius:5px;" class="btn btn-dark" data-dismiss="modal">
             <i ="color:#e74c3c;" class="fas fa-times"></i> Cerrar
         </button>
 
-        <button class="btn btn-primary" id="saveMember">
-            <i ="color:#3498db;" class="fas fa-check"></i> Almacenar
+        <button style="border-radius:5px;" class="btn btn-primary" id="saveMember">
+            <i ="color:#3498db;" class="fas fa-check"></i> Guardar
         </button>
     `)
 
     $('#memberRUT').on('keyup', function () {
         let rut = validateRut($(this).val())
-        if(rut){
+        if (rut) {
             $(this).val(rut)
         }
     })
 
     $('#memberType').change(function () {
-        if($(this).val()=='personal'){
-            $('#divPersonal').css('display','block')
-            $('#divEnterprise').css('display','none')
-        }else{
-            $('#divPersonal').css('display','none')
-            $('#divEnterprise').css('display','block')
+        if ($(this).val() == 'personal') {
+            $('#divPersonal').css('display', 'block')
+            $('#divEnterprise').css('display', 'none')
+        } else {
+            $('#divPersonal').css('display', 'none')
+            $('#divEnterprise').css('display', 'block')
         }
     })
 
@@ -306,7 +314,7 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     $('#memberEnterpriseCategory').val(member.enterprise.category)
     $('#memberEnterpriseAddress').val(member.enterprise.address)
     $('#memberAddress').val(member.address.address)
-    if(member.address.sector) $('#memberSector').val(member.address.sector)
+    if (member.address.sector) $('#memberSector').val(member.address.sector)
     //waterMeters: waterMeters,
     //subsidies: subsidies,
     $('#memberEmail').val(member.email)
@@ -322,7 +330,7 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
         $("#spanStatus").addClass('bg-danger')
     }
 
-    if(member.waterMeters.length>0){
+    if (member.waterMeters.length > 0) {
         $('#memberWaterNumber').val(member.waterMeters[0].number)
         $('#memberWaterDiameter').val(member.waterMeters[0].diameter)
         $('#memberWaterState').val(member.waterMeters[0].state)
@@ -334,7 +342,7 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
         locale: dateRangePickerDefaultLocale,
         singleDatePicker: true,
         autoApply: true
-    }, function(start, end, label) {
+    }, function (start, end, label) {
     })
 
     loadSubsidies(internals.dataRowSelected._id)
@@ -390,21 +398,21 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
         }
 
         console.log(memberData)
-        
+
         const res = validateMemberData(memberData)
-        
+
         if (res.ok) {
             let saveMember = await axios.post('/api/memberUpdate', memberData)
 
-            if(saveMember.data){
-                if(saveMember.data._id){
+            if (saveMember.data) {
+                if (saveMember.data._id) {
                     $('#modalMember').modal('hide')
 
                     $('#modal_title').html(`Almacenado`)
                     $('#modal_body').html(`<h6 class="alert-heading">Socio almacenado correctamente</h6>`)
                     chargeMembersTable()
 
-                }else if(saveMember.data=='created'){
+                } else if (saveMember.data == 'created') {
                     $('#modal_title').html(`Error`)
                     $('#modal_body').html(`<h6 class="alert-heading">RUT ya registrado, favor corroborar</h6>`)
                 
@@ -412,13 +420,13 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
                     $('#modal_title').html(`Error`)
                     $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
                 }
-            }else{
+            } else {
                 $('#modal_title').html(`Error`)
                 $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
             }
             $('#modal').modal('show')
 
-        }else{
+        } else {
 
         }
 
@@ -431,7 +439,7 @@ function validateMemberData(memberData) {
     let errorMessage = ''
 
 
-    if(validateRut(memberData.rut)){
+    if (validateRut(memberData.rut)) {
         validationCounter++
         $('#memberRUT').css('border', '1px solid #E5E5E5')
     } else {
@@ -462,9 +470,9 @@ function validateMemberData(memberData) {
         errorMessage += `<br>Sector</b>`
         $('.address').css('border', '1px solid #e74c3c')
     }
-    
 
-    if (isEmail(memberData.email) || memberData.email=='') {
+
+    if (isEmail(memberData.email) || memberData.email == '') {
         validationCounter++
         $('#memberEmail').css('border', '1px solid #E5E5E5')
     } else {
@@ -475,7 +483,7 @@ function validateMemberData(memberData) {
     if (validationCounter >= 5) {
         return { ok: memberData }
     } else {
-        toastr.warning('Faltan datos:<br>'+errorMessage)
+        toastr.warning('Faltan datos:<br>' + errorMessage)
         return { err: memberData }
     }
 
@@ -483,7 +491,7 @@ function validateMemberData(memberData) {
 
 function setModal(type){
 
-    let html = `
+    let html = /*html*/`
             <div class="row">
                 <div class="col-md-5">
                     <div class="card border-primary">
@@ -493,7 +501,7 @@ function setModal(type){
                                     <h6>DATOS GENERALES</h6>
                                 </div>
                                 <div class="col-md-2">
-                                    N°
+                                    N° SOCIO
                                     <input id="memberNumber" type="text" class="form-control form-control-sm border-input" disabled>
                                 </div>
                                 <div class="col-md-5">
@@ -590,12 +598,11 @@ function setModal(type){
                                     Sector
                                     <select id="memberSector" class="form-select form-select-sm custom-select address">
                                         <option value="0">-</option>
-                                        ${                      
-                                            sectors.reduce((acc,el)=>{
-                                                acc += '<option value="'+el._id+'">'+el.name+'</option>'
-                                                return acc
-                                            },'')
-                                        }
+                                        ${sectors.reduce((acc, el) => {
+        acc += '<option value="' + el._id + '">' + el.name + '</option>'
+        return acc
+    }, '')
+        }
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -658,7 +665,7 @@ function setModal(type){
                                     <h6>SUBSIDIOS</h6>
                                 </div>
                                 <div class="col-md-3">
-                                    <button class="btn btn-sm btn-primary" onclick="addSubsidy()"><i class="fas fa-plus-circle"></i> Agregar Subsidio</button>
+                                    <button class="btn btn-sm btn-primary" style="border-radius:5px;" onclick="addSubsidy()"><i class="fas fa-plus-circle"></i> Agregar Subsidio</button>
                                 </div>
 
                                 <div class="col-md-2">
@@ -718,20 +725,20 @@ function setModal(type){
         locale: dateRangePickerDefaultLocale,
         singleDatePicker: true,
         autoApply: true
-    }, function(start, end, label) {
+    }, function (start, end, label) {
     })
 }
 
 function addSubsidy(){
     $("#tableBodySubsidies").append(`<tr>
-                    <td><button class="btn btn-sm btn-success" onclick="saveSubsidy(this)">Almacenar</button></td>
+                    <td><button class="btn btn-sm btn-success" style="border-radius:5px;" onclick="saveSubsidy(this)">Almacenar</button></td>
                     <td><input type="text" class="form-control form-control-sm" /></td>
                     <td><input type="text" class="form-control form-control-sm datepicker" /></td>
                     <td><input type="text" class="form-control form-control-sm datepicker" /></td>
                     <td><input type="text" class="form-control form-control-sm datepicker" /></td>
                     <td><input type="text" class="form-control form-control-sm datepicker" /></td>
                     <td><input type="text" class="form-control form-control-sm" value="100" /></td>
-                    <td><button class="btn btn-sm btn-danger" onclick="deleteSubsidy(this)"><i class="fas fa-times"></i></button></td>
+                    <td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteSubsidy(this)"><i class="fas fa-times"></i></button></td>
                 </tr>`)
 
     $('.datepicker').daterangepicker({
@@ -824,7 +831,7 @@ async function deleteSubsidy(btn,id){
                 $(btn).parent().parent().remove()
                 
                 $('#modal_title').html(`Almacenado`)
-                $('#modal_body').html(`<h6 class="alert-heading">Registro eliminado correctamente</h6>`)
+                $('#modal_body').html(`<h6 class="alert-heading">Registro eliminado correctamente.</h6>`)
             
             }else{
                 $('#modal_title').html(`Error`)
@@ -853,7 +860,7 @@ async function loadSubsidies(member){
 
     for(let i=0; i<subsidies.length; i++){
         $("#tableBodySubsidies").append(`<tr>
-                    <td><button class="btn btn-sm btn-success" onclick="saveSubsidy(this,'${subsidies[i]._id}')">Almacenar</button></td>
+                    <td><button class="btn btn-sm btn-success" style="border-radius:5px;" onclick="saveSubsidy(this,'${subsidies[i]._id}')">Almacenar</button></td>
                     <td><input type="text" class="form-control form-control-sm" value="${subsidies[i].decreeNumber}" /></td>
                     <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].decreeDate).utc().format('DD/MM/YYYY')}" /></td>
                     <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].inscriptionDate).utc().format('DD/MM/YYYY')}" /></td>
