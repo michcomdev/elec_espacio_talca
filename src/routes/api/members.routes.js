@@ -305,5 +305,143 @@ export default [
                 })
             }
         }
+    },    
+    {
+        method: 'POST',
+        path: '/api/subsidySave',
+        options: {
+            description: 'create subsidy',
+            notes: 'create subsidy',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+
+                    let payload = request.payload   
+
+                    let member = await Member.findById(payload.member)
+
+                    member.subsidies.push({
+                        decreeNumber: payload.decreeNumber,
+                        decreeDate: payload.decreeDate,
+                        inscriptionDate: payload.inscriptionDate,
+                        startDate: payload.startDate,
+                        endDate: payload.endDate,
+                        percentage: payload.percentage
+                    })
+
+                    const response = await member.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    member: Joi.string().optional().allow(''),
+                    decreeNumber: Joi.number().optional().allow(0),
+                    decreeDate: Joi.string().optional().allow(''),
+                    inscriptionDate: Joi.string().optional().allow(''),
+                    startDate: Joi.string().optional().allow(''),
+                    endDate: Joi.string().optional().allow(''),
+                    percentage: Joi.number().optional().allow(0)
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/subsidyUpdate',
+        options: {
+            description: 'update subsidy',
+            notes: 'update subsidy',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+
+                    let payload = request.payload   
+                    let member = await Member.findById(payload.member)
+
+                    for(let i=0; i<member.subsidies.length; i++){
+                        console.log(member.subsidies[i]._id,payload.id)
+                        if(member.subsidies[i]._id.toString()==payload.id){
+                            member.subsidies[i].decreeNumber = payload.decreeNumber
+                            member.subsidies[i].decreeDate = payload.decreeDate
+                            member.subsidies[i].inscriptionDate = payload.inscriptionDate
+                            member.subsidies[i].startDate = payload.startDate
+                            member.subsidies[i].endDate = payload.endDate
+                            member.subsidies[i].percentage = payload.percentage
+                        }
+                    }
+
+                    const response = await member.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    member: Joi.string().optional().allow(''),
+                    id: Joi.string().optional().allow(''),
+                    decreeNumber: Joi.number().optional().allow(0),
+                    decreeDate: Joi.string().optional().allow(''),
+                    inscriptionDate: Joi.string().optional().allow(''),
+                    startDate: Joi.string().optional().allow(''),
+                    endDate: Joi.string().optional().allow(''),
+                    percentage: Joi.number().optional().allow(0)
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/subsidyDelete',
+        options: {
+            description: 'delete subsidy',
+            notes: 'delete subsidy',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+
+                    let payload = request.payload   
+                    let member = await Member.findById(payload.member)
+
+                    for(let i=0; i<member.subsidies.length; i++){
+                        if(member.subsidies[i]._id.toString()==payload.id){
+                            member.subsidies.splice(i, 1)
+                        }
+                    }
+
+                    const response = await member.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    member: Joi.string().optional().allow(''),
+                    id: Joi.string().optional().allow('')
+                })
+            }
+        }
     }
 ]

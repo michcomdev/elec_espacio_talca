@@ -29,9 +29,15 @@ const memberSchema = new Schema({
         dateStart: { type: Date },
         dateEnd: { type: Date }
     }],
-    subsidies: {
-        subsidy: { type: Schema.Types.ObjectId, ref: 'subsidies' },
-    },
+    subsidies: [{
+        /*subsidy: { type: Schema.Types.ObjectId, ref: 'subsidies' },*/
+        decreeNumber: { type: Number },
+        decreeDate: { type: Date },
+        inscriptionDate: { type: Date },
+        startDate: { type: Date },
+        endDate: { type: Date },
+        percentage: { type: Number }
+    }],
     email: { type: String },
     phone: { type: String },
     dateStart: { type: Date },

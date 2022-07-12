@@ -7,6 +7,7 @@ let internals = {
 }
 
 let sectors
+let parametersGeneral
 
 $(document).ready(async function () {
     getParameters()
@@ -64,8 +65,8 @@ function chargeMembersTable() {
                 $('#optionModMember').prop('disabled', true)
                 $('#optionDeleteMember').prop('disabled', true)
             } else {
-                internals.members.table.$('tr.selected').removeClass('selected');
-                $(this).addClass('selected');
+                internals.members.table.$('tr.selected').removeClass('selected')
+                $(this).addClass('selected')
                 $('#optionModMember').prop('disabled', false)
                 $('#optionDeleteMember').prop('disabled', false)
                 internals.members.data = internals.members.table.row($(this)).data()
@@ -95,6 +96,9 @@ async function getParameters() {
             return acc
         },'')
     )
+
+    let parametersData = await axios.get('api/parameters')
+    parametersGeneral = parametersData.data
 }
 
 async function getMembersEnabled() {
@@ -138,7 +142,7 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
 
     $('#modalMember').modal('show')
     $('#modalMember_title').html(`Nuevo Socio`)
-    setModal()
+    setModal('create')
     
     $('#modalMember_footer').html(`
         <button class="btn btn-dark" data-dismiss="modal">
@@ -227,30 +231,30 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
                     $('#modalMember').modal('hide')
 
                     $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Socio almacenado correctamente</h5>`)
+                    $('#modal_body').html(`<h6 class="alert-heading">Socio almacenado correctamente</h6>`)
                     chargeMembersTable()
                 
                 }else if(saveMember.data=='created'){
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h5 class="alert-heading">RUT ya registrado, favor corroborar</h5>`)
+                    $('#modal_body').html(`<h6 class="alert-heading">RUT ya registrado, favor corroborar</h6>`)
                 
                 }else{
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                    $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
                 }
             }else{
                 $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
             }
-            $('#modal').modal('show');
+            $('#modal').modal('show')
 
         }else{
 
         }
 
-    });
+    })
 
-});
+})
 
 $('#optionModMember').on('click', async function () { // CREAR SOCIO
 
@@ -258,7 +262,7 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     let member = memberData.data
     $('#modalMember').modal('show')
     $('#modalMember_title').html(`Modifica Socio`)
-    $('#modalMember_body').html(setModal())
+    setModal('update')
 
     $('#modalMember_footer').html(`
         <button class="btn btn-dark" data-dismiss="modal">
@@ -333,6 +337,17 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     }, function(start, end, label) {
     })
 
+    loadSubsidies(internals.dataRowSelected._id)
+
+    console.log(parametersGeneral)
+
+    let subsidyNumber = parametersGeneral.municipality.subsidyCode + '' +member.number
+    
+    while (subsidyNumber.length<11) {
+        subsidyNumber = '0' + subsidyNumber
+      }
+
+    $("#memberSubsidyNumber").val(subsidyNumber)
 
     setTimeout(() => {
         $('#memberRUT').focus()
@@ -386,30 +401,30 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
                     $('#modalMember').modal('hide')
 
                     $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Socio almacenado correctamente</h5>`)
+                    $('#modal_body').html(`<h6 class="alert-heading">Socio almacenado correctamente</h6>`)
                     chargeMembersTable()
 
                 }else if(saveMember.data=='created'){
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h5 class="alert-heading">RUT ya registrado, favor corroborar</h5>`)
+                    $('#modal_body').html(`<h6 class="alert-heading">RUT ya registrado, favor corroborar</h6>`)
                 
                 }else{
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                    $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
                 }
             }else{
                 $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
             }
-            $('#modal').modal('show');
+            $('#modal').modal('show')
 
         }else{
 
         }
 
-    });
+    })
 
-});
+})
 
 function validateMemberData(memberData) {
     let validationCounter = 0
@@ -466,9 +481,9 @@ function validateMemberData(memberData) {
 
 }
 
-function setModal(){
+function setModal(type){
 
-    $('#modalMember_body').html(`
+    let html = `
             <div class="row">
                 <div class="col-md-5">
                     <div class="card border-primary">
@@ -612,8 +627,8 @@ function setModal(){
                                 <div class="col-md-3">
                                     Diámetro
                                     <select id="memberWaterDiameter" class="form-select form-select-sm custom-select">
-                                        <option value="UnCuarto">UN CUARTO</option>
                                         <option value="Medio">MEDIO</option>
+                                        <option value="TresCuartos">3/4</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -631,10 +646,72 @@ function setModal(){
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>`
 
-            </div>
-        `)
+        if(type=='update'){
+            html += `<div class="col-md-12">
+                    <br/>
+                    <div class="card border-primary">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6>SUBSIDIOS</h6>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-sm btn-primary" onclick="addSubsidy()"><i class="fas fa-plus-circle"></i> Agregar Subsidio</button>
+                                </div>
+
+                                <div class="col-md-2">
+                                    N° Único Subsidio
+                                </div>
+                                <div class="col-md-2">
+                                    <input id="memberSubsidyNumber" type="text" class="form-control form-control-sm border-input" style="text-align: center" disabled>
+                                </div>
+                                
+                                <div class="col-md-12">
+                                    <table class="table" style="font-size: 12px">
+                                        <thead>
+                                            <tr>
+                                                <th>Estado</th>
+                                                <th>N° Decreto</th>
+                                                <th>Fecha Decreto</th>
+                                                <th>Fecha Inscripción Reg. Social</th>
+                                                <th>Inicio</th>
+                                                <th>Fin</th>
+                                                <th>Porcentaje</th>
+                                                <th>Quitar</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableBodySubsidies">
+                                        </tbody>
+
+                                    </table>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>`
+        }else{
+            html += `<div class="col-md-12">
+                    <br/>
+                    <div class="card border-primary">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h6>SUBSIDIOS</h6>
+                                </div>
+                                <div class="col-md-12">
+                                    Debe almacenar los datos de socio para poder agregar subsidios
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`
+        }
+    html +=`</div>`
+
+    $('#modalMember_body').html(html)
 
     $('.datepicker').daterangepicker({
         opens: 'left',
@@ -643,4 +720,156 @@ function setModal(){
         autoApply: true
     }, function(start, end, label) {
     })
+}
+
+function addSubsidy(){
+    $("#tableBodySubsidies").append(`<tr>
+                    <td><button class="btn btn-sm btn-success" onclick="saveSubsidy(this)">Almacenar</button></td>
+                    <td><input type="text" class="form-control form-control-sm" /></td>
+                    <td><input type="text" class="form-control form-control-sm datepicker" /></td>
+                    <td><input type="text" class="form-control form-control-sm datepicker" /></td>
+                    <td><input type="text" class="form-control form-control-sm datepicker" /></td>
+                    <td><input type="text" class="form-control form-control-sm datepicker" /></td>
+                    <td><input type="text" class="form-control form-control-sm" value="100" /></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="deleteSubsidy(this)"><i class="fas fa-times"></i></button></td>
+                </tr>`)
+
+    $('.datepicker').daterangepicker({
+        opens: 'left',
+        locale: dateRangePickerDefaultLocale,
+        singleDatePicker: true,
+        autoApply: true
+    }, function(start, end, label) {
+    })
+}
+
+async function saveSubsidy(btn,id){
+
+    let tr = $(btn).parent().parent()
+
+    //let value1 = $($($(tr).children()[1]).children()[0]).val()
+    let decreeNumber = $($($(tr).children()[1]).children()[0]).val()
+    let decreeDate = $($($(tr).children()[2]).children()[0]).data('daterangepicker').startDate.format('YYYY-MM-DD')
+    let inscriptionDate = $($($(tr).children()[3]).children()[0]).data('daterangepicker').startDate.format('YYYY-MM-DD')
+    let startDate = $($($(tr).children()[4]).children()[0]).data('daterangepicker').startDate.format('YYYY-MM-DD')
+    let endDate = $($($(tr).children()[5]).children()[0]).data('daterangepicker').startDate.format('YYYY-MM-DD')
+    let percentage = $($($(tr).children()[6]).children()[0]).val()
+
+    if(!$.isNumeric(decreeNumber)){
+        $('#modal_title').html(`Verificar`)
+        $('#modal_body').html(`<h6 class="alert-heading">N° de Decreto no válido</h6>`)
+        $('#modal').modal('show')
+        return
+    }
+    if(!$.isNumeric(percentage)){
+        $('#modal_title').html(`Verificar`)
+        $('#modal_body').html(`<h6 class="alert-heading">Porcentaje no válido (debe ser entre 1% y 100%)</h6>`)
+        $('#modal').modal('show')
+        return
+    }else{
+        if(percentage<=0 || percentage>100){
+            $('#modal_title').html(`Verificar`)
+            $('#modal_body').html(`<h6 class="alert-heading">Porcentaje no válido (debe ser entre 1% y 100%)</h6>`)
+            $('#modal').modal('show')
+            return
+        }
+    }
+
+    let subsidyData = {
+        member: internals.dataRowSelected._id,
+        decreeNumber: decreeNumber,
+        decreeDate: decreeDate,
+        inscriptionDate: inscriptionDate,
+        startDate: startDate,
+        endDate: endDate,
+        percentage: percentage
+    }
+
+    let apiSave = 'subsidySave'
+    if(id){
+        subsidyData.id = id
+        apiSave = 'subsidyUpdate'
+    }
+
+    console.log(subsidyData)
+
+    let saveSubsidy = await axios.post('/api/'+apiSave, subsidyData)
+    console.log(saveSubsidy)
+    if(saveSubsidy.data){
+        if(saveSubsidy.data._id){
+
+            $('#modal_title').html(`Almacenado`)
+            $('#modal_body').html(`<h6 class="alert-heading">Subsidio almacenado correctamente</h6>`)
+            loadSubsidies(internals.dataRowSelected._id)
+        
+        }else{
+            $('#modal_title').html(`Error`)
+            $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
+        }
+    }else{
+        $('#modal_title').html(`Error`)
+        $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
+    }
+    $('#modal').modal('show')
+
+}
+
+async function deleteSubsidy(btn,id){
+
+    if(id){
+        let deleteSubsidy = await axios.post('/api/subsidyDelete', {member: internals.dataRowSelected._id, id: id})
+        console.log(deleteSubsidy)
+        if(deleteSubsidy.data){
+            if(deleteSubsidy.data._id){
+                $(btn).parent().parent().remove()
+                
+                $('#modal_title').html(`Almacenado`)
+                $('#modal_body').html(`<h6 class="alert-heading">Registro eliminado correctamente</h6>`)
+            
+            }else{
+                $('#modal_title').html(`Error`)
+                $('#modal_body').html(`<h6 class="alert-heading">Error al eliminar, favor reintente</h6>`)
+            }
+        }else{
+            $('#modal_title').html(`Error`)
+            $('#modal_body').html(`<h6 class="alert-heading">Error al eliminar, favor reintente</h6>`)
+        }
+        $('#modal').modal('show')
+
+    }else{
+        $(btn).parent().parent().remove()
+        
+        $('#modal_title').html(`Eliminado`)
+        $('#modal_body').html(`<h6 class="alert-heading">Registro eliminado correctamente</h6>`)
+        $('#modal').modal('show')
+    }
+}
+
+async function loadSubsidies(member){
+    $("#tableBodySubsidies").html('')
+
+    let memberSubsidies = await axios.post('/api/memberSingle', {id: internals.dataRowSelected._id})
+    let subsidies = memberSubsidies.data.subsidies
+
+    for(let i=0; i<subsidies.length; i++){
+        $("#tableBodySubsidies").append(`<tr>
+                    <td><button class="btn btn-sm btn-success" onclick="saveSubsidy(this,'${subsidies[i]._id}')">Almacenar</button></td>
+                    <td><input type="text" class="form-control form-control-sm" value="${subsidies[i].decreeNumber}" /></td>
+                    <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].decreeDate).utc().format('DD/MM/YYYY')}" /></td>
+                    <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].inscriptionDate).utc().format('DD/MM/YYYY')}" /></td>
+                    <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].startDate).utc().format('DD/MM/YYYY')}" /></td>
+                    <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].endDate).utc().format('DD/MM/YYYY')}" /></td>
+                    <td><input type="text" class="form-control form-control-sm" value="${subsidies[i].percentage}"></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="deleteSubsidy(this,'${subsidies[i]._id}')"><i class="fas fa-times"></i></button></td>
+                </tr>`)
+    }
+    
+    $('.datepicker').daterangepicker({
+        opens: 'left',
+        locale: dateRangePickerDefaultLocale,
+        singleDatePicker: true,
+        autoApply: true
+    }, function(start, end, label) {
+    })
+
 }

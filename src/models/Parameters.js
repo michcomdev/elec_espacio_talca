@@ -20,6 +20,9 @@ const parametersSchema = new Schema({
         phone: { type: String },
         siiCode: { type: String }
     },
+    committee: {
+        subsidyCode: { type: Number }
+    },
     apikey: { type: String }
 }, {
     versionKey: false
