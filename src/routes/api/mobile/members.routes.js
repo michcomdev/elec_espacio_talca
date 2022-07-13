@@ -132,7 +132,7 @@ export default [
                     let sectors = await Sectors.find().lean()
 
                     for (let i = 0; i < sectors.length; i++) {
-                        let query = { 'address.sector': sectors[0]._id }
+                        let query = { 'address.sector': sectors[i]._id }
 
                         let members = await Member.find(query).lean()
 

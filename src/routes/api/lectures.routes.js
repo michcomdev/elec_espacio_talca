@@ -136,6 +136,8 @@ export default [
                         }
                     }
 
+                    console.log(lastLecture)
+
                     lecture.lastLecture = lastLecture
 
                     return lecture
