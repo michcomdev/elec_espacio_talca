@@ -145,7 +145,8 @@ export default [
                         phone: payload.phone,
                         dateStart: payload.dateStart,
                         dateEnd: payload.dateEnd,
-                        status: 'active'
+                        status: 'active',
+                        inactiveObservation: ''
                     })
 
                     const response = await member.save()
@@ -189,9 +190,6 @@ export default [
                         diameter: Joi.string().optional().allow(''),
                         state: Joi.string().optional().allow(''),
                         dateStart: Joi.string().optional().allow('')
-                    })),
-                    subsidies: Joi.array().items(Joi.object().keys({
-                        subsidy: Joi.string().optional().allow('')
                     })),
                     email: Joi.string().optional().allow(''),
                     phone: Joi.string().optional().allow(''),
@@ -249,11 +247,13 @@ export default [
 
                     member.address = address
                     //FALTA WATERMETER & SUBSIDIES
+                    member.subsidyNumber = payload.subsidyNumber
                     member.email = payload.email
                     member.phone = payload.phone
                     member.dateStart = payload.dateStart
                     member.dateEnd = payload.dateEnd
                     member.status = payload.status
+                    member.inactiveObservation = payload.inactiveObservation
 
                     const response = await member.save()
 
@@ -294,14 +294,13 @@ export default [
                         state: Joi.string().optional().allow(''),
                         dateStart: Joi.string().optional().allow('')
                     })),
-                    subsidies: Joi.array().items(Joi.object().keys({
-                        subsidy: Joi.string().optional().allow('')
-                    })),
                     email: Joi.string().optional().allow(''),
                     phone: Joi.string().optional().allow(''),
                     dateStart: Joi.string().optional().allow(''),
                     dateEnd: Joi.string().optional().allow(''),
-                    status: Joi.string()
+                    status: Joi.string().optional().allow(''),
+                    inactiveObservation: Joi.string().optional().allow(''),
+                    subsidyNumber: Joi.number().optional().allow(0)
                 })
             }
         }

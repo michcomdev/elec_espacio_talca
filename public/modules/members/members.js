@@ -40,12 +40,12 @@ function chargeMembersTable() {
                     className: 'btn-pdf'
                 },
             ],
-            iDisplayLength: 50,
+            iDisplayLength: 10,
             language: {
                 url: spanishDataTableLang
             },
             responsive: false,
-            order: [[ 0, 'desc' ]],
+            order: [[ 0, 'asc' ]],
             ordering: true,
             rowCallback: function( row, data ) {
           },
@@ -57,10 +57,11 @@ function chargeMembersTable() {
             { data: 'sector' },
             { data: 'address' },
             //{ data: 'dateStart' },
-            { data: 'status' }
+            { data: 'status' },
+            { data: 'subsidyNumber' },
+            { data: 'subsidyActive' }
           ],
           initComplete: function (settings, json) {
-            console.log("ready go go");
             getMembersEnabled()
           }
         })
@@ -135,6 +136,16 @@ async function getMembersEnabled() {
             }else if(el.status=='inactive'){
                 el.status = 'INACTIVO'
             }
+
+            if(el.subsidies.length>0){
+                //for(let i=0; i<el.subsidies)
+                //Verificar que subsidio esté activo
+                el.subsidyActive = 'SI'
+            }else{
+                el.subsidyActive = 'NO'
+
+            }
+
             return el
         })
 
@@ -164,9 +175,7 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
 
     let parametersData = await axios.get('api/parameters')
     parameters = parametersData.data
-
-    console.log(parameters)
-
+    
     $('#memberNumber').val(parameters.memberNumber)
     $('#memberRUT').on('keyup', function () {
         let rut = validateRut($(this).val())
@@ -185,6 +194,9 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
         }
     })
 
+    $("#memberStatus").attr('disabled','disabled')
+    $(".divDateEnd").css('visibility','hidden')
+
     setTimeout(() => {
         $('#memberRUT').focus()
     }, 500)
@@ -198,7 +210,6 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             state: $('#memberWaterState').val(),
             dateStart: $('#memberWaterDate').data('daterangepicker').startDate.format('YYYY-MM-DD')
         }]
-        let subsidies = []
 
         let memberData = {
             number: $('#memberNumber').val(),
@@ -220,16 +231,11 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
                 sector: $('#memberSector').val()
             },
             waterMeters: waterMeters,
-            subsidies: subsidies,
             email: $('#memberEmail').val(),
             phone: $('#memberPhone').val(),
             dateStart: $('#memberDateStart').data('daterangepicker').startDate.format('YYYY-MM-DD'),
             dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD')
         }
-
-
-
-        console.log(memberData)
 
         const res = validateMemberData(memberData)
         if (res.ok) {
@@ -320,15 +326,28 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     $('#memberEmail').val(member.email)
     $('#memberPhone').val(member.phone)
     $('#memberDateStart').val(moment(member.dateStart).utc().format('DD/MM/YYYY'))
-    $('#memberDateEnd').val(moment(member.dateEnd).utc().format('DD/MM/YYYY'))
     if(member.status=='active'){
         $("#spanStatus").text('Activo')
         $("#spanStatus").addClass('bg-primary')
-        $("#divDateEnd").css('visibility','hidden')
+        $(".divDateEnd").css('visibility','hidden')
     }else{
         $("#spanStatus").text('Inactivo')
         $("#spanStatus").addClass('bg-danger')
+        $(".divDateEnd").css('visibility','visible')
     }
+
+    $("#memberStatus").val(member.status)
+    $("#memberStatusObservation").val(member.inactiveObservation)
+    $('#memberDateEnd').val(moment(member.dateEnd).utc().format('DD/MM/YYYY'))
+    
+
+    $('#memberStatus').change(function () {
+        if ($(this).val() == 'inactive') {
+            $(".divDateEnd").css('visibility','visible')
+        } else {
+            $(".divDateEnd").css('visibility','hidden')
+        }
+    })
 
     if (member.waterMeters.length > 0) {
         $('#memberWaterNumber').val(member.waterMeters[0].number)
@@ -346,15 +365,17 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     })
 
     loadSubsidies(internals.dataRowSelected._id)
-
-    console.log(parametersGeneral)
-
-    let subsidyNumber = parametersGeneral.municipality.subsidyCode + '' +member.number
     
-    while (subsidyNumber.length<11) {
-        subsidyNumber = '0' + subsidyNumber
-      }
-
+    let subsidyNumber = ''
+    if(member.subsidyNumber){
+        subsidyNumber = member.subsidyNumber.toString()
+        while (subsidyNumber.length<11) {
+            subsidyNumber = '0' + subsidyNumber
+        }
+    }else{
+        subsidyNumber = parametersGeneral.municipality.subsidyCode
+    }
+    
     $("#memberSubsidyNumber").val(subsidyNumber)
 
     setTimeout(() => {
@@ -368,7 +389,6 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             state: $('#memberWaterState').val(),
             dateStart: $('#memberWaterDate').data('daterangepicker').startDate.format('YYYY-MM-DD')
         }]
-        let subsidies = []
         let memberData = {
             id: internals.dataRowSelected._id,
             rut: $('#memberRUT').val(),
@@ -389,15 +409,14 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
                 sector: $('#memberSector').val()
             },
             waterMeters: waterMeters,
-            subsidies: subsidies,
             email: $('#memberEmail').val(),
             phone: $('#memberPhone').val(),
             dateStart: $('#memberDateStart').data('daterangepicker').startDate.format('YYYY-MM-DD'),
             dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD'),
-            status: ($("#spanStatus").text()=='Activo') ? 'active' : 'inactive'
+            status: $("#memberStatus").val(),
+            inactiveObservation: ($("#memberStatusObservation").val()) ? $("#memberStatusObservation").val() : '',
+            subsidyNumber: $('#memberSubsidyNumber').val()
         }
-
-        console.log(memberData)
 
         const res = validateMemberData(memberData)
 
@@ -447,20 +466,30 @@ function validateMemberData(memberData) {
         $('#memberRUT').css('border', '1px solid #e74c3c')
     }
 
-    if (memberData.personal.name.length > 1) {
-        validationCounter++
-        $('#memberName').css('border', '1px solid #E5E5E5')
-    } else {
-        errorMessage += `<br>Nombre</b>`
-        $('#memberName').css('border', '1px solid #e74c3c')
-    }
+    if(memberData.type=='personal'){
+        if (memberData.personal.name.length > 1) {
+            validationCounter++
+            $('#memberName').css('border', '1px solid #E5E5E5')
+        } else {
+            errorMessage += `<br>Nombre</b>`
+            $('#memberName').css('border', '1px solid #e74c3c')
+        }
 
-    if (memberData.personal.lastname1.length > 1) {
-        validationCounter++
-        $('#memberLastname1').css('border', '1px solid #E5E5E5')
-    } else {
-        errorMessage += `<br>Apellido Paterno</b>`
-        $('#memberLastname1').css('border', '1px solid #e74c3c')
+        if (memberData.personal.lastname1.length > 1) {
+            validationCounter++
+            $('#memberLastname1').css('border', '1px solid #E5E5E5')
+        } else {
+            errorMessage += `<br>Apellido Paterno</b>`
+            $('#memberLastname1').css('border', '1px solid #e74c3c')
+        }
+    }else{
+        if (memberData.enterprise.name.length > 1) {
+            validationCounter++
+            $('#memberLastname1').css('border', '1px solid #E5E5E5')
+        } else {
+            errorMessage += `<br>Nombre Empresa</b>`
+            $('#memberLastname1').css('border', '1px solid #e74c3c')
+        }
     }
 
     if (memberData.address.address != '' && memberData.address.sector != 0) {
@@ -479,8 +508,16 @@ function validateMemberData(memberData) {
         errorMessage += `<br>E-Mail válido`
         $('#memberEmail').css('border', '1px solid #e74c3c')
     }
+    
+    if ($.isNumeric(memberData.subsidyNumber) || !memberData.id) {
+        validationCounter++
+        $('#memberSubsidyNumber').css('border', '1px solid #E5E5E5')
+    } else {
+        errorMessage += `<br>N° MIDEPLAN`
+        $('#memberSubsidyNumber').css('border', '1px solid #e74c3c')
+    }
 
-    if (validationCounter >= 5) {
+    if (validationCounter >= 5 ) {
         return { ok: memberData }
     } else {
         toastr.warning('Faltan datos:<br>' + errorMessage)
@@ -493,7 +530,7 @@ function setModal(type){
 
     let html = /*html*/`
             <div class="row">
-                <div class="col-md-5">
+                <div class="col-md-6">
                     <div class="card border-primary">
                         <div class="card-body">
                             <div class="row">
@@ -504,22 +541,37 @@ function setModal(type){
                                     N° SOCIO
                                     <input id="memberNumber" type="text" class="form-control form-control-sm border-input" disabled>
                                 </div>
-                                <div class="col-md-5">
+                                <div class="col-md-3">
                                     RUT
                                     <input id="memberRUT" type="text" class="form-control form-control-sm border-input">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     Tipo
                                     <select id="memberType" class="form-select form-select-sm custom-select">
                                         <option value="personal">PERSONA</option>
                                         <option value="enterprise">EMPRESA</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     Fecha Ingreso
                                     <input id="memberDateStart" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
                                 </div>
-                                <div id="divDateEnd" class="col-md-6">
+
+                                <div class="col-md-3">
+                                    Estado
+                                    <select id="memberStatus" class="form-select form-select-sm custom-select">
+                                        <option value="active">ACTIVO</option>
+                                        <option value="inactive">INACTIVO</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 divDateEnd">
+                                    Motivo Baja
+                                    <select id="memberStatusObservation" class="form-select form-select-sm custom-select">
+                                        <option value="unmember">PIERDE CALIDAD</option>
+                                        <option value="deceased">FALLECIDO</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 divDateEnd">
                                     Fecha Baja
                                     <input id="memberDateEnd" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
                                 </div>
@@ -528,7 +580,7 @@ function setModal(type){
                     </div>
                 </div>
 
-                <div id="divPersonal" class="col-md-7">
+                <div id="divPersonal" class="col-md-6">
                     <div class="card border-primary">
                         <div class="card-body">
                             <div class="row">
@@ -553,7 +605,7 @@ function setModal(type){
                     </div>
                 </div>
                         
-                <div id="divEnterprise" class="col-md-7" style="display: none;">
+                <div id="divEnterprise" class="col-md-6" style="display: none;">
                     <div class="card border-danger">
                         <div class="card-body">
                             <div class="row">
@@ -590,19 +642,20 @@ function setModal(type){
                                     <h6>CONTACTO</h6>
                                 </div>
 
-                                <div class="col-md-3">
+                                <div class="col-md-5">
                                     Dirección
                                     <input id="memberAddress" type="text" class="form-control form-control-sm border-input address">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     Sector
                                     <select id="memberSector" class="form-select form-select-sm custom-select address">
                                         <option value="0">-</option>
-                                        ${sectors.reduce((acc, el) => {
-        acc += '<option value="' + el._id + '">' + el.name + '</option>'
-        return acc
-    }, '')
-        }
+                                        ${
+                                            sectors.reduce((acc, el) => {
+                                                acc += '<option value="' + el._id + '">' + el.name + '</option>'
+                                                return acc
+                                            }, '')
+                                        }
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -669,10 +722,10 @@ function setModal(type){
                                 </div>
 
                                 <div class="col-md-2">
-                                    N° Único Subsidio
+                                    N° MIDEPLAN
                                 </div>
                                 <div class="col-md-2">
-                                    <input id="memberSubsidyNumber" type="text" class="form-control form-control-sm border-input" style="text-align: center" disabled>
+                                    <input id="memberSubsidyNumber" maxlength="11" type="text" class="form-control form-control-sm border-input" style="text-align: center">
                                 </div>
                                 
                                 <div class="col-md-12">
@@ -798,10 +851,7 @@ async function saveSubsidy(btn,id){
         apiSave = 'subsidyUpdate'
     }
 
-    console.log(subsidyData)
-
     let saveSubsidy = await axios.post('/api/'+apiSave, subsidyData)
-    console.log(saveSubsidy)
     if(saveSubsidy.data){
         if(saveSubsidy.data._id){
 
@@ -825,7 +875,6 @@ async function deleteSubsidy(btn,id){
 
     if(id){
         let deleteSubsidy = await axios.post('/api/subsidyDelete', {member: internals.dataRowSelected._id, id: id})
-        console.log(deleteSubsidy)
         if(deleteSubsidy.data){
             if(deleteSubsidy.data._id){
                 $(btn).parent().parent().remove()

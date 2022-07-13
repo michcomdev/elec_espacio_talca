@@ -79,7 +79,7 @@ export default [
 
                     let query = {
                         lectures: payload.lectures,
-                        member: payload.member,
+                        members: payload.member,
                         dateExpire: payload.dateExpire,
                         date: payload.date,
                         charge: payload.charge,
@@ -149,7 +149,7 @@ export default [
                     if(payload.number){
                         invoices.number = payload.number
                     }
-                    invoices.member = payload.member
+                    invoices.members = payload.member
                     invoices.date = payload.date
                     invoices.dateExpire = payload.dateExpire
                     invoices.charge = payload.charge

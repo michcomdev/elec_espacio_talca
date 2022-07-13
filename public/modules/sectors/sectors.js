@@ -76,8 +76,7 @@ function chargeLecturesTable() {
 
 $('#updateSector').on('click', function () { //MODIFICAR USUARIO
     handleModal(internals.sectors.data)
-    console.log(internals.sectors.data)
-
+    
     $('#saveSector').on('click', async function () {
         internals.sectors.data.name = $('#sectorName').val().trim()
 
@@ -156,7 +155,7 @@ function handleModal(sectorSelected) {
 
 async function getLectures() {
     let sectorData = await axios.get('api/sectors')
-    console.log(sectorData);
+    
     if (sectorData.data.length > 0) {
         let formatData = sectorData.data.map(el => {
             return el

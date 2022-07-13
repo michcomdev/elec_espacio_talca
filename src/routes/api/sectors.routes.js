@@ -16,7 +16,7 @@ export default [
                 try {
                     let sectors = await Sectors.find().lean()
                     sectors.sort((a, b) => (a.name > b.name) * 2 - 1)
-                    console.log(sectors);
+                    
                     return sectors
                 } catch (error) {
                     console.log(error)

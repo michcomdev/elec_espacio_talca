@@ -26,14 +26,21 @@ $(document).ready(async function () {
         //internals.initDate = start.format('YYYY-MM-DD')
         //internals.endDate = end.format('YYYY-MM-DD')
     })
+    getParameters()
 
     chargeMembersTable()
-    //getParameters()
 })
 
 async function getParameters() {
-    let clientsData = await axios.get('api/clients')
-    clients = clientsData.data
+    let sectorsData = await axios.get('api/sectors')
+    sectors = sectorsData.data
+
+    $("#searchSector").append(
+        sectors.reduce((acc,el)=>{
+            acc += '<option value="'+el._id+'">'+el.name+'</option>'
+            return acc
+        },'')
+    )
 
 }
 
@@ -56,7 +63,7 @@ function chargeMembersTable() {
                     },
 
                 ],
-                iDisplayLength: 50,
+                iDisplayLength: 10,
                 oLanguage: {
                     sSearch: 'buscar:'
                 },
@@ -65,18 +72,20 @@ function chargeMembersTable() {
                     url: spanishDataTableLang
                 },
                 responsive: true,
-                columnDefs: [{ targets: [0, 1, 3, 4], className: 'dt-center' }],
-                order: [[0, 'desc']],
+                columnDefs: [{ targets: [0, 1, 4, 5, 6], className: 'dt-center' }],
+                order: [[0, 'asc']],
                 ordering: true,
                 rowCallback: function (row, data) {
                     //$(row).find('td:eq(1)').html(moment.utc(data.date).format('DD/MM/YYYY'))
-                    $(row).find('td:eq(3)').html(dot_separators(data.lastLecture))
+                    $(row).find('td:eq(5)').html(dot_separators(data.lastLecture))
                     // $('td', row).css('background-color', 'White');
                 },
                 columns: [
                     { data: 'number' },
                     { data: 'typeString' },
                     { data: 'name' },
+                    { data: 'sector' },
+                    { data: 'subsidyActive' },
                     { data: 'lastLecture' },
                     { data: 'paymentStatus' }
                 ],
@@ -106,10 +115,11 @@ function chargeMembersTable() {
 }
 
 async function getMembers() {
-    let lecturesData = await axios.get('api/memberLectures')
+    let lecturesData = await axios.post('api/membersLectures', {sector: $("#searchSector").val()})
 
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
+            console.log(el)
             //el.datetime = moment(el.datetime).format('DD/MM/YYYY HH:mm')
             if (el.type == 'personal') {
                 el.typeString = 'PERSONA'
@@ -118,8 +128,18 @@ async function getMembers() {
                 el.typeString = 'EMPRESA'
                 el.name = el.enterprise.name
             }
+            el.sector = el.address.sector.name
+            if(el.subsidies.length>0){
+                //Verificar que subsidio esté activo
+                el.subsidyActive = 'SI'
+            }else{
+                el.subsidyActive = 'NO'
+
+            }
+            
             el.lastLecture = 0
             el.paymentStatus = 'AL DÍA'
+
             return el
         })
 
@@ -455,7 +475,7 @@ function createModalBody() {
 <h5>Lecturas realizadas</h5>
     <div class="col-md-12">
         <div class="row">
-            <div class="col-md-5 table-responsive">
+            <div class="col-md-6 table-responsive">
                 <br/>
                 <button style="border-radius: 5px;" class="btn btn-primary" onclick="addLecture()" disabled><i class="fas fa-plus-circle"></i> Agregar lectura manual</button>
                 <br />
@@ -468,14 +488,15 @@ function createModalBody() {
                             <th style="text-align: center; background-color: #3B6FC9;">Lectura</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Estado Pago</th>
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Ver Boleta/Factura</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Ver Boleta/Factura</th>
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">DTE SII</th>
                         </tr>
                     </thead>
                     <tbody id="tableLecturesBody">
                     </tbody>
                 </table>
             </div>
-            <div class="col-md-1"></div>
             <div class="col-md-6">
                 <br />
                 <br />

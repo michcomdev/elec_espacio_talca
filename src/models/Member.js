@@ -29,6 +29,7 @@ const memberSchema = new Schema({
         dateStart: { type: Date },
         dateEnd: { type: Date }
     }],
+    subsidyNumber: { type: Number },
     subsidies: [{
         /*subsidy: { type: Schema.Types.ObjectId, ref: 'subsidies' },*/
         decreeNumber: { type: Number },
@@ -42,6 +43,8 @@ const memberSchema = new Schema({
     phone: { type: String },
     dateStart: { type: Date },
     dateEnd: { type: Date },
+    status: { type: String },
+    inactiveObservation: { type: String }
 }, {
     versionKey: false
 })

@@ -36,36 +36,26 @@ export default [
         }
     },
     {
-        method: 'GET',
-        path: '/api/memberLectures',
+        method: 'POST',
+        path: '/api/membersLectures',
         options: {
-            auth: false,
-            description: 'get all lectures data by member',
-            notes: 'return all data from member lectures',
+            description: 'get one member',
+            notes: 'get one member',
             tags: ['api'],
             handler: async (request, h) => {
                 try {
-                    let members = await Member.find().lean()
-                    //let lectures = await Lectures.find().lean()
-                    
-                    /*inventory = inventory.reduce((acc, el, i) => {
-                        let lastPurchase = el.purchases.length - 1
-                        acc.push({
-                            _id: el._id,
-                            name: el.name,
-                            stock: el.stock,
-                            cost: el.purchases[lastPurchase].cost,
-                            price: el.price,
-                            status: el.status,
-                            description: el.description,
-                            purchases: el.purchases
-                        })
-                
-                        return acc
-                    }, [])*/
 
+                    let payload = request.payload   
+                    let query = {}
+                    if(payload.sector!=0){
+                        query = {
+                            'address.sector': payload.sector
+                        }
+                    }
 
+                    let members = await Member.find(query).populate(['address.sector'])
                     return members
+                                        
                 } catch (error) {
                     console.log(error)
 
@@ -73,6 +63,11 @@ export default [
                         error: 'Internal Server Error'
                     }).code(500)
                 }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    sector: Joi.string()
+                })
             }
         }
     },
@@ -86,11 +81,9 @@ export default [
             handler: async (request, h) => {
                 try {
                     let payload = request.payload
-                    console.log("call api");
-                    console.log(payload);
 
                     let query = {
-                        member: payload.member
+                        members: payload.member
                     }
 
 
@@ -102,7 +95,6 @@ export default [
                         lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
                     }
 
-                    console.log(lectures);
                     return lectures
 
                 } catch (error) {
@@ -131,8 +123,8 @@ export default [
                 try {
                     let payload = request.payload   
 
-                    let lecture = await Lectures.findById(payload.id).lean()
-                    let lecturesLast = await Lectures.find({member: lecture.member}).sort({'year' : 'ascending', 'month' : 'ascending'}).lean()
+                    let lecture = await Lectures.findById(payload.id).populate(['members'])
+                    let lecturesLast = await Lectures.find({members: lecture.members}).sort({'year' : 'ascending', 'month' : 'ascending'}).lean()
                     let lastLecture = 0
                     
                     for(let i=0;i<lecturesLast.length;i++){
@@ -175,7 +167,7 @@ export default [
                     let payload = request.payload   
                     let date = new Date(payload.date)
 
-                    let lectures = await Lectures.find({member: payload.member, month: date.getMonth() + 1, year: date.getFullYear()}).lean()
+                    let lectures = await Lectures.find({members: payload.member, month: date.getMonth() + 1, year: date.getFullYear()}).lean()
 
                     if(lectures[0]){
                         let lecture = await Lectures.findById(lectures[0]._id)
@@ -189,7 +181,7 @@ export default [
 
                     }else{
                         let query = {
-                            member: payload.member,
+                            members: payload.member,
                             month: date.getMonth() + 1,
                             year: date.getFullYear(),
                             logs: [{

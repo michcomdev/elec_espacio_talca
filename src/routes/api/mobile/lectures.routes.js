@@ -42,7 +42,7 @@ export default [
                     }*/
 
                     let date = new Date()
-                    let lectures = await Lectures.find({ member: member[0]._id, month: date.getMonth() + 1, year: date.getFullYear() }).lean()
+                    let lectures = await Lectures.find({ members: member[0]._id, month: date.getMonth() + 1, year: date.getFullYear() }).lean()
 
                     if (lectures[0]) {
                         let lecture = await Lectures.findById(lectures[0]._id)
@@ -57,7 +57,7 @@ export default [
 
                     } else {
                         let query = {
-                            member: member[0]._id,
+                            members: member[0]._id,
                             month: date.getMonth() + 1,
                             year: date.getFullYear(),
                             logs: [{

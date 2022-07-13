@@ -4,7 +4,7 @@ const Schema = mongoose.Schema
 
 const invoicesSchema = new Schema({
     lectures: { type: Schema.Types.ObjectId, ref: 'lectures' },
-    member: { type: Schema.Types.ObjectId, ref: 'members' },
+    members: { type: Schema.Types.ObjectId, ref: 'members' },
     date: { type: Date, default: Date.now() },
     dateExpire: { type: Date, default: Date.now() },
     charge: { type: Number },
