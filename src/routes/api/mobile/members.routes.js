@@ -163,7 +163,7 @@ export default [
                 try {
                     let payload = request.payload
                     let query = {
-                        member: payload.member
+                        members: payload.member
                     }
 
                     let lectures = await Lectures.find(query).sort({ 'year': 'descending', 'month': 'descending' }).lean()
