@@ -218,7 +218,7 @@ async function getTractors() {
         )
 
         new QRCode(document.getElementById(data[i]._id), {
-            text: data[i]._id,
+            text: { id: data[i]._id },
             width: 150,
             height: 150
         })

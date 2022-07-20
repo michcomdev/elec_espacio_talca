@@ -102,6 +102,7 @@ internals.server = async () => {
             key: process.env.SECRET_KEY,          // Never Share your secret key
             validate: async function (decoded, request) {
 
+                console.log("decoded",decoded)
                 if (decoded.aud && decoded.aud == 'mobileuser') {
                     let tokenredis = await request.redis.client.hget('aguamobile',decoded.id)
 

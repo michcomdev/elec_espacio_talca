@@ -11,6 +11,7 @@ export default [
         options: {
             description: 'get all tractors data',
             notes: 'return all data from tractors',
+            //auth: 'sysw',
             tags: ['api'],
             handler: async (request, h) => {
                 try {
