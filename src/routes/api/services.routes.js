@@ -71,6 +71,7 @@ export default [
 
                     let service = new Services({
                         name: payload.name,
+                        type: payload.type,
                         value: payload.value,
                         status: payload.status,
                         description: payload.description
@@ -91,6 +92,7 @@ export default [
             validate: {
                 payload: Joi.object().keys({
                     name: Joi.string().optional().allow(''),
+                    type: Joi.string().optional().allow(''),
                     value: Joi.number().allow(0).optional(),
                     status: Joi.string().optional().allow(''),
                     description: Joi.string().optional().allow('')
@@ -112,6 +114,7 @@ export default [
                     let service = await Services.findById(payload.id)
                    
                     service.name = payload.name
+                    service.type = payload.type
                     service.value = payload.value
                     service.status = payload.status
                     service.description = payload.description
@@ -132,7 +135,8 @@ export default [
                 payload: Joi.object().keys({
                     id: Joi.string().optional().allow(''),
                     name: Joi.string().optional().allow(''),
-                    value: Joi.number().allow(0).optional(),
+                    type: Joi.string().optional().allow(''),
+                    value: Joi.number().allow(0).optional(),    
                     status: Joi.string().optional().allow(''),
                     description: Joi.string().optional().allow('')
                 })

@@ -123,7 +123,7 @@ export default [
                 try {
                     let payload = request.payload   
 
-                    let lecture = await Lectures.findById(payload.id).populate(['members'])
+                    let lecture = await Lectures.findById(payload.id).populate(['members']).lean()
                     let lecturesLast = await Lectures.find({members: lecture.members}).sort({'year' : 'ascending', 'month' : 'ascending'}).lean()
                     let lastLecture = 0
                     
@@ -135,8 +135,6 @@ export default [
                             i = lecturesLast.length
                         }
                     }
-
-                    console.log(lastLecture)
 
                     lecture.lastLecture = lastLecture
 

@@ -119,7 +119,7 @@ async function getMembers() {
 
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
-            console.log(el)
+            
             //el.datetime = moment(el.datetime).format('DD/MM/YYYY HH:mm')
             if (el.type == 'personal') {
                 el.typeString = 'PERSONA'

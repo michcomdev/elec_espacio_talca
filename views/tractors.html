@@ -1,0 +1,34 @@
+{{!<layout/default}}
+    {{#extend "css" }}
+<link rel="stylesheet" type="text/css"
+    href="/public/modules/sectors/sectors.css">
+{{/extend}}
+<br />
+<h3 class="text-center animate__animated animate__fadeIn">TRACTORES</h3>
+<br>
+
+<div class="row animate__animated animate__fadeIn">
+    <div id="list" class="row">
+        
+    </div>
+
+    <div class="modal fade" id="modal" role="dialog" aria-labelledby="modal"
+        data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-sectors" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modal_title"></h4>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+                </div>
+                <div class="modal-body" id="modal_body"></div>
+                <div class="modal-footer" id="modal_footer"></div>
+            </div>
+        </div>
+    </div> 
+    {{#extend "js"}}
+    <script src="/public/modules/tractors/tractors.js"></script>
+    <script src="/public/js/qrcode.js"></script>
+    {{/extend}}

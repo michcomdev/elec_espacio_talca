@@ -2,6 +2,7 @@ import Member from '../../../models/Member'
 import Sectors from '../../../models/Sectors'
 import Lectures from '../../../models/Lectures'
 import Invoices from '../../../models/Invoices'
+import Tractor from '../../../models/Tractor'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 
