@@ -128,11 +128,11 @@ $('#createSector').on('click', async function () { // CREAR SECTOR
 function handleModal(sectorSelected) {
     $('#modal').modal('show');
     $('#modal_title').html(`${(sectorSelected) ? 'Modificar sector ' : 'Nuevo sector'}`)
-    $('#modal_body').html( /*html*/`
+    $('#modal_body').html(`
         <div class="row">
-            <div class="col-md-6" style="margin-top:10px;">
-                <h6>Nombre del sector</h6>
-                <input id="sectorName" type="text" value="${(sectorSelected) ? sectorSelected.name : ''}" class="form-control border-input">
+            <div class="col-md-6">
+                Nombre del sector
+                <input id="sectorName" type="text" value="${(sectorSelected) ? sectorSelected.name : ''}" class="form-control form-control-sm border-input">
             </div>
 
             <div class="col-md-6" id="sectorErrorMessage"></div>

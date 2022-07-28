@@ -74,7 +74,7 @@ export default [
                 try {
 
                     let payload = request.payload   
-                    let member = await Member.findById(payload.id)
+                    let member = await Member.findById(payload.id).populate(['address.sector','services.services'])
                     return member
 
                 } catch (error) {
@@ -118,12 +118,10 @@ export default [
                         address.sector = payload.address.sector
                     }
 
-                    console.log(address)
-
                     let parameters = await Parameters.findById('6263033665a0afa3096a6a62')
                     let number = parameters.memberNumber
 
-                    let member = new Member({
+                    let query = {
                         number: number,
                         rut: payload.rut,
                         type: payload.type,
@@ -147,7 +145,13 @@ export default [
                         dateEnd: payload.dateEnd,
                         status: 'active',
                         inactiveObservation: ''
-                    })
+                    }
+
+                    if(payload.services.length>0){
+                        query.services = payload.services
+                    }
+
+                    let member = new Member(query)
 
                     const response = await member.save()
 
@@ -194,7 +198,11 @@ export default [
                     email: Joi.string().optional().allow(''),
                     phone: Joi.string().optional().allow(''),
                     dateStart: Joi.string().optional().allow(''),
-                    dateEnd: Joi.string().optional().allow('')
+                    dateEnd: Joi.string().optional().allow(''),
+                    services: Joi.array().items(Joi.object().keys({
+                        services: Joi.string().optional().allow(''),
+                        value: Joi.number().optional().allow(0)
+                    })).optional()
                 })
             }
         }
@@ -235,7 +243,6 @@ export default [
                         address: payload.enterprise.address
                     }
 
-
                     let address = {
                         address: payload.address.address
                     }
@@ -254,6 +261,7 @@ export default [
                     member.dateEnd = payload.dateEnd
                     member.status = payload.status
                     member.inactiveObservation = payload.inactiveObservation
+                    member.services = payload.services
 
                     const response = await member.save()
 
@@ -300,7 +308,11 @@ export default [
                     dateEnd: Joi.string().optional().allow(''),
                     status: Joi.string().optional().allow(''),
                     inactiveObservation: Joi.string().optional().allow(''),
-                    subsidyNumber: Joi.number().optional().allow(0)
+                    subsidyNumber: Joi.number().optional().allow(0),
+                    services: Joi.array().items(Joi.object().keys({
+                        services: Joi.string().optional().allow(''),
+                        value: Joi.number().optional().allow(0)
+                    })).optional()
                 })
             }
         }
@@ -320,12 +332,21 @@ export default [
                     let member = await Member.findById(payload.member)
 
                     member.subsidies.push({
+                        rut: payload.rut,
+                        name: payload.name,
+                        lastname1: payload.lastname1,
+                        lastname2: payload.lastname2,
+                        houseQuantity: payload.houseQuantity,
+                        municipality: payload.municipality,
+                        type: payload.type,
                         decreeNumber: payload.decreeNumber,
                         decreeDate: payload.decreeDate,
                         inscriptionDate: payload.inscriptionDate,
+                        inscriptionScore: payload.inscriptionScore,
                         startDate: payload.startDate,
                         endDate: payload.endDate,
-                        percentage: payload.percentage
+                        percentage: payload.percentage,
+                        status: payload.status
                     })
 
                     const response = await member.save()
@@ -343,12 +364,21 @@ export default [
             validate: {
                 payload: Joi.object().keys({
                     member: Joi.string().optional().allow(''),
+                    rut: Joi.string().optional().allow(''),
+                    name: Joi.string().optional().allow(''),
+                    lastname1: Joi.string().optional().allow(''),
+                    lastname2: Joi.string().optional().allow(''),
+                    houseQuantity: Joi.number().optional().allow(0),
+                    municipality: Joi.string().optional().allow(''),
+                    type: Joi.number().optional().allow(0),
                     decreeNumber: Joi.number().optional().allow(0),
                     decreeDate: Joi.string().optional().allow(''),
                     inscriptionDate: Joi.string().optional().allow(''),
+                    inscriptionScore: Joi.number().optional().allow(0),
                     startDate: Joi.string().optional().allow(''),
                     endDate: Joi.string().optional().allow(''),
-                    percentage: Joi.number().optional().allow(0)
+                    percentage: Joi.number().optional().allow(0),
+                    status: Joi.string().optional().allow('')
                 })
             }
         }
@@ -369,12 +399,21 @@ export default [
                     for(let i=0; i<member.subsidies.length; i++){
                         console.log(member.subsidies[i]._id,payload.id)
                         if(member.subsidies[i]._id.toString()==payload.id){
+                            member.subsidies[i].rut = payload.rut
+                            member.subsidies[i].name = payload.name
+                            member.subsidies[i].lastname1 = payload.lastname1
+                            member.subsidies[i].lastname2 = payload.lastname2
+                            member.subsidies[i].houseQuantity = payload.houseQuantity
+                            member.subsidies[i].municipality = payload.municipality
+                            member.subsidies[i].type = payload.type
                             member.subsidies[i].decreeNumber = payload.decreeNumber
                             member.subsidies[i].decreeDate = payload.decreeDate
                             member.subsidies[i].inscriptionDate = payload.inscriptionDate
+                            member.subsidies[i].inscriptionScore = payload.inscriptionScore
                             member.subsidies[i].startDate = payload.startDate
                             member.subsidies[i].endDate = payload.endDate
                             member.subsidies[i].percentage = payload.percentage
+                            member.subsidies[i].status = payload.status
                         }
                     }
 
@@ -394,12 +433,61 @@ export default [
                 payload: Joi.object().keys({
                     member: Joi.string().optional().allow(''),
                     id: Joi.string().optional().allow(''),
+                    rut: Joi.string().optional().allow(''),
+                    name: Joi.string().optional().allow(''),
+                    lastname1: Joi.string().optional().allow(''),
+                    lastname2: Joi.string().optional().allow(''),
+                    houseQuantity: Joi.number().optional().allow(0),
+                    municipality: Joi.string().optional().allow(''),
+                    type: Joi.number().optional().allow(0),
                     decreeNumber: Joi.number().optional().allow(0),
                     decreeDate: Joi.string().optional().allow(''),
                     inscriptionDate: Joi.string().optional().allow(''),
+                    inscriptionScore: Joi.number().optional().allow(0),
                     startDate: Joi.string().optional().allow(''),
                     endDate: Joi.string().optional().allow(''),
-                    percentage: Joi.number().optional().allow(0)
+                    percentage: Joi.number().optional().allow(0),
+                    status: Joi.string().optional().allow('')
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/subsidyDeactivate',
+        options: {
+            description: 'deactivate subsidy',
+            notes: 'deactivate subsidy',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+
+                    let payload = request.payload   
+                    let member = await Member.findById(payload.member)
+
+                    for(let i=0; i<member.subsidies.length; i++){
+                        if(member.subsidies[i]._id.toString()==payload.id){
+                            member.subsidies[i].status = payload.status
+                        }
+                    }
+
+                    const response = await member.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    member: Joi.string().optional().allow(''),
+                    id: Joi.string().optional().allow(''),
+                    status: Joi.string().optional().allow('')
                 })
             }
         }

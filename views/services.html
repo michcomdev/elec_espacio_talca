@@ -31,11 +31,9 @@
                             table-condensed" cellspacing="0" width="100%">
                             <thead>
                                 <tr class="table-info">
-                                    <th style="background-color: #3B6FC9;
-                                        border-top-left-radius: 5px;">SERVICIO</th>
-                                    <th style="background-color: #3B6FC9;">VALOR</th>
-                                    <th style="background-color: #3B6FC9;
-                                        border-top-right-radius: 5px;">ESTADO</th>
+                                    <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">SERVICIO</th>
+                                    <th style="background-color: #3B6FC9;">TIPO</th>
+                                    <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">ESTADO</th>
                                 </tr>
                             </thead>
                         </table>
@@ -48,11 +46,11 @@
                     </div>
                 </div>
             </div>
-
         </div>
+    </div>
+</div>
 
-        <div class="modal fade" id="serviceModal" role="dialog"
-            aria-labelledby="modal">
+        <div class="modal fade" id="serviceModal" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-xl" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -74,7 +72,7 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title" id="modal_title"></h4>
+                        <h6 class="modal-title" id="modal_title"></h6>
                         <button type="button" class="btn-close"
                             data-dismiss="modal"
                             aria-label="Close">

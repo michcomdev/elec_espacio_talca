@@ -38,16 +38,15 @@ function chargeServiceTable() {
                 url: spanishDataTableLang
             },
             responsive: false,
-            columnDefs: [{targets: [1], className: 'dt-right'},
-                        {targets: [2], className: 'dt-center'}],
+            //columnDefs: [{targets: [0,1,2], className: 'dt-center'}],
             order: [[ 0, 'desc' ]],
             ordering: true,
             rowCallback: function( row, data ) {
-                $(row).find('td:eq(1)').html(dot_separators(data.value));
+                //$(row).find('td:eq(1)').html(dot_separators(data.value));
             },
             columns: [
                 { data: 'name' },
-                { data: 'value' },
+                { data: 'type' },
                 { data: 'status' }
             ],
             initComplete: function (settings, json) {
@@ -81,8 +80,12 @@ async function getServicesEnabled() {
 
     if (servicesData.data.length > 0) {
         let formatData= servicesData.data.map(el => {
-            el.datetime = moment(el.datetime).format('DD/MM/YYYY HH:mm')
 
+            if(el.type=='MENSUAL'){
+                el.type = 'Boleta Mensual'
+            }else{
+                el.type = 'Extra'
+            }
             return el
         })
 
@@ -120,7 +123,7 @@ $('#createService').on('click', function () { // CREAR MOVIMIENTO
         
         let serviceData = {
             name: $('#serviceName').val(),
-            value: $('#serviceValue').val(),
+            type: $('#serviceType').val(),
             status: $('#serviceStatus').val(),
             description: $('#serviceDescription').val()
         }
@@ -171,7 +174,7 @@ $('#updateService').on('click', async function () {
     `)
 
     $('#serviceName').val(service.name)
-    $('#serviceValue').val(service.value)
+    $('#serviceType').val(service.type)
     $('#serviceStatus').val(service.status)
     $('#serviceDescription').val(service.description)
     
@@ -180,7 +183,7 @@ $('#updateService').on('click', async function () {
         let serviceData = {
             id: internals.dataRowSelected._id,
             name: $('#serviceName').val(),
-            value: $('#serviceValue').val(),
+            type: $('#serviceType').val(),
             status: $('#serviceStatus').val(),
             description: $('#serviceDescription').val()
         }
@@ -215,16 +218,6 @@ function validateServiceData(serviceData) {
     if(serviceData.name==''){
         errorMessage += '<br>Nombre'
     }
-
-    if(serviceData.value.length!=0){
-        if(!$.isNumeric(serviceData.value)){
-            errorMessage += '<br>Precio'
-        }else{
-            serviceData.value = parseInt(serviceData.value)
-        }
-    }else{
-        errorMessage += '<br>Precio'
-    }
     
     if(serviceData.description==''){
         errorMessage += '<br>Descripción'
@@ -248,30 +241,35 @@ function validateServiceData(serviceData) {
 
 function createModalBody(){
     let body = `
-    <div class="row">
-        <div class="col-md-4">
-            Nombre Servicio
-            <input id="serviceName" type="text" class="form-control border-input">
-        </div>
-        <div class="col-md-4">
-            Precio
-            <input id="serviceValue" type="text" class="form-control border-input">
-        </div>
-        <div class="col-md-4">
-            Estado
-            <br/>
-            <select id="serviceStatus" class="form-select">
-                <option value="HABILITADO">HABILITADO</option>
-                <option value="DESHABILITADO">DESHABILITADO</option>
-            </select>
-        </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        Nombre Servicio
+                        <input id="serviceName" type="text" class="form-control form-control-sm border-input">
+                    </div>
+                    <div class="col-md-4">
+                        Aplica en
+                        <br/>
+                        <select id="serviceType" class="form-select form-select-sm">
+                            <option value="MENSUAL">BOLETA MENSUAL</option>
+                            <option value="EXTRA">BOLETA EXTRA</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        Estado
+                        <br/>
+                        <select id="serviceStatus" class="form-select form-select-sm">
+                            <option value="HABILITADO">HABILITADO</option>
+                            <option value="DESHABILITADO">DESHABILITADO</option>
+                        </select>
+                    </div>
 
-        <div class="form-group col-md-12">
-            <h6 class="card-title">&nbsp;Descripción</h6>
-            <textarea id="serviceDescription" placeholder="EJEMPLO" class="form-control" rows="5"></textarea>
-        </div>
+                    <div class="form-group col-md-12">
+                        Descripción
+                        <br/>
+                        <textarea id="serviceDescription" placeholder="EJEMPLO" class="form-control form-control-sm" rows="5"></textarea>
+                    </div>
 
-    </div>
-`
+                </div>
+            `
     return body
 }

@@ -181,33 +181,31 @@ async function getTractors() {
                         <b>Patente ${data[i].plate}</b>
                     </div>
                     <div class="card-body">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4" style="text-align: center;">
-                                    <img src="${data[i].photo}" style="max-width: 150px; max-height: 150px;"/>
-                                </div>
-                                <div class="col-md-4">
-                                    <table>
-                                        <tr>
-                                            <td>Marca</td>
-                                            <td>&nbsp;</td>
-                                            <td>${data[i].brand}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modelo</td>
-                                            <td>&nbsp;</td>
-                                            <td>${data[i].model}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Patente</td>
-                                            <td>&nbsp;</td>
-                                            <td>${data[i].plate}</td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <div class="col-md-4">
-                                    <div id="${data[i]._id}">
-                                    </div>
+                        <div class="row">
+                            <div class="col-md-4" style="text-align: center;">
+                                <img src="${data[i].photo}" style="max-width: 150px; max-height: 150px;"/>
+                            </div>
+                            <div class="col-md-4">
+                                <table>
+                                    <tr>
+                                        <td>Marca</td>
+                                        <td>&nbsp;</td>
+                                        <td>${data[i].brand}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Modelo</td>
+                                        <td>&nbsp;</td>
+                                        <td>${data[i].model}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Patente</td>
+                                        <td>&nbsp;</td>
+                                        <td>${data[i].plate}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-4">
+                                <div id="${data[i]._id}">
                                 </div>
                             </div>
                         </div>

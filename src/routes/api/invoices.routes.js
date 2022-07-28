@@ -45,7 +45,7 @@ export default [
                 try {
                     let payload = request.payload   
 
-                    let invoice = await Invoices.findById(payload.id).lean().populate(['lectures'])
+                    let invoice = await Invoices.findById(payload.id).lean().populate(['lectures','services.services'])
 
                     return invoice
 
@@ -97,6 +97,10 @@ export default [
                     if(payload.number){
                         query.number = payload.number
                     }
+                    
+                    if(payload.services.length>0){
+                        query.services = payload.services
+                    }
 
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
@@ -127,7 +131,11 @@ export default [
                     subsidyValue: Joi.number().allow(0),
                     consumption: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
-                    invoiceTotal: Joi.number().allow(0)
+                    invoiceTotal: Joi.number().allow(0),
+                    services: Joi.array().items(Joi.object().keys({
+                        services: Joi.string().optional().allow(''),
+                        value: Joi.number().optional().allow(0)
+                    })).optional()
                 })
             }
         }
@@ -162,6 +170,7 @@ export default [
                     invoices.consumption = payload.consumption
                     invoices.invoiceDebt = payload.invoiceDebt
                     invoices.invoiceTotal = payload.invoiceTotal
+                    invoices.services = payload.services
 
                     const response = await invoices.save()
 
@@ -192,7 +201,11 @@ export default [
                     subsidyValue: Joi.number().allow(0),
                     consumption: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
-                    invoiceTotal: Joi.number().allow(0)
+                    invoiceTotal: Joi.number().allow(0),
+                    services: Joi.array().items(Joi.object().keys({
+                        services: Joi.string().optional().allow(''),
+                        value: Joi.number().optional().allow(0)
+                    })).optional()
                 })
             }
         }

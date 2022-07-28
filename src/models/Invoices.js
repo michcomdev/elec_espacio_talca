@@ -17,7 +17,10 @@ const invoicesSchema = new Schema({
     consumption: { type: Number },
     invoiceDebt: { type: Number },
     invoiceTotal: { type: Number },
-    /*Add Extra Services*/
+    services: [{
+        services: { type: Schema.Types.ObjectId, ref: 'services' },
+        value: { type: Number }
+    }],
     /*Add Payment Data*/
     /*Add Invoice data: number - type */
     //DTE data

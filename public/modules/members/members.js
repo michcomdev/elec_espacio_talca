@@ -6,7 +6,7 @@ let internals = {
     dataRowSelected: {}
 }
 
-let sectors
+let sectors, services
 let parametersGeneral
 
 $(document).ready(async function () {
@@ -105,6 +105,9 @@ async function getParameters() {
             return acc
         },'')
     )
+
+    let servicesData = await axios.post('api/servicesByFilter', {type: "MENSUAL"})
+    services = servicesData.data
 
     let parametersData = await axios.get('api/parameters')
     parametersGeneral = parametersData.data
@@ -211,6 +214,24 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             dateStart: $('#memberWaterDate').data('daterangepicker').startDate.format('YYYY-MM-DD')
         }]
 
+        let services = []
+        if($("#tableBodyServices > tr").length>0){
+            $("#tableBodyServices > tr").each(function() {
+
+                if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
+                    value = 0
+                }else{
+                    value = $($($(this).children()[1]).children()[0]).val()
+                }
+
+                services.push({
+                    services: $($($(this).children()[0]).children()[0]).val(),
+                    value: value
+                })
+            })    
+        }
+        
+
         let memberData = {
             number: $('#memberNumber').val(),
             rut: $('#memberRUT').val(),
@@ -245,20 +266,20 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
                     $('#modalMember').modal('hide')
 
                     $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h6 class="alert-heading">Socio almacenado correctamente</h6>`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Socio almacenado correctamente</h7>`)
                     chargeMembersTable()
 
                 } else if (saveMember.data == 'created') {
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h6 class="alert-heading">RUT ya registrado, favor corroborar</h6>`)
+                    $('#modal_body').html(`<h7 class="alert-heading">RUT ya registrado, favor corroborar</h7>`)
                 
                 }else{
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
                 }
             } else {
                 $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
+                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
             }
             $('#modal').modal('show')
 
@@ -356,6 +377,30 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
         $('#memberWaterDate').val(moment(member.waterMeters[0].dateStart).utc().format('DD/MM/YYYY'))
     }
 
+    if (member.services.length > 0) {
+        for(let i=0; i<member.services.length; i++){
+            $("#tableBodyServices").append(`<tr>
+                <td>
+                    <select class="form-select form-select-sm custom-select">
+                        ${
+                            services.reduce((acc, el) => {
+                                console.log(member.services[i].services)
+                                if(el._id==member.services[i].services){
+                                    acc += '<option value="' + el._id + '" selected>' + el.name + '</option>'
+                                }else{
+                                    acc += '<option value="' + el._id + '">' + el.name + '</option>'
+                                }
+                                return acc
+                            }, '')
+                        }
+                    </select>
+                </td>
+                <td><input type="text" class="form-control form-control-sm" value="${(member.services[i].value!=0) ? member.services[i].value : '' }"/></td>
+                <td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
+            </tr>`)
+        }
+    }
+
     $('.datepicker').daterangepicker({
         opens: 'left',
         locale: dateRangePickerDefaultLocale,
@@ -389,6 +434,24 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             state: $('#memberWaterState').val(),
             dateStart: $('#memberWaterDate').data('daterangepicker').startDate.format('YYYY-MM-DD')
         }]
+
+        let services = []
+        if($("#tableBodyServices > tr").length>0){
+            $("#tableBodyServices > tr").each(function() {
+
+                if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
+                    value = 0
+                }else{
+                    value = $($($(this).children()[1]).children()[0]).val()
+                }
+
+                services.push({
+                    services: $($($(this).children()[0]).children()[0]).val(),
+                    value: value
+                })
+            })    
+        }
+
         let memberData = {
             id: internals.dataRowSelected._id,
             rut: $('#memberRUT').val(),
@@ -415,7 +478,8 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD'),
             status: $("#memberStatus").val(),
             inactiveObservation: ($("#memberStatusObservation").val()) ? $("#memberStatusObservation").val() : '',
-            subsidyNumber: $('#memberSubsidyNumber').val()
+            subsidyNumber: $('#memberSubsidyNumber').val(),
+            services: services
         }
 
         const res = validateMemberData(memberData)
@@ -428,20 +492,20 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
                     $('#modalMember').modal('hide')
 
                     $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h6 class="alert-heading">Socio almacenado correctamente</h6>`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Socio almacenado correctamente</h7>`)
                     chargeMembersTable()
 
                 } else if (saveMember.data == 'created') {
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h6 class="alert-heading">RUT ya registrado, favor corroborar</h6>`)
+                    $('#modal_body').html(`<h7 class="alert-heading">RUT ya registrado, favor corroborar</h7>`)
                 
                 }else{
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
                 }
             } else {
                 $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
+                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
             }
             $('#modal').modal('show')
 
@@ -714,38 +778,123 @@ function setModal(type){
                     <div class="card border-primary">
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <h6>SUBSIDIOS</h6>
                                 </div>
-                                <div class="col-md-3">
-                                    <button class="btn btn-sm btn-primary" style="border-radius:5px;" onclick="addSubsidy()"><i class="fas fa-plus-circle"></i> Agregar Subsidio</button>
-                                </div>
-
+                                
                                 <div class="col-md-2">
                                     N° MIDEPLAN
                                 </div>
                                 <div class="col-md-2">
                                     <input id="memberSubsidyNumber" maxlength="11" type="text" class="form-control form-control-sm border-input" style="text-align: center">
                                 </div>
-                                
-                                <div class="col-md-12">
-                                    <table class="table" style="font-size: 12px">
-                                        <thead>
-                                            <tr>
-                                                <th>Estado</th>
-                                                <th>N° Decreto</th>
-                                                <th>Fecha Decreto</th>
-                                                <th>Fecha Inscripción Reg. Social</th>
-                                                <th>Inicio</th>
-                                                <th>Fin</th>
-                                                <th>Porcentaje</th>
-                                                <th>Quitar</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tableBodySubsidies">
-                                        </tbody>
 
-                                    </table>
+                                <div class="col-md-4">
+                                    <button class="btn btn-sm btn-primary" style="border-radius:5px; visibility: hidden;" onclick="addSubsidy()"><i class="fas fa-plus-circle"></i> Agregar Subsidio</button>
+                                </div>
+
+                                
+                                <div class="col-md-6">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <b>Subsidio Activo</b>
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    RUT
+                                                    <input id="subsidyRUT" type="text" class="form-control form-control-sm border-input">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    Nombres
+                                                    <input id="subsidyName" type="text" class="form-control form-control-sm border-input">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    Apellido Paterno
+                                                    <input id="subsidyLastname1" type="text" class="form-control form-control-sm border-input">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    Apellido Materno
+                                                    <input id="subsidyLastname2" type="text" class="form-control form-control-sm border-input">
+                                                </div>
+                                                
+                                                <div class="col-md-3">
+                                                    Municipalidad
+                                                    <input id="subsidyMunicipality" type="text" class="form-control form-control-sm border-input">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    Tipo
+                                                    <select id="subsidyType" class="form-select form-select-sm custom-select">
+                                                        <option value="1">1</option>
+                                                        <option value="2">2</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    N° Decreto
+                                                    <input id="subsidyDecreeNumber" type="text" class="form-control form-control-sm border-input">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    Fecha Decreto
+                                                    <input id="subsidyDecreeDate" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    N° Viviendas
+                                                    <input id="subsidyHouseQuantity" type="text" class="form-control form-control-sm border-input">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    Porcentaje
+                                                    <input id="subsidyPercentage" type="text" class="form-control form-control-sm border-input">
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    Puntaje Ficha CAS
+                                                    <input id="subsidyInscriptionScore" type="text" class="form-control form-control-sm border-input">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    Fecha CAS
+                                                    <input id="subsidyInscriptionDate" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
+                                                </div>
+                                                
+
+
+                                                <div class="col-md-3">
+                                                    <br/>
+                                                    <button id="btnSaveSubsidy" class="btn btn-sm btn-success" style="border-radius:5px;">Almacenar</button>
+                                                </div>
+                                                <div class="col-md-3">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <br/>
+                                                    <button id="btnDeactivateSubsidy" class="btn btn-sm btn-danger" style="border-radius:5px;">Dar de Baja</button>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    Fecha Vencimiento
+                                                    <input id="subsidyEndDate" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <b>Histórico</b>
+                                            <table class="table" style="font-size: 12px">
+                                                <thead>
+                                                    <tr>
+                                                        <th>N° Decreto</th>
+                                                        <th>Fecha Decreto</th>
+                                                        <th>Fecha Inscripción Reg. Social</th>
+                                                        <th>Inicio</th>
+                                                        <th>Fin</th>
+                                                        <th>Porcentaje</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tableBodySubsidies">
+                                                </tbody>
+
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                             </div>
@@ -769,7 +918,38 @@ function setModal(type){
                     </div>
                 </div>`
         }
-    html +=`</div>`
+
+        html += `<div class="col-md-6">
+            <br/>
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>SERVICIOS</h6>
+                        </div>
+                        <div class="col-md-5">
+                            <button class="btn btn-sm btn-primary" style="border-radius:5px;" onclick="addService()"><i class="fas fa-plus-circle"></i> Agregar Servicio</button>
+                        </div>                        
+                        <div class="col-md-12">
+                            <table class="table" style="font-size: 12px">
+                                <thead>
+                                    <tr>
+                                        <th>Servicio</th>
+                                        <th>Valor (si corresponde)</th>
+                                        <th>Quitar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBodyServices">
+                                </tbody>
+
+                            </table>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`
 
     $('#modalMember_body').html(html)
 
@@ -782,142 +962,64 @@ function setModal(type){
     })
 }
 
-function addSubsidy(){
-    $("#tableBodySubsidies").append(`<tr>
-                    <td><button class="btn btn-sm btn-success" style="border-radius:5px;" onclick="saveSubsidy(this)">Almacenar</button></td>
-                    <td><input type="text" class="form-control form-control-sm" /></td>
-                    <td><input type="text" class="form-control form-control-sm datepicker" /></td>
-                    <td><input type="text" class="form-control form-control-sm datepicker" /></td>
-                    <td><input type="text" class="form-control form-control-sm datepicker" /></td>
-                    <td><input type="text" class="form-control form-control-sm datepicker" /></td>
-                    <td><input type="text" class="form-control form-control-sm" value="100" /></td>
-                    <td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteSubsidy(this)"><i class="fas fa-times"></i></button></td>
-                </tr>`)
-
-    $('.datepicker').daterangepicker({
-        opens: 'left',
-        locale: dateRangePickerDefaultLocale,
-        singleDatePicker: true,
-        autoApply: true
-    }, function(start, end, label) {
-    })
-}
-
-async function saveSubsidy(btn,id){
-
-    let tr = $(btn).parent().parent()
-
-    //let value1 = $($($(tr).children()[1]).children()[0]).val()
-    let decreeNumber = $($($(tr).children()[1]).children()[0]).val()
-    let decreeDate = $($($(tr).children()[2]).children()[0]).data('daterangepicker').startDate.format('YYYY-MM-DD')
-    let inscriptionDate = $($($(tr).children()[3]).children()[0]).data('daterangepicker').startDate.format('YYYY-MM-DD')
-    let startDate = $($($(tr).children()[4]).children()[0]).data('daterangepicker').startDate.format('YYYY-MM-DD')
-    let endDate = $($($(tr).children()[5]).children()[0]).data('daterangepicker').startDate.format('YYYY-MM-DD')
-    let percentage = $($($(tr).children()[6]).children()[0]).val()
-
-    if(!$.isNumeric(decreeNumber)){
-        $('#modal_title').html(`Verificar`)
-        $('#modal_body').html(`<h6 class="alert-heading">N° de Decreto no válido</h6>`)
-        $('#modal').modal('show')
-        return
-    }
-    if(!$.isNumeric(percentage)){
-        $('#modal_title').html(`Verificar`)
-        $('#modal_body').html(`<h6 class="alert-heading">Porcentaje no válido (debe ser entre 1% y 100%)</h6>`)
-        $('#modal').modal('show')
-        return
-    }else{
-        if(percentage<=0 || percentage>100){
-            $('#modal_title').html(`Verificar`)
-            $('#modal_body').html(`<h6 class="alert-heading">Porcentaje no válido (debe ser entre 1% y 100%)</h6>`)
-            $('#modal').modal('show')
-            return
-        }
-    }
-
-    let subsidyData = {
-        member: internals.dataRowSelected._id,
-        decreeNumber: decreeNumber,
-        decreeDate: decreeDate,
-        inscriptionDate: inscriptionDate,
-        startDate: startDate,
-        endDate: endDate,
-        percentage: percentage
-    }
-
-    let apiSave = 'subsidySave'
-    if(id){
-        subsidyData.id = id
-        apiSave = 'subsidyUpdate'
-    }
-
-    let saveSubsidy = await axios.post('/api/'+apiSave, subsidyData)
-    if(saveSubsidy.data){
-        if(saveSubsidy.data._id){
-
-            $('#modal_title').html(`Almacenado`)
-            $('#modal_body').html(`<h6 class="alert-heading">Subsidio almacenado correctamente</h6>`)
-            loadSubsidies(internals.dataRowSelected._id)
-        
-        }else{
-            $('#modal_title').html(`Error`)
-            $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
-        }
-    }else{
-        $('#modal_title').html(`Error`)
-        $('#modal_body').html(`<h6 class="alert-heading">Error al almacenar, favor reintente</h6>`)
-    }
-    $('#modal').modal('show')
-
-}
-
-async function deleteSubsidy(btn,id){
-
-    if(id){
-        let deleteSubsidy = await axios.post('/api/subsidyDelete', {member: internals.dataRowSelected._id, id: id})
-        if(deleteSubsidy.data){
-            if(deleteSubsidy.data._id){
-                $(btn).parent().parent().remove()
-                
-                $('#modal_title').html(`Almacenado`)
-                $('#modal_body').html(`<h6 class="alert-heading">Registro eliminado correctamente.</h6>`)
-            
-            }else{
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h6 class="alert-heading">Error al eliminar, favor reintente</h6>`)
-            }
-        }else{
-            $('#modal_title').html(`Error`)
-            $('#modal_body').html(`<h6 class="alert-heading">Error al eliminar, favor reintente</h6>`)
-        }
-        $('#modal').modal('show')
-
-    }else{
-        $(btn).parent().parent().remove()
-        
-        $('#modal_title').html(`Eliminado`)
-        $('#modal_body').html(`<h6 class="alert-heading">Registro eliminado correctamente</h6>`)
-        $('#modal').modal('show')
-    }
-}
-
 async function loadSubsidies(member){
     $("#tableBodySubsidies").html('')
+
+    $("#subsidyRUT").val('')
+    $("#subsidyName").val('')
+    $("#subsidyLastname1").val('')
+    $("#subsidyLastname2").val('')
+    $("#subsidyHouseQuantity").val('')
+    $("#subsidyMunicipality").val('')
+    $("#subsidyType").val('')
+    $("#subsidyDecreeNumber").val('')
+    $("#subsidyDecreeDate").val(moment().utc().format('DD/MM/YYYY'))
+    $("#subsidyInscriptionDate").val(moment().utc().format('DD/MM/YYYY'))
+    $("#subsidyInscriptionScore").val('')
+    $("#subsidyStartDate").val(moment().utc().format('DD/MM/YYYY'))
+    $("#subsidyEndDate").val(moment().add(3,'years').utc().format('DD/MM/YYYY'))
+    $("#subsidyPercentage").val('')
+    $("#subsidyStatus").val('')
 
     let memberSubsidies = await axios.post('/api/memberSingle', {id: internals.dataRowSelected._id})
     let subsidies = memberSubsidies.data.subsidies
 
+    let activeID = 0
+
     for(let i=0; i<subsidies.length; i++){
-        $("#tableBodySubsidies").append(`<tr>
-                    <td><button class="btn btn-sm btn-success" style="border-radius:5px;" onclick="saveSubsidy(this,'${subsidies[i]._id}')">Almacenar</button></td>
-                    <td><input type="text" class="form-control form-control-sm" value="${subsidies[i].decreeNumber}" /></td>
-                    <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].decreeDate).utc().format('DD/MM/YYYY')}" /></td>
-                    <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].inscriptionDate).utc().format('DD/MM/YYYY')}" /></td>
-                    <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].startDate).utc().format('DD/MM/YYYY')}" /></td>
-                    <td><input type="text" class="form-control form-control-sm datepicker" value="${moment(subsidies[i].endDate).utc().format('DD/MM/YYYY')}" /></td>
-                    <td><input type="text" class="form-control form-control-sm" value="${subsidies[i].percentage}"></td>
-                    <td><button class="btn btn-sm btn-danger" onclick="deleteSubsidy(this,'${subsidies[i]._id}')"><i class="fas fa-times"></i></button></td>
-                </tr>`)
+
+        if(subsidies[i].status=='active'){
+
+            console.log(subsidies[i])
+            activeID = subsidies[i]._id
+            $("#subsidyRUT").val(subsidies[i].rut)
+            $("#subsidyName").val(subsidies[i].name)
+            $("#subsidyLastname1").val(subsidies[i].lastname1)
+            $("#subsidyLastname2").val(subsidies[i].lastname2)
+            $("#subsidyHouseQuantity").val(subsidies[i].houseQuantity)
+            $("#subsidyMunicipality").val(subsidies[i].municipality)
+            $("#subsidyType").val(subsidies[i].type)
+            $("#subsidyDecreeNumber").val(subsidies[i].decreeNumber)
+            $("#subsidyDecreeDate").val(moment(subsidies[i].decreeDate).utc().format('DD/MM/YYYY'))
+            $("#subsidyInscriptionDate").val(moment(subsidies[i].inscriptionDate).utc().format('DD/MM/YYYY'))
+            $("#subsidyInscriptionScore").val(subsidies[i].inscriptionScore)
+            $("#subsidyStartDate").val(moment(subsidies[i].startDate).utc().format('DD/MM/YYYY'))
+            $("#subsidyEndDate").val(moment(subsidies[i].endDate).utc().format('DD/MM/YYYY'))
+            $("#subsidyPercentage").val(subsidies[i].percentage)
+            $("#subsidyStatus").val(subsidies[i].status)
+
+        }else{
+        
+            $("#tableBodySubsidies").append(`<tr>
+                        <td>${subsidies[i].decreeNumber}</td>
+                        <td>${moment(subsidies[i].decreeDate).utc().format('DD/MM/YYYY')}</td>
+                        <td>${moment(subsidies[i].inscriptionDate).utc().format('DD/MM/YYYY')}</td>
+                        <td>${moment(subsidies[i].startDate).utc().format('DD/MM/YYYY')}</td>
+                        <td>${moment(subsidies[i].endDate).utc().format('DD/MM/YYYY')}</td>
+                        <td>${subsidies[i].percentage}</td>
+                    </tr>`)
+
+        }
     }
     
     $('.datepicker').daterangepicker({
@@ -928,4 +1030,177 @@ async function loadSubsidies(member){
     }, function(start, end, label) {
     })
 
+    $('#memberRUT').on('keyup', function () {
+        let rut = validateRut($(this).val())
+        if (rut) {
+            $(this).val(rut)
+        }
+    })
+
+    $('#btnSaveSubsidy').off('click')
+    $('#btnSaveSubsidy').on('click', async function () {
+        saveSubsidy(activeID)
+    })
+
+    if(activeID==0){
+        $('#btnDeactivateSubsidy').css('visibility','hidden')
+        $('#btnDeactivateSubsidy').off('click')
+    }else{
+        $('#btnDeactivateSubsidy').off('click')
+        $('#btnDeactivateSubsidy').on('click', async function () {
+            deactivateSubsidy(activeID)
+        })
+    }
+
+}
+
+async function saveSubsidy(id){
+
+    if (!validateRut($("#subsidyRUT").val())) {
+        $('#modal_title').html(`Verificar`)
+        $('#modal_body').html(`<h7 class="alert-heading">El RUT ingresado no es válido</h7>`)
+        $('#modal').modal('show')
+        return
+    }
+    if(!$.isNumeric($("#subsidyDecreeNumber").val())){
+        $('#modal_title').html(`Verificar`)
+        $('#modal_body').html(`<h7 class="alert-heading">N° de Decreto no válido</h7>`)
+        $('#modal').modal('show')
+        return
+    }
+    if(!$.isNumeric($("#subsidyInscriptionScore").val())){
+        $('#modal_title').html(`Verificar`)
+        $('#modal_body').html(`<h7 class="alert-heading">N° de Decreto no válido</h7>`)
+        $('#modal').modal('show')
+        return
+    }
+    if(!$.isNumeric($("#subsidyPercentage").val() )){
+        $('#modal_title').html(`Verificar`)
+        $('#modal_body').html(`<h7 class="alert-heading">Porcentaje no válido (debe ser entre 1% y 100%)</h7>`)
+        $('#modal').modal('show')
+        return
+    }else{
+        if(percentage<=0 || percentage>100){
+            $('#modal_title').html(`Verificar`)
+            $('#modal_body').html(`<h7 class="alert-heading">Porcentaje no válido (debe ser entre 1% y 100%)</h7>`)
+            $('#modal').modal('show')
+            return
+        }
+    }
+
+    let subsidyData = {
+        member: internals.dataRowSelected._id,
+        rut: $("#subsidyRUT").val(),
+        name: $("#subsidyName").val(),
+        lastname1: $("#subsidyLastname1").val(),
+        lastname2: $("#subsidyLastname2").val(),
+        houseQuantity: $("#subsidyHouseQuantity").val(),
+        municipality: $("#subsidyMunicipality").val(),
+        type: parseInt($("#subsidyType").val()),
+        decreeNumber: parseInt($("#subsidyDecreeNumber").val()),
+        decreeDate: $("#subsidyDecreeDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+        inscriptionDate: $("#subsidyInscriptionDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+        inscriptionScore: parseInt($("#subsidyInscriptionScore").val()),
+        startDate: $("#subsidyDecreeDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+        endDate: $("#subsidyEndDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+        percentage: parseInt($("#subsidyPercentage").val()),
+        status: 'active'
+    }
+
+    let apiSave = 'subsidySave'
+    if(id!=0){
+        subsidyData.id = id
+        apiSave = 'subsidyUpdate'
+    }
+
+    console.log('saveSubsidy', subsidyData)
+
+    let saveSubsidy = await axios.post('/api/'+apiSave, subsidyData)
+    if(saveSubsidy.data){
+        if(saveSubsidy.data._id){
+
+            $('#modal_title').html(`Almacenado`)
+            $('#modal_body').html(`<h7 class="alert-heading">Subsidio almacenado correctamente</h7>`)
+            loadSubsidies(internals.dataRowSelected._id)
+        
+        }else{
+            $('#modal_title').html(`Error`)
+            $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+        }
+    }else{
+        $('#modal_title').html(`Error`)
+        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+    }
+    $('#modal').modal('show')
+
+}
+
+async function deactivateSubsidy(id){
+
+    let subsidyDeactivate = await Swal.fire({
+        title: '¿Está seguro de dar de baja el subsidio?',
+        customClass: 'swal-wide',
+        html: ``,
+        showCloseButton: true,
+        showCancelButton: true,
+        showConfirmButton: true,
+        focusConfirm: false,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar'
+    })
+
+    if (subsidyDeactivate.value) {
+        
+        let subsidyData = {
+            member: internals.dataRowSelected._id,
+            id: id,
+            status: 'inactive'
+        }
+
+        console.log('saveSubsidy', subsidyData)
+
+        let saveSubsidy = await axios.post('/api/subsidyDeactivate', subsidyData)
+        if(saveSubsidy.data){
+            if(saveSubsidy.data._id){
+
+                $('#modal_title').html(`Almacenado`)
+                $('#modal_body').html(`<h7 class="alert-heading">Subsidio almacenado correctamente</h7>`)
+                loadSubsidies(internals.dataRowSelected._id)
+            
+            }else{
+                $('#modal_title').html(`Error`)
+                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+            }
+        }else{
+            $('#modal_title').html(`Error`)
+            $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+        }
+        $('#modal').modal('show')
+    }
+
+}
+
+function addService(){
+    $("#tableBodyServices").append(`<tr>
+                    <td>
+                        <select class="form-select form-select-sm custom-select">
+                            ${
+                                services.reduce((acc, el) => {
+                                    acc += '<option value="' + el._id + '">' + el.name + '</option>'
+                                    return acc
+                                }, '')
+                            }
+                        </select>
+                    </td>
+                    <td><input type="text" class="form-control form-control-sm" /></td>
+                    <td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
+                </tr>`)
+}
+
+async function deleteService(btn){
+    $(btn).parent().parent().remove()
+    
+    $('#modal_title').html(`Eliminado`)
+    $('#modal_body').html(`<h7 class="alert-heading">Registro eliminado correctamente</h7>`)
+    $('#modal').modal('show')
 }

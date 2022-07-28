@@ -16,6 +16,8 @@ let containerTypes = {}
 let sites = {}
 let cranes = {}
 
+let parameters
+
 $(document).ready(async function () {
     $('#searchDate').daterangepicker({
         opens: 'left',
@@ -32,6 +34,10 @@ $(document).ready(async function () {
 })
 
 async function getParameters() {
+
+    let parametersData = await axios.get('/api/parameters')
+    parameters = parametersData.data
+
     let sectorsData = await axios.get('api/sectors')
     sectors = sectorsData.data
 
@@ -172,7 +178,7 @@ $('#updateLectures').on('click', async function () {
     }
 
     $('#modalLecture_title').html(`Lecturas Socio N° ${member.number} - ${member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2}`)
-    createModalBody()
+    createModalBody(member)
 
     $('#modalLecture_footer').html(`
         <button style="border-radius: 5px;" class="btn btn-dark" data-dismiss="modal">
@@ -186,113 +192,9 @@ $('#updateLectures').on('click', async function () {
     $('#memberName').val(name)
     $('#memberWaterMeter').val(member.waterMeters.find(x => x.state === 'Activo').number)
     $('#memberAddress').val(member.address.address)
-    //$('#saleDate').val(moment.utc(sale.date).format('DD/MM/YYYY'))
-    //$('#saleNet').val(dot_separators(sale.net))
 
     loadLectures(member)
 
-
-    /*
-    $('#saleDate').daterangepicker({
-        opens: 'left',
-        locale: dateRangePickerDefaultLocale,
-        singleDatePicker: true,
-        autoApply: true
-        //endDate: moment()
-    }, function(start, end, label) {
-        //internals.initDate = start.format('YYYY-MM-DD')
-        //internals.endDate = end.format('YYYY-MM-DD')
-    })*/
-
-
-    /*$('#saveSale').on('click', async function () {
-
-        let products = []
-        let services = []
-        let goSave = false
-
-        if($("#tableLecturesBody tr").length>0 || $("#tableServicesBody tr").length>0){
-            goSave = true
-        }
-        $("#tableLecturesBody tr").each(function(){
-            if($($($(this).children()[0]).children()[1])){
-
-                if($($($(this).children()[0]).children()[1]).val()==0 || !$.isNumeric($($($(this).children()[2]).children()[1]).val()) || !$.isNumeric($($($(this).children()[3]).children()[0]).val())){
-                    goSave = false
-                }
-                products.push({
-                    products: $($($(this).children()[0]).children()[1]).val(),
-                    quantity: parseInt($($($(this).children()[2]).children()[1]).val()),
-                    value: parseInt($($($(this).children()[3]).children()[0]).val())
-                })
-            }
-        })
-
-        $("#tableServicesBody tr").each(function(){
-            if($($($(this).children()[0]).children()[1])){
-
-                if($($($(this).children()[0]).children()[1]).val()==0 || !$.isNumeric($($($(this).children()[2]).children()[1]).val()) || !$.isNumeric($($($(this).children()[3]).children()[0]).val())){
-                    goSave = false
-                }
-                services.push({
-                    services: $($($(this).children()[0]).children()[1]).val(),
-                    quantity: parseInt($($($(this).children()[2]).children()[1]).val()),
-                    value: parseInt($($($(this).children()[3]).children()[0]).val())
-                })
-            }
-        })
-
-        if(!goSave){
-            toastr.warning('Debe ingresar productos con valores correctos')
-            return
-        }
-
-        let saleData = {
-            id: internals.dataRowSelected._id,
-            date: $("#saleDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
-            rut: $('#saleRUT').val(),
-            name: $('#saleName').val(),
-            address: $('#saleAddress').val(),
-            status: $('#saleStatus').val(),
-            net: replaceAll($('#saleNet').val(), '.', '').replace(' ', ''),
-            iva: replaceAll($('#saleIVA').val(), '.', '').replace(' ', ''),
-            total: replaceAll($('#saleTotal').val(), '.', '').replace(' ', ''),
-            payment: $('#salePayment').val(),
-            paymentVoucher: $('#salePaymentVoucher').val(),
-            type: 'MANUAL'
-        }
-
-        
-        if(products.length>0){
-            saleData.products = products
-        }
-        if(services.length>0){
-            saleData.services = services
-        }
-        
-        
-        const res = validateInvoiceData(saleData)
-        if(res.ok){
-            let updateLectures = await axios.post('/api/saleUpdate', res.ok)
-            if(updateLectures.data){
-                if(updateLectures.data._id){
-                    $('#lectureModal').modal('hide')
-
-                    $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Boleta almacenada correctamente</h5>`)
-                    chargeMembersTable()
-                }else{
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
-                }
-            }else{
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
-            }
-            $('#modal').modal('show')
-        }
-
-    })*/
 })
 
 
@@ -308,25 +210,26 @@ async function loadLectures(member) {
     for (i = 0; i < lectures.length; i++) {
 
         let total = 0
-        let btn = '', btnGenerate = '', btnSII = ''
+        let btn = '', btnGenerate = '', btnSII = '', btnPayment = ''
         let invoiceID = 0
         if (lectures[i].invoice) {
             total = dot_separators(lectures[i].invoice.invoiceTotal)
-            btn = `<button class="btn btn-sm btn-info" onclick="printInvoice('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+            btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printInvoice('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
             invoiceID = lectures[i].invoice._id
             
             if(lectures[i].invoice.number){
-                btnGenerate = `<button class="btn btn-sm btn-danger" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+                btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+                btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
             }else{
-                btnGenerate = `<button class="btn btn-sm btn-info" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')">Generar DTE</button>`
+                btnGenerate = `<button class="btn btn-sm btn-info btnLecture" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')">Generar DTE</button>`
             }
             if(lectures[i].invoice.token){
-                btnSII = `<button class="btn btn-sm btn-warning" onclick="showSIIPDF('${lectures[i].invoice.token}')"><img src="/public/img/logo_sii.png" style="width: 24px"/></button>`
+                btnSII = `<button class="btn btn-sm btn-warning btnLecture" onclick="showSIIPDF('${lectures[i].invoice.token}')"><img src="/public/img/logo_sii.png" style="width: 24px"/></button>`
             }
         }else{
             total = 'NO CALCULADO'
-            btn = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>`
-            btnGenerate = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+            btn = `<button class="btn btn-sm btn-dark btnLecture" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+            btnGenerate = `<button class="btn btn-sm btn-dark btnLecture" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
         }
 
         $('#tableLecturesBody').append(`
@@ -344,7 +247,7 @@ async function loadLectures(member) {
                     ${total}
                 </td>
                 <td style="text-align: center;">
-                    POR PAGAR
+                    <button class="btn btn-sm btn-warning btnLecture" onclick="createInvoice('${lectures[i]._id}','${invoiceID}','${member._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
                 </td>
                 <td style="text-align: center;">
                     ${btn}
@@ -355,27 +258,34 @@ async function loadLectures(member) {
                 <td style="text-align: center;">
                     ${btnSII}
                 </td>
+                <td style="text-align: center;">
+                    ${btnPayment}
+                </td>
+                <td style="text-align: center;">
+                    POR PAGAR
+                </td>
             </tr>
         `)
     }
 
-    $('#tableLectures tbody').off("click")
+    /*$('#tableLectures tbody').off("click")
 
     $('#tableLectures tbody').on('click', 'tr', function () {
-        if ($(this).hasClass('table-primary')) {
-            $(this).removeClass('table-primary')
-            $('#tableInvoice').css('visibility', 'hidden')
-        } else {
             $('#tableLecturesBody > tr').removeClass('table-primary')
             $(this).addClass('table-primary')
-            $('#tableInvoice').css('visibility', 'visible')
+            $('#divInvoice').css('display', 'block')
+            $('#tableLectures tbody').off("click")
+            $('.btnLecture').attr('disabled',true)
             createInvoice($(this).attr('id'), $(this).attr('data-invoice'), member)
-        }
-    })
+    
+    })*/
 
 }
 
+
 function validateInvoiceData(productData) {
+
+    console.log(productData)
     let errorMessage = ''
     
     /*if(!$.isNumeric(productData.number)){
@@ -421,14 +331,14 @@ function validateInvoiceData(productData) {
 
         $('#modal').modal('show')
         $('#modal_title').html(`Error al almacenar ingreso`)
-        $('#modal_body').html(`<h6 class="alert-heading">Falta ingresar los siguientes datos:</h6>
+        $('#modal_body').html(`<h7 class="alert-heading">Falta ingresar los siguientes datos:</h7>
                                     <p class="mb-0">${errorMessage}</p>`)
 
         return { err: productData }
     }
 }
 
-function createModalBody() {
+function createModalBody(member) {
 
     let body = /*html*/ `
     <div class="row">
@@ -475,9 +385,9 @@ function createModalBody() {
 <h5>Lecturas realizadas</h5>
     <div class="col-md-12">
         <div class="row">
-            <div class="col-md-6 table-responsive">
+            <div class="col-md-8 table-responsive">
                 <br/>
-                <button style="border-radius: 5px;" class="btn btn-primary" onclick="addLecture()" disabled><i class="fas fa-plus-circle"></i> Agregar lectura manual</button>
+                <button style="border-radius: 5px;" class="btn btn-primary" onclick="addLecture()"><i class="fas fa-plus-circle"></i> Agregar lectura manual</button>
                 <br />
                 <br />
                 <table id="tableLectures" class="display nowrap table table-condensed cell-border" cellspacing="0">
@@ -487,100 +397,228 @@ function createModalBody() {
                             <th style="text-align: center; background-color: #3B6FC9;">Fecha</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Lectura</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Estado Pago</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Crear/Editar</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Ver Boleta/Factura</th>
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">DTE SII</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Estado Pago</th>
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Pago</th>
                         </tr>
                     </thead>
                     <tbody id="tableLecturesBody">
                     </tbody>
                 </table>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
+            </div>
+
+            <div class="col-md-2">
+            </div>
+            <div class="col-md-8">
                 <br />
                 <br />
                 <br />
                 <br />
-                <table id="tableInvoice" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 13px; visibility: hidden;">
-                    <thead>
-                        <tr class="table-primary">
-                            <th colspan="3" style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px; border-top-right-radius: 5px;" id="invoiceTitle">Registro de Boleta/Factura</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableInvoiceBody">
-                        <tr>
-                            <td>N° Documento</td>
-                            <td><input id="invoiceNumber" type="text" class="form-control form-control-sm border-input"></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Fecha</td>
-                            <td><input id="invoiceDate" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().format('DD/MM/YYYY')}"></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Fecha Vencimiento</td>
-                            <td><input id="invoiceDateExpire" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().add(15, 'days').format('DD/MM/YYYY')}"></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Cargo Fijo</td>
-                            <td></td>
-                            <td><input id="invoiceCharge" type="text" class="form-control form-control-sm border-input"></td>
-                        </tr>
-                        <tr>
-                            <td>Lectura Actual</td>
-                            <td><input id="invoiceLectureActual" type="text" class="form-control form-control-sm border-input"></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Lectura Anterior</td>
-                            <td><input id="invoiceLectureLast" type="text" class="form-control form-control-sm border-input"></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Consumo mts<sup>3</sup></td>
-                            <td><input id="invoiceLectureResult" type="text" class="form-control form-control-sm border-input"></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Valor mt<sup>3</sup></td>
-                            <td><input id="invoiceMeterValue" type="text" class="form-control form-control-sm border-input"></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Consumo Mes</td>
-                            <td><input id="invoiceConsumption1" type="text" class="form-control form-control-sm border-input"></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td><span style="display: inline-block">Subsidio</span> <input id="invoiceSubsidyPercentage" type="text" class="form-control form-control-sm border-input" style="display: inline-block; width: 50%"><span style="display: inline-block">%</span></td>
-                            <td><input id="invoiceSubsidyValue" type="text" class="form-control form-control-sm border-input"></td>
-                            <td></td>
-                        </tr>
-                        <tr>
-                            <td>Consumo a Cobro</td>
-                            <td><input id="invoiceConsumption2" type="text" class="form-control form-control-sm border-input"></td>
-                            <td><input id="invoiceConsumption2b" type="text" class="form-control form-control-sm border-input"></td>
-                        </tr>
-                        <tr>
-                            <td>Deuda Anterior</td>
-                            <td></td>
-                            <td><input id="invoiceDebt" type="text" class="form-control form-control-sm border-input"></td>
-                        </tr>
-                        <tr>
-                            <td>Total</td>
-                            <td></td>
-                            <td><input id="invoiceTotal" type="text" class="form-control form-control-sm border-input"></td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td><button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="invoiceSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
-                        </tr>                            
-                    </tbody>
-                </table>
+                <div id="divInvoice" class="card border-primary" style="display: none;">
+                    <div class="card-header text-white bg-primary" style="text-align: center">
+                        <b id="invoiceTitle">Registro de Boleta/Factura</b>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                Fecha
+                            </div>
+                            <div class="col-md-3">
+                                <input id="invoiceDate" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
+                            </div>
+                            <div class="col-md-3">
+                                Fecha Vencimiento
+                            </div>
+                            <div class="col-md-3">
+                                <input id="invoiceDateExpire" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().add(15, 'days').format('DD/MM/YYYY')}">
+                            </div>
+                        </div>
+
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12" style="text-align: center">
+                                        <b>Consumos</b>
+                                    </div>
+
+                                    <div class="col-md-7">
+                                        Lectura Actual
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center"></div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceLectureActual" type="text" class="form-control form-control-sm border-input numericValues consumption">
+                                    </div>
+
+                                    <div class="col-md-7">
+                                        Lectura Anterior
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(-)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceLectureLast" type="text" class="form-control form-control-sm border-input numericValues consumption">
+                                    </div>
+
+                                    <div class="col-md-7">
+                                        Consumo mts<sup>3</sup>
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(=)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceLectureResult" type="text" class="form-control form-control-sm border-input numericValues consumption">
+                                    </div>
+
+                                    <div class="col-md-7">
+                                        Valor mt<sup>3</sup>
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(x)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceMeterValue" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
+
+                                    <div class="col-md-7">
+                                        Consumo $
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(=)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceConsumption1" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        Subsidio
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input id="invoiceSubsidyPercentage" type="text" class="form-control form-control-sm border-input" style="display: inline-block; width: 50%"><span style="display: inline-block">%</span>
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(-)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceSubsidyValue" type="text" class="form-control form-control-sm border-input numericValues money" >
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        Sobreconsumo mts<sup>3</sup>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input id="invoiceConsumptionLimit" type="text" class="form-control form-control-sm border-input" style="display: inline-block; width: 60%"><span style="display: inline-block">mts<sup>3</sup></span>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input id="invoiceConsumptionLimitValue" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceConsumptionLimitTotal" type="text" class="form-control form-control-sm border-input numericValues money" >
+                                    </div>
+
+
+                                    <div class="col-md-7">
+                                        Consumo a Cobro
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(=)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceConsumption2" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #b7ebd8">
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12" style="text-align: center">
+                                        <b>Servicios</b>
+                                    </div>
+
+                                    <div class="col-md-12">
+                                        <table class="table" style="font-size: 12px">
+                                            <thead>
+                                                <tr>
+                                                    <th>Servicio</th>
+                                                    <th>Valor</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tableBodyServices">
+                                           
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        Total Servicios $
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center"></div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceTotalServices" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12" style="text-align: center">
+                                        <b>Montos $</b>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        Cargo Fijo
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceCharge" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        Consumo
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceConsumption2b" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #B7EBD8">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        Servicios
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceTotalServicesb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        Saldo Anterior
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        Total
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(=)</div>
+                                    <div class="col-md-4">
+                                        <input id="invoiceTotal" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3" style="text-align: center;">
+                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="invoiceCancel"><i ="color:#3498db;" class="fas fa-arrow-left"></i> Atrás</button></td>
+                            </div>
+                            <div class="col-md-3" style="text-align: center;">
+                            </div>
+                            <div class="col-md-3" style="text-align: center;">
+                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="invoiceSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- <div class="col-md-6" style="height:300px; overflow-y:scroll;">
                 <table id="tableLectures" class="display nowrap table table-condensed cell-border" cellspacing="0">
@@ -610,6 +648,35 @@ function createModalBody() {
 `
 
     $('#modalLecture_body').html(body)
+
+
+    $("#invoiceCancel").on('click', async function () {
+
+        $("#tableLecturesBody > tr").removeClass('table-primary')
+        $('#divInvoice').css('display', 'none')
+        $("#invoiceTitle").text('')
+        $(".numericValues").val('')
+        $("#invoiceDate").val('')
+        $("#invoiceDateExpire").val('')
+        $("#invoiceSubsidyPercentage").val('')
+        $("#tableBodyServices").html('')
+        $('.btnLecture').removeAttr('disabled')
+
+/*
+        $('#tableLectures tbody').on('click', 'tr', function () {
+            if ($(this).hasClass('table-primary')) {
+                $(this).removeClass('table-primary')
+                $('#tableInvoice').css('visibility', 'hidden')
+            } else {
+                $('#tableLecturesBody > tr').removeClass('table-primary')
+                $(this).addClass('table-primary')
+                $('#divInvoice').css('display', 'block')
+                $('#tableLectures tbody').off("click")
+                $('.btnLecture').attr('disabled',true)
+                createInvoice($(this).attr('id'), $(this).attr('data-invoice'), member)
+            //}
+        })*/
+    })
 }
 
 async function addLecture() {
@@ -644,226 +711,138 @@ async function addLecture() {
 
 }
 
-
-function deletePurchase(btn) {
-    $(btn).parent().parent().remove()
-    calculateTotal()
-}
-
-function qtyControl(btn, type) {
-    if (!$.isNumeric($($(btn).parent().children()[1]).val())) {
-        $($(btn).parent().children()[1]).val(0)
-    }
-
-    let qty = $($(btn).parent().children()[1]).val()
-    if (type == 'minus') {
-        if (qty > 0) {
-            qty--
-        }
-        $($(btn).parent().children()[1]).val(qty)
-    } else {
-        qty++
-        $($(btn).parent().children()[1]).val(qty)
-    }
-    calculateTotal()
-}
-
 function calculateTotal() {
     let net = 0
+    //Consumos
+    let lectureActual = $("#invoiceLectureActual").val()
+    let lectureLast = $("#invoiceLectureLast").val()
+    let lectureValue = lectureActual - lectureLast
 
-    $("#tableLecturesBody tr").each(function () {
-        let qty = $($($(this).children()[2]).children()[1]).val()
-        let price = $($($(this).children()[3]).children()[0]).val()
+    $("#invoiceLectureResult").val(lectureValue)
+    let meterValue = $("#invoiceMeterValue").val()
+    let consumptionValue = lectureValue * meterValue
+    $("#invoiceConsumption1").val(consumptionValue)
 
-        if ($.isNumeric(qty, price)) {
-            $($($(this).children()[4]).children()[0]).val(qty * price)
-            net += qty * price
+    let subsidy = $("#invoiceSubsidyPercentage").val()
+
+    let subsidyValue = 0
+    if (subsidy > 0) {
+        if (lectureValue <= parameters.subsidyLimit) {
+            subsidyValue = Math.round(consumptionValue * (subsidy / 100))
+        } else {
+            subsidyValue = Math.round((parameters.subsidyLimit * meterValue) * (subsidy / 100))
         }
+    }
+    $("#invoiceSubsidyValue").val(subsidyValue)
+    let consumptionLimit = $("#invoiceConsumptionLimit").val()
+    let consumptionLimitValue = $("#invoiceConsumptionLimitValue").val()
+    let consumptionLimitTotal = 0 //Valor a pagar por sobreconsumo
+    if(lectureValue>consumptionLimit){
+        consumptionLimitTotal = (lectureValue - consumptionLimit) * consumptionLimitValue
+    }
+    $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
+
+    let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal
+    $("#invoiceConsumption2").val(lastConsumptionValue)
+    $("#invoiceConsumption2b").val(lastConsumptionValue)
+
+    //Servicios
+    let totalServices = 0
+    if($("#tableBodyServices > tr").length>0){
+        $("#tableBodyServices > tr").each(function() {
+            let value = 0
+            if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
+                value = 0
+            }else{
+                value = $($($(this).children()[1]).children()[0]).val()
+            }
+            totalServices += parseInt(value)
+        })    
+    }
+    $("#invoiceTotalServices").val(totalServices)
+    $("#invoiceTotalServicesb").val(totalServices)
+
+    //Montos
+    let debt = 0
+    $("#invoiceDebt").val(debt) //A asignar
+    $("#invoiceTotal").val(parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(debt) + parseInt(totalServices))
+
+
+    $(".consumption").each(function() {
+        //$(this).val(dot_separators($(this).val()))
+
+        new Cleave($(this), {
+            prefix: '',
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            numeralDecimalScale: 0,
+            numeralPositiveOnly: true,
+            numeralDecimalMark: ",",
+            delimiter: "."
+        })
     })
 
+    $(".money").each(function() {
+        //$(this).val(dot_separators($(this).val()))
 
-    /*let iva = Math.round(net * 0.19)
+        new Cleave($(this), {
+            prefix: '$ ',
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            numeralDecimalScale: 0,
+            numeralPositiveOnly: true,
+            numeralDecimalMark: ",",
+            delimiter: "."
+        })
+    })    
 
-    $("#saleNet").val(dot_separators(net))
-    $("#saleIVA").val(dot_separators(iva))
-    $("#saleTotal").val(dot_separators(net + iva))*/
-    $("#saleNet").val(dot_separators(net))
-    $("#saleIVA").val(dot_separators(0))
-    $("#saleTotal").val(dot_separators(net))
+    
 
 }
 
-async function selectProduct(btn) {
+async function createInvoice(lectureID, invoiceID, memberID) {
 
-    let productSelectedData = await Swal.fire({
-        title: 'Seleccione producto',
-        customClass: 'swal-wide',
-        html: `
-            <div style="max-height: 400px !important; overflow-y: scroll;">
-                <table id="tableSearchProducts" class="display nowrap table table-condensed" cellspacing="0">
-                    <thead>
-                        <tr class="table-info">
-                            <th>IMAGEN</th>
-                            <th>PRODUCTO</th>
-                            <th>STOCK</th>
-                            <th>COSTO UNITARIO (ÚLT)</th>
-                            <th>PRECIO</th>
-                            <th>ESTADO</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableSearchProductsBody"></tbody>
-                </table>
-            </div>
-        `,
-        onBeforeOpen: () => {
-            try {
-                if ($.fn.DataTable.isDataTable('#tableSearchProducts')) {
-                    internals.products.table.clear().destroy()
-                }
-                internals.products.table = $('#tableSearchProducts')
-                    .DataTable({
-                        dom: 'Bfrtip',
-                        buttons: [
-                            'excel'
-                        ],
+    $('#tableLecturesBody > tr').removeClass('table-primary')
+    $("#"+lectureID).addClass('table-primary')
+    $('#divInvoice').css('display', 'block')
+    $('.btnLecture').attr('disabled',true)
+    //createInvoice($(this).attr('id'), $(this).attr('data-invoice'), member)
 
-                        iDisplayLength: 50,
-                        oLanguage: {
-                            sSearch: 'buscar: '
-                        },
-                        lengthMenu: [[50, 100, 500, -1], [50, 100, 500, 'Todos los registros']],
-                        language: {
-                            url: spanishDataTableLang
-                        },
-                        responsive: false,
-                        columnDefs: [{ targets: [1, 2, 3], className: 'dt-right' },
-                        { targets: [4], className: 'dt-center' }],
-                        order: [[0, 'desc']],
-                        ordering: true,
-                        rowCallback: function (row, data) {
-                            $(row).find('td:eq(0)').html('<img src="' + data.image + '" style="width: 100px; height: 100px;">')
-                            $(row).find('td:eq(2)').html(dot_separators(data.stock))
-                            $(row).find('td:eq(3)').html(dot_separators(data.cost))
-                            $(row).find('td:eq(4)').html(dot_separators(data.price))
-                        },
-                        columns: [
-                            { data: 'image' },
-                            { data: 'name' },
-                            { data: 'stock' },
-                            { data: 'cost' },
-                            { data: 'price' },
-                            { data: 'status' }
-                        ],
-                        initComplete: function (settings, json) {
-                            getProducts()
-                        }
-                    })
-
-                $('#tableSearchProducts tbody').off("click")
-
-                $('#tableSearchProducts tbody').on('click', 'tr', function () {
-                    if ($(this).hasClass('selected')) {
-                        $(this).removeClass('selected')
-                    } else {
-                        internals.products.table.$('tr.selected').removeClass('selected')
-                        $(this).addClass('selected')
-                        internals.productRowSelected = internals.products.table.row($(this)).data()
-                    }
-
-                })
-
-            } catch (error) {
-                loadingHandler('stop')
-
-                console.log(error)
-            }
-        },
-        preConfirm: async () => {
-            try {
-                let productSelected = internals.productRowSelected
-
-                if (productSelected) {
-                    return {
-                        ...productSelected
-                    }
-                }
-
-                throw new Error('Debe seleccionar un producto.')
-            } catch (error) {
-                Swal.showValidationMessage(error)
-            }
-        },
-        showCloseButton: true,
-        showCancelButton: true,
-        showConfirmButton: true,
-        focusConfirm: false,
-        confirmButtonText: 'Seleccionar',
-        cancelButtonText: 'Cancelar'
-    })
-
-    if (productSelectedData.value) {
-        $($(btn).parent().children()[1]).val(productSelectedData.value._id)
-        $($($(btn).parent().parent().children()[1]).children()[0]).text(productSelectedData.value.name)
-        $($($(btn).parent().parent().children()[2]).children()[1]).val(1)
-        $($($(btn).parent().parent().children()[3]).children()[0]).val(productSelectedData.value.price)
-
-        calculateTotal()
-
-    }
-}
-
-async function getProducts() {
-    let inventoryData = await axios.get('api/inventory')
-    if (inventoryData.data.length > 0) {
-        internals.products.table.rows.add(inventoryData.data).draw()
-    }
-}
-
-async function createInvoice(lectureID, invoiceID, member) {
+    let memberData = await axios.post('/api/memberSingle', {id: memberID})
+    let member = memberData.data
+    
     if (invoiceID == 0) {
-
-        let parametersData = await axios.get('/api/parameters')
-        let parameters = parametersData.data
-        let charge = parameters.charge
-        let meterValue = parameters.meterValue
-        let subsidyLimit = parameters.subsidyLimit
 
         let lectureData = await axios.post('/api/lectureSingle', { id: lectureID })
         let lecture = lectureData.data
 
         console.log("lecture", lecture)
         //Definir parámetros
-
-        let subsidy = 50, debt = 0
-
         $("#invoiceTitle").text("Nueva Boleta/Factura")
-        $("#invoiceNumber").val('')
+        //$("#invoiceNumber").val('')
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
         $("#invoiceDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
-        $("#invoiceCharge").val(charge)
-        $("#invoiceLectureActual").val(lecture.logs[lecture.logs.length - 1].lecture)
-        $("#invoiceLectureLast").val(lecture.lastLecture)
-        let lectureValue = lecture.logs[lecture.logs.length - 1].lecture - lecture.lastLecture
-        $("#invoiceLectureResult").val(lectureValue)
-        $("#invoiceMeterValue").val(meterValue)
-        let consumptionValue = lectureValue * meterValue
-        $("#invoiceConsumption1").val(consumptionValue)
+        $("#invoiceCharge").val(parameters.charge)
 
-        let subsidyValue = 0
-        if (subsidy > 0) {
-            if (lectureValue <= subsidyLimit) {
-                subsidyValue = Math.round(consumptionValue * (subsidy / 100))
-            } else {
-                subsidyValue = Math.round((subsidyLimit * meterValue) * (subsidy / 100))
+        let subsidy = 0
+        if (member.subsidies.length > 0) {
+            for(let i=0; i<member.subsidies.length; i++){
+                /*if(moment.utc()>=moment(member.subsidies[i].startDate) && moment.utc()<=moment(member.subsidies[i].endDate)){
+                    subsidy = member.subsidies[i].percentage
+                }*/
+                if(member.subsidies[i].status=='active'){
+                    subsidy = member.subsidies[i].percentage
+                }
             }
         }
+
+        $("#invoiceLectureActual").val(lecture.logs[lecture.logs.length - 1].lecture)
+        $("#invoiceLectureLast").val(lecture.lastLecture)
         $("#invoiceSubsidyPercentage").val(subsidy)
-        $("#invoiceSubsidyValue").val(subsidyValue)
-        let lastConsumptionValue = consumptionValue - subsidyValue
-        $("#invoiceConsumption2").val(lastConsumptionValue)
-        $("#invoiceConsumption2b").val(lastConsumptionValue)
-        $("#invoiceDebt").val(debt) //A asignar
-        $("#invoiceTotal").val(parseInt(lastConsumptionValue) + parseInt(debt) + parseInt(charge))
+        $("#invoiceMeterValue").val(parameters.meterValue)
+
+        $("#invoiceConsumptionLimit").val(parameters.consumptionLimit)
+        $("#invoiceConsumptionLimitValue").val(parameters.consumptionLimitValue)
 
         $('.invoiceDateClass').daterangepicker({
             opens: 'right',
@@ -872,52 +851,66 @@ async function createInvoice(lectureID, invoiceID, member) {
             autoApply: true
         })
 
+        console.log("member",member)
+
+        $("#tableBodyServices").html('')
+
+        if (member.services) {
+            if (member.services.length > 0) {
+                for(let i=0; i<member.services.length; i++){
+                    $("#tableBodyServices").append(`<tr>
+                        <td>
+                            <input type="text" class="form-control form-control-sm" value="${member.services[i].services._id}" style="display: none"/>
+                            <span>${member.services[i].services.name}</span>
+                        </td>
+                        <td><input type="text" class="form-control form-control-sm numericValues money" value="${(member.services[i].value!=0) ? member.services[i].value : '' }"/></td>
+                    </tr>`)
+                }
+            }
+        }
+
+        calculateTotal()
+
         $('#invoiceSave').off("click")
 
         $("#invoiceSave").on('click', async function () {
 
             let goSave = false
 
-            /*EJEMPLO PARA POSIBLE UTILIZACIÓN EN SERVICIOS EXTRAS
-            if($("#tableServicesBody tr").length>0){
-                goSave = true
-            }
+            let services = []
+            if($("#tableBodyServices > tr").length>0){
+                $("#tableBodyServices > tr").each(function() {
     
-            $("#tableServicesBody tr").each(function(){
-                if($($($(this).children()[0]).children()[1])){
-    
-                    if($($($(this).children()[0]).children()[1]).val()==0 || !$.isNumeric($($($(this).children()[2]).children()[1]).val()) || !$.isNumeric($($($(this).children()[3]).children()[0]).val())){
-                        goSave = false
+                    if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
+                        value = 0
+                    }else{
+                        value = replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
                     }
-                    services.push({
-                        services: $($($(this).children()[0]).children()[1]).val(),
-                        quantity: parseInt($($($(this).children()[2]).children()[1]).val()),
-                        value: parseInt($($($(this).children()[3]).children()[0]).val())
-                    })
-                }
-            })
     
-            if(!goSave){
-                toastr.warning('Debe ingresar productos con valores correctos')
-                return
-            }*/
+                    services.push({
+                        services: $($($(this).children()[0]).children()[0]).val(),
+                        value: value
+                    })
+                })    
+            }
 
             let invoiceData = {
                 lectures: lectureID,
-                member: internals.dataRowSelected._id,
+                member: member._id,
                 //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
                 date: $("#invoiceDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 dateExpire: $("#invoiceDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
-                charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', ''),
-                lectureActual: replaceAll($("#invoiceLectureActual").val(), '.', '').replace(' ', ''),
-                lectureLast: replaceAll($("#invoiceLectureLast").val(), '.', '').replace(' ', ''),
-                lectureResult: replaceAll($("#invoiceLectureResult").val(), '.', '').replace(' ', ''),
-                meterValue: replaceAll($("#invoiceMeterValue").val(), '.', '').replace(' ', ''),
-                subsidyPercentage: replaceAll($("#invoiceSubsidyPercentage").val(), '.', '').replace(' ', ''),
-                subsidyValue: replaceAll($("#invoiceSubsidyValue").val(), '.', '').replace(' ', ''),
-                consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', ''),
-                invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', ''),
-                invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '')
+                charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', '').replace('$', ''),
+                lectureActual: replaceAll($("#invoiceLectureActual").val(), '.', '').replace(' ', '').replace('$', ''),
+                lectureLast: replaceAll($("#invoiceLectureLast").val(), '.', '').replace(' ', '').replace('$', ''),
+                lectureResult: replaceAll($("#invoiceLectureResult").val(), '.', '').replace(' ', '').replace('$', ''),
+                meterValue: replaceAll($("#invoiceMeterValue").val(), '.', '').replace(' ', '').replace('$', ''),
+                subsidyPercentage: replaceAll($("#invoiceSubsidyPercentage").val(), '.', '').replace(' ', '').replace('$', ''),
+                subsidyValue: replaceAll($("#invoiceSubsidyValue").val(), '.', '').replace(' ', '').replace('$', ''),
+                consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
+                invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
+                invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
+                services: services
             }
 
             /*if(services.length>0){
@@ -931,15 +924,15 @@ async function createInvoice(lectureID, invoiceID, member) {
                     if (saveInvoice.data._id) {
 
                         $('#modal_title').html(`Almacenado`)
-                        $('#modal_body').html(`<h5 class="alert-heading">Boleta almacenada correctamente</h5>`)
+                        $('#modal_body').html(`<h7 class="alert-heading">Boleta almacenada correctamente</h7>`)
                         loadLectures(member)
                     } else {
                         $('#modal_title').html(`Error`)
-                        $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
                     }
                 } else {
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
                 }
                 $('#modal').modal('show')
             }
@@ -961,16 +954,25 @@ async function createInvoice(lectureID, invoiceID, member) {
         $("#invoiceCharge").val(invoice.charge)
         $("#invoiceLectureActual").val(invoice.lectureActual)
         $("#invoiceLectureLast").val(invoice.lectureLast)
-        $("#invoiceLectureResult").val(invoice.lectureResult)
+        $("#invoiceSubsidyPercentage").val(invoice.subsidyPercentage)
         $("#invoiceMeterValue").val(invoice.meterValue)
+
+        console.log("invoice", invoice)
+        console.log("consumptionLimit", invoice.consumptionLimit)
+
+        $("#invoiceConsumptionLimit").val(invoice.consumptionLimit)
+        $("#invoiceConsumptionLimitValue").val(invoice.consumptionLimitValue)
+        //$("#invoiceConsumptionLimitTotal").val(invoice.consumptionLimitTotal)
+        
+        /*
+        $("#invoiceLectureResult").val(invoice.lectureResult)
         let consumptionValue = invoice.lectureResult * invoice.meterValue
         $("#invoiceConsumption1").val(consumptionValue)
-        $("#invoiceSubsidyPercentage").val(invoice.subsidyPercentage)
         $("#invoiceSubsidyValue").val(invoice.subsidyValue)
         $("#invoiceConsumption2").val(invoice.consumption)
         $("#invoiceConsumption2b").val(invoice.consumption)
         $("#invoiceDebt").val(invoice.invoiceDebt)
-        $("#invoiceTotal").val(invoice.invoiceTotal)
+        $("#invoiceTotal").val(invoice.invoiceTotal)*/
 
         $('.invoiceDateClass').daterangepicker({
             opens: 'right',
@@ -979,58 +981,71 @@ async function createInvoice(lectureID, invoiceID, member) {
             autoApply: true
         })
 
+        $("#tableBodyServices").html('')
+
+        if (invoice.services) {
+            if (invoice.services.length > 0) {
+                for(let i=0; i<invoice.services.length; i++){
+                    $("#tableBodyServices").append(`<tr>
+                        <td>
+                            <input type="text" class="form-control form-control-sm" value="${invoice.services[i].services._id}" style="display: none"/>
+                            <span>${invoice.services[i].services.name}</span>
+                        </td>
+                        <td><input type="text" class="form-control form-control-sm numericValues money" value="${(invoice.services[i].value!=0) ? invoice.services[i].value : '' }"/></td>
+                        <td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
+                    </tr>`)
+                }
+            }
+        }
+
+        calculateTotal()
+
         $('#invoiceSave').off("click")
 
         $("#invoiceSave").on('click', async function () {
 
             let goSave = false
 
-            /*EJEMPLO PARA POSIBLE UTILIZACIÓN EN SERVICIOS EXTRAS
-            if($("#tableServicesBody tr").length>0){
-                goSave = true
-            }
+            let services = []
+            if($("#tableBodyServices > tr").length>0){
+                $("#tableBodyServices > tr").each(function() {
     
-            $("#tableServicesBody tr").each(function(){
-                if($($($(this).children()[0]).children()[1])){
-    
-                    if($($($(this).children()[0]).children()[1]).val()==0 || !$.isNumeric($($($(this).children()[2]).children()[1]).val()) || !$.isNumeric($($($(this).children()[3]).children()[0]).val())){
-                        goSave = false
+                    if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
+                        value = 0
+                    }else{
+                        value = replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
                     }
-                    services.push({
-                        services: $($($(this).children()[0]).children()[1]).val(),
-                        quantity: parseInt($($($(this).children()[2]).children()[1]).val()),
-                        value: parseInt($($($(this).children()[3]).children()[0]).val())
-                    })
-                }
-            })
     
-            if(!goSave){
-                toastr.warning('Debe ingresar productos con valores correctos')
-                return
-            }*/
-
+                    services.push({
+                        services: $($($(this).children()[0]).children()[0]).val(),
+                        value: value
+                    })
+                })    
+            }
 
             let invoiceData = {
                 id: invoiceID,
                 lectures: lectureID,
-                member: internals.dataRowSelected._id,
+                //member: internals.dataRowSelected._id,
+                member: member._id,
                 date: $("#invoiceDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 dateExpire: $("#invoiceDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
-                charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', ''),
-                lectureActual: replaceAll($("#invoiceLectureActual").val(), '.', '').replace(' ', ''),
-                lectureLast: replaceAll($("#invoiceLectureLast").val(), '.', '').replace(' ', ''),
-                lectureResult: replaceAll($("#invoiceLectureResult").val(), '.', '').replace(' ', ''),
-                meterValue: replaceAll($("#invoiceMeterValue").val(), '.', '').replace(' ', ''),
-                subsidyPercentage: replaceAll($("#invoiceSubsidyPercentage").val(), '.', '').replace(' ', ''),
-                subsidyValue: replaceAll($("#invoiceSubsidyValue").val(), '.', '').replace(' ', ''),
-                consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', ''),
-                invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', ''),
-                invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '')
+                charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', '').replace('$', ''),
+                lectureActual: replaceAll($("#invoiceLectureActual").val(), '.', '').replace(' ', '').replace('$', ''),
+                lectureLast: replaceAll($("#invoiceLectureLast").val(), '.', '').replace(' ', '').replace('$', ''),
+                lectureResult: replaceAll($("#invoiceLectureResult").val(), '.', '').replace(' ', '').replace('$', ''),
+                meterValue: replaceAll($("#invoiceMeterValue").val(), '.', '').replace(' ', '').replace('$', ''),
+                subsidyPercentage: replaceAll($("#invoiceSubsidyPercentage").val(), '.', '').replace(' ', '').replace('$', ''),
+                subsidyValue: replaceAll($("#invoiceSubsidyValue").val(), '.', '').replace(' ', '').replace('$', ''),
+                consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
+                invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
+                invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
+                services: services
             }
 
-            if ($.isNumeric($("#invoiceNumber").val())) {
+            /*if ($.isNumeric($("#invoiceNumber").val())) {
                 invoiceData.number = $("#invoiceNumber").val()
-            }
+            }*/
 
             /*if(services.length>0){
                 saleData.services = services
@@ -1043,15 +1058,15 @@ async function createInvoice(lectureID, invoiceID, member) {
                     if (updateInvoice.data._id) {
 
                         $('#modal_title').html(`Almacenado`)
-                        $('#modal_body').html(`<h5 class="alert-heading">Boleta almacenada correctamente</h5>`)
+                        $('#modal_body').html(`<h7 class="alert-heading">Boleta almacenada correctamente</h7>`)
                         loadLectures(member)
                     } else {
                         $('#modal_title').html(`Error`)
-                        $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
                     }
                 } else {
                     $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
                 }
                 $('#modal').modal('show')
             }
@@ -1114,7 +1129,11 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.text(docName, pdfX + 310, pdfY + 20, 'center')
 
     doc.setFontType('bold')
-    doc.text('N° ' + invoice.number, pdfX + 310, pdfY + 50, 'center')
+    if(invoice.number){
+        doc.text('N° ' + invoice.number, pdfX + 310, pdfY + 50, 'center')
+    }else{
+        doc.text('N° -', pdfX + 310, pdfY + 50, 'center')
+    }
     doc.setFontSize(11)
     doc.text('S.I.I. - CURICO', pdfX + 310, pdfY + 75, 'center')
 
@@ -1197,9 +1216,18 @@ async function printInvoice(docType,type,memberID,invoiceID) {
         doc.text('Subsidio (' + invoice.subsidyPercentage.toString() + '%)', pdfX, pdfY + 46)
     }
     doc.text('SubTotal Consumo Mes', pdfX, pdfY + 72)
-    doc.text('Saldo Anterior', pdfX, pdfY + 85)
+
+    let index = 72 + 13
+    if(invoice.services){
+        for(let i=0; i<invoice.services.length; i++){
+          doc.text(invoice.services[i].services.name, pdfX, pdfY + index)
+            index += 13
+        }
+    }
+
+    doc.text('Saldo Anterior', pdfX, pdfY + index)
     doc.setFontType('bold')
-    doc.text('Monto Total', pdfX, pdfY + 111)
+    doc.text('Monto Total', pdfX, pdfY + index + 26)
 
 
     doc.setFontSize(10)
@@ -1211,10 +1239,22 @@ async function printInvoice(docType,type,memberID,invoiceID) {
         doc.text('-' + dot_separators(invoice.subsidyValue), pdfX + 250, pdfY + 46, 'right')
     }
     doc.text(dot_separators(invoice.charge + invoice.consumption), pdfX + 250, pdfY + 72, 'right')
-    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + 85, 'right')
-    doc.setFontType('bold')
-    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 111, 'right')
+    
+    index = 72 + 13
+    if(invoice.services){
+        for(let i=0; i<invoice.services.length; i++){
+            doc.text(dot_separators(invoice.services[i].value), pdfX + 250, pdfY + index, 'right')
+            index += 13
+        }
+    }
 
+    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index, 'right')
+    doc.setFontType('bold')
+    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + index + 26, 'right')
+
+
+    //////TOTALES Y CÓDIGO SII//////
+    pdfY += 50
     doc.setFontSize(12)
 
     doc.setFillColor(23, 162, 184)
@@ -1252,10 +1292,10 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     }
 
 
-    ///////GRÁFICO CONSUMOS/////
+    ///////GRÁFICO CONSUMOS///////
 
     pdfX = 30
-    pdfY += 200
+    pdfY += 150
     doc.setFontSize(9)
     doc.setFontType('bold')
     doc.setTextColor(0, 0, 0)
@@ -1585,7 +1625,7 @@ async function sendData(type,memberID,invoiceID) {
             loadingHandler('stop')
 
             $('#modal_title').html(`Almacenado`)
-            $('#modal_body').html(`<h5 class="alert-heading">Documento generado correctamente</h5>`)
+            $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
             $('#modal').modal('show')
 
             loadLectures(member)

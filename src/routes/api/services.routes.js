@@ -30,6 +30,38 @@ export default [
     },
     {
         method: 'POST',
+        path: '/api/servicesByFilter',
+        options: {
+            description: 'get services',
+            notes: 'get services',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+                    let query = {
+                        type: payload.type
+                    }
+                    let service = await Services.find(query)
+                
+                    return service
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    type: Joi.string().optional().allow('')
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
         path: '/api/serviceSingle',
         options: {
             description: 'get service',
@@ -72,7 +104,6 @@ export default [
                     let service = new Services({
                         name: payload.name,
                         type: payload.type,
-                        value: payload.value,
                         status: payload.status,
                         description: payload.description
                     })
@@ -93,7 +124,6 @@ export default [
                 payload: Joi.object().keys({
                     name: Joi.string().optional().allow(''),
                     type: Joi.string().optional().allow(''),
-                    value: Joi.number().allow(0).optional(),
                     status: Joi.string().optional().allow(''),
                     description: Joi.string().optional().allow('')
                 })
@@ -115,7 +145,6 @@ export default [
                    
                     service.name = payload.name
                     service.type = payload.type
-                    service.value = payload.value
                     service.status = payload.status
                     service.description = payload.description
                     
@@ -136,7 +165,6 @@ export default [
                     id: Joi.string().optional().allow(''),
                     name: Joi.string().optional().allow(''),
                     type: Joi.string().optional().allow(''),
-                    value: Joi.number().allow(0).optional(),    
                     status: Joi.string().optional().allow(''),
                     description: Joi.string().optional().allow('')
                 })

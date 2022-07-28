@@ -32,19 +32,31 @@ const memberSchema = new Schema({
     subsidyNumber: { type: Number },
     subsidies: [{
         /*subsidy: { type: Schema.Types.ObjectId, ref: 'subsidies' },*/
+        rut: { type: String },
+        name: { type: String },
+        lastname1: { type: String },
+        lastname2: { type: String },
+        houseQuantity: { type: Number },
+        type: { type: Number },
         decreeNumber: { type: Number },
         decreeDate: { type: Date },
         inscriptionDate: { type: Date },
+        inscriptionScore: { type: Number },
         startDate: { type: Date },
         endDate: { type: Date },
-        percentage: { type: Number }
+        percentage: { type: Number },
+        status: { type: String }
     }],
     email: { type: String },
     phone: { type: String },
     dateStart: { type: Date },
     dateEnd: { type: Date },
     status: { type: String },
-    inactiveObservation: { type: String }
+    inactiveObservation: { type: String },
+    services: [{
+        services: { type: Schema.Types.ObjectId, ref: 'services' },
+        value: { type: Number }
+    }],
 }, {
     versionKey: false
 })
