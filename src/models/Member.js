@@ -37,6 +37,7 @@ const memberSchema = new Schema({
         lastname1: { type: String },
         lastname2: { type: String },
         houseQuantity: { type: Number },
+        municipality: { type: String },
         type: { type: Number },
         decreeNumber: { type: Number },
         decreeDate: { type: Date },

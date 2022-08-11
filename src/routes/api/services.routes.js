@@ -38,9 +38,15 @@ export default [
             handler: async (request, h) => {
                 try {
                     let payload = request.payload
-                    let query = {
-                        type: payload.type
+                    let query = {}
+
+                    if(payload.type){
+                        query.type = payload.type
                     }
+                    if(payload.invoice){
+                        query.invoice = payload.invoice
+                    }
+
                     let service = await Services.find(query)
                 
                     return service
@@ -55,7 +61,8 @@ export default [
             },
             validate: {
                 payload: Joi.object().keys({
-                    type: Joi.string().optional().allow('')
+                    type: Joi.string().optional().allow(''),
+                    invoice: Joi.string().optional().allow('')
                 })
             }
         }
@@ -104,6 +111,8 @@ export default [
                     let service = new Services({
                         name: payload.name,
                         type: payload.type,
+                        invoice: payload.invoice,
+                        value: payload.value,
                         status: payload.status,
                         description: payload.description
                     })
@@ -124,6 +133,8 @@ export default [
                 payload: Joi.object().keys({
                     name: Joi.string().optional().allow(''),
                     type: Joi.string().optional().allow(''),
+                    invoice: Joi.string().optional().allow(''),
+                    value: Joi.number().optional().allow(0),
                     status: Joi.string().optional().allow(''),
                     description: Joi.string().optional().allow('')
                 })
@@ -145,6 +156,8 @@ export default [
                    
                     service.name = payload.name
                     service.type = payload.type
+                    service.invoice = payload.invoice
+                    service.value = payload.value
                     service.status = payload.status
                     service.description = payload.description
                     
@@ -165,6 +178,8 @@ export default [
                     id: Joi.string().optional().allow(''),
                     name: Joi.string().optional().allow(''),
                     type: Joi.string().optional().allow(''),
+                    invoice: Joi.string().optional().allow(''),
+                    value: Joi.number().optional().allow(0),
                     status: Joi.string().optional().allow(''),
                     description: Joi.string().optional().allow('')
                 })

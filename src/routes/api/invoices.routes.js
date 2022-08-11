@@ -1,5 +1,6 @@
 import Member from '../../models/Member'
 import Invoices from '../../models/Invoices'
+import Payments from '../../models/Payments'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 
@@ -75,8 +76,6 @@ export default [
                 try {
                     let payload = request.payload
 
-                    let date = new Date(payload.date)
-
                     let query = {
                         lectures: payload.lectures,
                         members: payload.member,
@@ -90,7 +89,11 @@ export default [
                         subsidyPercentage: payload.subsidyPercentage,
                         subsidyValue: payload.subsidyValue,
                         consumption: payload.consumption,
+                        consumptionLimit: payload.consumptionLimit,
+                        consumptionLimitValue: payload.consumptionLimitValue,
+                        consumptionLimitTotal: payload.consumptionLimitTotal,
                         invoiceDebt: payload.invoiceDebt,
+                        invoicePaid: 0,
                         invoiceTotal: payload.invoiceTotal
                     }
 
@@ -130,6 +133,9 @@ export default [
                     subsidyPercentage: Joi.number().allow(0),
                     subsidyValue: Joi.number().allow(0),
                     consumption: Joi.number().allow(0),
+                    consumptionLimit: Joi.number().allow(0),
+                    consumptionLimitValue: Joi.number().allow(0),
+                    consumptionLimitTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
@@ -168,7 +174,11 @@ export default [
                     invoices.subsidyPercentage = payload.subsidyPercentage
                     invoices.subsidyValue = payload.subsidyValue
                     invoices.consumption = payload.consumption
+                    invoices.consumptionLimit = payload.consumptionLimit
+                    invoices.consumptionLimitValue = payload.consumptionLimitValue
+                    invoices.consumptionLimitTotal = payload.consumptionLimitTotal
                     invoices.invoiceDebt = payload.invoiceDebt
+                    //invoices.invoicePaid = payload.invoicePaid
                     invoices.invoiceTotal = payload.invoiceTotal
                     invoices.services = payload.services
 
@@ -200,6 +210,9 @@ export default [
                     subsidyPercentage: Joi.number().allow(0),
                     subsidyValue: Joi.number().allow(0),
                     consumption: Joi.number().allow(0),
+                    consumptionLimit: Joi.number().allow(0),
+                    consumptionLimitValue: Joi.number().allow(0),
+                    consumptionLimitTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
@@ -250,5 +263,68 @@ export default [
                 })
             }
         }
-    }
+    },
+    {
+        method: 'POST',
+        path: '/api/invoicesDebt',
+        options: {
+            description: 'get unpaid invoices',
+            notes: 'get unpaid invoices',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+                    let query = {
+                        members: payload.member,
+                        number: {
+                            $exists: true,
+                            $ne: 0
+                        },
+                        $where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
+                        
+                    }
+                    /*if(payload.paymentID){
+                        query._id = { $ne: payload.paymentID }
+                    }*/
+
+                    let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
+                    /*console.log(invoices)
+                    let queryPayment = {
+                        members: payload.member
+                    }
+
+                    let payments = await Payments.find(queryPayment).lean()
+                    for(let i=0; i<payments.length; i++){ // Se recorren las boletas pagadas y se asigna su monto cancelado a las boletas generales
+                        for(let j=0; j<payments[i].invoices.length; j++){
+                            invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).invoiceDebt += payments[i].invoices[j].amount
+                        }
+                    }*/
+
+                    if(payload.paymentID){
+
+                        let payments = await Payments.findById(payload.paymentID).lean()
+                        for(let i=0; i<payments.invoices.length; i++){
+                            let index = invoices.map(x => x._id.toString()).indexOf(payments.invoices[i].invoices.toString())
+                            invoices.splice(index,1)
+                        }
+                    }
+
+                    return invoices
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    member: Joi.string().optional().allow(''),
+                    paymentID: Joi.string().optional().allow('')
+                })
+            }
+        }
+    },
 ]

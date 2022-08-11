@@ -47,6 +47,8 @@ function chargeServiceTable() {
             columns: [
                 { data: 'name' },
                 { data: 'type' },
+                { data: 'invoice' },
+                { data: 'value' },
                 { data: 'status' }
             ],
             initComplete: function (settings, json) {
@@ -81,11 +83,18 @@ async function getServicesEnabled() {
     if (servicesData.data.length > 0) {
         let formatData= servicesData.data.map(el => {
 
-            if(el.type=='MENSUAL'){
-                el.type = 'Boleta Mensual'
+            /*if(el.invoice){
+                el.invoice = '<i style="color: #17A2B8;" class="fas fa-check-circle"></i>'
             }else{
-                el.type = 'Extra'
+                el.invoice = '<i style="color: #D9534F;" class="fas fa-times-circle"></i>'
+            }*/
+            if(el.invoice=='MENSUAL'){
+                el.invoice = 'Boleta Mensual'
+            }else{
+                el.invoice = 'Extra'
             }
+            
+
             return el
         })
 
@@ -110,11 +119,11 @@ $('#createService').on('click', function () { // CREAR MOVIMIENTO
 
     $('#modalService_footer').html(`
         <button class="btn btn-dark" data-dismiss="modal">
-            <i ="color:#E74C3C;" class="fas fa-times"></i> CERRAR
+            <i class="fas fa-times"></i> CERRAR
         </button>
 
         <button class="btn btn-info" id="saveService">
-            <i ="color:#3498db;" class="fas fa-check"></i> GUARDAR
+            <i class="fas fa-check"></i> GUARDAR
         </button>
     `)
 
@@ -124,9 +133,13 @@ $('#createService').on('click', function () { // CREAR MOVIMIENTO
         let serviceData = {
             name: $('#serviceName').val(),
             type: $('#serviceType').val(),
+            invoice: $('#serviceInvoice').val(),
+            value: $('#serviceValue').val(),
             status: $('#serviceStatus').val(),
             description: $('#serviceDescription').val()
         }
+
+        console.log(serviceData)
 
         const res = validateServiceData(serviceData)
         if(res.ok){
@@ -165,16 +178,18 @@ $('#updateService').on('click', async function () {
     
     $('#modalService_footer').html(`
          <button class="btn btn-dark" data-dismiss="modal">
-            <i ="color:#E74C3C;" class="fas fa-times"></i> CERRAR
+            <i class="fas fa-times"></i> CERRAR
         </button>
 
         <button class="btn btn-info" id="saveService">
-            <i ="color:#3498db;" class="fas fa-check"></i> GUARDAR
+            <i class="fas fa-check"></i> GUARDAR
         </button>
     `)
 
     $('#serviceName').val(service.name)
     $('#serviceType').val(service.type)
+    $('#serviceInvoice').val(service.invoice)
+    $('#serviceValue').val(service.value)
     $('#serviceStatus').val(service.status)
     $('#serviceDescription').val(service.description)
     
@@ -184,6 +199,8 @@ $('#updateService').on('click', async function () {
             id: internals.dataRowSelected._id,
             name: $('#serviceName').val(),
             type: $('#serviceType').val(),
+            invoice: $('#serviceInvoice').val(),
+            value: $('#serviceValue').val(),
             status: $('#serviceStatus').val(),
             description: $('#serviceDescription').val()
         }
@@ -218,10 +235,14 @@ function validateServiceData(serviceData) {
     if(serviceData.name==''){
         errorMessage += '<br>Nombre'
     }
-    
-    if(serviceData.description==''){
-        errorMessage += '<br>Descripción'
+
+    if(!$.isNumeric(serviceData.value)){
+        errorMessage += '<br>Valor'
     }
+    
+    /*if(serviceData.description==''){
+        errorMessage += '<br>Descripción'
+    }*/
 
     if (errorMessage.length===0) {
         return { ok: serviceData }
@@ -242,19 +263,31 @@ function validateServiceData(serviceData) {
 function createModalBody(){
     let body = `
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         Nombre Servicio
                         <input id="serviceName" type="text" class="form-control form-control-sm border-input">
                     </div>
-                    <div class="col-md-4">
-                        Aplica en
+                    <div class="col-md-3">
+                        Tipo
                         <br/>
                         <select id="serviceType" class="form-select form-select-sm">
+                            <option value="OTROS">OTROS</option>
+                            <option value="ALCANTARILLADO">ALCANTARILLADO</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        Aplica en
+                        <br/>
+                        <select id="serviceInvoice" class="form-select form-select-sm">
                             <option value="MENSUAL">BOLETA MENSUAL</option>
                             <option value="EXTRA">BOLETA EXTRA</option>
                         </select>
                     </div>
                     <div class="col-md-4">
+                        Valor
+                        <input id="serviceValue" type="text" class="form-control form-control-sm border-input">
+                    </div>
+                    <div class="col-md-3">
                         Estado
                         <br/>
                         <select id="serviceStatus" class="form-select form-select-sm">

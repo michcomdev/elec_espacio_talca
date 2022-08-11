@@ -15,7 +15,11 @@ const invoicesSchema = new Schema({
     subsidyPercentage: { type: Number },
     subsidyValue: { type: Number },
     consumption: { type: Number },
+    consumptionLimit: { type: Number },
+    consumptionLimitValue: { type: Number },
+    consumptionLimitTotal: { type: Number },
     invoiceDebt: { type: Number },
+    invoicePaid: { type: Number },
     invoiceTotal: { type: Number },
     services: [{
         services: { type: Schema.Types.ObjectId, ref: 'services' },
