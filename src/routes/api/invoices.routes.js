@@ -123,6 +123,7 @@ export default [
                     number: Joi.number().allow(0).optional(),
                     lectures: Joi.string().allow(''),
                     member: Joi.string().allow(''),
+                    memberType: Joi.string().allow('').optional(), //Para efectos de generación múltiple
                     date: Joi.string().allow(''),
                     dateExpire: Joi.string().allow(''),
                     charge: Joi.number().allow(0),
@@ -200,6 +201,7 @@ export default [
                     number: Joi.number().allow(0).optional(),
                     lectures: Joi.string().allow(''),
                     member: Joi.string().allow(''),
+                    memberType: Joi.string().allow('').optional(), //Para efectos de generación múltiple
                     date: Joi.string().allow(''),
                     dateExpire: Joi.string().allow(''),
                     charge: Joi.number().allow(0),

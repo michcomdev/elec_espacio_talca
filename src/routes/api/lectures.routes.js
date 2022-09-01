@@ -73,6 +73,68 @@ export default [
     },
     {
         method: 'POST',
+        path: '/api/lecturesSectorMembers',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let members = await Member.find({'address.sector': payload.sector}).populate(['address.sector'])
+                    let array = []
+                    for(let i=0; i<members.length ; i++){
+                        array.push(members[i]._id)
+                    }
+
+                    let query = {
+                        members: { $in: array },
+                        month: payload.month,
+                        year: payload.year
+                    }
+                    let queryLast = {
+                        members: { $in: array },
+                        month: (payload.month==1) ? 12 : payload.month - 1,
+                        year: (payload.month==1) ? payload.year - 1 : payload.year, 
+                    }
+                    let queryInvoice = {
+                        members: { $in: array }
+                    }
+
+                    let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
+                    let lecturesLast = await Lectures.find(queryLast).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
+                    let invoices = await Invoices.find(queryInvoice).sort({'date' : 'descending'}).lean().populate(['lectures','services.services'])
+
+                    for(let i=0;i<lectures.length;i++){
+                        lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                        
+                        if(lecturesLast.find(x => x.members._id.toString() == lectures[i].members._id.toString())){
+                            lectures[i].lastLecture = lecturesLast.find(x => x.members._id.toString() == lectures[i].members._id.toString())
+                        }
+                    }
+
+                    return lectures
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    sector: Joi.string().optional().allow(''),
+                    month: Joi.number().allow(0),
+                    year: Joi.number().allow(0)
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
         path: '/api/lecturesSingleMember',
         options: {
             description: 'get all lectures from single member',
@@ -121,7 +183,7 @@ export default [
             tags: ['api'],
             handler: async (request, h) => {
                 try {
-                    let payload = request.payload   
+                    let payload = request.payload
 
                     let lecture = await Lectures.findById(payload.id).populate(['members']).lean()
                     let lecturesLast = await Lectures.find({members: lecture.members}).sort({'year' : 'ascending', 'month' : 'ascending'}).lean()

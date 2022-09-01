@@ -1,0 +1,82 @@
+#filterBtn {
+    margin-top: 12px;
+    background-color:#1C508A;
+    color: beige;
+}
+
+.cartolaFilters {
+    text-transform:uppercase;
+}
+
+#cartolaTable thead tr {
+    background-color:#1C508A;
+}
+#cartolaTable thead th {
+    color: beige;
+}
+
+@media (min-width: 992px) {
+    .modal-lg, .modal-xl {
+        max-width: 80%;
+    }
+}
+
+#modalMember {
+    font-size: 12px;
+}
+
+#tableCartola {
+    font-size: 12px;
+}
+
+.btn {
+    font-size: 12px;
+}
+
+.form-control {
+    font-size: 12px;
+}
+
+.form-select {
+    font-size: 12px;
+}
+
+.modal-header {
+    background-color: #3B6FC9;
+    color: white;
+}
+
+.btn-close {
+    background: white url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+}
+
+.dataTables_filter input {
+    width: 160px;
+    height: 30px;
+    background: white;
+    border-radius: 5px;
+    border: 0.2px solid rgb(221, 210, 210);
+}
+
+.btn-excel {
+    border: transparent !important;
+    border-radius: 5px !important;
+    color: white !important;
+    font-size: 14px !important ;
+    background-image: linear-gradient(to right, #3B6FC9 100%,  #3B6FC9 100%) !important;
+}
+
+.btn-pdf {
+    border: transparent !important;
+    border-radius: 5px !important;
+    color: white !important;
+    font-size: 14px !important ;
+    background-image: linear-gradient(to right, #3B6FC9 100%,  #3B6FC9 100%) !important;
+}
+
+.paginate_button.current {
+    color: #ffffff !important;
+    background: #3B6FC9 !important;
+    border-radius: 5px !important;
+    border: transparent;
+}

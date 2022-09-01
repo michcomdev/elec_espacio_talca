@@ -1,10 +1,10 @@
 {{!<layout/default}}
     {{#extend "css" }}
 <link rel="stylesheet" type="text/css"
-    href="/public/modules/cartola/cartola.css">
+    href="/public/modules/monthSummary/monthSummary.css">
 {{/extend}}
 <br />
-<h3 class="text-center animate__animated animate__fadeIn">CARTOLA</h3>
+<h3 class="text-center animate__animated animate__fadeIn">RESUMEN MENSUAL INGRESOS</h3>
 <br>
 <div class="row">
     <div class="col-md-2">
@@ -16,25 +16,38 @@
     </div>
     <div class="col-md-2">
         <label style="font-size: 14px;">Medio de Pago</label>
-        <select id="searchPaymentMethod" class="form-select form-select-sm
+        <select id="searchInvoiceType" class="form-select form-select-sm
             custom-select">
+            <option value="BOLETAS">SÓLO BOLETAS</option>
+            <option value="FACTURAS">SÓLO FACTURAS</option>
             <option value="0">TODOS</option>
-            <option value="EFECTIVO">EFECTIVO</option>
-            <option value="TRANSFERENCIA">TRANSFERENCIA</option>
-            <option value="REDCOMPRA">REDCOMPRA</option>
-            <option value="CHEQUE">CHEQUE</option>
         </select>
     </div>
-    <div class="col-md-2" style="text-align: right;">
-        
+    <div class="col-md-2">
+        <label style="font-size: 14px;">Año</label>
+        <select id="searchYear" class="form-control form-select-sm form-select"></select>
     </div>
     <div class="col-md-2">
-        <label style="font-size: 14px;">Fecha</label>
-        <input id="searchDate" type="text" class="form-control form-control-sm border-input">
+        <label style="font-size: 14px;">Mes</label>
+        <select id="searchMonth" class="form-control form-select-sm form-select">
+            <option value="01">ENERO</option>
+            <option value="02">FEBRERO</option>
+            <option value="03">MARZO</option>
+            <option value="04">ABRIL</option>
+            <option value="05">MAYO</option>
+            <option value="06">JUNIO</option>
+            <option value="07">JULIO</option>
+            <option value="08">AGOSTO</option>
+            <option value="09">SEPTIEMBRE</option>
+            <option value="10">OCTUBRE</option>
+            <option value="11">NOVIEMBRE</option>
+            <option value="12">DICIEMBRE</option>
+        </select>
     </div>
+    
     <div class="col-md-3">
         <button style="border-radius: 5px;" class="btn btn-sm btn-primary
-            btn-block" id="searchCartola">
+            btn-block" id="searchSummary">
             <i class="fas fa-search"></i> FILTRAR
         </button>
     </div>
@@ -44,28 +57,27 @@
         <br/>
     </div>
     <div class="col-md-12 col-xs-12 table-responsive">
-        <table id="tableCartola" class="display nowrap cell-border
-            table-condensed" cellspacing="0" width="100%">
+        <table id="tableSummary" class="display nowrap cell-border table-condensed" cellspacing="0" width="100%" style="font-size: 13px;">
             <thead>
                 <tr class="table-info">
-                    <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">FECHA</th>
-                    <th style="background-color: #3B6FC9;">DETALLE</th>
-                    <th style="background-color: #3B6FC9;">N° DOCUMENTO</th>
-                    <th style="background-color: #3B6FC9;">N° SOCIO</th>
-                    <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">HABER (+)</th>
-                    <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">HABER (+)</th>
-                    
-                    
-                    
-                    <!--<th style="background-color: #3B6FC9;">SECTOR</th>
-                    <th style="background-color: #3B6FC9;">NOMBRE</th>
-                    <th style="background-color: #3B6FC9;">MEDIO DE PAGO</th>
-                    <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">MONTO</th>
-                    <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">MONTO</th>-->
+                    <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">DÍA</th>
+                    <th style="background-color: #3B6FC9;">DESDE</th>
+                    <th style="background-color: #3B6FC9;">HASTA</th>
+                    <th style="background-color: #3B6FC9;">VOUCHER N°</th>
+                    <th style="background-color: #3B6FC9;">EFECTIVO</th>
+                    <th style="background-color: #3B6FC9;">CHEQUE</th>
+                    <th style="background-color: #3B6FC9;">REDCOMPRA</th>
+                    <th style="background-color: #3B6FC9;">TRANSFERENCIA</th>
+                    <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">TOTAL</th>
+                    <th style="background-color: #3B6FC9;">EFECTIVO</th>
+                    <th style="background-color: #3B6FC9;">CHEQUE</th>
+                    <th style="background-color: #3B6FC9;">REDCOMPRA</th>
+                    <th style="background-color: #3B6FC9;">TRANSFERENCIA</th>
+                    <th style="background-color: #3B6FC9;">TOTAL</th>
                 </tr>
             </thead>
         </table>
-        <div id="loadingCartola">
+        <div id="loadingSummary">
             <center>
                 <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
                 <span class="sr-only">Cargando...</span>
@@ -107,5 +119,5 @@
     </div>
 </div>
 {{#extend "js"}}
-<script src="/public/modules/cartola/cartola.js"></script>
+<script src="/public/modules/monthSummary/monthSummary.js"></script>
 {{/extend}}
