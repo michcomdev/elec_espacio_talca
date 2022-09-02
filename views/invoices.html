@@ -1,11 +1,11 @@
 {{!<layout/default}}
     {{#extend "css" }}
 <link rel="stylesheet" type="text/css"
-    href="/public/modules/lecturesFull/lecturesFull.css">
+    href="/public/modules/invoices/invoices.css">
 
 {{/extend}}
 <br />
-<h3 class="text-center animate__animated animate__fadeIn">Facturación Mensual</h3>
+<h3 class="text-center animate__animated animate__fadeIn">INGRESOS</h3>
 
 <br>
 
@@ -26,7 +26,7 @@
         <button style="border-radius: 5px;" class="btn btn-secondary btn-block" onclick="showSIIPDF('1dcad2ce3138124888dcd51bc3f9a16e908ecbf5d6bb29ea96e83b01c712dd23')">
             <i class="far fa-file-pdf"></i> OBTENCIÓN
         </button>-->
-    <!--<div class="col-md-2">
+    <div class="col-md-2">
         <button id="updateLectures" style="border-radius: 5px;" class="btn btn-info btn-block" disabled>
             <i class="far fa-eye"></i> LECTURAS
         </button>
@@ -36,86 +36,56 @@
         <button id="updatePayment" style="border-radius: 5px;" class="btn btn-primary btn-block" disabled>
             <i class="fas fa-dollar-sign"></i> PAGOS
         </button>
+    </div>
+    <!--<div class="col-md-3">
+        Desde - Hasta
+        <input id="searchDate" type="text" placeholder="Ej: ABC123"
+            class="form-control border-input">
     </div>-->
-    <div class="col-md-2">
-        <label style="font-size: 14px;">Año</label>
-        <select id="searchYear" class="form-control form-select-sm form-select"></select>
-    </div>
-    <div class="col-md-2">
-        <label style="font-size: 14px;">Mes</label>
-        <select id="searchMonth" class="form-control form-select-sm form-select">
-            <option value="01">ENERO</option>
-            <option value="02">FEBRERO</option>
-            <option value="03">MARZO</option>
-            <option value="04">ABRIL</option>
-            <option value="05">MAYO</option>
-            <option value="06">JUNIO</option>
-            <option value="07">JULIO</option>
-            <option value="08">AGOSTO</option>
-            <option value="09">SEPTIEMBRE</option>
-            <option value="10">OCTUBRE</option>
-            <option value="11">NOVIEMBRE</option>
-            <option value="12">DICIEMBRE</option>
-        </select>
-    </div>
-    <div class="col-md-2">
+    <div class="col-md-2" style="text-align: right;">
         <label style="font-size: 14px;">Selecciona el sector</label>
-        <select id="searchSector" class="form-control form-select-sm form-select">
-            <option value="0">Seleccione</option>
-        </select>
     </div>
     <div class="col-md-2">
-        <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block"
+        <select id="searchSector" class="form-select form-select-sm
+            custom-select">
+            <option value="0">Todos</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button style="border-radius: 5px;" class="btn btn-primary btn-block"
             id="searchMembers">
             <i class="fas fa-search"></i> FILTRAR
         </button>
     </div>
-
-    <div class="col-md-2">
-        <button style="border-radius: 5px;" class="btn btn-sm btn-info btn-block" id="calculateLectures">
-            <i class="fas fa-calculator"></i> Calcular
-        </button>
-    </div>
-    <div class="col-md-2">
-        <button style="border-radius: 5px;" class="btn btn-sm btn-danger btn-block" id="saveLectures" onclick="saveMultiple()">
-            <i class="fas fa-save"></i> Generar
-        </button>
-    </div>
-
     <div class="col-md-12 table-responsive">
         <br/>
             <table id="tableMembers" class="display nowrap cell-border
                 table-condensed" cellspacing="0" width="100%">
                 <thead>
                     <tr class="table-info">
-                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">SEL.</th>
-                        <th style="background-color: #3B6FC9;">N° SOCIO</th>
+                        <th style="background-color: #3B6FC9;
+                            border-top-left-radius: 5px;">N° SOCIO</th>
                         <th style="background-color: #3B6FC9">TIPO</th>
                         <th style="background-color: #3B6FC9">NOMBRE</th>
-                        <th style="background-color: #3B6FC9">CONSUMO MTS<sup>3</sup></th>
-                        <th style="background-color: #3B6FC9">CARGO FIJO</th>
-                        <th style="background-color: #3B6FC9">CONSUMO</th>
+                        <th style="background-color: #3B6FC9">SECTOR</th>
                         <th style="background-color: #3B6FC9">SUBSIDIO</th>
-                        <th style="background-color: #3B6FC9">ALCANTARILLADO</th>
-                        <th style="background-color: #3B6FC9">OTROS</th>
-                        <th style="background-color: #3B6FC9">SALDO</th>
-                        <th style="background-color: #3B6FC9">TOTAL</th>
-                        <th style="background-color: #3B6FC9">DETALLE</th>
-                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PDF</th>
+                        <th style="background-color: #3B6FC9">ÚLTIMA LECTURA</th>
+                        <th style="background-color: #3B6FC9;
+                            border-top-right-radius: 5px;">ESTADO DEUDA</th>
                     </tr>
                 </thead>
             </table>
-            <!--<div id="loadingMembers">
+            <div id="loadingMembers">
                 <center>
                     <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
                     <span class="sr-only">Cargando...</span>
                 </center>
-            </div>-->
+            </div>
         </div>
     </div>
 
     <div class="modal fade" id="lectureModal" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h6 class="modal-title" id="modalLecture_title"></h6>
@@ -169,5 +139,5 @@
     <script src="/public/modules/default/logoImg.js"></script>
     <script src="/public/modules/default/test2D.js"></script>
     <script src="/public/js/jspdf.plugin.autotable.js"></script>
-    <script src="/public/modules/lecturesFull/lecturesFull.js"></script>
+    <script src="/public/modules/invoices/invoices.js"></script>
     {{/extend}}

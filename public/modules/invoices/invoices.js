@@ -7,7 +7,6 @@ let internals = {
         table: {},
         data: []
     },
-    invoices: [],
     dataRowSelected: {},
     productRowSelected: {}
 }
@@ -31,18 +30,10 @@ $(document).ready(async function () {
     })
     getParameters()
 
-    //chargeMembersTable()
+    chargeMembersTable()
 })
 
 async function getParameters() {
-
-    let firstYear = 2021
-    for (let i = firstYear; i <= moment().format('YYYY'); i++) {
-        $("#searchYear").append(`<option value="${i}">${i}</option>`)
-    }
-    $("#searchYear").val(moment().format('YYYY'))
-    //$("#searchMonth").val(moment().format('MM'))
-    $("#searchMonth").val('05')
 
     let parametersData = await axios.get('/api/parameters')
     parameters = parametersData.data
@@ -52,7 +43,7 @@ async function getParameters() {
 
     $("#searchSector").append(
         sectors.reduce((acc,el)=>{
-            acc += `<option value="${el._id}" ${(el._id=='62bdd303b2e945b5ee150bf0') ? 'selected' : ''}>${el.name}</option>`
+            acc += '<option value="'+el._id+'">'+el.name+'</option>'
             return acc
         },'')
     )
@@ -87,37 +78,29 @@ function chargeMembersTable() {
                     url: spanishDataTableLang
                 },
                 responsive: true,
-                columnDefs: [{ targets: [0, 1, 2, 11, 12], className: 'dt-center' },
-                            { targets: [4, 5, 6, 7, 8, 9, 10], className: 'dt-right' }],
-                order: [[1, 'asc']],
+                columnDefs: [{ targets: [0, 1, 4, 5, 6], className: 'dt-center' }],
+                order: [[0, 'asc']],
                 ordering: true,
                 rowCallback: function (row, data) {
                     //$(row).find('td:eq(1)').html(moment.utc(data.date).format('DD/MM/YYYY'))
-                    //$(row).find('td:eq(5)').html(dot_separators(data.lastLecture))
+                    $(row).find('td:eq(5)').html(dot_separators(data.lastLecture))
                     // $('td', row).css('background-color', 'White');
                 },
                 columns: [
-                    { data: 'select' },
                     { data: 'number' },
                     { data: 'typeString' },
                     { data: 'name' },
-                    { data: 'consumption' },
-                    { data: 'charge' },
-                    { data: 'consumptionValue' },
-                    { data: 'subsidy' },
-                    { data: 'sewerage' },
-                    { data: 'others' },
-                    { data: 'debt' },
-                    { data: 'total' },
-                    { data: 'detail' },
-                    { data: 'pdf' }
+                    { data: 'sector' },
+                    { data: 'subsidyActive' },
+                    { data: 'lastLecture' },
+                    { data: 'paymentStatus' }
                 ],
                 initComplete: function (settings, json) {
-                    getLectures()
+                    getMembers()
                 }
             })
 
-       /*$('#tableMembers tbody').off("click")
+        $('#tableMembers tbody').off("click")
 
         $('#tableMembers tbody').on('click', 'tr', function () {
             if ($(this).hasClass('selected')) {
@@ -132,114 +115,38 @@ function chargeMembersTable() {
                 //internals.members.data = internals.members.table.row($(this)).data()
                 internals.dataRowSelected = internals.members.table.row($(this)).data()
             }
-        })*/
+        })
     } catch (error) {
         console.log(error)
     }
 
 }
 
-async function getLectures() {
-    //let lecturesData = await axios.post('api/membersLectures', {sector: $("#searchSector").val()})
-    let query = {
-        sector: $("#searchSector").val(), 
-        year: $("#searchYear").val(), 
-        month: $("#searchMonth").val()
-    }
-    let lecturesData = await axios.post('api/lecturesSectorMembers', query)
-
-    internals.members.data = lecturesData.data
-
-    internals.invoices = []
+async function getMembers() {
+    let lecturesData = await axios.post('api/membersLectures', {sector: $("#searchSector").val()})
 
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
-
-            el.select = `<input type="checkbox" class="chkClass" id="chk${el.members._id}" />`
-            el.number = el.members.number
-
-            if (el.members.type == 'personal') {
+            
+            //el.datetime = moment(el.datetime).format('DD/MM/YYYY HH:mm')
+            if (el.type == 'personal') {
                 el.typeString = 'PERSONA'
-                el.name = el.members.personal.name + ' ' + el.members.personal.lastname1 + ' ' + el.members.personal.lastname2
+                el.name = el.personal.name + ' ' + el.personal.lastname1 + ' ' + el.personal.lastname2
             } else {
                 el.typeString = 'EMPRESA'
-                el.name = el.members.enterprise.name
+                el.name = el.enterprise.name
             }
-
-            console.log(el)
-
-            if(el.invoice){
-
-                let invoiceServices = [], sewerage = 0, others = 0
-                for(let j=0; j < el.invoice.services.length; j++){
-                    if(el.invoice.services[j].services.type=='ALCANTARILLADO'){
-                        sewerage += (parseInt(el.invoice.services[j].value)!=0) ? parseInt(el.invoice.services[j].value) : parseInt(el.invoice.services[j].services.value)//Indicar valor por defecto en caso de 0
-                    }else{
-                        others += (parseInt(el.invoice.services[j].value)!=0) ? parseInt(el.invoice.services[j].value) : parseInt(el.invoice.services[j].services.value) //Indicar valor por defecto en caso de 0
-                    }
-
-                    invoiceServices.push({
-                        services: el.invoice.services[j].services._id,
-                        value: el.invoice.services[j].value
-                    })
-                }
-
-                if(!el.invoice.token){
-
-                    internals.invoices.push({
-                        id: el.invoice._id,
-                        lectures: el.invoice.lectures._id,
-                        member: el.invoice.members,
-                        memberType: el.members.type,
-                        date: moment.utc(el.invoice.date).format('YYYY-MM-DD'),
-                        dateExpire: moment.utc(el.invoice.dateExpire).format('YYYY-MM-DD'),
-                        charge: el.invoice.charge,
-                        lectureActual: el.invoice.lectureActual,
-                        lectureLast: el.invoice.lectureLast,
-                        lectureResult: el.invoice.lectureResult,
-                        meterValue: el.invoice.meterValue,
-                        subsidyPercentage: el.invoice.subsidyPercentage,
-                        subsidyValue: el.invoice.subsidyValue,
-                        consumptionLimit: el.invoice.consumptionLimit,
-                        consumptionLimitValue: el.invoice.consumptionLimitValue,
-                        consumptionLimitTotal: el.invoice.consumptionLimitTotal,
-                        consumption: el.invoice.consumption,
-                        invoiceDebt: el.invoice.invoiceDebt,
-                        invoiceTotal: el.invoice.invoiceTotal,
-                        services: invoiceServices
-                    })
-                }
-
-                el.consumption = el.invoice.lectureResult
-                el.charge = el.invoice.charge
-                el.consumptionValue = el.invoice.consumption
-                el.subsidy = el.invoice.subsidyValue
-                el.sewerage = sewerage
-                el.others = others
-                el.debt = el.invoice.invoiceDebt
-                el.total = el.invoice.invoiceTotal
-                el.detail = `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
-                
-                if(el.invoice.token){
-                    el.select = ''
-                    el.pdf = `<button class="btn btn-sm btn-danger" onclick="printInvoice('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
-                }else{
-                    el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
-                }
-
-            
+            el.sector = el.address.sector.name
+            if(el.subsidies.length>0){
+                //Verificar que subsidio esté activo
+                el.subsidyActive = 'SI'
             }else{
-                el.consumption = 0
-                el.charge = 0
-                el.consumptionValue = 0
-                el.subsidy = 0
-                el.sewerage = 0
-                el.others = 0
-                el.debt = 0
-                el.total = 0
-                el.detail = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>'
-                el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
+                el.subsidyActive = 'NO'
+
             }
+            
+            el.lastLecture = 0
+            el.paymentStatus = 'AL DÍA'
 
             return el
         })
@@ -252,263 +159,8 @@ async function getLectures() {
     }
 }
 
-async function calculate(){
-    let array = internals.members.data
-    let newArray = []
-    internals.invoices = []
-
-    console.log(internals.members.data)
-
-    for(let i=0; i < array.length; i++){
-
-        let typeString = '', name = ''
-        if (array[i].members.type == 'personal') {
-            typeString = 'PERSONA'
-            name = array[i].members.personal.name + ' ' + array[i].members.personal.lastname1 + ' ' + array[i].members.personal.lastname2
-        } else {
-            typeString = 'EMPRESA'
-            name = array[i].members.enterprise.name
-        }
-
-
-        let goCalculate = true
-        if(array[i].invoice){
-            if(array[i].invoice.token){
-                goCalculate = false
-            }
-        }
-
-        if(!goCalculate){
-
-            let el = array[i]
-            
-            let invoiceServices = [], sewerage = 0, others = 0
-            for(let j=0; j < el.invoice.services.length; j++){
-                if(el.invoice.services[j].services.type=='ALCANTARILLADO'){
-                    sewerage += (parseInt(el.invoice.services[j].value)!=0) ? parseInt(el.invoice.services[j].value) : parseInt(el.invoice.services[j].services.value)//Indicar valor por defecto en caso de 0
-                }else{
-                    others += (parseInt(el.invoice.services[j].value)!=0) ? parseInt(el.invoice.services[j].value) : parseInt(el.invoice.services[j].services.value) //Indicar valor por defecto en caso de 0
-                }
-
-                invoiceServices.push({
-                    services: el.invoice.services[j].services._id,
-                    value: el.invoice.services[j].value
-                })
-            }
-
-            newArray.push(
-                {
-                    select: '',
-                    number: el.members.number,
-                    typeString: typeString,
-                    name: name,
-                    consumption: el.invoice.lectureResult,
-                    charge: el.invoice.charge,
-                    consumptionValue: el.invoice.consumption,
-                    subsidy: el.invoice.subsidyValue,
-                    sewerage: sewerage,
-                    others: others,
-                    debt: el.invoice.invoiceDebt,
-                    total: el.invoice.invoiceTotal,
-                    detail: `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`,
-                    pdf: `<button class="btn btn-sm btn-danger" onclick="printInvoice('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
-                }
-            )
-
-
-
-            /*internals.invoices.push({
-                id: el.invoice._id,
-                lectures: el.invoice.lectures._id,
-                member: el.invoice.members,
-                memberType: el.members.type,
-                date: moment.utc(el.invoice.date).format('YYYY-MM-DD'),
-                dateExpire: moment.utc(el.invoice.dateExpire).format('YYYY-MM-DD'),
-                charge: el.invoice.charge,
-                lectureActual: el.invoice.lectureActual,
-                lectureLast: el.invoice.lectureLast,
-                lectureResult: el.invoice.lectureResult,
-                meterValue: el.invoice.meterValue,
-                subsidyPercentage: el.invoice.subsidyPercentage,
-                subsidyValue: el.invoice.subsidyValue,
-                consumptionLimit: el.invoice.consumptionLimit,
-                consumptionLimitValue: el.invoice.consumptionLimitValue,
-                consumptionLimitTotal: el.invoice.consumptionLimitTotal,
-                consumption: el.invoice.consumption,
-                invoiceDebt: el.invoice.invoiceDebt,
-                invoiceTotal: el.invoice.invoiceTotal,
-                services: invoiceServices
-            })*/
-         
-
-        }else{
-
-            let net = 0
-            //Consumos
-            let lectureActual = array[i].logs[array[i].logs.length - 1].lecture
-            let lectureLast = (array[i].lastLecture) ? array[i].lastLecture.logs[array[i].lastLecture.logs.length - 1].lecture : 0 //Posiblemente se deba definir un default en caso de medidor nuevo
-            let lectureValue = lectureActual - lectureLast
-
-            let meterValue = parameters.meterValue
-            let consumptionValue = lectureValue * meterValue
-
-            let subsidyPercentage = 0
-            if (array[i].members.subsidies.length > 0) {
-                for(let i=0; i < array[i].members.subsidies.length; i++){
-                    if(array[i].members.subsidies[i].status=='active'){
-                        subsidyPercentage = array[i].members.subsidies[i].percentage
-                    }
-                }
-            }
-
-            let subsidyValue = 0
-            if (subsidyPercentage > 0) {
-                if (lectureValue <= parameters.subsidyLimit) {
-                    subsidyValue = Math.round(consumptionValue * (subsidyPercentage / 100))
-                } else {
-                    subsidyValue = Math.round((parameters.subsidyLimit * meterValue) * (subsidyPercentage / 100))
-                }
-            }
-
-            let consumptionLimit = parameters.consumptionLimit
-            let consumptionLimitValue = parameters.consumptionLimitValue
-            let consumptionLimitTotal = 0 //Valor a pagar por sobreconsumo
-            if(lectureValue>consumptionLimit){
-                consumptionLimitTotal = (lectureValue - consumptionLimit) * consumptionLimitValue
-            }
-
-            let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal
-
-            //Servicios
-            let sewerage = 0
-            let others = 0
-            let services = [] //Para almacenaje
-            if(array[i].members.services){
-                for(let j=0; j < array[i].members.services.length; j++){
-                    if(array[i].members.services[j].services.type=='ALCANTARILLADO'){
-                        sewerage += (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value)//Indicar valor por defecto en caso de 0
-                    }else{
-                        others += (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value) //Indicar valor por defecto en caso de 0
-                    }
-
-                    services.push({
-                        services: array[i].members.services[j].services._id,
-                        value: (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value)
-                    })
-
-                }
-            }
-
-            //Montos
-            let debt = 0
-            let total = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(debt) + parseInt(sewerage) + parseInt(others)
-
-            newArray.push(
-                {
-                    select: `<input type="checkbox" class="chkClass" id="chk${array[i].members._id}"/>`,
-                    number: array[i].members.number,
-                    typeString: typeString,
-                    name: name,
-                    consumption: lectureValue,
-                    charge: parameters.charge,
-                    consumptionValue: lastConsumptionValue,
-                    subsidy: subsidyValue,
-                    sewerage: sewerage,
-                    others: others,
-                    debt: debt,
-                    total: total,
-                    //detail: `<button class="btn btn-sm btn-info" onclick="createInvoice('${lectures[i]._id}','${invoiceID}','${member._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`,
-                    detail: `<button class="btn btn-sm btn-info" onclick="createInvoice('${array[i]._id}','0','${array[i].members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`,
-                    pdf: '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
-                }
-            )
-
-
-            internals.invoices.push({
-                lectures: array[i]._id,
-                member: array[i].members._id,
-                memberType: array[i].members.type,
-                //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
-                date: moment.utc().format('YYYY-MM-DD'),
-                dateExpire: moment.utc().add(15, 'days').format('YYYY-MM-DD'),
-                charge: parameters.charge,
-                lectureActual: lectureActual,
-                lectureLast: lectureLast,
-                lectureResult: lectureValue,
-                meterValue: meterValue,
-                subsidyPercentage: subsidyPercentage,
-                subsidyValue: subsidyValue,
-                consumptionLimit: consumptionLimit,
-                consumptionLimitValue: consumptionLimitValue,
-                consumptionLimitTotal: consumptionLimitTotal,
-                consumption: lastConsumptionValue,
-                invoiceDebt: debt,
-                invoiceTotal: total,
-                services: services
-            })
-        }
-
-        if(i+1==array.length){
-            internals.members.table.clear()
-            internals.members.table.rows.add(newArray)
-            internals.members.table.draw()
-        }
-    }
-
-}
-
-async function saveMultiple(){
-    console.log(internals.invoices)
-    //console.log($(".chkClass").prop('checked').length)
-
-    let goGenerate = false
-    $(".chkClass").each(function() {
-        if($(this).prop('checked')){
-            goGenerate = true
-        }
-    })
-    
-    if(goGenerate){
-        for(let i=0; i<internals.invoices.length; i++){
-            if($("#chk"+internals.invoices[i].member).prop('checked')){
-                if(!internals.invoices[i].id){
-                    
-                    let saveInvoice = await axios.post('/api/invoiceSave', internals.invoices[i])
-                    if (saveInvoice.data) {
-                        if (saveInvoice.data._id) {
-                            console.log('Save', i)
-                            sendData(internals.invoices[i].memberType,internals.invoices[i].member,saveInvoice.data._id)
-                        }
-                    }
-                }else{
-                    let updateInvoice = await axios.post('/api/invoiceUpdate', internals.invoices[i])
-                    if (updateInvoice.data) {
-                        if (updateInvoice.data._id) {
-                            console.log('Update', i)
-                            console.log('data', updateInvoice.data)
-                            sendData(internals.invoices[i].memberType,internals.invoices[i].member,updateInvoice.data._id)
-                        }
-                    }
-                }
-            }
-        }
-    }else{
-        $('#modal_title').html(`Error`)
-        $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
-        $('#modal').modal('show')
-    }
-}
-
 $('#searchMembers').on('click', async function () {
-    if($("#searchSector").val()!=0){
-        chargeMembersTable()
-    }else{
-        toastr.warning('Debe seleccionar un sector')
-    }
-})
-
-$('#calculateLectures').on('click', async function () {
-    calculate()
+    chargeMembersTable()
 })
 
 $('#updateLectures').on('click', async function () {
@@ -689,39 +341,87 @@ function createModalBody(member) {
 
     let body = /*html*/ `
     <div class="row">
-        <div class="col-md-12">
-            <h5>Datos de socio</h5>
-            <div class="row">
-                <div class="col-md-2">
-                    RUT
-                    <input id="memberRUT" type="text" class="form-control form-control-sm border-input" disabled>
-                </div>
-                <div class="col-md-3">
-                    Nombre
-                    <input id="memberName" type="text" class="form-control form-control-sm border-input" disabled>
-                </div>
-                <div class="col-md-1">
-                    N° Medidor
-                    <input id="memberWaterMeter" type="text" class="form-control form-control-sm border-input" disabled>
-                </div>
-                <div class="col-md-2">
-                    Tipo
-                    <input id="memberType" type="text" class="form-control form-control-sm border-input" disabled>
-                </div>
-                <div class="col-md-4">
-                    Dirección
-                    <input id="memberAddress" type="text" class="form-control form-control-sm border-input" disabled>
-                </div>
-            
+    <div class="col-md-12">
+    <h5>Datos de socio</h5>
+        <div class="row">
+            <div class="col-md-2">
+                RUT
+                <input id="memberRUT" type="text" class="form-control form-control-sm border-input" disabled>
             </div>
+            <div class="col-md-3">
+                Nombre
+                <input id="memberName" type="text" class="form-control form-control-sm border-input" disabled>
+            </div>
+            <div class="col-md-1">
+                N° Medidor
+                <input id="memberWaterMeter" type="text" class="form-control form-control-sm border-input" disabled>
+            </div>
+            <div class="col-md-2">
+                Tipo
+                <input id="memberType" type="text" class="form-control form-control-sm border-input" disabled>
+            </div>
+            <div class="col-md-4">
+                Dirección
+                <input id="memberAddress" type="text" class="form-control form-control-sm border-input" disabled>
+            </div>
+            
+            <!--<div class="col-md-12">
+                <br/><br/>
+            </div>-->
+            
         </div>
     </div>
+</div>
+<br />
+<br />
 <div class="row">
+
+
+<h5>Lecturas realizadas</h5>
     <div class="col-md-12">
         <div class="row">
+
+            <div class="col-md-3">
+                <input id="addLectureTest" type="text" class="form-control form-control-sm border-input">
+            </div>
+            <div class="col-md-3">
+                <button style="border-radius: 5px;" class="btn btn-primary" onclick="addLecture()"><i class="fas fa-plus-circle"></i> Agregar lectura manual</button>
+            </div>
+            </div>
+            <div class="col-md-8 table-responsive">
+                <br/>
+                <br />
+                <br />
+                <table id="tableLectures" class="display nowrap table table-condensed cell-border" cellspacing="0">
+                    <thead id="tableLecturesHead">
+                        <tr class="table-info">
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Mes</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Fecha</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Lectura</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Crear/Editar</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Ver Boleta/Factura</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Pago</th>
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Estado Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableLecturesBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-4">
+                
+            </div>
+
             <div class="col-md-2">
             </div>
             <div class="col-md-8">
+                <br />
+                <br />
+                <br />
+                <br />
                 <div id="divInvoice" class="card border-primary" style="display: none;">
                     <div class="card-header text-white bg-primary" style="text-align: center">
                         <b id="invoiceTitle">Registro de Boleta/Factura</b>
@@ -911,19 +611,41 @@ function createModalBody(member) {
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-5" style="text-align: center;">
+                            <div class="col-md-3" style="text-align: center;">
+                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="invoiceCancel"><i ="color:#3498db;" class="fas fa-arrow-left"></i> Atrás</button></td>
                             </div>
-                            <div class="col-md-2" style="text-align: center;">
-                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="invoiceCancel"><i ="color:#3498db;" class="fas fa-times"></i> Cerrar</button></td>
+                            <div class="col-md-3" style="text-align: center;">
+                            </div>
+                            <div class="col-md-3" style="text-align: center;">
+                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="invoiceSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <!-- <div class="col-md-6" style="height:300px; overflow-y:scroll;">
+                <table id="tableLectures" class="display nowrap table table-condensed cell-border" cellspacing="0">
+                    <thead id="tableLecturesHead">
+                        <tr class="table-info">
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Mes</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Fecha</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Lectura</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Estado Pago</th>
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Ver Boleta/Factura</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableLecturesBody">
+                    </tbody>
+                </table>
+            </div>-->
         </div>
     </div>
 
-   
+    <!--<div class="col-md-4">
+        
+    </div>-->
+    
 </div>
     
 `
@@ -935,6 +657,20 @@ function createModalBody(member) {
 
         cleanInvoice()
 
+/*
+        $('#tableLectures tbody').on('click', 'tr', function () {
+            if ($(this).hasClass('table-primary')) {
+                $(this).removeClass('table-primary')
+                $('#tableInvoice').css('visibility', 'hidden')
+            } else {
+                $('#tableLecturesBody > tr').removeClass('table-primary')
+                $(this).addClass('table-primary')
+                $('#divInvoice').css('display', 'block')
+                $('#tableLectures tbody').off("click")
+                $('.btnLecture').attr('disabled',true)
+                createInvoice($(this).attr('id'), $(this).attr('data-invoice'), member)
+            //}
+        })*/
     })
 }
 
@@ -948,8 +684,20 @@ async function cleanInvoice() {
     $("#invoiceSubsidyPercentage").val('')
     $("#tableBodyServices").html('')
     $('.btnLecture').removeAttr('disabled')
-    
-    $("#lecturesModal").modal('hide')
+}
+
+async function addLecture() {
+    //date: moment().format('YYYY-MM-DD[T]HH:mm[Z]'),
+
+    let lecture = {
+        users: userCredentials._id,
+        date: moment().format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]'),
+        member: internals.dataRowSelected._id,
+        //lecture: 3513
+        lecture: $("#addLectureTest").val()
+    }
+
+    let saveLecture = await axios.post('/api/lectureSave', lecture)
 }
 
 function calculateTotal() {
@@ -1043,9 +791,6 @@ function calculateTotal() {
 
 async function createInvoice(lectureID, invoiceID, memberID) {
 
-    createModalBody(memberID)
-    $('#lectureModal').modal('show')
-
     $('#tableLecturesBody > tr').removeClass('table-primary')
     $("#"+lectureID).addClass('table-primary')
     $('#divInvoice').css('display', 'block')
@@ -1054,23 +799,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
     let member = memberData.data
-
-    let name = ''
-    let type = ''
-    if (member.type == 'personal') {
-        type = 'PERSONAL'
-        name = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
-    } else {
-        type = 'EMPRESA'
-        name = member.enterprise.name
-    }
-
-    $('#memberNumber').val(member.number)
-    $('#memberType').val(type)
-    $('#memberRUT').val(member.rut)
-    $('#memberName').val(name)
-    $('#memberWaterMeter').val(member.waterMeters.find(x => x.state === 'Activo').number)
-    $('#memberAddress').val(member.address.address)
     
     if (invoiceID == 0) {
 
@@ -1759,200 +1487,848 @@ async function showSIIPDF(token) {
 }
 
 async function sendData(type,memberID,invoiceID) {
-    console.log('sendData',type,memberID,invoiceID)
 
+    let generateDTE = await Swal.fire({
+        title: '¿Está seguro de generar documento?',
+        customClass: 'swal-wide',
+        html: ``,
+        showCloseButton: true,
+        showCancelButton: true,
+        showConfirmButton: true,
+        focusConfirm: false,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar'
+    })
+
+    if (generateDTE.value) {
         
-    //loadingHandler('start')
-    
-    let memberData = await axios.post('/api/memberSingle', {id: memberID})
-    let member = memberData.data
+        loadingHandler('start')
+        
+        let memberData = await axios.post('/api/memberSingle', {id: memberID})
+        let member = memberData.data
 
-    let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
-    let invoice = invoiceData.data
+        let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
+        let invoice = invoiceData.data
 
-    let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
-    let lectures = lecturesData.data
+        let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
+        let lectures = lecturesData.data
 
-    let parametersData = await axios.get('/api/parameters')
-    let parameters = parametersData.data
+        let parametersData = await axios.get('/api/parameters')
+        let parameters = parametersData.data
 
-    let dteType = 34 //Factura exenta electrónica
-    let name = '', category = ''
-    let document = ''
+        let dteType = 34 //Factura exenta electrónica
+        let name = '', category = ''
+        let document = ''
 
-    if(type=='personal'){
+        if(type=='personal'){
 
-        dteType = 41 //Boleta exenta electrónica
-        name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
-
-        let Emisor = { //EMISOR DE PRUEBA
-            RUTEmisor: "76795561-8",
-            RznSocEmisor: "HAULMER SPA",
-            GiroEmisor: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
-            DirOrigen: "ARTURO PRAT 527   CURICO",
-            CmnaOrigen: "Curicó",
-            CdgSIISucur: "81303347"
-        }
-
-
-        document = {
-            response: ["TIMBRE","FOLIO"],
-            dte: {
-                Encabezado: {
-                    IdDoc:{
-                        TipoDTE: dteType,
-                        Folio: 0,
-                        FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
-                        IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
-                    },
-                    Emisor: Emisor,
-                    Receptor:{
-                        RUTRecep: member.rut.split('.').join(''),
-                        RznSocRecep: name,
-                        DirRecep: member.address.address,
-                        CmnaRecep: parameters.committee.commune,
-                        CiudadRecep: parameters.committee.city
-                    },
-                    Totales:{
-                        MntExe: invoice.invoiceTotal,
-                        MntTotal: invoice.invoiceTotal,
-                        VlrPagar: invoice.invoiceTotal
-                    }
-                },
-                Detalle:[
-                    {
-                        NroLinDet: 1,
-                        NmbItem: "Servicio de Agua",
-                        QtyItem: 1,
-                        PrcItem: invoice.invoiceTotal,
-                        MontoItem: invoice.invoiceTotal,
-                        IndExe: 1 //1=exento o afecto / 2=no facturable
-                    }
-                ]
-            }
-        }
-
-
-    }else{
-        name = member.enterprise.fullName
-        category = member.enterprise.category
-
-        if(name==''){ //Sólo para efectos de TEST
+            dteType = 41 //Boleta exenta electrónica
             name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
-            category = 'TEST'
-        }
 
-        //let net = parseInt(invoice.invoiceTotal / 1.19)
-        //let iva = invoice.invoiceTotal - net
-
-        /*let Emisor = {
-            RUTEmisor: parameters.committee.rut.split('.').join(''),
-            RznSoc: parameters.committee.name,
-            GiroEmis: parameters.committee.category,
-            Acteco: parameters.committee.acteco,
-            DirOrigen: parameters.committee.address,
-            CmnaOrigen: parameters.committee.commune,
-            Telefono: parameters.committee.phone,
-            CdgSIISucur: parameters.committee.siiCode
-        }*/
-        console.log(invoice)
+            let Emisor = { //EMISOR DE PRUEBA
+                RUTEmisor: "76795561-8",
+                RznSocEmisor: "HAULMER SPA",
+                GiroEmisor: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
+                DirOrigen: "ARTURO PRAT 527   CURICO",
+                CmnaOrigen: "Curicó",
+                CdgSIISucur: "81303347"
+            }
 
 
-        let Emisor = { //EMISOR DE PRUEBA
-            RUTEmisor: "76795561-8",
-            RznSoc: "HAULMER SPA",
-            GiroEmis: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
-            Acteco: "479100",
-            DirOrigen: "ARTURO PRAT 527   CURICO",
-            CmnaOrigen: "Curicó",
-            Telefono: "0 0",
-            CdgSIISucur: "81303347"
-        }
-
-        document = {
-            response: ["TIMBRE","FOLIO"],
-            dte: {
-                Encabezado: {
-                    IdDoc:{
-                        TipoDTE: dteType,
-                        Folio: 0,
-                        FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
-                        TpoTranCompra:"1",
-                        TpoTranVenta:"1",
-                        FmaPago:"2"
+            document = {
+                response: ["TIMBRE","FOLIO"],
+                dte: {
+                    Encabezado: {
+                        IdDoc:{
+                            TipoDTE: dteType,
+                            Folio: 0,
+                            FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
+                            IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
+                        },
+                        Emisor: Emisor,
+                        Receptor:{
+                            RUTRecep: member.rut.split('.').join(''),
+                            RznSocRecep: name,
+                            DirRecep: member.address.address,
+                            CmnaRecep: parameters.committee.commune,
+                            CiudadRecep: parameters.committee.city
+                        },
+                        Totales:{
+                            MntExe: invoice.invoiceTotal,
+                            MntTotal: invoice.invoiceTotal,
+                            VlrPagar: invoice.invoiceTotal
+                        }
                     },
-                    Emisor: Emisor,
-                    Receptor:{
-                        RUTRecep: member.rut.split('.').join(''),
-                        RznSocRecep: name,
-                        GiroRecep: category,
-                        CdgIntRecep: member.number,
-                        DirRecep: member.address.address,
-                        CmnaRecep: parameters.committee.commune,
+                    Detalle:[
+                        {
+                            NroLinDet: 1,
+                            NmbItem: "Servicio de Agua",
+                            QtyItem: 1,
+                            PrcItem: invoice.invoiceTotal,
+                            MontoItem: invoice.invoiceTotal,
+                            IndExe: 1 //1=exento o afecto / 2=no facturable
+                        }
+                    ]
+                }
+            }
+
+
+        }else{
+            name = member.enterprise.fullName
+            category = member.enterprise.category
+
+            if(name==''){ //Sólo para efectos de TEST
+                name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+                category = 'TEST'
+            }
+
+            //let net = parseInt(invoice.invoiceTotal / 1.19)
+            //let iva = invoice.invoiceTotal - net
+
+            /*let Emisor = {
+                RUTEmisor: parameters.committee.rut.split('.').join(''),
+                RznSoc: parameters.committee.name,
+                GiroEmis: parameters.committee.category,
+                Acteco: parameters.committee.acteco,
+                DirOrigen: parameters.committee.address,
+                CmnaOrigen: parameters.committee.commune,
+                Telefono: parameters.committee.phone,
+                CdgSIISucur: parameters.committee.siiCode
+            }*/
+            console.log(invoice)
+
+
+            let Emisor = { //EMISOR DE PRUEBA
+                RUTEmisor: "76795561-8",
+                RznSoc: "HAULMER SPA",
+                GiroEmis: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
+                Acteco: "479100",
+                DirOrigen: "ARTURO PRAT 527   CURICO",
+                CmnaOrigen: "Curicó",
+                Telefono: "0 0",
+                CdgSIISucur: "81303347"
+            }
+
+            document = {
+                response: ["TIMBRE","FOLIO"],
+                dte: {
+                    Encabezado: {
+                        IdDoc:{
+                            TipoDTE: dteType,
+                            Folio: 0,
+                            FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
+                            TpoTranCompra:"1",
+                            TpoTranVenta:"1",
+                            FmaPago:"2"
+                        },
+                        Emisor: Emisor,
+                        Receptor:{
+                            RUTRecep: member.rut.split('.').join(''),
+                            RznSocRecep: name,
+                            GiroRecep: category,
+                            CdgIntRecep: member.number,
+                            DirRecep: member.address.address,
+                            CmnaRecep: parameters.committee.commune,
+                        },
+                        Totales:{
+                            //MntNeto: net,
+                            //TasaIVA: "19",
+                            //IVA: iva,
+                            MntExe: invoice.invoiceTotal,
+                            MntTotal: invoice.invoiceTotal,
+                            MontoPeriodo: invoice.invoiceTotal, //Consultar si se separa monto adeudado anterior
+                            VlrPagar: invoice.invoiceTotal
+                        }
                     },
-                    Totales:{
-                        //MntNeto: net,
-                        //TasaIVA: "19",
-                        //IVA: iva,
-                        MntExe: invoice.invoiceTotal,
-                        MntTotal: invoice.invoiceTotal,
-                        MontoPeriodo: invoice.invoiceTotal, //Consultar si se separa monto adeudado anterior
-                        VlrPagar: invoice.invoiceTotal
-                    }
-                },
-                Detalle:[
-                    {
-                        NroLinDet: 1,
-                        NmbItem: "Servicio de Agua",
-                        QtyItem: 1,
-                        PrcItem: invoice.invoiceTotal,
-                        MontoItem: invoice.invoiceTotal,
-                        IndExe: 1 //1=exento o afecto / 2=no facturable
-                    }
-                ]
+                    Detalle:[
+                        {
+                            NroLinDet: 1,
+                            NmbItem: "Servicio de Agua",
+                            QtyItem: 1,
+                            PrcItem: invoice.invoiceTotal,
+                            MontoItem: invoice.invoiceTotal,
+                            IndExe: 1 //1=exento o afecto / 2=no facturable
+                        }
+                    ]
+                }
             }
         }
+
+        console.log(JSON.stringify(document))
+        var settings = {
+            "url": "https://dev-api.haulmer.com/v2/dte/document",
+            "method": "POST",
+            "timeout": 0,
+            "headers": {
+            "apikey": parameters.apikey
+            },
+            "data": JSON.stringify(document)
+        };  
+        
+        $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
+        
+            console.log('ERROR', jqXHR.responseJSON.error.message)
+            console.log('ERROR', jqXHR.responseJSON.error.details)
+            loadingHandler('stop')
+
+        }).done(async function (response) {
+            
+            console.log(response)
+            
+            let dteData = {
+                id: invoiceID,
+                type: dteType,
+                number: response.FOLIO,
+                seal: response.TIMBRE,
+                token: response.TOKEN
+            }
+
+            let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
+            loadingHandler('stop')
+
+            $('#modal_title').html(`Almacenado`)
+            $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
+            $('#modal').modal('show')
+
+            loadLectures(member)
+            
+        })
     }
 
-    console.log(JSON.stringify(document))
-    var settings = {
-        "url": "https://dev-api.haulmer.com/v2/dte/document",
-        "method": "POST",
-        "timeout": 0,
-        "headers": {
-        "apikey": parameters.apikey
-        },
-        "data": JSON.stringify(document)
-    };  
-    
-    $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
-    
-        console.log('ERROR', jqXHR.responseJSON.error.message)
-        console.log('ERROR', jqXHR.responseJSON.error.details)
-        loadingHandler('stop')
-
-    }).done(async function (response) {
-        
-        console.log(response)
-        
-        let dteData = {
-            id: invoiceID,
-            type: dteType,
-            number: response.FOLIO,
-            seal: response.TIMBRE,
-            token: response.TOKEN
-        }
-
-        let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
-        //loadingHandler('stop')
-
-        console.log('Generado Folio:',response.FOLIO)
-        /*$('#modal_title').html(`Almacenado`)
-        $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
-        $('#modal').modal('show')*/
-        
-    })
 
 }
 
 
+
+
+//////////////////ZONA PAGOS//////////////////
+
+$('#updatePayment').on('click', async function () {
+
+    let memberData = await axios.post('/api/memberSingle', { id: internals.dataRowSelected._id })
+    let member = memberData.data
+    $('#paymentModal').modal('show')
+
+    let name = ''
+    let type = ''
+    if (member.type == 'personal') {
+        type = 'PERSONAL'
+        name = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
+    } else {
+        type = 'EMPRESA'
+        name = member.enterprise.name
+    }
+
+    $('#modalPayment_title').html(`Pagos Socio N° ${member.number} - ${member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2}`)
+    createModalPayment(member)
+
+    $('#modalPayment_footer').html(`
+        <button style="border-radius: 5px;" class="btn btn-dark" data-dismiss="modal">
+            <i ="color:#E74C3C;" class="fas fa-times"></i> CERRAR
+        </button>
+    `)
+
+    console.log(member)
+
+    $('#memberPaymentNumber').val(member.number)
+    $('#memberPaymentType').val(type)
+    $('#memberPaymentRUT').val(member.rut)
+    $('#memberPaymentName').val(name)
+    $('#memberPaymentWaterMeter').val(member.waterMeters.find(x => x.state === 'Activo').number)
+    $('#memberPaymentAddress').val(member.address.address)
+
+    loadPayments(member)
+})
+
+async function loadPayments(member) {
+
+    let paymentData = await axios.post('/api/paymentsSingleMember', { member: member._id })
+    let payments = paymentData.data
+
+    $('#tablePaymentsBody').html('')
+
+    for(let i=0; i<payments.length; i++) {
+
+        $('#tablePaymentsBody').append(`
+            <tr id="${payments[i]._id}">
+                <td style="text-align: center;">
+                    ${moment(payments[i].date).utc().format('DD/MM/YYYY')}
+                </td>
+                <td style="text-align: center;">
+                    ${payments[i].paymentMethod}
+                </td>
+                <td style="text-align: center;">
+                    ${payments[i].transaction}
+                </td>
+                <td style="text-align: center;">
+                    ${dot_separators(payments[i].amount)}
+                </td>
+                <td style="text-align: center;">
+                    <button class="btn btn-sm btn-warning btnLecture" onclick="createPayment('${member._id}','${payments[i]._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
+                </td>
+            </tr>
+        `)
+    }
+
+}
+
+
+function createModalPayment(member) {
+
+    let body = /*html*/ `
+    <div class="row">
+    <div class="col-md-12">
+    <h5>Datos de socio</h5>
+        <div class="row">
+            <div class="col-md-2">
+                RUT
+                <input id="memberPaymentRUT" type="text" class="form-control form-control-sm border-input" disabled>
+            </div>
+            <div class="col-md-3">
+                Nombre
+                <input id="memberPaymentName" type="text" class="form-control form-control-sm border-input" disabled>
+            </div>
+            <div class="col-md-1">
+                N° Medidor
+                <input id="memberPaymentWaterMeter" type="text" class="form-control form-control-sm border-input" disabled>
+            </div>
+            <div class="col-md-2">
+                Tipo
+                <input id="memberPaymentType" type="text" class="form-control form-control-sm border-input" disabled>
+            </div>
+            <div class="col-md-4">
+                Dirección
+                <input id="memberPaymentAddress" type="text" class="form-control form-control-sm border-input" disabled>
+            </div>
+            
+        </div>
+    </div>
+</div>
+<br />
+<br />
+<div class="row">
+
+
+<h5>Pagos realizados</h5>
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-8 table-responsive">
+                <br/>
+                <button style="border-radius: 5px;" class="btn btn-primary" onclick="createPayment('${member._id}')"><i class="fas fa-plus-circle"></i> Agregar pago</button>
+                <br />
+                <br />
+                <table id="tablePayments" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
+                    <thead id="tablePaymentsHead">
+                        <tr class="table-info">
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Fecha</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Medio Pago</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">N° Transacción</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Monto</th>
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Editar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablePaymentsBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-4">
+                
+            </div>
+
+            <div class="col-md-12">
+                <br />
+                <br />
+                <br />
+                <br />
+                <div id="divPayment" class="card border-primary" style="display: none;">
+                    <div class="card-header text-white bg-primary" style="text-align: center">
+                        <b id="paymentTitle">Registro de Pago</b>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <table id="tableDebtInvoices" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
+                                            <thead>
+                                                <tr>
+                                                    <th style="text-align: center">Sel</th>
+                                                    <th style="text-align: center">N° Boleta</th>
+                                                    <th style="text-align: center">Fecha</th>
+                                                    <th style="text-align: center">Vencimiento</th>
+                                                    <th style="text-align: center">Monto Total</th>
+                                                    <th style="text-align: center">Saldo Adeudado</th>
+                                                    <th style="text-align: center">Saldo Final</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tableBodyDebtInvoices">
+                                        
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-5">
+                                                Fecha
+                                            </div>
+                                            <div class="col-md-1" style="text-align: center"></div>
+                                            <div class="col-md-6">
+                                                <input id="paymentDate" type="text" class="form-control form-control-sm border-input paymentDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
+                                            </div>
+
+                                            <div class="col-md-5">
+                                                Medio de Pago
+                                            </div>
+                                            <div class="col-md-1" style="text-align: center"></div>
+                                            <div class="col-md-6">
+                                                <select id="paymentType" class="form-select form-select-sm">
+                                                    <option value="SELECCIONE">SELECCIONE</option>
+                                                    <option value="EFECTIVO">EFECTIVO</option>
+                                                    <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                                                    <option value="REDCOMPRA">REDCOMPRA</option>
+                                                    <option value="CHEQUE">CHEQUE</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-5">
+                                                N° Transacción
+                                            </div>
+                                            <div class="col-md-1" style="text-align: center"></div>
+                                            <div class="col-md-6">
+                                                <input id="paymentNumber" type="text" class="form-control form-control-sm border-input numericValues">
+                                            </div>
+
+                                            <div class="col-md-5">
+                                                Saldo máximo a Cancelar
+                                            </div>
+                                            <div class="col-md-1" style="text-align: center"></div>
+                                            <div class="col-md-6">
+                                                <input id="paymentToPay" type="text" class="form-control form-control-sm border-input numericValues">
+                                            </div>
+
+                                            <div class="col-md-5">
+                                                Monto
+                                            </div>
+                                            <div class="col-md-1" style="text-align: center"></div>
+                                            <div class="col-md-6">
+                                                <input id="paymentAmount" type="text" class="form-control form-control-sm border-input numericValues">
+                                            </div>
+
+                                            
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3" style="text-align: center;">
+                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="paymentCancel"><i ="color:#3498db;" class="fas fa-arrow-left"></i> Atrás</button></td>
+                            </div>
+                            <div class="col-md-3" style="text-align: center;">
+                            </div>
+                            <div class="col-md-3" style="text-align: center;">
+                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="paymentSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
+                            </div>
+
+                            <div class="col-md-3" style="text-align: center;">
+                                <button style="border-radius:5px; " class="btn btn-danger" id="paymentDelete"><i ="color:#3498db;" class="fas fa-times"></i> ELIMINAR</button></td>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    
+</div>
+    
+`
+
+    $('#modalPayment_body').html(body)
+
+
+    $("#paymentCancel").on('click', async function () {
+        cleanPayment()
+    })
+}
+
+async function cleanPayment() {
+    $("#tablePaymentsBody > tr").removeClass('table-primary')
+    $('#divPayment').css('display', 'none')
+    $("#tableBodyDebtInvoices").html('')
+    $("#paymentTitle").text('')
+    $(".numericValues").val('')
+    $("#paymentDate").val('')
+    $("#paymentType").val('SELECCIONE')
+    $("#paymentToPay").val('')
+    $("#paymentAmount").val('')
+    $('.btnPayment').removeAttr('disabled')
+}
+
+
+async function createPayment(memberID,paymentID) {
+
+    $('#tablePaymentsBody > tr').removeClass('table-primary')
+    if(paymentID){
+        $("#"+paymentID).addClass('table-primary')
+    }
+    $('#divPayment').css('display', 'block')
+    $('.btnPayment').attr('disabled',true)
+
+    let memberData = await axios.post('/api/memberSingle', {id: memberID})
+    let member = memberData.data
+
+    $("#tableBodyDebtInvoices").html('')
+
+    $("#paymentDate").val(moment.utc().format('DD/MM/YYYY'))
+    $("#paymentType").val('SELECCIONE')
+    $("#paymentToPay").val('')
+    $("#paymentAmount").val('')
+
+    if(paymentID){
+        let invoicesPaymentData = await axios.post('/api/paymentSingle', { id: paymentID })
+        let invoicesPayment = invoicesPaymentData.data
+
+        $("#paymentDate").val(moment(invoicesPayment.date).utc().format('DD/MM/YYYY'))
+        $("#paymentType").val(invoicesPayment.paymentMethod)
+        $("#paymentNumber").val(invoicesPayment.transaction)
+        //$("#paymentToPay").val('')
+        $("#paymentAmount").val(invoicesPayment.amount)
+
+        console.log(invoicesPayment.invoices)
+
+        for(let i=0; i<invoicesPayment.invoices.length; i++){
+            $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
+                <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
+                <td style="text-align: center">${invoicesPayment.invoices[i].invoices.number}</td>
+                <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
+                <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
+                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceTotal)}</td>
+                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
+                    <input value="${invoicesPayment.invoices[i].invoices.invoiceTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
+                </td>
+                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}</td>
+            </tr>`)
+        }
+
+
+        //Carga de boletas adeudadas
+        let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID, paymentID: paymentID})
+        let invoicesDebt = invoicesDebtData.data
+        
+        if(invoicesDebt.length>0){
+            for(let i=0; i<invoicesDebt.length; i++){
+
+                $("#tableBodyDebtInvoices").append(`<tr>
+                    <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
+                    <td style="text-align: center">${invoicesDebt[i].number}</td>
+                    <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
+                    <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid)}
+                        <input value="${invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid}" style="display: none;"/>
+                    </td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid)}</td>
+                </tr>`)
+            }
+        }
+
+    }else{
+        
+        //Carga de boletas adeudadas
+        let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
+        let invoicesDebt = invoicesDebtData.data
+        
+        if(invoicesDebt.length>0){
+            for(let i=0; i<invoicesDebt.length; i++){
+
+                $("#tableBodyDebtInvoices").append(`<tr>
+                    <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
+                    <td style="text-align: center">${invoicesDebt[i].number}</td>
+                    <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
+                    <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid)}
+                        <input value="${invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid}" style="display: none;"/>
+                    </td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid)}</td>
+                </tr>`)
+            }
+        }else{
+            $('#modal_title').html(`Al día`)
+            $('#modal_body').html(`<h7 class="alert-heading">Socio no tiene deuda activa</h7>`)
+        }
+
+    }
+
+    
+    $('.paymentDateClass').daterangepicker({
+        opens: 'right',
+        locale: dateRangePickerDefaultLocale,
+        singleDatePicker: true,
+        autoApply: true
+    })
+
+    $('.checkInvoice').change(function () {
+        calculatePaymentBalance()
+    })
+
+    $("#paymentAmount").keyup(function () {
+        calculatePaymentBalance()
+    })
+
+
+    calculatePaymentBalance()
+
+    $('#paymentSave').off("click")
+
+    $("#paymentSave").on('click', async function () {
+
+        let goSave = false
+        let invoices = []
+
+        if($("#tableBodyDebtInvoices > tr").length>0){
+            $("#tableBodyDebtInvoices > tr").each(function() {
+                if($($($(this).children()[0]).children()[0]).prop('checked')){
+                    goSave = true
+
+                    let invoiceAmount = parseInt($($($(this).children()[5]).children()[0]).val()) - parseInt(replaceAll($($(this).children()[6]).text(), '.',''))
+
+                    invoices.push({
+                        invoices: $($($(this).children()[0]).children()[1]).val(),
+                        amount: invoiceAmount
+                    })
+                }
+            })    
+        }
+
+        if(!goSave){
+            $('#modal').modal('show')
+            $('#modal_title').html(`Error al almacenar pago`)
+            $('#modal_body').html(`<h7 class="alert-heading">Debe seleccionar al menos 1 boleta a cancelar</h7>`)
+            return
+        }
+
+        let toPay = parseInt(replaceAll($("#paymentToPay").val(), '.', '').replace(' ', '').replace('$', ''))
+        let amount = parseInt(replaceAll($("#paymentAmount").val(), '.', '').replace(' ', '').replace('$', ''))
+
+        if(!$.isNumeric(amount)){
+            $('#modal').modal('show')
+            $('#modal_title').html(`Error al almacenar pago`)
+            $('#modal_body').html(`<h7 class="alert-heading">Monto no válido</h7>`)
+            return
+        }
+
+        if(amount<=0){
+            $('#modal').modal('show')
+            $('#modal_title').html(`Error al almacenar pago`)
+            $('#modal_body').html(`<h7 class="alert-heading">Monto no válido</h7>`)
+            return
+        }
+        
+        if(amount>toPay){
+            $('#modal').modal('show')
+            $('#modal_title').html(`Error al almacenar pago`)
+            $('#modal_body').html(`<h7 class="alert-heading">El monto a pagar no puede ser mayor al saldo</h7>`)
+            return
+        }
+        if($("#paymentType").val()=='SELECCIONE'){
+            $('#modal').modal('show')
+            $('#modal_title').html(`Error al almacenar pago`)
+            $('#modal_body').html(`<h7 class="alert-heading">Debe seleccionar medio de pago</h7>`)
+            return
+        }
+        
+        let paymentData = {
+            member: member._id,
+            //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
+            date: $("#paymentDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+            paymentMethod: $("#paymentType").val(),
+            transaction: $("#paymentNumber").val(),
+            amount: amount,
+            invoices: invoices
+        }
+
+        console.log(paymentData)
+
+        let urlSave = 'paymentSave'
+        if(paymentID){
+            urlSave = 'paymentUpdate'
+            paymentData.id = paymentID
+        }
+        
+        let savePayment = await axios.post('/api/'+urlSave, paymentData)
+        if (savePayment.data) {
+            if (savePayment.data._id) {
+
+                $('#modal_title').html(`Almacenado`)
+                $('#modal_body').html(`<h7 class="alert-heading">Pago almacenado correctamente</h7>`)
+                loadPayments(member)
+                cleanPayment()
+            } else {
+                $('#modal_title').html(`Error`)
+                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+            }
+        } else {
+            $('#modal_title').html(`Error`)
+            $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+        }
+        $('#modal').modal('show')
+
+    })
+}
+
+function calculatePaymentBalance() {
+
+    let totalSelected = 0
+    $("#tableBodyDebtInvoices > tr").each(function() {
+        let value = 0
+        if($($($(this).children()[0]).children()[0]).prop('checked')){
+            value = $($($(this).children()[5]).children()[0]).val()
+        }
+        totalSelected += parseInt(value)
+
+        $($(this).children()[6]).text(dot_separators($($($(this).children()[5]).children()[0]).val()))
+    })
+    
+    $("#paymentToPay").val(dot_separators(totalSelected))
+
+    let amount = parseInt(replaceAll($("#paymentAmount").val(), '.', '').replace(' ', '').replace('$', ''))
+
+    if($.isNumeric(amount)){
+        $("#tableBodyDebtInvoices > tr").each(function() {
+            let value = 0
+            if($($($(this).children()[0]).children()[0]).prop('checked')){
+                value = parseInt($($($(this).children()[5]).children()[0]).val())
+
+                if(value<=amount){
+                    $($(this).children()[6]).text(0)
+                    amount -= value
+                }else if(amount!=0){
+                    $($(this).children()[6]).text(dot_separators(value-amount))
+                }
+            }
+            
+        })
+    }
+
+    new Cleave($("#paymentAmount"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })
+
+    new Cleave($("#paymentToPay"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })
+
+    return
+    let net = 0
+    //Consumos
+    let lectureActual = $("#invoiceLectureActual").val()
+    let lectureLast = $("#invoiceLectureLast").val()
+    let lectureValue = lectureActual - lectureLast
+
+    $("#invoiceLectureResult").val(lectureValue)
+    let meterValue = $("#invoiceMeterValue").val()
+    let consumptionValue = lectureValue * meterValue
+    $("#invoiceConsumption1").val(consumptionValue)
+
+    let subsidy = $("#invoiceSubsidyPercentage").val()
+
+    let subsidyValue = 0
+    if (subsidy > 0) {
+        if (lectureValue <= parameters.subsidyLimit) {
+            subsidyValue = Math.round(consumptionValue * (subsidy / 100))
+        } else {
+            subsidyValue = Math.round((parameters.subsidyLimit * meterValue) * (subsidy / 100))
+        }
+    }
+    $("#invoiceSubsidyValue").val(subsidyValue)
+    let consumptionLimit = $("#invoiceConsumptionLimit").val()
+    let consumptionLimitValue = $("#invoiceConsumptionLimitValue").val()
+    let consumptionLimitTotal = 0 //Valor a pagar por sobreconsumo
+    if(lectureValue>consumptionLimit){
+        consumptionLimitTotal = (lectureValue - consumptionLimit) * consumptionLimitValue
+    }
+    $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
+
+    let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal
+    $("#invoiceConsumption2").val(lastConsumptionValue)
+    $("#invoiceConsumption2b").val(lastConsumptionValue)
+
+    //Servicios
+    let totalServices = 0
+    if($("#tableBodyServices > tr").length>0){
+        $("#tableBodyServices > tr").each(function() {
+            let value = 0
+            if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
+                value = 0
+            }else{
+                value = $($($(this).children()[1]).children()[0]).val()
+            }
+            totalServices += parseInt(value)
+        })    
+    }
+    $("#invoiceTotalServices").val(totalServices)
+    $("#invoiceTotalServicesb").val(totalServices)
+
+    //Montos
+    let debt = 0
+    $("#invoiceDebt").val(debt) //A asignar
+    $("#invoiceTotal").val(parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(debt) + parseInt(totalServices))
+
+
+    $(".consumption").each(function() {
+        //$(this).val(dot_separators($(this).val()))
+
+        new Cleave($(this), {
+            prefix: '',
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            numeralDecimalScale: 0,
+            numeralPositiveOnly: true,
+            numeralDecimalMark: ",",
+            delimiter: "."
+        })
+    })
+
+    $(".money").each(function() {
+        //$(this).val(dot_separators($(this).val()))
+
+        new Cleave($(this), {
+            prefix: '$ ',
+            numeral: true,
+            numeralThousandsGroupStyle: 'thousand',
+            numeralDecimalScale: 0,
+            numeralPositiveOnly: true,
+            numeralDecimalMark: ",",
+            delimiter: "."
+        })
+    })    
+
+    
+
+}
