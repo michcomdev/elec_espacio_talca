@@ -25,6 +25,7 @@ const invoicesSchema = new Schema({
         services: { type: Schema.Types.ObjectId, ref: 'services' },
         value: { type: Number }
     }],
+    typeInvoice: { type: String }, //Para los casos de boleta "ingreso"
     /*Add Payment Data*/
     /*Add Invoice data: number - type */
     //DTE data

@@ -91,7 +91,7 @@ async function getServicesEnabled() {
             if(el.invoice=='MENSUAL'){
                 el.invoice = 'Boleta Mensual'
             }else{
-                el.invoice = 'Extra'
+                el.invoice = 'Ingreso'
             }
             
 
@@ -280,7 +280,7 @@ function createModalBody(){
                         <br/>
                         <select id="serviceInvoice" class="form-select form-select-sm">
                             <option value="MENSUAL">BOLETA MENSUAL</option>
-                            <option value="EXTRA">BOLETA EXTRA</option>
+                            <option value="INGRESO">BOLETA INGRESO</option>
                         </select>
                     </div>
                     <div class="col-md-4">

@@ -205,6 +205,8 @@ async function loadLectures(member) {
     let lectureData = await axios.post('/api/lecturesSingleMember', { member: internals.dataRowSelected._id })
     let lectures = lectureData.data
 
+    console.log(lectures)
+
     $('#tableLecturesBody').html('')
 
     for (i = 0; i < lectures.length; i++) {

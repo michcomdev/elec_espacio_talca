@@ -329,4 +329,146 @@ export default [
             }
         }
     },
+    {
+        method: 'POST',
+        path: '/api/invoicesSingleMember',
+        options: {
+            description: 'get unpaid invoices',
+            notes: 'get unpaid invoices',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+                    let query = {
+                        members: payload.member,
+                        typeInvoice: 'Ingreso'
+                    }
+
+                    let invoices = await Invoices.find(query).lean().populate(['services.services'])
+                   
+                    return invoices
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    member: Joi.string().optional().allow('')
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/invoiceInvoiceSave', //Boleta tipo Ingreso
+        options: {
+            description: 'create invoice',
+            notes: 'create invoice',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let query = {
+                        members: payload.member,
+                        dateExpire: payload.dateExpire,
+                        date: payload.date,
+                        invoiceTotal: payload.invoiceTotal,
+                        typeInvoice: 'Ingreso'
+                    }
+
+                    if(payload.number){
+                        query.number = payload.number
+                    }
+                    
+                    if(payload.services.length>0){
+                        query.services = payload.services
+                    }
+
+                    let invoice = new Invoices(query)
+                    const response = await invoice.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    number: Joi.number().allow(0).optional(),
+                    member: Joi.string().allow(''),
+                    memberType: Joi.string().allow('').optional(), //Para efectos de generación múltiple
+                    date: Joi.string().allow(''),
+                    dateExpire: Joi.string().allow(''),
+                    invoiceTotal: Joi.number().allow(0),
+                    services: Joi.array().items(Joi.object().keys({
+                        services: Joi.string().optional().allow(''),
+                        value: Joi.number().optional().allow(0)
+                    })).optional()
+                })
+            }
+        }
+    }, 
+    {
+        method: 'POST',
+        path: '/api/invoiceInvoiceUpdate',
+        options: {
+            description: 'update invoice',
+            notes: 'update invoice',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let invoices = await Invoices.findById(payload.id)
+
+                    invoices.lectures = payload.lectures
+                    if(payload.number){
+                        invoices.number = payload.number
+                    }
+                    invoices.members = payload.member
+                    invoices.date = payload.date
+                    invoices.dateExpire = payload.dateExpire
+                    invoices.invoiceTotal = payload.invoiceTotal
+                    invoices.services = payload.services
+
+                    const response = await invoices.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    id: Joi.string().allow(''),
+                    number: Joi.number().allow(0).optional(),
+                    member: Joi.string().allow(''),
+                    memberType: Joi.string().allow('').optional(), //Para efectos de generación múltiple
+                    date: Joi.string().allow(''),
+                    dateExpire: Joi.string().allow(''),
+                    invoiceTotal: Joi.number().allow(0),
+                    services: Joi.array().items(Joi.object().keys({
+                        services: Joi.string().optional().allow(''),
+                        value: Joi.number().optional().allow(0)
+                    })).optional()
+                })
+            }
+        }
+    }
 ]
