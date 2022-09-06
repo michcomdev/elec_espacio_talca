@@ -64,21 +64,38 @@
             <option value="0">Seleccione</option>
         </select>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-1">
         <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block"
             id="searchMembers">
             <i class="fas fa-search"></i> FILTRAR
         </button>
     </div>
 
-    <div class="col-md-2">
+    <div class="col-md-1 btn-calculate">
         <button style="border-radius: 5px;" class="btn btn-sm btn-info btn-block" id="calculateLectures">
             <i class="fas fa-calculator"></i> Calcular
         </button>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-1 btn-calculate">
         <button style="border-radius: 5px;" class="btn btn-sm btn-danger btn-block" id="saveLectures" onclick="saveMultiple()">
             <i class="fas fa-save"></i> Generar
+        </button>
+    </div>
+    <div class="col-md-1 btn-calculate">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block" onclick="printInvoiceMultiple()">
+            <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <div class="col-md-1 btn-print" style="display: none">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-danger btn-block" onclick="printCancel()">
+            <i class="fas fa-times"></i> Cancelar
+        </button>
+    </div>
+    
+    <div class="col-md-1 btn-print" style="display: none">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block" onclick="printMultiple()">
+            <i class="fas fa-print"></i> Imprimir
         </button>
     </div>
 
@@ -88,6 +105,7 @@
                 table-condensed" cellspacing="0" width="100%">
                 <thead>
                     <tr class="table-info">
+                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">SEL.</th>
                         <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">SEL.</th>
                         <th style="background-color: #3B6FC9;">N° SOCIO</th>
                         <th style="background-color: #3B6FC9">TIPO</th>

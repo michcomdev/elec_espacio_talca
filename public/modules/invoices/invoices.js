@@ -240,7 +240,7 @@ async function loadInvoices(member) {
             btnGenerate = `<button class="btn btn-sm btn-info btnLecture" onclick="sendData('${member.type}','${member._id}','${lectures[i]._id}')">Generar DTE</button>`
         }
         if(lectures[i].token){
-            btnSII = `<button class="btn btn-sm btn-warning btnLecture" onclick="showSIIPDF('${lectures[i].invoice.token}')"><img src="/public/img/logo_sii.png" style="width: 24px"/></button>`
+            btnSII = `<button class="btn btn-sm btn-warning btnLecture" onclick="showSIIPDF('${lectures[i].token}')"><img src="/public/img/logo_sii.png" style="width: 24px"/></button>`
         }
         
         $('#tableLecturesBody').append(`
@@ -1252,6 +1252,7 @@ async function showSIIPDF(token) {
 }
 
 async function sendData(type,memberID,invoiceID) {
+    console.log(type,memberID,invoiceID) 
 
     let generateDTE = await Swal.fire({
         title: '¿Está seguro de generar documento?',
@@ -1275,15 +1276,25 @@ async function sendData(type,memberID,invoiceID) {
         let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
         let invoice = invoiceData.data
 
-        let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
-        let lectures = lecturesData.data
-
         let parametersData = await axios.get('/api/parameters')
         let parameters = parametersData.data
 
         let dteType = 34 //Factura exenta electrónica
         let name = '', category = ''
         let document = ''
+
+        let detail = []
+        for(let i=0; i<invoice.services.length; i++){
+            detail.push({
+                NroLinDet: i+1,
+                NmbItem: invoice.services[i].services.name,
+                QtyItem: 1,
+                PrcItem: invoice.services[i].value,
+                MontoItem: invoice.services[i].value,
+                IndExe: 1 //1=exento o afecto / 2=no facturable
+            })
+        }
+        
 
         if(type=='personal'){
 
@@ -1324,16 +1335,7 @@ async function sendData(type,memberID,invoiceID) {
                             VlrPagar: invoice.invoiceTotal
                         }
                     },
-                    Detalle:[
-                        {
-                            NroLinDet: 1,
-                            NmbItem: "Servicio de Agua",
-                            QtyItem: 1,
-                            PrcItem: invoice.invoiceTotal,
-                            MontoItem: invoice.invoiceTotal,
-                            IndExe: 1 //1=exento o afecto / 2=no facturable
-                        }
-                    ]
+                    Detalle: detail
                 }
             }
 
@@ -1405,16 +1407,7 @@ async function sendData(type,memberID,invoiceID) {
                             VlrPagar: invoice.invoiceTotal
                         }
                     },
-                    Detalle:[
-                        {
-                            NroLinDet: 1,
-                            NmbItem: "Servicio de Agua",
-                            QtyItem: 1,
-                            PrcItem: invoice.invoiceTotal,
-                            MontoItem: invoice.invoiceTotal,
-                            IndExe: 1 //1=exento o afecto / 2=no facturable
-                        }
-                    ]
+                    Detalle: detail
                 }
             }
         }

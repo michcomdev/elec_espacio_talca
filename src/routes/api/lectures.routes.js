@@ -99,7 +99,8 @@ export default [
                         year: (payload.month==1) ? payload.year - 1 : payload.year, 
                     }
                     let queryInvoice = {
-                        members: { $in: array }
+                        members: { $in: array },
+                        typeInvoice: { $exists : false }
                     }
 
                     let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
@@ -147,11 +148,14 @@ export default [
                     let query = {
                         members: payload.member
                     }
-
+                    let queryInvoice = {
+                        members: payload.member,
+                        typeInvoice: { $exists : false } 
+                    }
 
                     let lectures = await Lectures.find(query).sort({'year' : 'descending', 'month' : 'descending'}).lean()
                     //let invoices = await Invoices.find(query).sort({'date' : 'descending'}).populate(['lectures']).lean()
-                    let invoices = await Invoices.find(query).sort({'date' : 'descending'}).lean().populate(['lectures'])
+                    let invoices = await Invoices.find(queryInvoice).sort({'date' : 'descending'}).lean().populate(['lectures'])
 
                     for(let i=0;i<lectures.length;i++){
                         lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())

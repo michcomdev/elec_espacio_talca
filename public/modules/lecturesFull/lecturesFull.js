@@ -87,8 +87,8 @@ function chargeMembersTable() {
                     url: spanishDataTableLang
                 },
                 responsive: true,
-                columnDefs: [{ targets: [0, 1, 2, 11, 12], className: 'dt-center' },
-                            { targets: [4, 5, 6, 7, 8, 9, 10], className: 'dt-right' }],
+                columnDefs: [{ targets: [0, 1, 2, 3, 12, 13], className: 'dt-center' },
+                            { targets: [5, 6, 7, 8, 9, 10, 11], className: 'dt-right' }],
                 order: [[1, 'asc']],
                 ordering: true,
                 rowCallback: function (row, data) {
@@ -98,6 +98,7 @@ function chargeMembersTable() {
                 },
                 columns: [
                     { data: 'select' },
+                    { data: 'selectPrint' },
                     { data: 'number' },
                     { data: 'typeString' },
                     { data: 'name' },
@@ -156,6 +157,7 @@ async function getLectures() {
         let formatData = lecturesData.data.map(el => {
 
             el.select = `<input type="checkbox" class="chkClass" id="chk${el.members._id}" />`
+            el.selectPrint = ''
             el.number = el.members.number
 
             if (el.members.type == 'personal') {
@@ -222,6 +224,8 @@ async function getLectures() {
                 
                 if(el.invoice.token){
                     el.select = ''
+                    el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" />`
+
                     el.pdf = `<button class="btn btn-sm btn-danger" onclick="printInvoice('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
                 }else{
                     el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
@@ -299,6 +303,7 @@ async function calculate(){
             newArray.push(
                 {
                     select: '',
+                    selectPrint: `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" />`,
                     number: el.members.number,
                     typeString: typeString,
                     name: name,
@@ -406,6 +411,7 @@ async function calculate(){
             newArray.push(
                 {
                     select: `<input type="checkbox" class="chkClass" id="chk${array[i].members._id}"/>`,
+                    selectPrint: '',
                     number: array[i].members.number,
                     typeString: typeString,
                     name: name,
@@ -1955,4 +1961,451 @@ async function sendData(type,memberID,invoiceID) {
 
 }
 
+async function printInvoiceMultiple() {
+    $(".btn-calculate").css('display','none')
+    $(".btn-print").css('display','block')
+}
 
+async function printCancel() {
+    $(".btn-print").css('display','none')
+    $(".btn-calculate").css('display','block')
+}
+
+async function printMultiple() {
+
+    let array = []
+
+    let count = 0
+    $(".chkPrintClass").each(function() {
+        if($(this).prop('checked')){
+            count++
+        }
+    })
+    console.log('internals', internals.invoices)
+
+    if(count>0){
+        let countIndex = 0
+        $(".chkPrintClass").each(async function() {
+            if($(this).prop('checked')){
+                let object = {}
+                console.log('member',$(this).attr('data-member-id'),'invoice',$(this).attr('data-invoice-id'))
+    
+                let memberData = await axios.post('/api/memberSingle', {id: $(this).attr('data-member-id') })
+                object.member = memberData.data
+
+                let invoiceData = await axios.post('/api/invoiceSingle', { id: $(this).attr('data-invoice-id') })
+                object.invoice = invoiceData.data
+
+                let lecturesData = await axios.post('/api/lecturesSingleMember', { member: $(this).attr('data-member-id') })
+                object.lectures = lecturesData.data
+                
+                array.push(object)
+                countIndex++
+                if(countIndex==count){
+                    printFinal(array)
+                }
+            }
+        })
+        
+    }else{
+        $('#modal_title').html(`Error`)
+        $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
+        $('#modal').modal('show')
+    }
+
+    console.log(array)
+
+    return
+}
+
+async function printFinal(array){
+
+    let parametersData = await axios.get('/api/parameters')
+    let parameters = parametersData.data
+
+    let doc = new jsPDF('p', 'pt', 'letter')
+    let docType = 'pdf'
+
+    for(let k=0; k<array.length; k++){
+        
+        doc.setDrawColor(0, 0, 0)
+        doc.setTextColor(0, 0, 0)
+        
+        let docName1 = '', docName2 = 'EXENTA ELECTRÓNICA', memberName = ''
+        if (array[k].member.type == 'personal') {
+            docName1 = 'BOLETA NO AFECTA O'
+            memberName = array[k].member.personal.name + ' ' + array[k].member.personal.lastname1 + ' ' + array[k].member.personal.lastname2
+        } else {
+            docName1 = 'FACTURA NO AFECTA O'
+            memberName = array[k].member.enterprise.name
+        }
+
+        //let doc = new jsPDF('p', 'pt', [302, 451])
+
+        let pdfX = 150
+        let pdfY = 20
+
+        doc.setFontSize(12)
+        doc.addImage(logoWallImg, 'PNG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight()) //Fondo
+
+        doc.addImage(logoImg, 'PNG', 112, pdfY, 77, 60)
+        pdfY += 60
+        doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX, pdfY + 23, 'center')
+        doc.text(`Y SERVICIOS SANITARIOS LOS CRISTALES`, pdfX, pdfY + 36, 'center')
+        doc.text(`Los Cristales S/N`, pdfX, pdfY + 49, 'center')
+
+
+        pdfY = 35
+        doc.setDrawColor(249, 51, 6)
+        doc.setLineWidth(3)
+        doc.line(pdfX + 209, pdfY - 10, pdfX + 411, pdfY - 10)//Línea Superior
+        doc.line(pdfX + 209, pdfY + 60, pdfX + 411, pdfY + 60)//Línea Inferior
+        doc.line(pdfX + 210, pdfY - 10, pdfX + 210, pdfY + 60)//Línea Izquierda
+        doc.line(pdfX + 410, pdfY - 10, pdfX + 410, pdfY + 60)//Línea Derecha
+
+        doc.setFontSize(13)
+        doc.setTextColor(249, 51, 6)
+        doc.text('R.U.T: 71.569.700-9', pdfX + 310, pdfY + 5, 'center')
+        doc.text(docName1, pdfX + 310, pdfY + 20, 'center')
+        doc.text(docName2, pdfX + 310, pdfY + 35, 'center')
+
+        doc.setFontType('bold')
+        if(array[k].invoice.number){
+            doc.text('N° ' + array[k].invoice.number, pdfX + 310, pdfY + 50, 'center')
+        }else{
+            doc.text('N° -', pdfX + 310, pdfY + 50, 'center')
+        }
+        doc.setFontSize(11)
+        doc.text('S.I.I. - CURICO', pdfX + 310, pdfY + 75, 'center')
+
+        doc.setDrawColor(0, 0, 0)
+        doc.setTextColor(0, 0, 0)
+
+        doc.setFontSize(10)
+        doc.setFontType('normal')
+        doc.text('Fecha Emisión ', pdfX + 220, pdfY + 100)
+        doc.text('Mes de Pago ', pdfX + 220, pdfY + 113)
+
+        doc.setFontType('bold')
+        doc.text(moment(array[k].invoice.date).utc().format('DD / MM / YYYY'), pdfX + 300, pdfY + 100)
+        doc.text(getMonthString(array[k].invoice.lectures.month) + ' / ' + array[k].invoice.lectures.year, pdfX + 300, pdfY + 113)
+
+
+        pdfX = 30
+        pdfY += 120
+        doc.setFontSize(12)
+        doc.text('SOCIO N° ' + array[k].member.number, pdfX, pdfY)
+        doc.text('R.U.T ' + array[k].member.rut, pdfX, pdfY + 13)
+        doc.setFontSize(13)
+        doc.text(memberName.toUpperCase(), pdfX, pdfY + 28)
+
+
+
+
+        pdfY += 60
+
+
+        //////////////TABLA CONSUMOS//////////////
+        doc.setFillColor(26, 117, 187)
+        doc.rect(pdfX - 3, pdfY - 10, 265, 13, 'F')
+
+        doc.setFontSize(9)
+        doc.setFontType('bold')
+        doc.setTextColor(255, 255, 255)
+        doc.text('Su consumo en m3 de este mes (1m3 = 1.000 lts de agua)', pdfX, pdfY)
+
+        doc.setFontSize(10)
+        doc.setFontType('normal')
+        doc.setTextColor(0, 0, 0)
+        doc.text('Lectura Actual ' + moment(array[k].invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 20)
+        doc.text('Lectura Anterior ' + moment(array[k].invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 33)
+        doc.text('Límite Sobreconsumo (m3)', pdfX, pdfY + 46)
+        doc.text('Consumo Calculado', pdfX, pdfY + 59)
+        doc.setFontType('bold')
+        doc.text('Consumo Facturado', pdfX, pdfY + 85)
+
+
+        doc.setFontSize(10)
+        doc.setFontType('normal')
+
+        doc.text(dot_separators(array[k].invoice.lectureActual), pdfX + 250, pdfY + 20, 'right')
+        doc.text(dot_separators(array[k].invoice.lectureLast), pdfX + 250, pdfY + 33, 'right')
+        doc.text(dot_separators(parameters.consumptionLimit), pdfX + 250, pdfY + 46, 'right')
+        doc.text(dot_separators(array[k].invoice.lectureResult), pdfX + 250, pdfY + 59, 'right')
+        doc.setFontType('bold')
+        doc.text(dot_separators(array[k].invoice.lectureResult), pdfX + 250, pdfY + 85, 'right') //Consultar diferencia facturado vs calculado
+
+
+
+        //////////////TABLA VALORES//////////////
+        pdfX += 300
+
+        doc.setFillColor(26, 117, 187)
+        doc.rect(pdfX - 3, pdfY - 10, 265, 13, 'F')
+
+        doc.setFontSize(9)
+        doc.setFontType('bold')
+        doc.setTextColor(255, 255, 255)
+        doc.text('Detalle de consumos y servicios en pesos de este mes', pdfX, pdfY)
+
+        doc.setFontSize(10)
+        doc.setFontType('normal')
+        doc.setTextColor(0, 0, 0)
+        doc.text('Cargo Fijo', pdfX, pdfY + 20)
+        doc.text('Consumo Agua Potable ', pdfX, pdfY + 33)
+        let pdfYTemp = 0
+        if (array[k].invoice.subsidyPercentage > 0) {
+            pdfYTemp = 13
+            doc.text('Subsidio (' + array[k].invoice.subsidyPercentage.toString() + '%)', pdfX, pdfY + 33 + pdfYTemp)
+        }
+        if (array[k].invoice.consumptionLimitTotal > 0) {
+            pdfYTemp += 13
+            doc.text('SobreConsumo', pdfX, pdfY + 33 + pdfYTemp)
+        }
+        
+        doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
+
+        let index = 85 + 13
+        if(array[k].invoice.services){
+            for(let i=0; i<array[k].invoice.services.length; i++){
+                if(array[k].invoice.services[i].services.type=='ALCANTARILLADO'){
+                    doc.text('Alcantarillado', pdfX, pdfY + index)
+                }else{
+                    doc.text(array[k].invoice.services[i].services.name, pdfX, pdfY + index)
+                }
+                index += 13
+            }
+        }
+
+        doc.text('Saldo Anterior', pdfX, pdfY + index)
+        doc.setFontType('bold')
+        doc.text('Monto Total', pdfX, pdfY + index + 26)
+
+
+        doc.setFontSize(10)
+        doc.setFontType('normal')
+
+        doc.text(dot_separators(array[k].invoice.charge), pdfX + 250, pdfY + 20, 'right')
+        doc.text(dot_separators(array[k].invoice.lectureResult * array[k].invoice.meterValue), pdfX + 250, pdfY + 33, 'right')
+
+        pdfYTemp = 0
+        if (array[k].invoice.subsidyPercentage > 0) {
+            pdfYTemp = 13
+            doc.text('-' + dot_separators(array[k].invoice.subsidyValue), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
+        }
+        if (array[k].invoice.consumptionLimitTotal > 0) {
+            pdfYTemp += 13
+            doc.text(dot_separators(array[k].invoice.consumptionLimitTotal), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
+        }
+
+
+        doc.text(dot_separators(array[k].invoice.charge + array[k].invoice.consumption), pdfX + 250, pdfY + 85, 'right')
+        
+        index = 85 + 13
+        if(array[k].invoice.services){
+            for(let i=0; i<array[k].invoice.services.length; i++){
+                doc.text(dot_separators(array[k].invoice.services[i].value), pdfX + 250, pdfY + index, 'right')
+                index += 13
+            }
+        }
+
+        doc.text(dot_separators(array[k].invoice.invoiceDebt), pdfX + 250, pdfY + index, 'right')
+        doc.setFontType('bold')
+        doc.text(dot_separators(array[k].invoice.invoiceTotal), pdfX + 250, pdfY + index + 26, 'right')
+
+
+        //////TOTALES Y CÓDIGO SII//////
+        pdfY += 50
+        doc.setFontSize(12)
+
+        doc.setFillColor(23, 162, 184)
+        doc.rect(pdfX - 3, pdfY + 137, 260, 35, 'F')
+
+        doc.setTextColor(255, 255, 255)
+        doc.text('TOTAL A PAGAR', pdfX, pdfY + 150)
+        doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 165)
+        doc.text('$ ' + dot_separators(array[k].invoice.invoiceTotal), pdfX + 250, pdfY + 150, 'right')
+        doc.text(moment(array[k].invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 165, 'right')
+
+
+        doc.setFontSize(8)
+        doc.setFontType('normal')
+        doc.setTextColor(0, 0, 0)
+        let net = parseInt(array[k].invoice.invoiceTotal / 1.19)
+        let iva = array[k].invoice.invoiceTotal - net
+        //doc.text('Datos Tributarios: ', pdfX + 100, pdfY + 180)
+        //doc.text('Neto ', pdfX + 190, pdfY + 180)
+        //doc.text('IVA ', pdfX + 190, pdfY + 190)
+        //doc.text(dot_separators(net), pdfX + 250, pdfY + 180, 'right')
+        //doc.text(dot_separators(iva), pdfX + 250, pdfY + 190, 'right')
+
+        if(docType=='preview'){
+            doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 200, 260, 106)
+        }else if(docType=='pdf'){
+            doc.setFillColor(255, 255, 255)
+            doc.rect(pdfX, pdfY + 200, 260, 106, 'F')
+            if(array[k].invoice.seal){
+                doc.addImage(array[k].invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
+
+                doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
+                doc.text('Res. 80 del 22-08-2014 Verifique Documento: www.sii.cl', pdfX + 130, pdfY + 330, 'center')
+            }
+        }
+
+
+        ///////GRÁFICO CONSUMOS///////
+
+        pdfX = 30
+        pdfY += 150
+        doc.setFontSize(9)
+        doc.setFontType('bold')
+        doc.setTextColor(0, 0, 0)
+        doc.text('Su consumo en m3 durante los últimos 13 meses fue:', pdfX, pdfY)
+
+
+        doc.setDrawColor(0, 0, 0)
+        doc.setLineWidth(1)
+        pdfX += 10
+        doc.line(pdfX, pdfY + 10, pdfX, pdfY + 120)//Línea Izquierda
+        doc.line(pdfX, pdfY + 120, pdfX + 250, pdfY + 120)//Línea Inferior
+
+        //DEFINICIÓN DE LECTURAS A MOSTRAR (MÁXIMO 13)
+        let lastInvoices = [], flag = 0, maxValue = 0
+        for (let j = 0; j < array[k].lectures.length; j++) {
+            if (array[k].lectures[j]._id == array[k].invoice.lectures._id) {
+                flag++
+            }
+
+            if (flag > 0 && flag <= 13) {
+                lastInvoices.push(array[k].lectures[j].invoice)
+                flag++
+
+                if (array[k].lectures[j].invoice.lectureResult > maxValue) {
+                    maxValue = array[k].lectures[j].invoice.lectureResult
+                }
+            }
+        }
+
+        let meterPoints = 100 / maxValue //Puntos en PDF por mt3
+
+        pdfY += 25
+        doc.setFontSize(7)
+        doc.setFontType('normal')
+
+        doc.setDrawColor(199, 199, 199)
+
+        if (maxValue < 5) {
+            pdfY -= 5
+            //Línea límite según lectura máxima
+            doc.text(maxValue.toString(), pdfX - 2, pdfY, 'right')
+            doc.line(pdfX, pdfY, pdfX + 250, pdfY)
+
+            if (maxValue == 4) {
+                doc.text('3', pdfX - 2, (pdfY + 2) + 25, 'right')
+                doc.text('2', pdfX - 2, (pdfY + 2) + 50, 'right')
+                doc.text('1', pdfX - 2, (pdfY + 2) + 77, 'right')
+                doc.line(pdfX, pdfY + 25, pdfX + 250, pdfY + 25)
+                doc.line(pdfX, pdfY + 50, pdfX + 250, pdfY + 50)
+                doc.line(pdfX, pdfY + 75, pdfX + 250, pdfY + 75)
+
+            } else if (maxValue == 3) {
+                doc.text('2', pdfX - 2, pdfY + 34, 'right')
+                doc.text('1', pdfX - 2, pdfY + 69, 'right')
+                doc.line(pdfX, pdfY + 34, pdfX + 250, pdfY + 34)
+                doc.line(pdfX, pdfY + 69, pdfX + 250, pdfY + 69)
+            } else if (maxValue == 2) {
+                doc.text('1', pdfX - 2, pdfY + 51, 'right')
+                doc.line(pdfX, pdfY + 51, pdfX + 250, pdfY + 51)
+            }
+
+            pdfY += 102
+
+        } else if (maxValue % 4 == 0) {
+
+            //Línea límite según lectura máxima
+            doc.text(maxValue.toString(), pdfX - 2, pdfY, 'right')
+            doc.line(pdfX, pdfY, pdfX + 250, pdfY)
+
+            let min = parseInt(maxValue / 4)
+            doc.text((min * 3).toString(), pdfX - 2, pdfY + (min * meterPoints), 'right')
+            doc.text((min * 2).toString(), pdfX - 2, pdfY + (min * 2 * meterPoints), 'right')
+            doc.text((min).toString(), pdfX - 2, pdfY + (min * 3 * meterPoints), 'right')
+
+            doc.line(pdfX, pdfY + (min * meterPoints), pdfX + 250, pdfY + (min * meterPoints))
+            doc.line(pdfX, pdfY + (min * 2 * meterPoints), pdfX + 250, pdfY + (min * 2 * meterPoints))
+            doc.line(pdfX, pdfY + (min * 3 * meterPoints), pdfX + 250, pdfY + (min * 3 * meterPoints))
+
+            pdfY += 102
+
+        } else {
+            pdfY -= 5
+            //Línea límite según lectura máxima
+            doc.text(maxValue.toString(), pdfX - 2, pdfY + (102 - (maxValue * meterPoints)), 'right')
+            doc.line(pdfX, pdfY + (100 - (maxValue * meterPoints)), pdfX + 250, pdfY + (100 - (maxValue * meterPoints)))
+
+            let min = parseInt(maxValue / 4)
+
+            pdfY += 102
+
+            doc.text((min * 4).toString(), pdfX - 2, (pdfY + 2) - (min * 4 * meterPoints), 'right')
+            doc.text((min * 3).toString(), pdfX - 2, (pdfY + 2) - (min * 3 * meterPoints), 'right')
+            doc.text((min * 2).toString(), pdfX - 2, (pdfY + 2) - (min * 2 * meterPoints), 'right')
+            doc.text((min).toString(), pdfX - 2, (pdfY + 2) - (min * meterPoints), 'right')
+
+            doc.line(pdfX, pdfY - (min * meterPoints), pdfX + 250, pdfY - (min * meterPoints))//Línea Inferior
+            doc.line(pdfX, pdfY - (min * 2 * meterPoints), pdfX + 250, pdfY - (min * 2 * meterPoints))//Línea Inferior
+            doc.line(pdfX, pdfY - (min * 3 * meterPoints), pdfX + 250, pdfY - (min * 3 * meterPoints))//Línea Inferior
+            doc.line(pdfX, pdfY - (min * 4 * meterPoints), pdfX + 250, pdfY - (min * 4 * meterPoints))//Línea Inferior
+        }
+
+        doc.text('0', pdfX - 2, pdfY, 'right')
+
+        //GRÁFICO DE CONSUMOS
+        pdfY = 435
+        pdfX = 263
+        //for(let i=lastInvoices.length; i>0; i--){
+        //for(let i=13; i>0; i--){ Max month test
+        doc.setFontSize(8)
+
+
+
+
+        for (let i = 0; i < lastInvoices.length; i++) {
+
+            if (i == 0) {
+                doc.setFillColor(23, 162, 184)
+            } else {
+                doc.setFillColor(82, 82, 82)
+            }
+
+            let offset = 100 - (lastInvoices[i].lectureResult * meterPoints) //Determina posición inicial respecto al máximo del gráfico
+
+            doc.rect(pdfX, pdfY + offset, 11, 99 - offset, 'F')
+            //Posición X (descendente)
+            //Posición Y suma offset según lectura
+            //11 = Ancho ~ 99 - offset = Largo
+            doc.text(lastInvoices[i].lectureResult.toString(), pdfX + 5, pdfY + offset - 5, 'center')
+            doc.text(getMonthShortString(lastInvoices[i].lectures.month), pdfX + 7, pdfY + 108, 'center')
+            pdfX -= 18
+        }
+
+        pdfX = 30
+        doc.setFillColor(26, 117, 187)
+        doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
+
+        doc.setFontSize(10)
+        doc.setFontType('bold')
+        doc.setTextColor(255, 255, 255)
+        doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
+
+
+        if(k+1==array.length){
+            window.open(doc.output('bloburl'), '_blank')
+        }else{
+            doc.addPage()
+        }
+    }
+
+    //doc.autoPrint()
+    //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
+}
