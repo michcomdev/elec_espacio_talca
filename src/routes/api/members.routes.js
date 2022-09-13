@@ -104,11 +104,11 @@ export default [
 
                     let payload = request.payload   
 
-                    let members = await Member.find({rut: payload.rut})
+                    //let members = await Member.find({rut: payload.rut})
 
-                    if(members.length>0){
+                    /*if(members.length>0){
                         return 'created'
-                    }
+                    }*/
 
                     let address = {
                         address: payload.address.address
@@ -139,16 +139,21 @@ export default [
                         waterMeters: payload.waterMeters,
                         address: address,
                         //FALTA WATERMETER & SUBSIDIES
+                        subsidyNumber: payload.subsidyNumber,
                         email: payload.email,
                         phone: payload.phone,
                         dateStart: payload.dateStart,
                         dateEnd: payload.dateEnd,
                         status: 'active',
-                        inactiveObservation: ''
+                        inactiveObservation: '',
+                        fine: (payload.fine) ? payload.fine : false,
+                        dte: payload.dte
                     }
 
-                    if(payload.services.length>0){
-                        query.services = payload.services
+                    if(payload.services){
+                        if(payload.services.length>0){
+                            query.services = payload.services
+                        }
                     }
 
                     let member = new Member(query)
@@ -199,10 +204,13 @@ export default [
                     phone: Joi.string().optional().allow(''),
                     dateStart: Joi.string().optional().allow(''),
                     dateEnd: Joi.string().optional().allow(''),
+                    subsidyNumber: Joi.number().optional().allow(0),
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
                         value: Joi.number().optional().allow(0)
-                    })).optional()
+                    })).optional(),
+                    fine: Joi.boolean().optional(),
+                    dte: Joi.string().optional()
                 })
             }
         }
@@ -219,13 +227,13 @@ export default [
 
                     let payload = request.payload
 
-                    let members = await Member.find({
+                    /*let members = await Member.find({
                         _id: { $ne: payload.id },
                         rut: payload.rut
                     })
                     if(members.length>0){
                         return 'created'
-                    }
+                    }*/
 
                     let member = await Member.findById(payload.id)
 
@@ -262,6 +270,8 @@ export default [
                     member.status = payload.status
                     member.inactiveObservation = payload.inactiveObservation
                     member.services = payload.services
+                    member.fine = (payload.fine) ? payload.fine : false
+                    member.dte = payload.dte
 
                     const response = await member.save()
 
@@ -312,7 +322,9 @@ export default [
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
                         value: Joi.number().optional().allow(0)
-                    })).optional()
+                    })).optional(),
+                    fine: Joi.boolean().optional(),
+                    dte: Joi.string().optional()
                 })
             }
         }

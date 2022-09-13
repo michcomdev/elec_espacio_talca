@@ -29,7 +29,7 @@ function chargeMembersTable() {
 
         internals.members.table = $('#tableMembers')
         .DataTable( {
-            dom: 'Bfrtip',
+            dom: 'Blfrtip',
             buttons: [
                 {
                     extend: 'excel',
@@ -40,30 +40,31 @@ function chargeMembersTable() {
                     className: 'btn-pdf'
                 },
             ],
+            lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "Todo"] ],
             iDisplayLength: 10,
             language: {
                 url: spanishDataTableLang
             },
             responsive: false,
-            order: [[ 0, 'asc' ]],
+            order: [[ 0, 'desc' ]],
             ordering: true,
             rowCallback: function( row, data ) {
-          },
-          columns: [
-            { data: 'number' },
-            { data: 'rut' },
-            { data: 'type' },
-            { data: 'name' },
-            { data: 'sector' },
-            { data: 'address' },
-            //{ data: 'dateStart' },
-            { data: 'status' },
-            { data: 'subsidyNumber' },
-            { data: 'subsidyActive' }
-          ],
-          initComplete: function (settings, json) {
-            getMembersEnabled()
-          }
+            },
+            columns: [
+                { data: 'number' },
+                { data: 'rut' },
+                { data: 'type' },
+                { data: 'name' },
+                { data: 'sector' },
+                { data: 'address' },
+                //{ data: 'dateStart' },
+                { data: 'status' },
+                { data: 'subsidyNumber' },
+                { data: 'subsidyActive' }
+            ],
+            initComplete: function (settings, json) {
+                getMembersEnabled()
+            }
         })
 
         $('#tableMembers tbody').off("click")
@@ -187,6 +188,8 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
         }
     })
 
+    $('#memberWaterNumber').val('S/N') //quitar
+
     $('#memberType').change(function () {
         if ($(this).val() == 'personal') {
             $('#divPersonal').css('display', 'block')
@@ -197,8 +200,14 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
         }
     })
 
+    $('#memberSector').change(function () {
+        $("#memberAddress").val($("#memberSector option:selected").text())
+    })
+
     $("#memberStatus").attr('disabled','disabled')
     $(".divDateEnd").css('visibility','hidden')
+
+    $("#memberSubsidyNumber").val(parametersGeneral.municipality.subsidyCode)
 
     setTimeout(() => {
         $('#memberRUT').focus()
@@ -211,7 +220,8 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             number: $('#memberWaterNumber').val(),
             diameter: $('#memberWaterDiameter').val(),
             state: $('#memberWaterState').val(),
-            dateStart: $('#memberWaterDate').data('daterangepicker').startDate.format('YYYY-MM-DD')
+            //dateStart: $('#memberWaterDate').data('daterangepicker').startDate.format('YYYY-MM-DD') Devolver a esta línea
+            dateStart: $('#memberDateStart').data('daterangepicker').startDate.format('YYYY-MM-DD')
         }]
 
         let services = []
@@ -255,12 +265,17 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             email: $('#memberEmail').val(),
             phone: $('#memberPhone').val(),
             dateStart: $('#memberDateStart').data('daterangepicker').startDate.format('YYYY-MM-DD'),
-            dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD')
+            dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD'),
+            subsidyNumber: $('#memberSubsidyNumber').val(),
+            fine: $('#memberFine').prop('checked'),
+            dte: $('#memberDTE').val()
         }
 
         const res = validateMemberData(memberData)
         if (res.ok) {
+            loadingHandler('start')
             let saveMember = await axios.post('/api/memberSave', memberData)
+            loadingHandler('stop')
             if (saveMember.data) {
                 if (saveMember.data._id) {
                     $('#modalMember').modal('hide')
@@ -269,10 +284,10 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
                     $('#modal_body').html(`<h7 class="alert-heading">Socio almacenado correctamente</h7>`)
                     chargeMembersTable()
 
-                } else if (saveMember.data == 'created') {
+                /*} else if (saveMember.data == 'created') {
                     $('#modal_title').html(`Error`)
                     $('#modal_body').html(`<h7 class="alert-heading">RUT ya registrado, favor corroborar</h7>`)
-                
+                */
                 }else{
                     $('#modal_title').html(`Error`)
                     $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
@@ -341,7 +356,7 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     $('#memberEnterpriseCategory').val(member.enterprise.category)
     $('#memberEnterpriseAddress').val(member.enterprise.address)
     $('#memberAddress').val(member.address.address)
-    if (member.address.sector) $('#memberSector').val(member.address.sector)
+    if (member.address.sector) $('#memberSector').val(member.address.sector._id)
     //waterMeters: waterMeters,
     //subsidies: subsidies,
     $('#memberEmail').val(member.email)
@@ -360,6 +375,10 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     $("#memberStatus").val(member.status)
     $("#memberStatusObservation").val(member.inactiveObservation)
     $('#memberDateEnd').val(moment(member.dateEnd).utc().format('DD/MM/YYYY'))
+
+    if (member.fine) $('#memberFine').prop('checked',true)
+    if (member.dte) $('#memberDTE').val(member.dte)
+
     
 
     $('#memberStatus').change(function () {
@@ -368,6 +387,10 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
         } else {
             $(".divDateEnd").css('visibility','hidden')
         }
+    })
+
+    $('#memberSector').change(function () {
+        $("#memberAddress").val($("#memberSector option:selected").text())
     })
 
     if (member.waterMeters.length > 0) {
@@ -478,8 +501,12 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             status: $("#memberStatus").val(),
             inactiveObservation: ($("#memberStatusObservation").val()) ? $("#memberStatusObservation").val() : '',
             subsidyNumber: $('#memberSubsidyNumber').val(),
-            services: services
+            services: services,
+            fine: $('#memberFine').prop('checked'),
+            dte: $('#memberDTE').val()
         }
+
+        console.log(memberData)
 
         const res = validateMemberData(memberData)
 
@@ -555,7 +582,17 @@ function validateMemberData(memberData) {
         }
     }
 
-    if (memberData.address.address != '' && memberData.address.sector != 0) {
+    if (memberData.address.address != '') {
+        validationCounter++
+        $('.address').css('border', '1px solid #E5E5E5')
+    } else {
+        errorMessage += `<br>Dirección</b>`
+        $('.address').css('border', '1px solid #e74c3c')
+    }
+
+    console.log(memberData.address)
+
+    if (memberData.address.sector != '0') {
         validationCounter++
         $('.address').css('border', '1px solid #E5E5E5')
     } else {
@@ -580,7 +617,7 @@ function validateMemberData(memberData) {
         $('#memberSubsidyNumber').css('border', '1px solid #e74c3c')
     }
 
-    if (validationCounter >= 5 ) {
+    if (validationCounter >= 6 ) {
         return { ok: memberData }
     } else {
         toastr.warning('Faltan datos:<br>' + errorMessage)
@@ -617,7 +654,7 @@ function setModal(type){
                                 </div>
                                 <div class="col-md-3">
                                     Fecha Ingreso
-                                    <input id="memberDateStart" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
+                                    <input id="memberDateStart" type="text" class="form-control form-control-sm border-input datepicker" value="01/01/2004">
                                 </div>
 
                                 <div class="col-md-3">
@@ -637,6 +674,20 @@ function setModal(type){
                                 <div class="col-md-3 divDateEnd">
                                     Fecha Baja
                                     <input id="memberDateEnd" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <br/>
+                                    Multa 20%&nbsp;
+                                    <input type="checkbox" id="memberFine" />
+                                </div>
+
+                                <div class="col-md-3">
+                                    Tipo de documento
+                                    <select id="memberDTE" class="form-select form-select-sm custom-select">
+                                        <option value="BOLETA">BOLETA</option>
+                                        <option value="FACTURA">FACTURA</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -705,11 +756,11 @@ function setModal(type){
                                     <h6>CONTACTO</h6>
                                 </div>
 
-                                <div class="col-md-5">
+                                <div class="col-md-7">
                                     Dirección
                                     <input id="memberAddress" type="text" class="form-control form-control-sm border-input address">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-5">
                                     Sector
                                     <select id="memberSector" class="form-select form-select-sm custom-select address">
                                         <option value="0">-</option>
@@ -721,7 +772,7 @@ function setModal(type){
                                         }
                                     </select>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-8">
                                     Correo Electrónico
                                     <input id="memberEmail" type="text" class="form-control form-control-sm border-input">
                                 </div>
@@ -911,6 +962,12 @@ function setModal(type){
                             <div class="row">
                                 <div class="col-md-12">
                                     <h6>SUBSIDIOS</h6>
+                                </div>
+                                <div class="col-md-2">
+                                    N° MIDEPLAN
+                                </div>
+                                <div class="col-md-2">
+                                    <input id="memberSubsidyNumber" maxlength="11" type="text" class="form-control form-control-sm border-input" style="text-align: center">
                                 </div>
                                 <div class="col-md-12">
                                     Debe almacenar los datos de socio para poder agregar subsidios

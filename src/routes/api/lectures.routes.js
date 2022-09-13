@@ -136,6 +136,69 @@ export default [
     },
     {
         method: 'POST',
+        path: '/api/lecturesSectorMembersManual',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let members = await Member.find({'address.sector': payload.sector}).populate(['address.sector']).lean()
+                    let array = []
+                    for(let i=0; i<members.length ; i++){
+                        array.push(members[i]._id)
+                    }
+
+                    let query = {
+                        members: { $in: array },
+                        month: payload.month,
+                        year: payload.year
+                    }
+                    let queryLast = {
+                        members: { $in: array },
+                        month: (payload.month==1) ? 12 : payload.month - 1,
+                        year: (payload.month==1) ? payload.year - 1 : payload.year, 
+                    }
+                    /*let queryInvoice = {
+                        members: { $in: array },
+                        typeInvoice: { $exists : false }
+                    }*/
+
+                    let lectures = await Lectures.find(query).lean()
+                    let lecturesLast = await Lectures.find(queryLast).lean()
+                    //let invoices = await Invoices.find(queryInvoice).sort({'date' : 'descending'}).lean().populate(['lectures','services.services'])
+
+                    for(let j=0;j<members.length;j++){
+                        
+                        members[j].lectures = lectures.find(x => x.members.toString() === members[j]._id.toString())
+                        members[j].lectureLast = lecturesLast.find(x => x.members.toString() === members[j]._id.toString())
+                        
+                    }
+
+
+                    return members
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    sector: Joi.string().optional().allow(''),
+                    month: Joi.number().allow(0),
+                    year: Joi.number().allow(0)
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
         path: '/api/lecturesSingleMember',
         options: {
             description: 'get all lectures from single member',
@@ -233,7 +296,10 @@ export default [
                     let payload = request.payload   
                     let date = new Date(payload.date)
 
-                    let lectures = await Lectures.find({members: payload.member, month: date.getMonth() + 1, year: date.getFullYear()}).lean()
+                    let year = (payload.year) ? payload.year : date.getFullYear() + 1
+                    let month = (payload.month) ? payload.month : date.getMonth() + 1
+
+                    let lectures = await Lectures.find({members: payload.member, month: month, year: year}).lean()
 
                     if(lectures[0]){
                         let lecture = await Lectures.findById(lectures[0]._id)
@@ -248,8 +314,8 @@ export default [
                     }else{
                         let query = {
                             members: payload.member,
-                            month: date.getMonth() + 1,
-                            year: date.getFullYear(),
+                            month: month,
+                            year: year,
                             logs: [{
                                 users: payload.users,
                                 date: date,
@@ -274,6 +340,8 @@ export default [
                 payload: Joi.object().keys({
                     users: Joi.string().allow(''),
                     date: Joi.string().allow(''),
+                    year: Joi.number().allow(0).optional(),
+                    month: Joi.number().allow(0).optional(),
                     member: Joi.string().allow(''),
                     lecture: Joi.number().allow(0)
                 })

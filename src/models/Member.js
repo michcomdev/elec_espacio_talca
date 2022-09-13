@@ -23,7 +23,7 @@ const memberSchema = new Schema({
     },
     waterMeters: [{
         /*waterMeter: { type: Schema.Types.ObjectId, ref: 'watermeters' },*/
-        number: { type: Number },
+        number: { type: String },
         diameter: { type: String },
         state: { type: String },
         dateStart: { type: Date },
@@ -58,6 +58,9 @@ const memberSchema = new Schema({
         services: { type: Schema.Types.ObjectId, ref: 'services' },
         value: { type: Number }
     }],
+    fine: { type: Boolean },
+    dte: { type: String },
+    orderIndex: { type: Number } //Para orden en lista de lectura masiva/manual por sector
 }, {
     versionKey: false
 })
