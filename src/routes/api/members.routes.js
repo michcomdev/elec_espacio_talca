@@ -355,6 +355,7 @@ export default [
                         decreeDate: payload.decreeDate,
                         inscriptionDate: payload.inscriptionDate,
                         inscriptionScore: payload.inscriptionScore,
+                        sectionRSH: payload.sectionRSH,
                         startDate: payload.startDate,
                         endDate: payload.endDate,
                         percentage: payload.percentage,
@@ -387,6 +388,7 @@ export default [
                     decreeDate: Joi.string().optional().allow(''),
                     inscriptionDate: Joi.string().optional().allow(''),
                     inscriptionScore: Joi.number().optional().allow(0),
+                    sectionRSH: Joi.number().optional().allow(0),
                     startDate: Joi.string().optional().allow(''),
                     endDate: Joi.string().optional().allow(''),
                     percentage: Joi.number().optional().allow(0),
@@ -422,6 +424,7 @@ export default [
                             member.subsidies[i].decreeDate = payload.decreeDate
                             member.subsidies[i].inscriptionDate = payload.inscriptionDate
                             member.subsidies[i].inscriptionScore = payload.inscriptionScore
+                            member.subsidies[i].sectionRSH = payload.sectionRSH
                             member.subsidies[i].startDate = payload.startDate
                             member.subsidies[i].endDate = payload.endDate
                             member.subsidies[i].percentage = payload.percentage
@@ -456,6 +459,7 @@ export default [
                     decreeDate: Joi.string().optional().allow(''),
                     inscriptionDate: Joi.string().optional().allow(''),
                     inscriptionScore: Joi.number().optional().allow(0),
+                    sectionRSH: Joi.number().optional().allow(0),
                     startDate: Joi.string().optional().allow(''),
                     endDate: Joi.string().optional().allow(''),
                     percentage: Joi.number().optional().allow(0),

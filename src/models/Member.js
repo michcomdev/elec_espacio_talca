@@ -46,7 +46,8 @@ const memberSchema = new Schema({
         startDate: { type: Date },
         endDate: { type: Date },
         percentage: { type: Number },
-        status: { type: String }
+        status: { type: String },
+        sectionRSH: { type: Number }
     }],
     email: { type: String },
     phone: { type: String },

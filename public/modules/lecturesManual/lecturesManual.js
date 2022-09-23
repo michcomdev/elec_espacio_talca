@@ -14,6 +14,11 @@ let internals = {
 let members = []
 let sectors = {}
 let serviceList = ''
+let yearSelected = 0
+let monthSelected = 0
+let monthNameSelected = ''
+let sectorSelected = 0
+let sectorNameSelected = ''
 
 let parameters
 
@@ -39,8 +44,8 @@ async function getParameters() {
         $("#searchYear").append(`<option value="${i}">${i}</option>`)
     }
     $("#searchYear").val(moment().format('YYYY'))
-    //$("#searchMonth").val(moment().format('MM'))
-    $("#searchMonth").val('05')
+    $("#searchMonth").val(moment().format('MM'))
+    //$("#searchMonth").val('05')
 
     let parametersData = await axios.get('/api/parameters')
     parameters = parametersData.data
@@ -88,7 +93,7 @@ function chargeMembersTable() {
                     },
 
                 ],
-                iDisplayLength: 10,
+                iDisplayLength: -1,
                 oLanguage: {
                     sSearch: 'buscar:'
                 },
@@ -107,6 +112,7 @@ function chargeMembersTable() {
                     // $('td', row).css('background-color', 'White');
                 },
                 columns: [
+                    { data: 'order' },
                     { data: 'number' },
                     { data: 'typeString' },
                     { data: 'name' },
@@ -158,13 +164,21 @@ function chargeMembersTable() {
 }
 
 async function getMembers() {
+
+    yearSelected = $("#searchYear").val()
+    monthSelected = $("#searchMonth").val()
+    sectorSelected = $("#searchSector").val()
+    monthNameSelected = $("#searchMonth option:selected").text()
+    sectorNameSelected = $("#searchSector option:selected").text()
+
     let query = {
-        sector: $("#searchSector").val(), 
-        year: $("#searchYear").val(), 
-        month: $("#searchMonth").val()
+        sector: sectorSelected, 
+        year: yearSelected, 
+        month: monthSelected
     }
     let lecturesData = await axios.post('api/lecturesSectorMembersManual', query)
     members = lecturesData.data
+    let order = 1
 
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
@@ -197,6 +211,13 @@ async function getMembers() {
             //el.lastLecture = `<span id="lectureLast">${el.lastLecture}</span>`
             el.value = `<span id="lectureValue-${el._id}">${el.value}</span>`
 
+            el.order = ''
+            /*if(order!=1){
+                el.order = '<i class="fas fa-sort-up"></i>' + order + '<i class="fas fa-sort-down"></i>'
+            }*/
+            el.order = order
+            order++
+
             return el
         })
 
@@ -218,43 +239,64 @@ $('#searchMembers').on('click', async function () {
 
 $('#saveLectures').on('click', async function () {
 
-    let array = []
+    if (members.length==0) {
+        toastr.warning('No ha filtrado planilla')
+        return
+    }
     
-    for(let i=0; i < members.length; i++){
-        console.log($("#lecture-"+members[i]._id).css('border'))
+    let saveLectures = await Swal.fire({
+        title: '¿Está seguro de almacenar lecturas?',
+        customClass: 'swal-wide',
+        html: `Sector: ${sectorNameSelected}<br/>Año: ${yearSelected}<br/>Mes: ${monthNameSelected}`,
+        showCloseButton: true,
+        showCancelButton: true,
+        showConfirmButton: true,
+        focusConfirm: false,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar'
+    })
 
-        //Gris por defecto: rgba(0, 0, 0, 0.1)
-        //Rojo: rgb(0, 0, 0, 0.1)
-        //Azul: rgb(69, 130, 236)
+    if (saveLectures.value) {
 
-        if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(231, 76, 60)'){
-            i = members.length
-            toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
-
-        }else if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(69, 130, 236)'){
-            array.push({
-                users: userCredentials._id,
-                date: moment().format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]'),
-                year: 2022, //MODIFICAR
-                month: 5, //MODIFICAR
-                member: members[i]._id,
-                lecture: replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')
-            })
+        let array = {
+            users: userCredentials._id,
+            date: moment().format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]'),
+            year: yearSelected, //MODIFICAR
+            month: monthSelected, //MODIFICAR
+            lectures: [],
+            members: []
         }
+        
+        for(let i=0; i < members.length; i++){
+            //Gris por defecto: rgba(0, 0, 0, 0.1)
+            //Rojo: rgb(0, 0, 0, 0.1)
+            //Azul: rgb(69, 130, 236)
 
-        if(i+1==members.length){
-            console.log(array)
-            if(array.length>0){
-                //ALMACENADO...
-            }else{
-                toastr.warning('No se han realizado cambios')
+            if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(231, 76, 60)'){
+                i = members.length
+                toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
+
+            }else if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(69, 130, 236)'){
+                array.lectures.push({
+                    member: members[i]._id,
+                    lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
+                })
+                array.members.push(members[i]._id)
+            }
+
+            if(i+1==members.length){
+                console.log(array)
+                if(array.lectures.length>0){
+                    //ALMACENADO...
+                    let saveLecture = await axios.post('/api/lectureSaveManual', array)
+
+                    console.log(saveLecture.data)
+                }else{
+                    toastr.warning('No ha realizado cambios, se mantienen los datos actuales')
+                }
             }
         }
     }
-    
-
-
-    
 
 })
 

@@ -46,7 +46,7 @@ function chargeMembersTable() {
                 url: spanishDataTableLang
             },
             responsive: false,
-            order: [[ 0, 'desc' ]],
+            order: [[ 0, 'asc' ]],
             ordering: true,
             rowCallback: function( row, data ) {
             },
@@ -225,11 +225,13 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
         }]
 
         let services = []
+        let serviceError = false
         if($("#tableBodyServices > tr").length>0){
             $("#tableBodyServices > tr").each(function() {
 
                 if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
                     value = 0
+                    serviceError = true
                 }else{
                     value = $($($(this).children()[1]).children()[0]).val()
                 }
@@ -239,6 +241,13 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
                     value: value
                 })
             })    
+        }
+        
+        if(serviceError){
+            $('#modal_title').html(`Error`)
+            $('#modal_body').html(`<h7 class="alert-heading">1 o más servicios tienen valores erróneos</h7>`)
+            $('#modal').modal('show')
+            return
         }
         
 
@@ -407,7 +416,7 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
                     <select class="form-select form-select-sm custom-select">
                         ${
                             services.reduce((acc, el) => {
-                                if(el._id==member.services[i].services){
+                                if(el._id==member.services[i].services._id){
                                     acc += '<option value="' + el._id + '" selected>' + el.name + '</option>'
                                 }else{
                                     acc += '<option value="' + el._id + '">' + el.name + '</option>'
@@ -458,11 +467,13 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
         }]
 
         let services = []
+        let serviceError = false
         if($("#tableBodyServices > tr").length>0){
             $("#tableBodyServices > tr").each(function() {
 
                 if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
                     value = 0
+                    serviceError = true
                 }else{
                     value = $($($(this).children()[1]).children()[0]).val()
                 }
@@ -472,6 +483,14 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
                     value: value
                 })
             })    
+        }
+
+
+        if(serviceError){
+            $('#modal_title').html(`Error`)
+            $('#modal_body').html(`<h7 class="alert-heading">1 o más servicios tienen valores erróneos</h7>`)
+            $('#modal').modal('show')
+            return
         }
 
         let memberData = {
@@ -505,8 +524,6 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             fine: $('#memberFine').prop('checked'),
             dte: $('#memberDTE').val()
         }
-
-        console.log(memberData)
 
         const res = validateMemberData(memberData)
 
@@ -590,8 +607,6 @@ function validateMemberData(memberData) {
         $('.address').css('border', '1px solid #e74c3c')
     }
 
-    console.log(memberData.address)
-
     if (memberData.address.sector != '0') {
         validationCounter++
         $('.address').css('border', '1px solid #E5E5E5')
@@ -609,7 +624,7 @@ function validateMemberData(memberData) {
         $('#memberEmail').css('border', '1px solid #e74c3c')
     }
     
-    if ($.isNumeric(memberData.subsidyNumber) || !memberData.id) {
+    if ($.isNumeric(memberData.subsidyNumber)) {
         validationCounter++
         $('#memberSubsidyNumber').css('border', '1px solid #E5E5E5')
     } else {
@@ -654,7 +669,7 @@ function setModal(type){
                                 </div>
                                 <div class="col-md-3">
                                     Fecha Ingreso
-                                    <input id="memberDateStart" type="text" class="form-control form-control-sm border-input datepicker" value="01/01/2004">
+                                    <input id="memberDateStart" type="text" class="form-control form-control-sm border-input datepicker" value="${moment().utc().format('DD/MM/YYYY')}">
                                 </div>
 
                                 <div class="col-md-3">
@@ -871,7 +886,7 @@ function setModal(type){
                                                 
                                                 <div class="col-md-3">
                                                     Municipalidad
-                                                    <input id="subsidyMunicipality" type="text" class="form-control form-control-sm border-input">
+                                                    <input id="subsidyMunicipality" type="text" class="form-control form-control-sm border-input" value="${parametersGeneral.municipality.code}">
                                                 </div>
                                                 <div class="col-md-3">
                                                     Tipo
@@ -914,10 +929,12 @@ function setModal(type){
                                                     <button id="btnSaveSubsidy" class="btn btn-sm btn-success" style="border-radius:5px;">Almacenar</button>
                                                 </div>
                                                 <div class="col-md-3">
-                                                </div>
-                                                <div class="col-md-3">
                                                     <br/>
                                                     <button id="btnDeactivateSubsidy" class="btn btn-sm btn-danger" style="border-radius:5px;">Dar de Baja</button>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    Tramo RSH
+                                                    <input id="subsidySectionRSH" type="text" class="form-control form-control-sm border-input">
                                                 </div>
                                                 <div class="col-md-3">
                                                     Fecha Vencimiento
@@ -1033,12 +1050,13 @@ async function loadSubsidies(member){
     $("#subsidyLastname1").val('')
     $("#subsidyLastname2").val('')
     $("#subsidyHouseQuantity").val('')
-    $("#subsidyMunicipality").val('')
-    $("#subsidyType").val('')
+    //$("#subsidyMunicipality").val('')
+    $("#subsidyType").val(1)
     $("#subsidyDecreeNumber").val('')
     $("#subsidyDecreeDate").val(moment().utc().format('DD/MM/YYYY'))
     $("#subsidyInscriptionDate").val(moment().utc().format('DD/MM/YYYY'))
     $("#subsidyInscriptionScore").val('')
+    $("#subsidySectionRSH").val('')
     $("#subsidyStartDate").val(moment().utc().format('DD/MM/YYYY'))
     $("#subsidyEndDate").val(moment().add(3,'years').utc().format('DD/MM/YYYY'))
     $("#subsidyPercentage").val('')
@@ -1069,6 +1087,7 @@ async function loadSubsidies(member){
             $("#subsidyDecreeDate").val(moment(subsidies[i].decreeDate).utc().format('DD/MM/YYYY'))
             $("#subsidyInscriptionDate").val(moment(subsidies[i].inscriptionDate).utc().format('DD/MM/YYYY'))
             $("#subsidyInscriptionScore").val(subsidies[i].inscriptionScore)
+            $("#subsidySectionRSH").val(subsidies[i].sectionRSH)
             $("#subsidyStartDate").val(moment(subsidies[i].startDate).utc().format('DD/MM/YYYY'))
             $("#subsidyEndDate").val(moment(subsidies[i].endDate).utc().format('DD/MM/YYYY'))
             $("#subsidyPercentage").val(subsidies[i].percentage)
@@ -1134,6 +1153,7 @@ async function saveSubsidy(id){
         $('#modal').modal('show')
         return
     }
+
     if(!$.isNumeric($("#subsidyDecreeNumber").val())){
         $('#modal_title').html(`Verificar`)
         $('#modal_body').html(`<h7 class="alert-heading">N° de Decreto no válido</h7>`)
@@ -1141,8 +1161,15 @@ async function saveSubsidy(id){
         return
     }
     if(!$.isNumeric($("#subsidyInscriptionScore").val())){
+        $("#subsidyInscriptionScore").val(0)
+        /*$('#modal_title').html(`Verificar`)
+        $('#modal_body').html(`<h7 class="alert-heading">Puntaje Ficha CAS</h7>`)
+        $('#modal').modal('show')
+        return*/
+    }
+    if(!$.isNumeric($("#subsidySectionRSH").val())){
         $('#modal_title').html(`Verificar`)
-        $('#modal_body').html(`<h7 class="alert-heading">N° de Decreto no válido</h7>`)
+        $('#modal_body').html(`<h7 class="alert-heading">Tramo RSH</h7>`)
         $('#modal').modal('show')
         return
     }
@@ -1175,6 +1202,7 @@ async function saveSubsidy(id){
         decreeDate: $("#subsidyDecreeDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
         inscriptionDate: $("#subsidyInscriptionDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
         inscriptionScore: parseInt($("#subsidyInscriptionScore").val()),
+        sectionRSH: parseInt($("#subsidySectionRSH").val()),
         startDate: $("#subsidyDecreeDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
         endDate: $("#subsidyEndDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
         percentage: parseInt($("#subsidyPercentage").val()),

@@ -145,7 +145,7 @@ export default [
                 try {
                     let payload = request.payload
 
-                    let members = await Member.find({'address.sector': payload.sector}).populate(['address.sector']).lean()
+                    let members = await Member.find({'address.sector': payload.sector}).populate(['address.sector']).sort({orderIndex: 'asc'}).lean()
                     let array = []
                     for(let i=0; i<members.length ; i++){
                         array.push(members[i]._id)
@@ -421,6 +421,107 @@ export default [
                             value: Joi.number().allow(0).optional()
                         })
                     ).optional()
+                })
+            }
+        }
+    },    
+    {
+        method: 'POST',
+        path: '/api/lectureSaveManual',
+        options: {
+            description: 'create lecture',
+            notes: 'create lecture',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+                    let date = new Date(payload.date)
+
+                    let year = (payload.year) ? payload.year : date.getFullYear() + 1
+                    let month = (payload.month) ? payload.month : date.getMonth() + 1
+
+                    let lectures = await Lectures.find({members: { $in: payload.members}, month: month, year: year}).lean()
+
+                    for(let i=0; i<payload.lectures.length; i++){
+
+                        let go = lectures.find(x => x.members.toString() === payload.lectures[i].member.toString())
+
+                        if(go){
+                            let lecture = await Lectures.findById(lectures.find(x => x.members.toString() === payload.lectures[i].member.toString())._id)
+                            lecture.logs.push({
+                                users: payload.users,
+                                date: date,
+                                lecture: payload.lectures[i].lecture
+                            })
+                            await lecture.save()
+
+                        }else{
+
+                            let query = {
+                                members: payload.lectures[i].member,
+                                month: month,
+                                year: year,
+                                logs: [{
+                                    users: payload.users,
+                                    date: date,
+                                    lecture: payload.lectures[i].lecture
+                                }]
+                            }
+                            let lecture = new Lectures(query)
+                            await lecture.save()
+                        }
+                        
+                        /*if(lectures[0]){
+                            let lecture = await Lectures.findById(lectures[0]._id)
+                            lecture.logs.push({
+                                users: payload.users,
+                                date: date,
+                                lecture: payload.lecture
+                            })
+                            const response = await lecture.save()
+                            return response
+
+                        }else{
+                            let query = {
+                                members: payload.member,
+                                month: month,
+                                year: year,
+                                logs: [{
+                                    users: payload.users,
+                                    date: date,
+                                    lecture: payload.lecture
+                                }]
+                            }
+                            let lecture = new Lectures(query)
+                            const response = await lecture.save()
+                            return response
+                        }*/
+                    }
+
+                    return payload
+
+    
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    users: Joi.string().allow(''),
+                    date: Joi.string().allow(''),
+                    year: Joi.number().allow(0).optional(),
+                    month: Joi.number().allow(0).optional(),
+                    lectures: Joi.array().items(
+                        Joi.object().keys({
+                            member: Joi.string().allow(''),
+                            lecture: Joi.number().allow(0)
+                        })
+                    ),
+                    members: Joi.array().items()
                 })
             }
         }
