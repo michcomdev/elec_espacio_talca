@@ -1,0 +1,159 @@
+{{!<layout/default}}
+    {{#extend "css" }}
+<link rel="stylesheet" type="text/css"
+    href="/public/modules/parameters/parameters.css">
+{{/extend}}
+
+<br>
+<h3 class="text-center animate__animated animate__fadeIn ">PARÁMETROS</h3>
+
+<br>
+
+<div class="row animate__animated animate__fadeIn">
+    <div class="row">
+        <div class="col-md-2">
+            Día Vencimiento
+            <select id="expireDay" class="numericClass form-control form-select-sm form-select">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="25">25</option>
+                <option value="30">30</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            Cargo Fijo
+            <input id="charge" class="numericClass form-control form-control-sm" type="number" />
+        </div>
+        <div class="col-md-2">
+            Valor Metro cúbico
+            <input id="meterValue" class="numericClass form-control form-control-sm" type="number" />
+        </div>
+        <div class="col-md-2">
+            Límite consumo (sobre consumo)
+            <input id="consumptionLimit" class="numericClass form-control form-control-sm" type="number" />
+        </div>
+        <div class="col-md-2">
+            Valor metro cúbico sobre consumo
+            <input id="consumptionLimitValue" class="numericClass form-control form-control-sm" type="number" />
+        </div>
+        <div class="col-md-12">
+            <br/>
+            <div class="card border-primary">
+                <div class="card-body">
+                    <label style="font-weight: bold;">Datos Comité</label>
+                    <div class="row">
+                        <div class="col-md-2">
+                            RUT
+                            <input id="committeeRut" class="committeClass form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-5">
+                            Nombre
+                            <input id="committeeName" class="committeClass form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-5">
+                            Giro
+                            <input id="committeeCategory" class="committeClass form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                            E-Mail
+                            <input id="committeeEmail" class="committeClass form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-8">
+                            Dirección
+                            <input id="committeeAddress" class="committeClass form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                            Código ACTECO
+                            <input id="committeeActeco" class="committeClass form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                            Comuna
+                            <input id="committeeCommune" class="committeClass form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                            Ciudad
+                            <input id="committeeCity" class="committeClass form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                            Teléfono
+                            <input id="committeePhone" class="committeClass form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                            Código SII
+                            <input id="committeeSiiCode" class="committeClass form-control form-control-sm"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <br/>
+            <div class="card border-primary">
+                <div class="card-body">
+                    <label style="font-weight: bold;">Datos Subsidio</label>
+                    <div class="row">
+                        <div class="col-md-2">
+                            Código Municipalidad
+                            <input id="municipalityCode" class="subsidyClass form-control form-control-sm" type="number"/>
+                        </div>
+                        <div class="col-md-2">
+                            Código Subsidio
+                            <input id="municipalitySubsidyCode" class="subsidyClass form-control form-control-sm" type="number"/>
+                        </div>
+                        <div class="col-md-2">
+                            Metros cúbicos máximos Subsidio
+                            <input id="subsidyLimit" class="subsidyClass form-control form-control-sm" type="number" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12 col-xs-12" style="text-align: center;">
+        <br>
+        <button style="border-radius: 5px;" class="btn btn-info
+            btn-block" id="save">
+            <i class="fas fa-save"></i> Almacenar
+        </button>
+    </div>
+</div>
+
+<div class="modal fade" id="serviceModal" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modalService_title"></h4>
+                <button type="button" class="btn-close"
+                    data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalService_body"></div>
+            <div class="modal-footer" id="modalService_footer"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal" role="dialog" aria-labelledby="modal"
+    data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="modal_title"></h6>
+                <button type="button" class="btn-close"
+                    data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <div class="modal-body" id="modal_body"></div>
+            <div class="modal-footer" id="modal_footer"></div>
+        </div>
+    </div>
+</div>
+{{#extend "js"}}
+<script src="/public/modules/parameters/parameters.js"></script>
+{{/extend}}

@@ -24,6 +24,7 @@ const parametersSchema = new Schema({
         subsidyCode: { type: Number },
         code: { type: Number }
     },
+    expireDay: { type: Number },
     apikey: { type: String }
 }, {
     versionKey: false

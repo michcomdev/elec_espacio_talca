@@ -546,5 +546,40 @@ export default [
                 })
             }
         }
+    },
+    {
+        method: 'POST',
+        path: '/api/memberOrderUpdate',
+        options: {
+            description: 'modify member',
+            notes: 'modify member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+
+                    let payload = request.payload
+                    let member = await Member.findById(payload.id)
+
+                    member.orderIndex = payload.orderIndex
+
+                    const response = await member.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    id: Joi.string().optional().allow(''),
+                    orderIndex: Joi.number().optional().allow(0),
+                })
+            }
+        }
     }
 ]

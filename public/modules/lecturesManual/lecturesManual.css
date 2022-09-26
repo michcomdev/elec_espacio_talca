@@ -98,3 +98,11 @@
 .numericValues {
     text-align: right;
 }
+
+.hoverUp:hover {
+    color: #3B6FC9;
+}
+
+.hoverDown:hover {
+    color: #3B6FC9;
+}

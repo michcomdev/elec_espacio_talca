@@ -498,7 +498,7 @@ export default [
                         }*/
                     }
 
-                    return payload
+                    return 'OK'
 
     
                 } catch (error) {
