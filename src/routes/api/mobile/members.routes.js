@@ -167,13 +167,20 @@ export default [
                         members: payload.member
                     }
 
-                    let lectures = await Lectures.find(query).sort({ 'year': 'descending', 'month': 'descending' }).lean()
                     /*let invoices = await Invoices.find(query).sort({'date' : 'descending'}).lean().populate(['lectures'])
 
                     for(let i=0;i<lectures.length;i++){
                         lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
                     }*/
-                    console.log(lectures);
+
+                    let lectures = await Lectures.find(query).sort({ 'year': 'descending', 'month': 'descending' }).limit(3).lean()
+
+                    for(let i=0;i<lectures.length;i++){
+                        lectures[i].logs = [
+                            lectures[i].logs[lectures[i].logs.length-1]
+                        ]
+                    }
+
                     return lectures
 
                 } catch (error) {

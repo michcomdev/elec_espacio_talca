@@ -309,12 +309,7 @@ $('#saveLectures').on('click', async function () {
             //Azul: rgb(69, 130, 236)
             let lectureInputNew = false
             if($("#lectureNewStart-"+members[i]._id).length>0){
-                console.log('here')
                 lectureInputNew = true
-            }
-            if(members[i]._id=='6321df338adffa8c6c36140f'){
-                console.log(members[i].lectures.logs)
-                console.log(members[i].lectures.logs[members[i].lectures.logs.length-1].lectureNewStart, lectureInputNew)
             }
 
             if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(231, 76, 60)'){
@@ -343,7 +338,7 @@ $('#saveLectures').on('click', async function () {
                     lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
                 })
                 array.members.push(members[i]._id)
-            }else if(members[i].lectures.logs[members[i].lectures.logs.length-1].lectureNewStart && !lectureInputNew){//Caso en que borren la lectura del medidor nuevo
+            }else if(members[i].lectures.logs[members[i].lectures.logs.length-1].lectureNewStart !== undefined && !lectureInputNew){//Caso en que borren la lectura del medidor nuevo
                 array.lectures.push({
                     member: members[i]._id,
                     lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
