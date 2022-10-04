@@ -39,11 +39,11 @@
     </div>-->
     <div class="col-md-2">
         <label style="font-size: 14px;">Año</label>
-        <select id="searchYear" class="form-control form-select-sm form-select"></select>
+        <select id="searchYear" class="form-control form-select-sm form-select filterClass"></select>
     </div>
     <div class="col-md-2">
         <label style="font-size: 14px;">Mes</label>
-        <select id="searchMonth" class="form-control form-select-sm form-select">
+        <select id="searchMonth" class="form-control form-select-sm form-select filterClass">
             <option value="01">ENERO</option>
             <option value="02">FEBRERO</option>
             <option value="03">MARZO</option>
@@ -60,30 +60,30 @@
     </div>
     <div class="col-md-2">
         <label style="font-size: 14px;">Selecciona el sector</label>
-        <select id="searchSector" class="form-control form-select-sm form-select">
+        <select id="searchSector" class="form-control form-select-sm form-select filterClass">
             <option value="0">Seleccione</option>
         </select>
     </div>
     <div class="col-md-1">
-        <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block"
+        <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block filterClass"
             id="searchMembers">
-            <i class="fas fa-search"></i> FILTRAR
+            <i class="fas fa-search"></i> Filtrar
         </button>
     </div>
 
-    <div class="col-md-1 btn-calculate">
-        <button style="border-radius: 5px;" class="btn btn-sm btn-info btn-block" id="calculateLectures">
+    <div class="col-md-1">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-info btn-block filterClass" id="calculateLectures">
             <i class="fas fa-calculator"></i> Calcular
         </button>
     </div>
-    <div class="col-md-1 btn-calculate">
-        <button style="border-radius: 5px;" class="btn btn-sm btn-danger btn-block" id="saveLectures" onclick="saveMultiple()">
+    <div class="col-md-1">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-danger btn-block filterClass" id="saveLectures" onclick="saveMultiple()">
             <i class="fas fa-save"></i> Generar
         </button>
     </div>
-    <div class="col-md-1 btn-calculate">
+    <div class="col-md-2 btn-calculate">
         <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block" onclick="printInvoiceMultiple()">
-            <i class="fas fa-print"></i> Imprimir
+            <i class="fas fa-print"></i> Seleccionar Imprimir / Enviar
         </button>
     </div>
 
@@ -96,6 +96,12 @@
     <div class="col-md-1 btn-print" style="display: none">
         <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block" onclick="printMultiple()">
             <i class="fas fa-print"></i> Imprimir
+        </button>
+    </div>
+
+    <div class="col-md-1 btn-print" style="display: none">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-warning btn-block" onclick="sendMultiple()">
+            <i class="fas fa-envelope-open-text"></i> Enviar E-Mail
         </button>
     </div>
 

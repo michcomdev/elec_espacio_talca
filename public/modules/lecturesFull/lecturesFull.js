@@ -41,8 +41,7 @@ async function getParameters() {
         $("#searchYear").append(`<option value="${i}">${i}</option>`)
     }
     $("#searchYear").val(moment().format('YYYY'))
-    //$("#searchMonth").val(moment().format('MM'))
-    $("#searchMonth").val('05')
+    $("#searchMonth").val(moment().format('MM'))
 
     let parametersData = await axios.get('/api/parameters')
     parameters = parametersData.data
@@ -87,8 +86,11 @@ function chargeMembersTable() {
                     url: spanishDataTableLang
                 },
                 responsive: true,
-                columnDefs: [{ targets: [0, 1, 2, 3, 12, 13], className: 'dt-center' },
-                            { targets: [5, 6, 7, 8, 9, 10, 11], className: 'dt-right' }],
+                columnDefs: [
+                            { targets: [0, 1, 2, 3, 12, 13], className: 'dt-center' },
+                            { targets: [5, 6, 7, 8, 9, 10, 11], className: 'dt-right' },
+                            { targets: [1], visible: false }
+                        ],
                 order: [[1, 'asc']],
                 ordering: true,
                 rowCallback: function (row, data) {
@@ -260,8 +262,6 @@ async function calculate(){
     let array = internals.members.data
     let newArray = []
     internals.invoices = []
-
-    console.log(internals.members.data)
 
     for(let i=0; i < array.length; i++){
 
@@ -464,8 +464,6 @@ async function calculate(){
 }
 
 async function saveMultiple(){
-    console.log(internals.invoices)
-    //console.log($(".chkClass").prop('checked').length)
 
     let goGenerate = false
     $(".chkClass").each(function() {
@@ -482,7 +480,6 @@ async function saveMultiple(){
                     let saveInvoice = await axios.post('/api/invoiceSave', internals.invoices[i])
                     if (saveInvoice.data) {
                         if (saveInvoice.data._id) {
-                            console.log('Save', i)
                             sendData(internals.invoices[i].memberType,internals.invoices[i].member,saveInvoice.data._id)
                         }
                     }
@@ -490,8 +487,6 @@ async function saveMultiple(){
                     let updateInvoice = await axios.post('/api/invoiceUpdate', internals.invoices[i])
                     if (updateInvoice.data) {
                         if (updateInvoice.data._id) {
-                            console.log('Update', i)
-                            console.log('data', updateInvoice.data)
                             sendData(internals.invoices[i].memberType,internals.invoices[i].member,updateInvoice.data._id)
                         }
                     }
@@ -1119,8 +1114,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#tableBodyServices").html('')
 
-        console.log("services",member.services)
-
         if (member.services) {
             if (member.services.length > 0) {
                 for(let i=0; i<member.services.length; i++){
@@ -1616,6 +1609,8 @@ async function printInvoice(docType,type,memberID,invoiceID) {
 
     let meterPoints = 100 / maxValue //Puntos en PDF por mt3
 
+    console.log('metersPoint', meterPoints, maxValue)
+
     pdfY += 25
     doc.setFontSize(7)
     doc.setFontType('normal')
@@ -1765,9 +1760,7 @@ async function showSIIPDF(token) {
 }
 
 async function sendData(type,memberID,invoiceID) {
-    console.log('sendData',type,memberID,invoiceID)
-
-        
+            
     //loadingHandler('start')
     
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
@@ -1963,12 +1956,18 @@ async function sendData(type,memberID,invoiceID) {
 
 async function printInvoiceMultiple() {
     $(".btn-calculate").css('display','none')
+    $(".filterClass").attr('disabled','disabled')
     $(".btn-print").css('display','block')
+    internals.members.table.column(0).visible(false)
+    internals.members.table.column(1).visible(true)
 }
 
 async function printCancel() {
     $(".btn-print").css('display','none')
     $(".btn-calculate").css('display','block')
+    $(".filterClass").removeAttr('disabled')
+    internals.members.table.column(0).visible(true)
+    internals.members.table.column(1).visible(false)
 }
 
 async function printMultiple() {
@@ -2287,6 +2286,8 @@ async function printFinal(array){
         }
 
         let meterPoints = 100 / maxValue //Puntos en PDF por mt3
+
+        console.log("point",meterPoints)
 
         pdfY += 25
         doc.setFontSize(7)

@@ -34,37 +34,60 @@ export default [
                         return 'Medidor no registrado'
                     }
 
-                    /*let query = {
-                        users: credentials.id,
-                        //date: date,
-                        member: member[0]._id,
-                        lecture: payload.lecture
-                    }*/
-
                     let date = new Date()
-                    let lectures = await Lectures.find({ members: member[0]._id, month: date.getMonth() + 1, year: date.getFullYear() }).lean()
+                    let year = (payload.year) ? payload.year : date.getFullYear()
+                    let month = (payload.month) ? payload.month : date.getMonth() + 1
+                    let lectures = await Lectures.find({ members: member[0]._id, month: month, year: year }).lean()
 
                     if (lectures[0]) {
                         let lecture = await Lectures.findById(lectures[0]._id)
-                        lecture.logs.push({
-                            users: credentials.id,
-                            date: date,
-                            lecture: payload.lecture,
-                            observation: payload.observation
-                        })
+                        if(payload.lectureNewStart !== undefined){
+                            lecture.logs.push({
+                                users: credentials.id,
+                                date: date,
+                                lecture: payload.lecture,
+                                lectureNewStart: payload.lectureNewStart,
+                                lectureNewEnd: payload.lectureNewEnd,
+                                observation: payload.observation
+                            })
+                        }else{
+                            lecture.logs.push({
+                                users: credentials.id,
+                                date: date,
+                                lecture: payload.lecture,
+                                observation: payload.observation
+                            })
+                        }
                         const response = await lecture.save()
                         return response
 
                     } else {
-                        let query = {
-                            members: member[0]._id,
-                            month: date.getMonth() + 1,
-                            year: date.getFullYear(),
-                            logs: [{
-                                users: credentials.id,
-                                date: date,
-                                lecture: payload.lecture
-                            }]
+                        let query
+
+                        if(payload.lectureNewStart !== undefined){
+                            query = {
+                                members: member[0]._id,
+                                month: month,
+                                year: year,
+                                logs: [{
+                                    users: credentials.id,
+                                    date: date,
+                                    lecture: payload.lecture,
+                                    lectureNewStart: payload.lectureNewStart,
+                                    lectureNewEnd: payload.lectureNewEnd
+                                }]
+                            }
+                        }else{
+                            query = {
+                                members: member[0]._id,
+                                month: month,
+                                year: year,
+                                logs: [{
+                                    users: credentials.id,
+                                    date: date,
+                                    lecture: payload.lecture
+                                }]
+                            }
                         }
                         let lecture = new Lectures(query)
                         const response = await lecture.save()
@@ -84,8 +107,12 @@ export default [
             validate: {
                 payload: Joi.object().keys({
                     number: Joi.number(),
-                    lecture: Joi.number(),
-                    observation: Joi.string().optional().allow('')
+                    lecture: Joi.number().allow(0),
+                    lectureNewStart: Joi.number().allow(0).optional(),
+                    lectureNewEnd: Joi.number().allow(0).optional(),
+                    observation: Joi.string().optional().allow(''),
+                    year: Joi.number().allow(0).optional(),
+                    month: Joi.number().allow(0).optional()
                 })
             }
         }

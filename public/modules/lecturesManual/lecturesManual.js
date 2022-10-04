@@ -41,6 +41,7 @@ $(document).ready(async function () {
             internals.members.table.column(8).visible(!internals.members.table.column(8).visible())
             internals.members.table.column(9).visible(!internals.members.table.column(9).visible())
             internals.members.table.column(10).visible(!internals.members.table.column(10).visible())
+            internals.members.table.column(11).visible(!internals.members.table.column(11).visible())
         }else{
             toastr.warning('No ha filtrado planilla ')
         }
@@ -117,10 +118,10 @@ function chargeMembersTable() {
                 responsive: true,
                 columnDefs: [
                     { 
-                        targets: [0, 1, 4, 5, 6, 7, 8, 9, 10], 
+                        targets: [0, 1, 4, 5, 6, 7, 8, 9, 10, 11], 
                         className: 'dt-center' 
                     },{
-                        targets: [ 9, 10 ],
+                        targets: [ 10, 11 ],
                         visible: false
                     }
                 ],
@@ -140,6 +141,7 @@ function chargeMembersTable() {
                     { data: 'address' },
                     { data: 'lastLecture' },
                     { data: 'lecture' },
+                    { data: 'lectureNew' },
                     { data: 'value' },
                     { data: 'date' },
                     { data: 'up' },
@@ -201,19 +203,32 @@ async function getMembers() {
             el.lecture = `<input id="lecture-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="0"></input>`
             el.value = 0
             el.date = ''
+            el.lectureNew = `<i class="fas fa-plus" onclick="addLectureNew(this,'${el._id}')"></i>`
+
             if(el.lectureLast){
                 el.lastLecture = el.lectureLast.logs[el.lectureLast.logs.length-1].lecture
+                if(el.lectureLast.logs[el.lectureLast.logs.length-1].lectureNewEnd){
+                    el.lastLecture = el.lectureLast.logs[el.lectureLast.logs.length-1].lectureNewEnd
+                }
             }
             if(el.lectures){
                 el.lecture = `<input id="lecture-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lecture)}"></input>`
                 el.date = moment(el.lectures.logs[el.lectures.logs.length-1].date).utc().format('DD/MM/YYYY HH:mm')
                 el.value = dot_separators(el.lectures.logs[el.lectures.logs.length-1].lecture - el.lastLecture)
+
+                if(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd){
+                    el.lectureNew = `<input id="lectureNewStart-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewStart)}"></input>
+                                    <input id="lectureNewEnd-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd)}"></input>
+                                    <i class="fas fa-times" onclick="removeLectureNew(this,'${el._id}')"></i>`
+                }
             }
 
             //el.lastLecture = `<span id="lectureLast-${el._id}">${el.lastLecture}</span>`
             el.lastLecture = `<span id="lectureLast-${el._id}">${dot_separators(el.lastLecture)}</span>`
             //el.lastLecture = `<span id="lectureLast">${el.lastLecture}</span>`
             el.value = `<span id="lectureValue-${el._id}">${el.value}</span>`
+
+            
 
             el.order = ''
             if(order==1){
@@ -255,6 +270,7 @@ $('#searchMembers').on('click', async function () {
     }
 })
 
+
 $('#saveLectures').on('click', async function () {
 
     if (members.length==0) {
@@ -284,17 +300,50 @@ $('#saveLectures').on('click', async function () {
             lectures: [],
             members: []
         }
+
+        console.log(members)
         
         for(let i=0; i < members.length; i++){
             //Gris por defecto: rgba(0, 0, 0, 0.1)
             //Rojo: rgb(0, 0, 0, 0.1)
             //Azul: rgb(69, 130, 236)
+            let lectureInputNew = false
+            if($("#lectureNewStart-"+members[i]._id).length>0){
+                console.log('here')
+                lectureInputNew = true
+            }
+            if(members[i]._id=='6321df338adffa8c6c36140f'){
+                console.log(members[i].lectures.logs)
+                console.log(members[i].lectures.logs[members[i].lectures.logs.length-1].lectureNewStart, lectureInputNew)
+            }
 
             if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(231, 76, 60)'){
                 i = members.length
                 toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
 
+            }else if(lectureInputNew){ //En caso que haya medidor nuevo
+                if($("#lectureNewStart-"+members[i]._id).css('border') == '1px solid rgb(231, 76, 60)'){
+                    i = members.length
+                    toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
+                }else{
+                    if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(69, 130, 236)' || $("#lectureNewStart-"+members[i]._id).css('border') == '1px solid rgb(69, 130, 236)'){
+                        array.lectures.push({
+                            member: members[i]._id,
+                            lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
+                            lectureNewStart: parseInt(replaceAll($("#lectureNewStart-"+members[i]._id).val(), '.', '').replace(' ', '')),
+                            lectureNewEnd: parseInt(replaceAll($("#lectureNewEnd-"+members[i]._id).val(), '.', '').replace(' ', ''))
+                        })
+                        array.members.push(members[i]._id)
+                    }
+                }
+
             }else if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(69, 130, 236)'){
+                array.lectures.push({
+                    member: members[i]._id,
+                    lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
+                })
+                array.members.push(members[i]._id)
+            }else if(members[i].lectures.logs[members[i].lectures.logs.length-1].lectureNewStart && !lectureInputNew){//Caso en que borren la lectura del medidor nuevo
                 array.lectures.push({
                     member: members[i]._id,
                     lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
@@ -304,6 +353,8 @@ $('#saveLectures').on('click', async function () {
 
             if(i+1==members.length){
                 console.log(array)
+
+                return
                 if(array.lectures.length>0){
                     //ALMACENADO...
                     let saveLecture = await axios.post('/api/lectureSaveManual', array)
@@ -332,11 +383,55 @@ function calculateValue(member){
 
     let lectureInput = replaceAll($("#lecture-"+member).val(), '.', '').replace(' ', '')
 
+    let lectureInputNew = false
+    let lectureInputNewValue = 0
+
+    console.log($("#lectureNewStart-"+member).length)
+    
+    if($("#lectureNewStart-"+member).length>0){
+        let lectureNewStart = replaceAll($("#lectureNewStart-"+member).val(), '.', '').replace(' ', '')
+        let lectureNewEnd = replaceAll($("#lectureNewEnd-"+member).val(), '.', '').replace(' ', '')
+        if($.isNumeric(lectureNewStart) && $.isNumeric(lectureNewEnd)){
+            if(parseInt(lectureNewEnd)>=parseInt(lectureNewStart)){
+                lectureInputNewValue = lectureNewEnd - lectureNewStart
+                
+                let memberData = members.find(x => x._id.toString() == member)
+                if(memberData.lectures){
+                    if(memberData.lectures.logs[memberData.lectures.logs.length-1].lectureNewStart==lectureNewStart){
+                        $("#lectureNewStart-"+member).css('border', '')
+                    }else{
+                        $("#lectureNewStart-"+member).css('border', '1px solid #4582EC')
+                    }
+
+                    if(memberData.lectures.logs[memberData.lectures.logs.length-1].lectureNewEnd==lectureNewEnd){
+                        $("#lectureNewEnd-"+member).css('border', '')
+                    }else{
+                        $("#lectureNewEnd-"+member).css('border', '1px solid #4582EC')
+                    }
+
+                }else{
+                    $("#lectureNewStart-"+member).css('border', '1px solid #4582EC')
+                    $("#lectureNewEnd-"+member).css('border', '1px solid #4582EC')
+                }
+            }else{
+                $("#lectureNewStart-"+member).css('border', '1px solid #E74C3C')
+                $("#lectureNewEnd-"+member).css('border', '1px solid #E74C3C')
+            }
+        }else{
+            $("#lectureNewStart-"+member).css('border', '1px solid #E74C3C')
+            $("#lectureNewEnd-"+member).css('border', '1px solid #E74C3C')
+        }
+        lectureInputNew = true
+    }
+
     if($.isNumeric(lectureInput)){
         lecture = lectureInput
 
         if(parseInt(lecture)>=parseInt(lectureLast)){
             value = lecture - lectureLast
+            if(lectureInputNew){
+                value += lectureInputNewValue
+            }
 
             let memberData = members.find(x => x._id.toString() == member)
             if(memberData.lectures){
@@ -354,11 +449,8 @@ function calculateValue(member){
         }
 
     }else{
-        console.log('here')
         $("#lecture-"+member).css('border', '1px solid #E74C3C')
     }
-
-    
 
     $("#lectureValue-"+member).text(dot_separators(value))
 }
@@ -398,6 +490,20 @@ $('#updateLectures').on('click', async function () {
     loadInvoices(member)
 
 })
+
+function addLectureNew(btn,id){
+    $(btn).parent().html(`<input id="lectureNewStart-${id}" onkeyup="calculateValue('${id}')" class="form-control form-control-sm lectureValue" style="text-align: center"></input>
+                        <input id="lectureNewEnd-${id}" onkeyup="calculateValue('${id}')" class="form-control form-control-sm lectureValue" style="text-align: center"></input>
+                        <i class="fas fa-times" onclick="removeLectureNew(this,'${id}')"></i>`)
+
+}
+
+function removeLectureNew(btn,id){
+    $(btn).parent().html(`<i class="fas fa-plus" onclick="addLectureNew(this,'${id}')"></i>`)
+    calculateValue(id)
+}
+
+
 
 async function printList() {
 

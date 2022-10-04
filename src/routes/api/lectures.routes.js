@@ -100,18 +100,20 @@ export default [
                     }
                     let queryInvoice = {
                         members: { $in: array },
-                        typeInvoice: { $exists : false }
+                        typeInvoice: { $exists : false },
+                        lectures: { $ne: null }
                     }
 
                     let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
                     let lecturesLast = await Lectures.find(queryLast).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
                     let invoices = await Invoices.find(queryInvoice).sort({'date' : 'descending'}).lean().populate(['lectures','services.services'])
-
                     for(let i=0;i<lectures.length;i++){
-                        lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
-                        
-                        if(lecturesLast.find(x => x.members._id.toString() == lectures[i].members._id.toString())){
-                            lectures[i].lastLecture = lecturesLast.find(x => x.members._id.toString() == lectures[i].members._id.toString())
+                        if(invoices){
+                            lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                            
+                            if(lecturesLast.find(x => x.members._id.toString() == lectures[i].members._id.toString())){
+                                lectures[i].lastLecture = lecturesLast.find(x => x.members._id.toString() == lectures[i].members._id.toString())
+                            }
                         }
                     }
 
@@ -437,7 +439,7 @@ export default [
                     let payload = request.payload
                     let date = new Date(payload.date)
 
-                    let year = (payload.year) ? payload.year : date.getFullYear() + 1
+                    let year = (payload.year) ? payload.year : date.getFullYear()
                     let month = (payload.month) ? payload.month : date.getMonth() + 1
 
                     let lectures = await Lectures.find({members: { $in: payload.members}, month: month, year: year}).lean()
@@ -448,24 +450,50 @@ export default [
 
                         if(go){
                             let lecture = await Lectures.findById(lectures.find(x => x.members.toString() === payload.lectures[i].member.toString())._id)
-                            lecture.logs.push({
-                                users: payload.users,
-                                date: date,
-                                lecture: payload.lectures[i].lecture
-                            })
+                            console.log(payload.lectures[i].lectureNewStart)
+                            if(payload.lectures[i].lectureNewStart !== undefined){
+                                console.log('here1')
+                                lecture.logs.push({
+                                    users: payload.users,
+                                    date: date,
+                                    lecture: payload.lectures[i].lecture,
+                                    lectureNewStart: payload.lectures[i].lectureNewStart,
+                                    lectureNewEnd: payload.lectures[i].lectureNewEnd
+                                })
+                            }else{
+                                console.log('here2')
+                                lecture.logs.push({
+                                    users: payload.users,
+                                    date: date,
+                                    lecture: payload.lectures[i].lecture
+                                })
+                            }
                             await lecture.save()
 
                         }else{
+
+                            let log = []
+                            if(payload.lectures[i].lectureNewStart !== undefined){
+                                log.push({
+                                    users: payload.users,
+                                    date: date,
+                                    lecture: payload.lectures[i].lecture,
+                                    lectureNewStart: payload.lectures[i].lectureNewStart,
+                                    lectureNewEnd: payload.lectures[i].lectureNewEnd
+                                })
+                            }else{
+                                log.push({
+                                    users: payload.users,
+                                    date: date,
+                                    lecture: payload.lectures[i].lecture
+                                })
+                            }
 
                             let query = {
                                 members: payload.lectures[i].member,
                                 month: month,
                                 year: year,
-                                logs: [{
-                                    users: payload.users,
-                                    date: date,
-                                    lecture: payload.lectures[i].lecture
-                                }]
+                                logs: log
                             }
                             let lecture = new Lectures(query)
                             await lecture.save()
@@ -518,7 +546,9 @@ export default [
                     lectures: Joi.array().items(
                         Joi.object().keys({
                             member: Joi.string().allow(''),
-                            lecture: Joi.number().allow(0)
+                            lecture: Joi.number().allow(0),
+                            lectureNewStart: Joi.number().allow(0).optional(),
+                            lectureNewEnd: Joi.number().allow(0).optional()
                         })
                     ),
                     members: Joi.array().items()

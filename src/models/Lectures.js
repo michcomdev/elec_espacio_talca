@@ -10,7 +10,9 @@ const lecturesSchema = new Schema({
         users: { type: Schema.Types.ObjectId, ref: 'users' },
         date: { type: Date, default: Date.now() },
         lecture: { type: Number },
-        observation: { type: String }
+        observation: { type: String },
+        lectureNewStart: { type: Number },
+        lectureNewEnd: { type: Number }
     }]
 }, {
     versionKey: false
