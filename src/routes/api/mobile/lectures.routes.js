@@ -74,7 +74,8 @@ export default [
                                     date: date,
                                     lecture: payload.lecture,
                                     lectureNewStart: payload.lectureNewStart,
-                                    lectureNewEnd: payload.lectureNewEnd
+                                    lectureNewEnd: payload.lectureNewEnd,
+                                    observation: payload.observation
                                 }]
                             }
                         }else{
@@ -85,7 +86,8 @@ export default [
                                 logs: [{
                                     users: credentials.id,
                                     date: date,
-                                    lecture: payload.lecture
+                                    lecture: payload.lecture,
+                                    observation: payload.observation
                                 }]
                             }
                         }
