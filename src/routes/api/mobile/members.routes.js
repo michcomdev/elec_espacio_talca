@@ -115,7 +115,7 @@ export default [
             },
             validate: {
                 payload: Joi.object().keys({
-                    number: Joi.number()
+                    number: Joi.string()
                 })
             }
         }

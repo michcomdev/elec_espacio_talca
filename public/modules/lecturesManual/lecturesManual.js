@@ -217,9 +217,9 @@ async function getMembers() {
                 el.value = dot_separators(el.lectures.logs[el.lectures.logs.length-1].lecture - el.lastLecture)
 
                 if(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd){
-                    el.lectureNew = `<input id="lectureNewStart-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewStart)}"></input>
-                                    <input id="lectureNewEnd-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd)}"></input>
-                                    <i class="fas fa-times" onclick="removeLectureNew(this,'${el._id}')"></i>`
+                    el.lectureNew = `<input id="lectureNewStart-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewStart)}"></input>
+                                    <input id="lectureNewEnd-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd)}"></input>
+                                    <i class="fas fa-times" style="width: 20%; display: inline-block" onclick="removeLectureNew(this,'${el._id}')"></i>`
                 }
             }
 
@@ -487,9 +487,9 @@ $('#updateLectures').on('click', async function () {
 })
 
 function addLectureNew(btn,id){
-    $(btn).parent().html(`<input id="lectureNewStart-${id}" onkeyup="calculateValue('${id}')" class="form-control form-control-sm lectureValue" style="text-align: center"></input>
-                        <input id="lectureNewEnd-${id}" onkeyup="calculateValue('${id}')" class="form-control form-control-sm lectureValue" style="text-align: center"></input>
-                        <i class="fas fa-times" onclick="removeLectureNew(this,'${id}')"></i>`)
+    $(btn).parent().html(`<input id="lectureNewStart-${id}" onkeyup="calculateValue('${id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block"></input>
+                        <input id="lectureNewEnd-${id}" onkeyup="calculateValue('${id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block"></input>
+                        <i class="fas fa-times" style="width: 20%; display: inline-block" onclick="removeLectureNew(this,'${id}')"></i>`)
 
 }
 

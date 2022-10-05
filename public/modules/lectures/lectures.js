@@ -452,58 +452,57 @@ function createModalBody(member) {
                                         <b>Consumos</b>
                                     </div>
 
-                                    <div class="col-md-7">
-                                        Lectura Actual
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center"></div>
-                                    <div class="col-md-4">
-                                        <input id="invoiceLectureActual" type="text" class="form-control form-control-sm border-input numericValues consumption">
-                                    </div>
-
-                                    <div class="col-md-7">
-                                        Lectura Anterior
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(-)</div>
-                                    <div class="col-md-4">
-                                        <input id="invoiceLectureLast" type="text" class="form-control form-control-sm border-input numericValues consumption">
-                                    </div>
-
-                                    <div class="col-md-7">
+                                    <div class="col-md-3">
+                                        <br>
                                         Consumo mts<sup>3</sup>
                                     </div>
-                                    <div class="col-md-1" style="text-align: center">(=)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3" style="text-align: center">
+                                        Lectura Actual - Anterior
+                                        <br>
+                                        (<input id="invoiceLectureLast" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">
+                                        -
+                                        <input id="invoiceLectureActual" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">)
+                                    </div>
+                                    <div class="col-md-3" style="text-align: center; visibility: hidden">
+                                        Medidor Nuevo Actual - Anterior
+                                        <br>
+                                        (<input id="invoiceLectureLastNewEnd" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: none;">
+                                        -
+                                        <input id="invoiceLectureActualNewStart" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: none;">)
+                                        </div>
+                                    <div class="col-md-3">
+                                        <br>
                                         <input id="invoiceLectureResult" type="text" class="form-control form-control-sm border-input numericValues consumption">
                                     </div>
 
-                                    <div class="col-md-7">
+                                    <div class="col-md-8">
                                         Valor mt<sup>3</sup>
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(x)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceMeterValue" type="text" class="form-control form-control-sm border-input numericValues money">
                                     </div>
 
-                                    <div class="col-md-7">
+                                    <div class="col-md-8">
                                         Consumo $
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(=)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceConsumption1" type="text" class="form-control form-control-sm border-input numericValues money">
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-5">
                                         Subsidio
                                     </div>
                                     <div class="col-md-3">
                                         <input id="invoiceSubsidyPercentage" type="text" class="form-control form-control-sm border-input" style="display: inline-block; width: 50%"><span style="display: inline-block">%</span>
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(-)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceSubsidyValue" type="text" class="form-control form-control-sm border-input numericValues money" >
                                     </div>
 
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         Sobreconsumo mts<sup>3</sup>
                                     </div>
                                     <div class="col-md-2">
@@ -513,16 +512,16 @@ function createModalBody(member) {
                                         <input id="invoiceConsumptionLimitValue" type="text" class="form-control form-control-sm border-input numericValues money">
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceConsumptionLimitTotal" type="text" class="form-control form-control-sm border-input numericValues money" >
                                     </div>
 
 
-                                    <div class="col-md-7">
+                                    <div class="col-md-8">
                                         Consumo a Cobro
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(=)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceConsumption2" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #b7ebd8">
                                     </div>
 
@@ -551,11 +550,11 @@ function createModalBody(member) {
                                             </tbody>
                                         </table>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         Total Servicios $
                                     </div>
                                     <div class="col-md-1" style="text-align: center"></div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceTotalServices" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
                                     </div>
                                     
@@ -570,43 +569,43 @@ function createModalBody(member) {
                                         <b>Montos $</b>
                                     </div>
                                     
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         Cargo Fijo
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceCharge" type="text" class="form-control form-control-sm border-input numericValues money">
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         Consumo
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceConsumption2b" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #B7EBD8">
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         Servicios
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceTotalServicesb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         Saldo Anterior
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money">
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-8">
                                         Total
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(=)</div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <input id="invoiceTotal" type="text" class="form-control form-control-sm border-input numericValues money">
                                     </div>
                                 </div>
@@ -828,6 +827,11 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#invoiceLectureActual").val(lecture.logs[lecture.logs.length - 1].lecture)
         $("#invoiceLectureLast").val(lecture.lastLecture)
+        if(lecture.logs[lecture.logs.length - 1].lectureNewStart){
+            $("#invoiceLectureActualNewStart").val(lecture.logs[lecture.logs.length - 1].lectureNewStart)
+            $("#invoiceLectureActualNewEnd").val(lecture.logs[lecture.logs.length - 1].lectureNewEnd)
+        }
+
         $("#invoiceSubsidyPercentage").val(subsidy)
         $("#invoiceMeterValue").val(parameters.meterValue)
 
