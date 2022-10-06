@@ -10,6 +10,8 @@ const invoicesSchema = new Schema({
     charge: { type: Number },
     lectureActual: { type: Number },
     lectureLast: { type: Number },
+    lectureNewStart: { type: Number },
+    lectureNewEnd: { type: Number },
     lectureResult: { type: Number },
     meterValue: { type: Number },
     subsidyPercentage: { type: Number },
@@ -32,7 +34,17 @@ const invoicesSchema = new Schema({
     type: { type: Number },
     number: { type: Number },
     seal: { type: String },
-    token: { type: String }
+    token: { type: String },
+    annulment: {
+        type: { type: Number },
+        number: { type: Number },
+        seal: { type: String },
+        token: { type: String },
+        resolution: { 
+            fecha: {type: String },
+            numero: {type: Number }
+        }
+    }
 }, {
     versionKey: false
 })

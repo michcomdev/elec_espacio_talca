@@ -215,15 +215,23 @@ export default [
                     }
                     let queryInvoice = {
                         members: payload.member,
-                        typeInvoice: { $exists : false } 
+                        typeInvoice: { $exists : false },
+                        annulment: { $exists : false }
+                    }
+                    let queryInvoiceAnnulled = {
+                        members: payload.member,
+                        typeInvoice: { $exists : false },
+                        annulment: { $exists : true }
                     }
 
                     let lectures = await Lectures.find(query).sort({'year' : 'descending', 'month' : 'descending'}).lean()
                     //let invoices = await Invoices.find(query).sort({'date' : 'descending'}).populate(['lectures']).lean()
                     let invoices = await Invoices.find(queryInvoice).sort({'date' : 'descending'}).lean().populate(['lectures'])
+                    let invoicesAnnulled = await Invoices.find(queryInvoiceAnnulled).sort({'date' : 'descending'}).lean().populate(['lectures'])
 
                     for(let i=0;i<lectures.length;i++){
                         lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                        lectures[i].invoicesAnnulled = invoicesAnnulled.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
                     }
 
                     return lectures

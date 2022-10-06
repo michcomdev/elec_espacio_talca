@@ -116,6 +116,37 @@
         </div>
     </div>
 
+    <div class="modal fade" id="paymentAnnulled" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Lista de Boletas y Notas de Crédito</h6>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                        aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalPaymentAnnulled_body">
+                    <table id="tableAnnulments" class="table cell-border table-condensed" cellspacing="0" width="100%" style="font-size: 13px">
+                        <thead>
+                            <tr class="table-info">
+                                <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N° BOLETA</th>
+                                <th style="background-color: #3B6FC9">FECHA</th>
+                                <th style="background-color: #3B6FC9">PDF</th>
+                                <th style="background-color: #3B6FC9">N° NOTA CRÉDITO</th>
+                                <th style="background-color: #3B6FC9">FECHA</th>
+                                <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableAnnulmentsBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer" id="modalPaymentAnnulled_footer"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal" role="dialog" aria-labelledby="modal"
         data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog" role="document">

@@ -212,7 +212,7 @@ async function loadLectures(member) {
     for (i = 0; i < lectures.length; i++) {
 
         let total = 0
-        let btn = '', btnGenerate = '', btnSII = '', btnPayment = ''
+        let btn = '', btnGenerate = '', btnSII = '', btnPayment = '', btnAnnulment = '', btnAnnulmentHistory = ''
         let invoiceID = 0
         if (lectures[i].invoice) {
             total = dot_separators(lectures[i].invoice.invoiceTotal)
@@ -222,16 +222,25 @@ async function loadLectures(member) {
             if(lectures[i].invoice.number){
                 btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
                 btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
+                btnAnnulment = `<button class="btn btn-sm btn-info btnLecture" onclick="annulmentInvoice('${member.type}','${member._id}','${lectures[i].invoice._id}')">Anular Boleta</button>`
             }else{
-                btnGenerate = `<button class="btn btn-sm btn-info btnLecture" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')">Generar DTE</button>`
+                btnGenerate = `<button class="btn btn-sm btn-info btnLecture" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')">Generar Boleta</button>`
+                btnAnnulment = `<button class="btn btn-sm btn-dark" disabled>Anular</button>`
             }
             if(lectures[i].invoice.token){
                 btnSII = `<button class="btn btn-sm btn-warning btnLecture" onclick="showSIIPDF('${lectures[i].invoice.token}')"><img src="/public/img/logo_sii.png" style="width: 24px"/></button>`
             }
+
         }else{
             total = 'NO CALCULADO'
             btn = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>`
             btnGenerate = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+        }
+
+        if(lectures[i].invoicesAnnulled){
+            btnAnnulmentHistory = `<button class="btn btn-sm btn-info" onclick="showAnnulment('${member.type}','${member._id}','${lectures[i]._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+        }else{
+            btnAnnulmentHistory = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>`
         }
 
         $('#tableLecturesBody').append(`
@@ -266,6 +275,12 @@ async function loadLectures(member) {
                 <td style="text-align: center;">
                     POR PAGAR
                 </td>
+                <td style="text-align: center;">
+                    ${btnAnnulment}
+                </td>
+                <td style="text-align: center;">
+                    ${btnAnnulmentHistory}
+                </td>
             </tr>
         `)
     }
@@ -285,46 +300,54 @@ async function loadLectures(member) {
 }
 
 
-function validateInvoiceData(productData) {
+function validateInvoiceData(invoiceData) {
 
     let errorMessage = ''
     
-    /*if(!$.isNumeric(productData.number)){
+    /*if(!$.isNumeric(invoiceData.number)){
         errorMessage += '<br>Número de Boleta/Factura'
     }*/
-    if(!$.isNumeric(productData.charge)){
+    if(!$.isNumeric(invoiceData.charge)){
         errorMessage += '<br>Cargo Fijo'
     }
-    if (!$.isNumeric(productData.lectureActual)) {
-        errorMessage += '<br>Lecture Actual'
+    if (!$.isNumeric(invoiceData.lectureActual)) {
+        errorMessage += '<br>Lectura Actual'
     }
-    if (!$.isNumeric(productData.lectureLast)) {
-        errorMessage += '<br>Lecture Anterior'
+    if (!$.isNumeric(invoiceData.lectureLast)) {
+        errorMessage += '<br>Lectura Anterior'
     }
-    if (!$.isNumeric(productData.lectureResult)) {
+    if(invoiceData.lectureNewStart !== undefined){
+        if (!$.isNumeric(invoiceData.lectureNewStart)) {
+            errorMessage += '<br>Lectura Inicio Medidor Nuevo'
+        }
+        if (!$.isNumeric(invoiceData.lectureNewEnd)) {
+            errorMessage += '<br>Lectura Final Medidor Nuevo'
+        }
+    }
+    if (!$.isNumeric(invoiceData.lectureResult)) {
         errorMessage += '<br>Consumo mts<sup>3</sup>'
     }
-    if (!$.isNumeric(productData.meterValue)) {
+    if (!$.isNumeric(invoiceData.meterValue)) {
         errorMessage += '<br>Valor mts<sup>3</sup>'
     }
-    if (!$.isNumeric(productData.subsidyPercentage)) {
+    if (!$.isNumeric(invoiceData.subsidyPercentage)) {
         errorMessage += '<br>Porcentaje Subsidio'
     }
-    if (!$.isNumeric(productData.subsidyValue)) {
+    if (!$.isNumeric(invoiceData.subsidyValue)) {
         errorMessage += '<br>Valor Subsidio'
     }
-    if (!$.isNumeric(productData.consumption)) {
+    if (!$.isNumeric(invoiceData.consumption)) {
         errorMessage += '<br>Consumo a Cobro'
     }
-    if (!$.isNumeric(productData.invoiceDebt)) {
+    if (!$.isNumeric(invoiceData.invoiceDebt)) {
         errorMessage += '<br>Deuda Anterior'
     }
-    if (!$.isNumeric(productData.invoiceTotal)) {
+    if (!$.isNumeric(invoiceData.invoiceTotal)) {
         errorMessage += '<br>Total'
     }
 
     if (errorMessage.length === 0) {
-        return { ok: productData }
+        return { ok: invoiceData }
     } else {
         $(document).on('hidden.bs.modal', '.modal', function () { //Soluciona problema de scroll
             $('.modal:visible').length && $(document.body).addClass('modal-open')
@@ -335,9 +358,11 @@ function validateInvoiceData(productData) {
         $('#modal_body').html(`<h7 class="alert-heading">Falta ingresar los siguientes datos:</h7>
                                     <p class="mb-0">${errorMessage}</p>`)
 
-        return { err: productData }
+        return { err: invoiceData }
     }
 }
+
+
 
 function createModalBody(member) {
 
@@ -390,7 +415,7 @@ function createModalBody(member) {
                 <button style="border-radius: 5px;" class="btn btn-primary" onclick="addLecture()"><i class="fas fa-plus-circle"></i> Agregar lectura manual</button>
             </div>
             </div>
-            <div class="col-md-8 table-responsive">
+            <div class="col-md-10 table-responsive">
                 <br/>
                 <br />
                 <br />
@@ -406,7 +431,9 @@ function createModalBody(member) {
                             <th style="text-align: center; background-color: #3B6FC9;">Ver Boleta/Factura</th>
                             <th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Pago</th>
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Estado Pago</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Estado Pago</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Anular</th>
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Anulados</th>
                         </tr>
                     </thead>
                     <tbody id="tableLecturesBody">
@@ -452,7 +479,7 @@ function createModalBody(member) {
                                         <b>Consumos</b>
                                     </div>
 
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <br>
                                         Consumo mts<sup>3</sup>
                                     </div>
@@ -463,13 +490,14 @@ function createModalBody(member) {
                                         -
                                         <input id="invoiceLectureActual" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">)
                                     </div>
-                                    <div class="col-md-3" style="text-align: center; visibility: hidden">
-                                        Medidor Nuevo Actual - Anterior
+                                    <div id="divLectureNew" class="col-md-4" style="text-align: center; visibility: hidden">
+                                        Medidor Nuevo (Actual - Anterior)
                                         <br>
-                                        (<input id="invoiceLectureLastNewEnd" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: none;">
+                                        + (<input id="invoiceLectureNewEnd" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">
                                         -
-                                        <input id="invoiceLectureActualNewStart" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: none;">)
-                                        </div>
+                                        <input id="invoiceLectureNewStart" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">)
+                                        =
+                                    </div>
                                     <div class="col-md-3">
                                         <br>
                                         <input id="invoiceLectureResult" type="text" class="form-control form-control-sm border-input numericValues consumption">
@@ -687,6 +715,30 @@ async function cleanInvoice() {
     $('.btnLecture').removeAttr('disabled')
 }
 
+async function showAnnulment(type,memberID,lecture){
+    let invoices = await axios.post('/api/invoicesByLecture', { lecture: lecture })
+
+    console.log(invoices)
+    $("#tableAnnulmentsBody").html('')
+
+    for(let i=0; i<invoices.data.length; i++){
+        $("#tableAnnulmentsBody").append(`
+            <tr>
+                <td style="text-align: center;">${invoices.data[i].number}</td>
+                <td style="text-align: center;">${moment(invoices.data[i].date).utc().format('DD/MM/YYYY')}</td>
+                <td style="text-align: center;"><button class="btn btn-sm btn-danger btnLecture" onclick="printInvoice('pdf','${type}','${memberID}','${invoices.data[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
+                <td style="text-align: center;">${invoices.data[i].annulment.number}</td>
+                <td style="text-align: center;">${moment(invoices.data[i].annulment.date).utc().format('DD/MM/YYYY')}</td>
+                <td style="text-align: center;"><button class="btn btn-sm btn-danger btnLecture" onclick="showSIIPDF('${invoices.data[i].annulment.token}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
+            </tr>
+        `)
+        
+    }
+
+    $('#paymentAnnulled').modal('show')
+
+}
+
 async function addLecture() {
     //date: moment().format('YYYY-MM-DD[T]HH:mm[Z]'),
 
@@ -707,6 +759,10 @@ function calculateTotal() {
     let lectureActual = $("#invoiceLectureActual").val()
     let lectureLast = $("#invoiceLectureLast").val()
     let lectureValue = lectureActual - lectureLast
+
+    if($("#divLectureNew").css('visibility') == 'visible'){
+        lectureValue += $("#invoiceLectureNewEnd").val() - $("#invoiceLectureNewStart").val() 
+    }
 
     $("#invoiceLectureResult").val(lectureValue)
     let meterValue = $("#invoiceMeterValue").val()
@@ -827,9 +883,10 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#invoiceLectureActual").val(lecture.logs[lecture.logs.length - 1].lecture)
         $("#invoiceLectureLast").val(lecture.lastLecture)
-        if(lecture.logs[lecture.logs.length - 1].lectureNewStart){
-            $("#invoiceLectureActualNewStart").val(lecture.logs[lecture.logs.length - 1].lectureNewStart)
-            $("#invoiceLectureActualNewEnd").val(lecture.logs[lecture.logs.length - 1].lectureNewEnd)
+        if(lecture.logs[lecture.logs.length - 1].lectureNewStart !== undefined){
+            $("#invoiceLectureNewStart").val(lecture.logs[lecture.logs.length - 1].lectureNewStart)
+            $("#invoiceLectureNewEnd").val(lecture.logs[lecture.logs.length - 1].lectureNewEnd)
+            $("#divLectureNew").css('visibility','visible')
         }
 
         $("#invoiceSubsidyPercentage").val(subsidy)
@@ -910,6 +967,11 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 services: services
             }
 
+            if($("#divLectureNew").css('visibility') == 'visible'){
+                invoiceData.lectureNewStart = replaceAll($("#invoiceLectureNewStart").val(), '.', '').replace(' ', '').replace('$', '')
+                invoiceData.lectureNewEnd = replaceAll($("#invoiceLectureNewEnd").val(), '.', '').replace(' ', '').replace('$', '')
+            }
+
             /*if(services.length>0){
                 saleData.services = services
             }*/
@@ -952,6 +1014,13 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         $("#invoiceCharge").val(invoice.charge)
         $("#invoiceLectureActual").val(invoice.lectureActual)
         $("#invoiceLectureLast").val(invoice.lectureLast)
+        if(invoice.lectureNewStart !== undefined){
+            $("#invoiceLectureNewStart").val(invoice.lectureNewStart)
+            $("#invoiceLectureNewEnd").val(invoice.lectureNewEnd)
+            $("#divLectureNew").css('visibility','visible')
+        }
+
+
         $("#invoiceSubsidyPercentage").val(invoice.subsidyPercentage)
         $("#invoiceMeterValue").val(invoice.meterValue)
 
@@ -1038,6 +1107,11 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 services: services
             }
 
+            if($("#divLectureNew").css('visibility') == 'visible'){
+                invoiceData.lectureNewStart = replaceAll($("#invoiceLectureNewStart").val(), '.', '').replace(' ', '').replace('$', '')
+                invoiceData.lectureNewEnd = replaceAll($("#invoiceLectureNewEnd").val(), '.', '').replace(' ', '').replace('$', '')
+            }
+
             /*if ($.isNumeric($("#invoiceNumber").val())) {
                 invoiceData.number = $("#invoiceNumber").val()
             }*/
@@ -1072,6 +1146,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 }
 
 async function printInvoice(docType,type,memberID,invoiceID) {
+    loadingHandler('start')
     
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
     let member = memberData.data
@@ -1173,6 +1248,8 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.setFontSize(10)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
+    console.log(lectures)
+    console.log(invoice)
     doc.text('Lectura Actual ' + moment(invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 20)
     doc.text('Lectura Anterior ' + moment(invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 33)
     doc.text('Límite Sobreconsumo (m3)', pdfX, pdfY + 46)
@@ -1333,11 +1410,13 @@ async function printInvoice(docType,type,memberID,invoiceID) {
         }
 
         if (flag > 0 && flag <= 13) {
-            lastInvoices.push(lectures[j].invoice)
             flag++
 
-            if (lectures[j].invoice.lectureResult > maxValue) {
-                maxValue = lectures[j].invoice.lectureResult
+            if (lectures[j].invoice !== undefined) {
+                lastInvoices.push(lectures[j].invoice)
+                if (lectures[j].invoice.lectureResult > maxValue) {
+                    maxValue = lectures[j].invoice.lectureResult
+                }
             }
         }
     }
@@ -1457,6 +1536,8 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     //doc.autoPrint()
     window.open(doc.output('bloburl'), '_blank')
     //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
+
+    loadingHandler('stop')
 }
 
 async function showSIIPDF(token) {
@@ -1542,7 +1623,7 @@ async function sendData(type,memberID,invoiceID) {
 
 
             document = {
-                response: ["TIMBRE","FOLIO"],
+                response: ["TIMBRE","FOLIO","RESOLUCION"],
                 dte: {
                     Encabezado: {
                         IdDoc:{
@@ -1616,7 +1697,7 @@ async function sendData(type,memberID,invoiceID) {
             }
 
             document = {
-                response: ["TIMBRE","FOLIO"],
+                response: ["TIMBRE","FOLIO","RESOLUCION"],
                 dte: {
                     Encabezado: {
                         IdDoc:{
@@ -1686,7 +1767,8 @@ async function sendData(type,memberID,invoiceID) {
                 type: dteType,
                 number: response.FOLIO,
                 seal: response.TIMBRE,
-                token: response.TOKEN
+                token: response.TOKEN,
+                resolution: response.RESOLUCION
             }
 
             let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
@@ -1696,14 +1778,180 @@ async function sendData(type,memberID,invoiceID) {
             $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
             $('#modal').modal('show')
 
+            printInvoice('pdf',member.type,member._id,lectures[i].invoice._id)
+
             loadLectures(member)
             
         })
     }
-
-
 }
 
+
+async function annulmentInvoice(type,memberID,invoiceID) {
+
+    let generateDTE = await Swal.fire({
+        title: '¿Está seguro de anular la boleta?',
+        customClass: 'swal-wide',
+        html: ``,
+        showCloseButton: true,
+        showCancelButton: true,
+        showConfirmButton: true,
+        focusConfirm: false,
+        confirmButtonText: 'Aceptar',
+        cancelButtonText: 'Cancelar'
+    })
+
+    if (generateDTE.value) {
+        
+        loadingHandler('start')
+        
+        let memberData = await axios.post('/api/memberSingle', {id: memberID})
+        let member = memberData.data
+
+        let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
+        let invoice = invoiceData.data
+
+        let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
+        let lectures = lecturesData.data
+
+        let parametersData = await axios.get('/api/parameters')
+        let parameters = parametersData.data
+
+        let name = '', category = ''
+        let document = ''
+
+
+        let Receptor
+        if(type=='personal'){
+            name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+            Receptor = {
+                            RUTRecep: member.rut.split('.').join(''),
+                            RznSocRecep: name,
+                            DirRecep: member.address.address,
+                            CmnaRecep: parameters.committee.commune,
+                            CiudadRecep: parameters.committee.city
+                        }
+        }else{
+            name = member.enterprise.fullName
+            category = member.enterprise.category
+
+            if(name==''){ //Sólo para efectos de TEST
+                name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+                category = 'TEST'
+            }
+            Receptor = {
+                            RUTRecep: member.rut.split('.').join(''),
+                            RznSocRecep: name,
+                            GiroRecep: category,
+                            CdgIntRecep: member.number,
+                            DirRecep: member.address.address,
+                            CmnaRecep: parameters.committee.commune
+                        }
+        }
+
+
+        let Emisor = { //EMISOR DE PRUEBA
+            RUTEmisor: "76795561-8",
+            RznSocEmisor: "HAULMER SPA",
+            GiroEmisor: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
+            DirOrigen: "ARTURO PRAT 527   CURICO",
+            CmnaOrigen: "Curicó",
+            CdgSIISucur: "81303347"
+            /*Acteco: "479100",
+            DirOrigen: "ARTURO PRAT 527   CURICO",
+            CmnaOrigen: "Curicó",
+            Telefono: "0 0",
+            CdgSIISucur: "81303347"*/
+        }
+
+        document = {
+            response: ["TIMBRE","FOLIO","RESOLUCION","PDF"],
+            dte: {
+                Encabezado: {
+                    IdDoc:{
+                        TipoDTE: 61,
+                        Folio: 0,
+                        FchEmis: moment.utc().format('YYYY-MM-DD'), //Fecha
+                        IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
+                    },
+                    Emisor: Emisor,
+                    Receptor: Receptor,
+                    Totales:{
+                        MntExe: invoice.invoiceTotal,
+                        MntTotal: invoice.invoiceTotal,
+                        VlrPagar: invoice.invoiceTotal
+                    }
+                },
+                Detalle:[
+                    {
+                        NroLinDet: 1,
+                        NmbItem: "Servicio de Agua",
+                        QtyItem: 1,
+                        PrcItem: invoice.invoiceTotal,
+                        MontoItem: invoice.invoiceTotal,
+                        IndExe: 1 //1=exento o afecto / 2=no facturable
+                    }
+                ],
+                Referencia: [
+                    {
+                        NroLinRef: 1,
+                        TpoDocRef: invoice.type.toString(),
+                        FolioRef: invoice.number.toString(),
+                        FchRef: moment.utc(invoice.date).format('YYYY-MM-DD'),
+                        CodRef: "3"
+                    }
+                ]
+            }
+        }        
+
+        console.log(document)
+
+        console.log(JSON.stringify(document))
+        var settings = {
+            "url": "https://dev-api.haulmer.com/v2/dte/document",
+            "method": "POST",
+            "timeout": 0,
+            "headers": {
+            "apikey": parameters.apikey
+            },
+            "data": JSON.stringify(document)
+        };  
+        
+        $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
+        
+            console.log('ERROR', jqXHR.responseJSON.error.message)
+            console.log('ERROR', jqXHR.responseJSON.error.details)
+            loadingHandler('stop')
+
+        }).done(async function (response) {
+            
+            console.log(response)
+            
+            let dteData = {
+                id: invoiceID,
+                type: dteType,
+                number: response.FOLIO,
+                seal: response.TIMBRE,
+                token: response.TOKEN,
+                resolution: response.RESOLUCION
+            }
+            console.log('dteData', dteData)
+
+            let setDTEInvoice = await axios.post('/api/invoiceUpdateDTEAnnulment', dteData)
+            loadingHandler('stop')
+
+            let pdfWindow = window.open("")
+            pdfWindow.document.write("<iframe width='100%' height='100%' src='data:application/pdf;base64, " +encodeURI(response.PDF) + "'></iframe>")
+
+            $('#modal_title').html(`Almacenado`)
+            $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
+            $('#modal').modal('show')
+
+            loadLectures(member)
+            
+        })
+    }
+}
 
 
 

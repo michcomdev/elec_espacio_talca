@@ -67,6 +67,39 @@ export default [
     },
     {
         method: 'POST',
+        path: '/api/invoicesByLecture',
+        options: {
+            description: 'get one invoice',
+            notes: 'get one invoice',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+                    let query = {
+                        lectures: payload.lecture
+                    }
+
+                    let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
+
+                    return invoices
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    lecture: Joi.string().optional().allow('')
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
         path: '/api/invoiceSave',
         options: {
             description: 'create invoice',
@@ -105,6 +138,11 @@ export default [
                         query.services = payload.services
                     }
 
+                    if(payload.lectureNewStart){
+                        query.lectureNewStart = payload.lectureNewStart
+                        query.lectureNewEnd = payload.lectureNewEnd
+                    }
+
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
 
@@ -129,6 +167,8 @@ export default [
                     charge: Joi.number().allow(0),
                     lectureActual: Joi.number().allow(0),
                     lectureLast: Joi.number().allow(0),
+                    lectureNewStart: Joi.number().allow(0).optional(),
+                    lectureNewEnd: Joi.number().allow(0).optional(),
                     lectureResult: Joi.number().allow(0),
                     meterValue: Joi.number().allow(0),
                     subsidyPercentage: Joi.number().allow(0),
@@ -183,6 +223,11 @@ export default [
                     invoices.invoiceTotal = payload.invoiceTotal
                     invoices.services = payload.services
 
+                    if(payload.lectureNewStart){
+                        invoices.lectureNewStart = payload.lectureNewStart
+                        invoices.lectureNewEnd = payload.lectureNewEnd
+                    }
+
                     const response = await invoices.save()
 
                     return response
@@ -207,6 +252,8 @@ export default [
                     charge: Joi.number().allow(0),
                     lectureActual: Joi.number().allow(0),
                     lectureLast: Joi.number().allow(0),
+                    lectureNewStart: Joi.number().allow(0).optional(),
+                    lectureNewEnd: Joi.number().allow(0).optional(),
                     lectureResult: Joi.number().allow(0),
                     meterValue: Joi.number().allow(0),
                     subsidyPercentage: Joi.number().allow(0),
@@ -242,6 +289,7 @@ export default [
                     invoices.number = payload.number
                     invoices.seal = payload.seal
                     invoices.token = payload.token
+                    invoices.resolution = payload.resolution
 
                     const response = await invoices.save()
 
@@ -261,7 +309,56 @@ export default [
                     type: Joi.number(),
                     number: Joi.number(),
                     seal: Joi.string(),
-                    token: Joi.string()
+                    token: Joi.string(),
+                    resolution: Joi.string()
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/invoiceUpdateDTEAnnulment',
+        options: {
+            description: 'update invoice',
+            notes: 'update invoice',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let invoices = await Invoices.findById(payload.id)
+
+                    invoices.annulment = {
+                        type: payload.type,
+                        number: payload.number,
+                        seal: payload.seal,
+                        token: payload.token,
+                        resolution: payload.resolution
+                    }
+
+                    const response = await invoices.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    id: Joi.string(),
+                    type: Joi.number(),
+                    number: Joi.number(),
+                    seal: Joi.string(),
+                    token: Joi.string(),
+                    resolution: Joi.object().keys({
+                        fecha: Joi.string(),
+                        numero: Joi.number()
+                    })
                 })
             }
         }
