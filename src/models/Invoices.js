@@ -20,11 +20,13 @@ const invoicesSchema = new Schema({
     consumptionLimit: { type: Number },
     consumptionLimitValue: { type: Number },
     consumptionLimitTotal: { type: Number },
+    invoiceSubTotal: { type: Number },
     invoiceDebt: { type: Number },
     invoicePaid: { type: Number },
     invoiceTotal: { type: Number },
     services: [{
         services: { type: Schema.Types.ObjectId, ref: 'services' },
+        other: { type: String },
         value: { type: Number }
     }],
     typeInvoice: { type: String }, //Para los casos de boleta "ingreso"

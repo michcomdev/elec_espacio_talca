@@ -25,7 +25,18 @@ const parametersSchema = new Schema({
         code: { type: Number }
     },
     expireDay: { type: Number },
-    apikey: { type: String }
+    apikey: { type: String },
+    emisor: {
+        RUTEmisor: { type: String },
+        RznSoc: { type: String },
+        RznSocEmisor: { type: String },
+        GiroEmis: { type: String },
+        Acteco: { type: String },
+        DirOrigen: { type: String },
+        CmnaOrigen: { type: String },
+        Telefono: { type: String },
+        CdgSIISucur: { type: String }
+    }
 }, {
     versionKey: false
 })

@@ -211,12 +211,14 @@ async function loadLectures(member) {
 
     for (i = 0; i < lectures.length; i++) {
 
-        let total = 0
+        let subtotal = 0, total = 0
         let btn = '', btnGenerate = '', btnSII = '', btnPayment = '', btnAnnulment = '', btnAnnulmentHistory = ''
         let invoiceID = 0
         if (lectures[i].invoice) {
+            subtotal = dot_separators(lectures[i].invoice.invoiceSubTotal)
             total = dot_separators(lectures[i].invoice.invoiceTotal)
-            btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printInvoice('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+            //btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printInvoice('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+            btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printAnnulment('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
             invoiceID = lectures[i].invoice._id
             
             if(lectures[i].invoice.number){
@@ -232,6 +234,7 @@ async function loadLectures(member) {
             }
 
         }else{
+            subtotal = 'NO CALCULADO'
             total = 'NO CALCULADO'
             btn = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>`
             btnGenerate = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
@@ -253,6 +256,9 @@ async function loadLectures(member) {
                 </td>
                 <td style="text-align: center;">
                     ${dot_separators(lectures[i].logs[lectures[i].logs.length - 1].lecture)}
+                </td>
+                <td style="text-align: center;">
+                    ${subtotal}
                 </td>
                 <td style="text-align: center;">
                     ${total}
@@ -407,15 +413,7 @@ function createModalBody(member) {
 <h5>Lecturas realizadas</h5>
     <div class="col-md-12">
         <div class="row">
-
-            <div class="col-md-3">
-                <input id="addLectureTest" type="text" class="form-control form-control-sm border-input">
-            </div>
-            <div class="col-md-3">
-                <button style="border-radius: 5px;" class="btn btn-primary" onclick="addLecture()"><i class="fas fa-plus-circle"></i> Agregar lectura manual</button>
-            </div>
-            </div>
-            <div class="col-md-10 table-responsive">
+            <div class="col-md-12 table-responsive">
                 <br/>
                 <br />
                 <br />
@@ -425,6 +423,7 @@ function createModalBody(member) {
                             <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Mes</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Fecha</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Lectura</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Sub Total</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Crear/Editar</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
@@ -458,16 +457,25 @@ function createModalBody(member) {
 
                     <div class="card-body">
                         <div class="row">
+                            <div class="col-md-2">
+                                Tipo Documento
+                            </div>
                             <div class="col-md-3">
+                                <select id="invoiceType" class="form-control form-select form-control-sm">
+                                    <option value="41">BOLETA</option>
+                                    <option value="34">FACTURA</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
                                 Fecha
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input id="invoiceDate" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 Fecha Vencimiento
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input id="invoiceDateExpire" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().add(15, 'days').format('DD/MM/YYYY')}">
                             </div>
                         </div>
@@ -481,14 +489,14 @@ function createModalBody(member) {
 
                                     <div class="col-md-2">
                                         <br>
-                                        Consumo mts<sup>3</sup>
+                                        Consumo mts<sup>3</sup> 
                                     </div>
                                     <div class="col-md-3" style="text-align: center">
                                         Lectura Actual - Anterior
                                         <br>
-                                        (<input id="invoiceLectureLast" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">
+                                        (<input id="invoiceLectureActual" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">
                                         -
-                                        <input id="invoiceLectureActual" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">)
+                                        <input id="invoiceLectureLast" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">)
                                     </div>
                                     <div id="divLectureNew" class="col-md-4" style="text-align: center; visibility: hidden">
                                         Medidor Nuevo (Actual - Anterior)
@@ -622,6 +630,14 @@ function createModalBody(member) {
                                     </div>
 
                                     <div class="col-md-8">
+                                        SubTotal (a generar en boleta SII)
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(=)</div>
+                                    <div class="col-md-3">
+                                        <input id="invoiceSubTotal" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #B6D8FF">
+                                    </div>
+
+                                    <div class="col-md-8">
                                         Saldo Anterior
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(+)</div>
@@ -724,12 +740,12 @@ async function showAnnulment(type,memberID,lecture){
     for(let i=0; i<invoices.data.length; i++){
         $("#tableAnnulmentsBody").append(`
             <tr>
-                <td style="text-align: center;">${invoices.data[i].number}</td>
-                <td style="text-align: center;">${moment(invoices.data[i].date).utc().format('DD/MM/YYYY')}</td>
-                <td style="text-align: center;"><button class="btn btn-sm btn-danger btnLecture" onclick="printInvoice('pdf','${type}','${memberID}','${invoices.data[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
-                <td style="text-align: center;">${invoices.data[i].annulment.number}</td>
-                <td style="text-align: center;">${moment(invoices.data[i].annulment.date).utc().format('DD/MM/YYYY')}</td>
-                <td style="text-align: center;"><button class="btn btn-sm btn-danger btnLecture" onclick="showSIIPDF('${invoices.data[i].annulment.token}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
+                <td>${invoices.data[i].number}</td>
+                <td>${moment(invoices.data[i].date).utc().format('DD/MM/YYYY')}</td>
+                <td><button class="btn btn-sm btn-danger btnLecture" onclick="printInvoice('pdf','${type}','${memberID}','${invoices.data[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
+                <td>${invoices.data[i].annulment.number}</td>
+                <td>${moment(invoices.data[i].annulment.date).utc().format('DD/MM/YYYY')}</td>
+                <td><button class="btn btn-sm btn-danger btnLecture" onclick="showSIIPDF('${invoices.data[i].annulment.token}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
             </tr>
         `)
         
@@ -761,7 +777,7 @@ function calculateTotal() {
     let lectureValue = lectureActual - lectureLast
 
     if($("#divLectureNew").css('visibility') == 'visible'){
-        lectureValue += $("#invoiceLectureNewEnd").val() - $("#invoiceLectureNewStart").val() 
+        lectureValue += ($("#invoiceLectureNewEnd").val() - $("#invoiceLectureNewStart").val())
     }
 
     $("#invoiceLectureResult").val(lectureValue)
@@ -788,6 +804,7 @@ function calculateTotal() {
     }
     $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
 
+    console.log('consump',consumptionValue,subsidyValue,consumptionLimitTotal)
     let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal
     $("#invoiceConsumption2").val(lastConsumptionValue)
     $("#invoiceConsumption2b").val(lastConsumptionValue)
@@ -809,9 +826,12 @@ function calculateTotal() {
     $("#invoiceTotalServicesb").val(totalServices)
 
     //Montos
-    let debt = 0
+    let debt = $("#invoiceDebt").val()
+    console.log(parseInt(parameters.charge),parseInt(lastConsumptionValue),parseInt(totalServices))
+    let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(totalServices)
+    $("#invoiceSubTotal").val(subTotal)
     $("#invoiceDebt").val(debt) //A asignar
-    $("#invoiceTotal").val(parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(debt) + parseInt(totalServices))
+    $("#invoiceTotal").val(subTotal + parseInt(debt))
 
 
     $(".consumption").each(function() {
@@ -862,9 +882,13 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         let lectureData = await axios.post('/api/lectureSingle', { id: lectureID })
         let lecture = lectureData.data
 
-        //Definir parámetros
         $("#invoiceTitle").text("Nueva Boleta/Factura")
         //$("#invoiceNumber").val('')
+        if(member.dte=='BOLETA'){
+            $("#invoiceType").val(41)
+        }else if(member.dte=='FACTURA'){
+            $("#invoiceType").val(34)
+        }
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
         $("#invoiceDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
         $("#invoiceCharge").val(parameters.charge)
@@ -920,6 +944,24 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             }
         }
 
+        //Carga de boletas adeudadas
+        let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
+        let invoicesDebt = invoicesDebtData.data
+
+        console.log('debt', invoicesDebt)
+        let debt = 0
+        if(invoicesDebt.length>0){
+            for(let i=0; i<invoicesDebt.length; i++){
+                if(invoicesDebt[i].invoicePaid){
+                    debt += invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid
+                }else{
+                    debt += invoicesDebt[i].invoiceSubTotal
+                }
+            }
+        }
+
+        $("#invoiceDebt").val(debt)
+
         calculateTotal()
 
         $('#invoiceSave').off("click")
@@ -942,13 +984,14 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                         services: $($($(this).children()[0]).children()[0]).val(),
                         value: value
                     })
-                })    
+                })
             }
 
             let invoiceData = {
                 lectures: lectureID,
                 member: member._id,
                 //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
+                type: $("#invoiceType").val(),
                 date: $("#invoiceDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 dateExpire: $("#invoiceDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', '').replace('$', ''),
@@ -962,6 +1005,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 consumptionLimitValue: replaceAll($("#invoiceConsumptionLimitValue").val(), '.', '').replace(' ', '').replace('$', ''),
                 consumptionLimitTotal: replaceAll($("#invoiceConsumptionLimitTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
+                invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 services: services
@@ -975,7 +1019,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             /*if(services.length>0){
                 saleData.services = services
             }*/
-
+console.log(invoiceData)
+//return
             const res = validateInvoiceData(invoiceData)
             if (res.ok) {
                 let saveInvoice = await axios.post('/api/invoiceSave', res.ok)
@@ -1005,10 +1050,15 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         
         if(invoice.number){
             $("#invoiceTitle").text("Boleta/Factura N° " + invoice.number)
+            $("#invoiceSave").attr('disabled',true)
+            $("#invoiceSave").attr('title','Debe anular la boleta para poder guardar')
         }else{
             $("#invoiceTitle").text("Boleta/Factura por generar")
+            $("#invoiceSave").removeAttr('disabled')
+            $("#invoiceSave").removeAttr('title')
         }
         //$("#invoiceNumber").val(invoice.number)
+        $("#invoiceType").val(invoice.type)
         $("#invoiceDate").val(moment(invoice.date).utc().format('DD/MM/YYYY'))
         $("#invoiceDateExpire").val(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'))
         $("#invoiceCharge").val(invoice.charge)
@@ -1092,6 +1142,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 lectures: lectureID,
                 //member: internals.dataRowSelected._id,
                 member: member._id,
+                type: $("#invoiceType").val(),
                 date: $("#invoiceDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 dateExpire: $("#invoiceDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', '').replace('$', ''),
@@ -1102,6 +1153,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 subsidyPercentage: replaceAll($("#invoiceSubsidyPercentage").val(), '.', '').replace(' ', '').replace('$', ''),
                 subsidyValue: replaceAll($("#invoiceSubsidyValue").val(), '.', '').replace(' ', '').replace('$', ''),
                 consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
+                invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 services: services
@@ -1250,12 +1302,34 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.setTextColor(0, 0, 0)
     console.log(lectures)
     console.log(invoice)
-    doc.text('Lectura Actual ' + moment(invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 20)
-    doc.text('Lectura Anterior ' + moment(invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 33)
-    doc.text('Límite Sobreconsumo (m3)', pdfX, pdfY + 46)
-    doc.text('Consumo Calculado', pdfX, pdfY + 59)
+
+    let lastInvoice, flagLastInvoice = 0
+    for (let k = 0; k < lectures.length; k++) {
+        if(flagLastInvoice==1){
+            if (lectures[k].invoice !== undefined) {
+                lastInvoice = lectures[k].invoice
+                k = lectures.length
+            }
+        }else{
+            if (lectures[k]._id == invoice.lectures._id) {
+                flagLastInvoice++
+            }
+        }
+    }
+
+    console.log('lastInvoice',lastInvoice)
+
+    doc.text('Lectura Mes Anterior ' + ((lastInvoice) ? moment(lastInvoice.date).utc().format('DD/MM/YYYY') : ''), pdfX, pdfY + 33)
+    doc.text('Lectura Mes Actual ' + moment(invoice.date).utc().format('DD/MM/YYYY'), pdfX, pdfY + 20)
+    if(invoice.lectureNewStart!==undefined){
+        doc.text('Lectura Medidor Nuevo Inicial ', pdfX, pdfY + 46)
+        doc.text('Lectura Medidor Nuevo Final ', pdfX, pdfY + 59)
+    }
+
+    doc.text('Límite Sobreconsumo (m3)', pdfX, pdfY + 72)
+    doc.text('Consumo Calculado', pdfX, pdfY + 85)
     doc.setFontType('bold')
-    doc.text('Consumo Facturado', pdfX, pdfY + 85)
+    doc.text('Consumo Facturado', pdfX, pdfY + 111)
 
 
     doc.setFontSize(10)
@@ -1263,10 +1337,16 @@ async function printInvoice(docType,type,memberID,invoiceID) {
 
     doc.text(dot_separators(invoice.lectureActual), pdfX + 250, pdfY + 20, 'right')
     doc.text(dot_separators(invoice.lectureLast), pdfX + 250, pdfY + 33, 'right')
-    doc.text(dot_separators(parameters.consumptionLimit), pdfX + 250, pdfY + 46, 'right')
-    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 59, 'right')
+
+    if(invoice.lectureNewStart!==undefined){
+        doc.text(dot_separators(invoice.lectureNewStart), pdfX + 250, pdfY + 46, 'right')
+        doc.text(dot_separators(invoice.lectureNewEnd), pdfX + 250, pdfY + 59, 'right')
+    }
+
+    doc.text(dot_separators(parameters.consumptionLimit), pdfX + 250, pdfY + 72, 'right')
+    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 85, 'right')
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 85, 'right') //Consultar diferencia facturado vs calculado
+    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 111, 'right') //Consultar diferencia facturado vs calculado
 
 
 
@@ -1310,9 +1390,12 @@ async function printInvoice(docType,type,memberID,invoiceID) {
         }
     }
 
-    doc.text('Saldo Anterior', pdfX, pdfY + index)
     doc.setFontType('bold')
-    doc.text('Monto Total', pdfX, pdfY + index + 26)
+    doc.text('SubTotal', pdfX, pdfY + index)
+    doc.setFontType('normal')
+    doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
+    doc.setFontType('bold')
+    doc.text('Monto Total', pdfX, pdfY + index + 39)
 
 
     doc.setFontSize(10)
@@ -1341,10 +1424,12 @@ async function printInvoice(docType,type,memberID,invoiceID) {
             index += 13
         }
     }
-
-    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index, 'right')
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + index + 26, 'right')
+    doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + index, 'right')
+    doc.setFontType('normal')
+    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
+    doc.setFontType('bold')
+    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + index + 39, 'right')
 
 
     //////TOTALES Y CÓDIGO SII//////
@@ -1456,7 +1541,7 @@ async function printInvoice(docType,type,memberID,invoiceID) {
         pdfY += 102
 
     } else if (maxValue % 4 == 0) {
-
+        pdfY -= 5
         //Línea límite según lectura máxima
         doc.text(maxValue.toString(), pdfX - 2, pdfY, 'right')
         doc.line(pdfX, pdfY, pdfX + 250, pdfY)
@@ -1502,9 +1587,7 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     //for(let i=13; i>0; i--){ Max month test
     doc.setFontSize(8)
 
-
-
-
+    
     for (let i = 0; i < lastInvoices.length; i++) {
 
         if (i == 0) {
@@ -1533,6 +1616,394 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.setTextColor(255, 255, 255)
     doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
 
+    //doc.autoPrint()
+    window.open(doc.output('bloburl'), '_blank')
+    //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
+
+    loadingHandler('stop')
+}
+
+async function printAnnulment(docType,type,memberID,invoiceID) {
+    loadingHandler('start')
+    
+    let memberData = await axios.post('/api/memberSingle', {id: memberID})
+    let member = memberData.data
+
+    let invoiceData = await axios.post('/api/invoiceSingle', { id: invoiceID })
+    let invoice = invoiceData.data
+
+    let lecturesData = await axios.post('/api/lecturesSingleMember', { member: memberID })
+    let lectures = lecturesData.data
+
+    let parametersData = await axios.get('/api/parameters')
+    let parameters = parametersData.data
+
+
+    let docName1 = 'NOTA DE CRÉDITO', docName2 = 'ELECTRÓNICA', memberName = ''
+    if (type == 'personal') {
+        memberName = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
+    } else {
+        memberName = member.enterprise.name
+    }
+
+    let doc = new jsPDF('p', 'pt', 'letter')
+    //let doc = new jsPDF('p', 'pt', [302, 451])
+
+    let pdfX = 150
+    let pdfY = 20
+
+    doc.setFontSize(12)
+    doc.addImage(logoWallImg, 'PNG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight()) //Fondo
+
+    doc.addImage(logoImg, 'PNG', 112, pdfY, 77, 60)
+    pdfY += 60
+    doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX, pdfY + 23, 'center')
+    doc.text(`Y SERVICIOS SANITARIOS LOS CRISTALES`, pdfX, pdfY + 36, 'center')
+    doc.text(`Los Cristales S/N`, pdfX, pdfY + 49, 'center')
+
+
+    pdfY = 35
+    doc.setDrawColor(249, 51, 6)
+    doc.setLineWidth(3)
+    doc.line(pdfX + 209, pdfY - 10, pdfX + 411, pdfY - 10)//Línea Superior
+    doc.line(pdfX + 209, pdfY + 60, pdfX + 411, pdfY + 60)//Línea Inferior
+    doc.line(pdfX + 210, pdfY - 10, pdfX + 210, pdfY + 60)//Línea Izquierda
+    doc.line(pdfX + 410, pdfY - 10, pdfX + 410, pdfY + 60)//Línea Derecha
+
+    doc.setFontSize(13)
+    doc.setTextColor(249, 51, 6)
+    doc.text('R.U.T: 71.569.700-9', pdfX + 310, pdfY + 5, 'center')
+    doc.text(docName1, pdfX + 310, pdfY + 20, 'center')
+    doc.text(docName2, pdfX + 310, pdfY + 35, 'center')
+
+    doc.setFontType('bold')
+    //doc.text('N° ' + invoice.annulment.number, pdfX + 310, pdfY + 50, 'center')
+    doc.text('N° 11', pdfX + 310, pdfY + 50, 'center') //NÚMERO TEST!!!
+
+    doc.setFontSize(11)
+    doc.text('S.I.I. - CURICO', pdfX + 310, pdfY + 75, 'center')
+
+    doc.setDrawColor(0, 0, 0)
+    doc.setTextColor(0, 0, 0)
+
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+    doc.text('Fecha Emisión ', pdfX + 220, pdfY + 100)
+    doc.text('Mes de Pago ', pdfX + 220, pdfY + 113)
+
+    doc.setFontType('bold')
+    doc.text(moment(invoice.date).utc().format('DD / MM / YYYY'), pdfX + 300, pdfY + 100)
+    doc.text(getMonthString(invoice.lectures.month) + ' / ' + invoice.lectures.year, pdfX + 300, pdfY + 113)
+
+
+    pdfX = 30
+    pdfY += 120
+    doc.setFontSize(12)
+    doc.text('SOCIO N° ' + member.number, pdfX, pdfY)
+    doc.text('R.U.T ' + member.rut, pdfX, pdfY + 13)
+    doc.setFontSize(13)
+    doc.text(memberName.toUpperCase(), pdfX, pdfY + 28)
+
+    pdfY += 60
+
+
+    //////////////TABLA CONSUMOS//////////////
+    doc.setFillColor(26, 117, 187)
+    doc.rect(pdfX - 3, pdfY - 10, doc.internal.pageSize.getWidth() - 57, 14, 'F')
+
+    doc.setFontSize(9)
+    doc.setFontType('bold')
+    doc.setTextColor(255, 255, 255)
+    doc.text('DETALLE', pdfX, pdfY)
+
+
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+
+
+    doc.text('Servicio de Agua', pdfX, pdfY + 25)
+
+    pdfX += 300
+    doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + 25, 'right')
+    
+
+    //////TOTALES Y CÓDIGO SII//////
+    pdfY += 50
+    doc.setFontSize(12)
+    doc.setFontType('bold')
+
+    doc.setFillColor(23, 162, 184)
+    doc.rect(pdfX - 3, pdfY + 137, 260, 18, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.text('TOTAL', pdfX, pdfY + 150)
+    doc.text('$ ' + dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 150, 'right')
+
+
+    doc.setFontSize(8)
+    doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+    let net = parseInt(invoice.invoiceTotal / 1.19)
+    let iva = invoice.invoiceTotal - net
+    //doc.text('Datos Tributarios: ', pdfX + 100, pdfY + 180)
+    //doc.text('Neto ', pdfX + 190, pdfY + 180)
+    //doc.text('IVA ', pdfX + 190, pdfY + 190)
+    //doc.text(dot_separators(net), pdfX + 250, pdfY + 180, 'right')
+    //doc.text(dot_separators(iva), pdfX + 250, pdfY + 190, 'right')
+
+    if(docType=='preview'){
+        doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 200, 260, 106)
+    }else if(docType=='pdf'){
+        doc.setFillColor(255, 255, 255)
+        doc.rect(pdfX, pdfY + 200, 260, 106, 'F')
+        if(invoice.seal){
+            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
+
+            doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
+            doc.text('Res. 80 del 22-08-2014 Verifique Documento: www.sii.cl', pdfX + 130, pdfY + 330, 'center')
+        }
+    }
+
+
+    ///////GRÁFICO CONSUMOS///////
+
+    pdfX = 30
+    pdfY += 150
+    doc.setFontSize(9)
+    doc.setFontType('bold')
+    doc.setTextColor(0, 0, 0)
+
+
+    doc.setDrawColor(0, 0, 0)
+    doc.setLineWidth(1)
+    doc.line(pdfX, pdfY - 10, pdfX + 201, pdfY - 10)//Línea Superior
+    doc.line(pdfX, pdfY + 60, pdfX + 201, pdfY + 60)//Línea Inferior
+    doc.line(pdfX, pdfY - 10, pdfX, pdfY + 60)//Línea Izquierda
+    doc.line(pdfX + 201, pdfY - 10, pdfX + 201, pdfY + 60)//Línea Derecha
+
+    let docName3 = 'Factura'
+    if(invoice.type==41){
+        docName3 = 'Boleta'
+    }
+    doc.text(`Observaciones:`, pdfX + 5, pdfY)
+    doc.setFontType('normal')
+    doc.text(`Anulación de ${docName3} N° ${invoice.number}`, pdfX + 5, pdfY + 20)
+
+    pdfX = 30
+    doc.setFillColor(26, 117, 187)
+    doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
+
+    doc.setFontSize(10)
+    doc.setFontType('bold')
+    doc.setTextColor(255, 255, 255)
+    doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
+
+    //doc.autoPrint()
+    window.open(doc.output('bloburl'), '_blank')
+    //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
+
+    loadingHandler('stop')
+}
+
+async function printVoucher(memberID,paymentID) {
+    loadingHandler('start')
+    
+    let memberData = await axios.post('/api/memberSingle', {id: memberID})
+    let member = memberData.data
+
+    let paymentData = await axios.post('/api/paymentSingle', { id: paymentID })
+    let payment = paymentData.data
+    console.log(payment)
+
+    /*for(let i=0; i<invoicesPayment.invoices.length; i++){
+        $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
+            <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
+            <td style="text-align: center">${invoicesPayment.invoices[i].invoices.number}</td>
+            <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
+            <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
+            <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal)}</td>
+            <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
+                <input value="${invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
+            </td>
+            <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}</td>
+        </tr>`)
+    }*/
+
+    let parametersData = await axios.get('/api/parameters')
+    let parameters = parametersData.data
+
+    if (member.type == 'personal') {
+        memberName = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
+    } else {
+        memberName = member.enterprise.name
+    }
+
+    let doc = new jsPDF('p', 'pt', 'letter')
+    //let doc = new jsPDF('p', 'pt', [302, 451])
+
+    let pdfX = 150
+    let pdfY = 20
+    doc.addImage(logoWallImg, 'PNG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight()) //Fondo
+
+    pdfX = 30
+    doc.setFontSize(16)
+    doc.setFontType('bold')
+    doc.text(`COMPROBANTE DE PAGO`, pdfX, pdfY + 23)
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+    doc.setTextColor(143, 143, 143)
+    doc.text(`Código Interno N° ${payment._id}`, pdfX, pdfY + 38)
+
+    pdfX = 280
+    doc.addImage(logoImg, 'PNG', pdfX, pdfY, 77, 60)
+    doc.setTextColor(0, 0, 0)
+    doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX + 80, pdfY + 23)
+    doc.text(`Y SERVICIOS SANITARIOS LOS CRISTALES`, pdfX + 80, pdfY + 36)
+    doc.text(`Los Cristales S/N`, pdfX + 80, pdfY + 49)
+
+    pdfX = 30
+    pdfY += 80
+
+    doc.setDrawColor(0, 0, 0)
+    doc.setTextColor(0, 0, 0)
+
+    doc.line(pdfX, pdfY, doc.internal.pageSize.getWidth() - 30, pdfY )//Línea Superior
+
+    pdfY += 35
+    doc.setFontSize(12)
+    doc.setFontType('bold')
+    doc.text('Socio N° ' + member.number, pdfX, pdfY)
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+    doc.text('R.U.T ' + member.rut, pdfX, pdfY + 15)
+    doc.text(memberName, pdfX, pdfY + 28)
+    let subsidyNumber = member.subsidyNumber.toString()
+    while (subsidyNumber.length<11) {
+        subsidyNumber = '0' + subsidyNumber
+    }
+    doc.text('MIDEPLAN ' + subsidyNumber, pdfX, pdfY + 41)
+
+    doc.setFontSize(12)
+    doc.setFontType('bold')
+    doc.text('Pago',  + 300, pdfY)
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+    doc.text('Medio de Pago: ' + payment.paymentMethod,  + 300, pdfY + 15)
+    doc.text('N° Transacción: ' + payment.transaction,  + 300, pdfY + 28)
+    doc.text('Fecha Pago: ' + moment(payment.date).utc().format('DD / MM / YYYY'),  + 300, pdfY + 41)
+
+    pdfY += 60
+
+    doc.setFillColor(26, 117, 187)
+    doc.rect(pdfX - 3, pdfY, doc.internal.pageSize.getWidth() - 57, 14, 'F')
+    doc.setFontSize(9)
+    doc.setFontType('bold')
+    doc.setTextColor(255, 255, 255)
+    doc.text('DETALLE', pdfX, pdfY + 10)
+    doc.text('SUBTOTAL', pdfX + 300, pdfY + 10)
+    doc.text('VALOR PAGADO', doc.internal.pageSize.getWidth() - 40, pdfY + 10, 'right')
+
+    pdfY += 18
+    doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+    for(let i=0; i<payment.invoices.length; i++){
+        pdfY += 13
+        if(payment.invoices[i].invoices.type==41){
+            doc.text(`Boleta N° ${payment.invoices[i].invoices.number} - Mes ...`, pdfX, pdfY)
+        }else{
+            doc.text(`Factura N° ${payment.invoices[i].invoices.number} - Mes ...`, pdfX, pdfY)
+        }
+        doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal), pdfX + 300, pdfY)
+        doc.text('$ ' + dot_separators(payment.invoices[i].amount), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
+
+    }
+
+    pdfY = 300
+    
+    doc.setFillColor(0, 0, 0)
+    doc.rect(pdfX + 345, pdfY, 200, 15, 'F')
+
+    doc.setFontType('bold')
+    doc.setFontSize(10)
+    doc.setTextColor(255, 255, 255)
+    doc.text(`Total Pagado`, pdfX + 350, pdfY + 11)
+    doc.text('$ ' + dot_separators(payment.amount), doc.internal.pageSize.getWidth() - 40, pdfY + 11, 'right')
+
+
+/*
+    //////////////TABLA CONSUMOS//////////////
+    doc.setFillColor(26, 117, 187)
+    doc.rect(pdfX - 3, pdfY - 10, doc.internal.pageSize.getWidth() - 57, 14, 'F')
+
+    doc.setFontSize(9)
+    doc.setFontType('bold')
+    doc.setTextColor(255, 255, 255)
+    doc.text('DETALLE', pdfX, pdfY)
+
+
+    doc.setFontSize(10)
+    doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+
+
+    doc.text('Servicio de Agua', pdfX, pdfY + 25)
+
+    pdfX += 300
+    doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + 25, 'right')
+    
+
+    //////TOTALES Y CÓDIGO SII//////
+    pdfY += 50
+    doc.setFontSize(12)
+    doc.setFontType('bold')
+
+    doc.setFillColor(23, 162, 184)
+    doc.rect(pdfX - 3, pdfY + 137, 260, 18, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.text('TOTAL', pdfX, pdfY + 150)
+    doc.text('$ ' + dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 150, 'right')
+
+
+    doc.setFontSize(8)
+    doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+    let net = parseInt(invoice.invoiceTotal / 1.19)
+    let iva = invoice.invoiceTotal - net
+
+
+    ///////GRÁFICO CONSUMOS///////
+
+    pdfX = 30
+    pdfY += 150
+    doc.setFontSize(9)
+    doc.setFontType('bold')
+    doc.setTextColor(0, 0, 0)
+
+
+    doc.setDrawColor(0, 0, 0)
+    doc.setLineWidth(1)
+    doc.line(pdfX, pdfY - 10, pdfX + 201, pdfY - 10)//Línea Superior
+    doc.line(pdfX, pdfY + 60, pdfX + 201, pdfY + 60)//Línea Inferior
+    doc.line(pdfX, pdfY - 10, pdfX, pdfY + 60)//Línea Izquierda
+    doc.line(pdfX + 201, pdfY - 10, pdfX + 201, pdfY + 60)//Línea Derecha
+
+    let docName3 = 'Factura'
+    if(invoice.type==41){
+        docName3 = 'Boleta'
+    }
+    doc.text(`Observaciones:`, pdfX + 5, pdfY)
+    doc.setFontType('normal')
+    doc.text(`Anulación de ${docName3} N° ${invoice.number}`, pdfX + 5, pdfY + 20)
+
+    pdfX = 30
+    doc.setFillColor(26, 117, 187)
+    doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
+
+    doc.setFontSize(10)
+    doc.setFontType('bold')
+    doc.setTextColor(255, 255, 255)
+    doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
+*/
     //doc.autoPrint()
     window.open(doc.output('bloburl'), '_blank')
     //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
@@ -1603,22 +2074,24 @@ async function sendData(type,memberID,invoiceID) {
         let parametersData = await axios.get('/api/parameters')
         let parameters = parametersData.data
 
-        let dteType = 34 //Factura exenta electrónica
         let name = '', category = ''
         let document = ''
 
-        if(type=='personal'){
+        if(invoice.type==41){
 
-            dteType = 41 //Boleta exenta electrónica
-            name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+            if(type=='personal'){
+                name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+            }else{
+                name = member.enterprise.fullName
+            }
 
             let Emisor = { //EMISOR DE PRUEBA
-                RUTEmisor: "76795561-8",
-                RznSocEmisor: "HAULMER SPA",
-                GiroEmisor: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
-                DirOrigen: "ARTURO PRAT 527   CURICO",
-                CmnaOrigen: "Curicó",
-                CdgSIISucur: "81303347"
+                RUTEmisor: parameters.emisor.RUTEmisor,
+                RznSocEmisor: parameters.emisor.RznSocEmisor,
+                GiroEmisor: parameters.emisor.GiroEmisor,
+                DirOrigen: parameters.emisor.DirOrigen,
+                CmnaOrigen: parameters.emisor.CmnaOrigen,
+                CdgSIISucur: parameters.emisor.CdgSIISucur
             }
 
 
@@ -1627,7 +2100,7 @@ async function sendData(type,memberID,invoiceID) {
                 dte: {
                     Encabezado: {
                         IdDoc:{
-                            TipoDTE: dteType,
+                            TipoDTE: invoice.type,
                             Folio: 0,
                             FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
                             IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
@@ -1641,9 +2114,9 @@ async function sendData(type,memberID,invoiceID) {
                             CiudadRecep: parameters.committee.city
                         },
                         Totales:{
-                            MntExe: invoice.invoiceTotal,
-                            MntTotal: invoice.invoiceTotal,
-                            VlrPagar: invoice.invoiceTotal
+                            MntExe: invoice.invoiceSubTotal,
+                            MntTotal: invoice.invoiceSubTotal,
+                            VlrPagar: invoice.invoiceSubTotal
                         }
                     },
                     Detalle:[
@@ -1651,8 +2124,8 @@ async function sendData(type,memberID,invoiceID) {
                             NroLinDet: 1,
                             NmbItem: "Servicio de Agua",
                             QtyItem: 1,
-                            PrcItem: invoice.invoiceTotal,
-                            MontoItem: invoice.invoiceTotal,
+                            PrcItem: invoice.invoiceSubTotal,
+                            MontoItem: invoice.invoiceSubTotal,
                             IndExe: 1 //1=exento o afecto / 2=no facturable
                         }
                     ]
@@ -1686,14 +2159,14 @@ async function sendData(type,memberID,invoiceID) {
 
 
             let Emisor = { //EMISOR DE PRUEBA
-                RUTEmisor: "76795561-8",
-                RznSoc: "HAULMER SPA",
-                GiroEmis: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
-                Acteco: "479100",
-                DirOrigen: "ARTURO PRAT 527   CURICO",
-                CmnaOrigen: "Curicó",
-                Telefono: "0 0",
-                CdgSIISucur: "81303347"
+                RUTEmisor: parameters.emisor.RUTEmisor,
+                RznSoc: parameters.emisor.RznSoc,
+                GiroEmis: parameters.emisor.GiroEmis,
+                Acteco: parameters.emisor.Acteco,
+                DirOrigen: parameters.emisor.DirOrigen,
+                CmnaOrigen: parameters.emisor.CmnaOrigen,
+                Telefono: parameters.emisor.Telefono,
+                CdgSIISucur: parameters.emisor.CdgSIISucur
             }
 
             document = {
@@ -1701,7 +2174,7 @@ async function sendData(type,memberID,invoiceID) {
                 dte: {
                     Encabezado: {
                         IdDoc:{
-                            TipoDTE: dteType,
+                            TipoDTE: invoice.type,
                             Folio: 0,
                             FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
                             TpoTranCompra:"1",
@@ -1721,10 +2194,10 @@ async function sendData(type,memberID,invoiceID) {
                             //MntNeto: net,
                             //TasaIVA: "19",
                             //IVA: iva,
-                            MntExe: invoice.invoiceTotal,
-                            MntTotal: invoice.invoiceTotal,
-                            MontoPeriodo: invoice.invoiceTotal, //Consultar si se separa monto adeudado anterior
-                            VlrPagar: invoice.invoiceTotal
+                            MntExe: invoice.invoiceSubTotal,
+                            MntTotal: invoice.invoiceSubTotal,
+                            MontoPeriodo: invoice.invoiceSubTotal, //Consultar si se separa monto adeudado anterior
+                            VlrPagar: invoice.invoiceSubTotal
                         }
                     },
                     Detalle:[
@@ -1732,8 +2205,8 @@ async function sendData(type,memberID,invoiceID) {
                             NroLinDet: 1,
                             NmbItem: "Servicio de Agua",
                             QtyItem: 1,
-                            PrcItem: invoice.invoiceTotal,
-                            MontoItem: invoice.invoiceTotal,
+                            PrcItem: invoice.invoiceSubTotal,
+                            MontoItem: invoice.invoiceSubTotal,
                             IndExe: 1 //1=exento o afecto / 2=no facturable
                         }
                     ]
@@ -1764,7 +2237,7 @@ async function sendData(type,memberID,invoiceID) {
             
             let dteData = {
                 id: invoiceID,
-                type: dteType,
+                type: invoice.type,
                 number: response.FOLIO,
                 seal: response.TIMBRE,
                 token: response.TOKEN,
@@ -1778,7 +2251,7 @@ async function sendData(type,memberID,invoiceID) {
             $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
             $('#modal').modal('show')
 
-            printInvoice('pdf',member.type,member._id,lectures[i].invoice._id)
+            printInvoice('pdf',member.type,member._id,invoiceID)
 
             loadLectures(member)
             
@@ -1817,6 +2290,7 @@ async function annulmentInvoice(type,memberID,invoiceID) {
         let parametersData = await axios.get('/api/parameters')
         let parameters = parametersData.data
 
+        let dteType = 61
         let name = '', category = ''
         let document = ''
 
@@ -1851,12 +2325,12 @@ async function annulmentInvoice(type,memberID,invoiceID) {
 
 
         let Emisor = { //EMISOR DE PRUEBA
-            RUTEmisor: "76795561-8",
-            RznSocEmisor: "HAULMER SPA",
-            GiroEmisor: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
-            DirOrigen: "ARTURO PRAT 527   CURICO",
-            CmnaOrigen: "Curicó",
-            CdgSIISucur: "81303347"
+            RUTEmisor: parameters.emisor.RUTEmisor,
+            RznSocEmisor: parameters.emisor.RznSocEmisor,
+            GiroEmisor: parameters.emisor.GiroEmisor,
+            DirOrigen: parameters.emisor.DirOrigen,
+            CmnaOrigen: parameters.emisor.CmnaOrigen,
+            CdgSIISucur: parameters.emisor.CdgSIISucur
             /*Acteco: "479100",
             DirOrigen: "ARTURO PRAT 527   CURICO",
             CmnaOrigen: "Curicó",
@@ -1869,7 +2343,7 @@ async function annulmentInvoice(type,memberID,invoiceID) {
             dte: {
                 Encabezado: {
                     IdDoc:{
-                        TipoDTE: 61,
+                        TipoDTE: dteType,
                         Folio: 0,
                         FchEmis: moment.utc().format('YYYY-MM-DD'), //Fecha
                         IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
@@ -1877,9 +2351,9 @@ async function annulmentInvoice(type,memberID,invoiceID) {
                     Emisor: Emisor,
                     Receptor: Receptor,
                     Totales:{
-                        MntExe: invoice.invoiceTotal,
-                        MntTotal: invoice.invoiceTotal,
-                        VlrPagar: invoice.invoiceTotal
+                        MntExe: invoice.invoiceSubTotal,
+                        MntTotal: invoice.invoiceSubTotal,
+                        VlrPagar: invoice.invoiceSubTotal
                     }
                 },
                 Detalle:[
@@ -1887,8 +2361,8 @@ async function annulmentInvoice(type,memberID,invoiceID) {
                         NroLinDet: 1,
                         NmbItem: "Servicio de Agua",
                         QtyItem: 1,
-                        PrcItem: invoice.invoiceTotal,
-                        MontoItem: invoice.invoiceTotal,
+                        PrcItem: invoice.invoiceSubTotal,
+                        MontoItem: invoice.invoiceSubTotal,
                         IndExe: 1 //1=exento o afecto / 2=no facturable
                     }
                 ],
@@ -2018,6 +2492,9 @@ async function loadPayments(member) {
                     ${dot_separators(payments[i].amount)}
                 </td>
                 <td style="text-align: center;">
+                    <button class="btn btn-sm btn-info btnLecture" onclick="printVoucher('${member._id}','${payments[i]._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
+                </td>
+                <td style="text-align: center;">
                     <button class="btn btn-sm btn-warning btnLecture" onclick="createPayment('${member._id}','${payments[i]._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
                 </td>
             </tr>
@@ -2078,6 +2555,7 @@ function createModalPayment(member) {
                             <th style="text-align: center; background-color: #3B6FC9;">Medio Pago</th>
                             <th style="text-align: center; background-color: #3B6FC9;">N° Transacción</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Monto</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Comprobante</th>
                             <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Editar</th>
                         </tr>
                     </thead>
@@ -2140,7 +2618,7 @@ function createModalPayment(member) {
                                             </div>
                                             <div class="col-md-1" style="text-align: center"></div>
                                             <div class="col-md-6">
-                                                <select id="paymentType" class="form-select form-select-sm">
+                                                <select id="paymentType" class="form-control form-control-sm form-select form-select-sm">
                                                     <option value="SELECCIONE">SELECCIONE</option>
                                                     <option value="EFECTIVO">EFECTIVO</option>
                                                     <option value="TRANSFERENCIA">TRANSFERENCIA</option>
@@ -2269,11 +2747,11 @@ async function createPayment(memberID,paymentID) {
                 <td style="text-align: center">${invoicesPayment.invoices[i].invoices.number}</td>
                 <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
                 <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
-                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceTotal)}</td>
-                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
-                    <input value="${invoicesPayment.invoices[i].invoices.invoiceTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
+                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal)}</td>
+                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
+                    <input value="${invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
                 </td>
-                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}</td>
+                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}</td>
             </tr>`)
         }
 
@@ -2290,11 +2768,11 @@ async function createPayment(memberID,paymentID) {
                     <td style="text-align: center">${invoicesDebt[i].number}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal)}</td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid)}
-                        <input value="${invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid}" style="display: none;"/>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}
+                        <input value="${invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid}" style="display: none;"/>
                     </td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}</td>
                 </tr>`)
             }
         }
@@ -2313,11 +2791,11 @@ async function createPayment(memberID,paymentID) {
                     <td style="text-align: center">${invoicesDebt[i].number}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal)}</td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid)}
-                        <input value="${invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid}" style="display: none;"/>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}
+                        <input value="${invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid}" style="display: none;"/>
                     </td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - invoicesDebt[i].invoicePaid)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}</td>
                 </tr>`)
             }
         }else{

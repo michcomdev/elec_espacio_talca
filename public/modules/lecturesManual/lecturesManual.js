@@ -300,8 +300,6 @@ $('#saveLectures').on('click', async function () {
             lectures: [],
             members: []
         }
-
-        console.log(members)
         
         for(let i=0; i < members.length; i++){
             //Gris por defecto: rgba(0, 0, 0, 0.1)
@@ -338,18 +336,20 @@ $('#saveLectures').on('click', async function () {
                     lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
                 })
                 array.members.push(members[i]._id)
-            }else if(members[i].lectures.logs[members[i].lectures.logs.length-1].lectureNewStart !== undefined && !lectureInputNew){//Caso en que borren la lectura del medidor nuevo
-                array.lectures.push({
-                    member: members[i]._id,
-                    lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
-                })
-                array.members.push(members[i]._id)
+            }else if(members[i].lectures){
+
+                if(members[i].lectures.logs[members[i].lectures.logs.length-1].lectureNewStart !== undefined && !lectureInputNew){//Caso en que borren la lectura del medidor nuevo
+                    array.lectures.push({
+                        member: members[i]._id,
+                        lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
+                    })
+                    array.members.push(members[i]._id)
+                }
             }
 
             if(i+1==members.length){
-                console.log(array)
+                //console.log(array)
 
-                return
                 if(array.lectures.length>0){
                     //ALMACENADO...
                     let saveLecture = await axios.post('/api/lectureSaveManual', array)

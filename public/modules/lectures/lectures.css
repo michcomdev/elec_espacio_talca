@@ -42,6 +42,18 @@
     font-size: 12px;
 }
 
+#tableMembers {
+    font-size: 12px;
+}
+
+#tableAnnulments {
+    font-size: 13px;
+}
+
+#tableAnnulments > thead > tr > th, #tableAnnulments > tbody > tr > td {
+    text-align: center;
+}
+
 .form-control {
     font-size: 12px;
 }

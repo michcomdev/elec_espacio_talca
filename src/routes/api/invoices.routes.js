@@ -125,9 +125,11 @@ export default [
                         consumptionLimit: payload.consumptionLimit,
                         consumptionLimitValue: payload.consumptionLimitValue,
                         consumptionLimitTotal: payload.consumptionLimitTotal,
+                        invoiceSubTotal: payload.invoiceSubTotal,
                         invoiceDebt: payload.invoiceDebt,
                         invoicePaid: 0,
-                        invoiceTotal: payload.invoiceTotal
+                        invoiceTotal: payload.invoiceTotal,
+                        type: payload.type
                     }
 
                     if(payload.number){
@@ -138,7 +140,7 @@ export default [
                         query.services = payload.services
                     }
 
-                    if(payload.lectureNewStart){
+                    if(payload.lectureNewStart !== undefined){
                         query.lectureNewStart = payload.lectureNewStart
                         query.lectureNewEnd = payload.lectureNewEnd
                     }
@@ -162,6 +164,7 @@ export default [
                     lectures: Joi.string().allow(''),
                     member: Joi.string().allow(''),
                     memberType: Joi.string().allow('').optional(), //Para efectos de generación múltiple
+                    type: Joi.number(),
                     date: Joi.string().allow(''),
                     dateExpire: Joi.string().allow(''),
                     charge: Joi.number().allow(0),
@@ -177,6 +180,7 @@ export default [
                     consumptionLimit: Joi.number().allow(0),
                     consumptionLimitValue: Joi.number().allow(0),
                     consumptionLimitTotal: Joi.number().allow(0),
+                    invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
@@ -205,6 +209,7 @@ export default [
                         invoices.number = payload.number
                     }
                     invoices.members = payload.member
+                    invoices.type = payload.type
                     invoices.date = payload.date
                     invoices.dateExpire = payload.dateExpire
                     invoices.charge = payload.charge
@@ -218,6 +223,7 @@ export default [
                     invoices.consumptionLimit = payload.consumptionLimit
                     invoices.consumptionLimitValue = payload.consumptionLimitValue
                     invoices.consumptionLimitTotal = payload.consumptionLimitTotal
+                    invoices.invoiceSubTotal = payload.invoiceSubTotal
                     invoices.invoiceDebt = payload.invoiceDebt
                     //invoices.invoicePaid = payload.invoicePaid
                     invoices.invoiceTotal = payload.invoiceTotal
@@ -247,6 +253,7 @@ export default [
                     lectures: Joi.string().allow(''),
                     member: Joi.string().allow(''),
                     memberType: Joi.string().allow('').optional(), //Para efectos de generación múltiple
+                    type: Joi.number().allow(0),
                     date: Joi.string().allow(''),
                     dateExpire: Joi.string().allow(''),
                     charge: Joi.number().allow(0),
@@ -262,6 +269,7 @@ export default [
                     consumptionLimit: Joi.number().allow(0),
                     consumptionLimitValue: Joi.number().allow(0),
                     consumptionLimitTotal: Joi.number().allow(0),
+                    invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
@@ -310,7 +318,10 @@ export default [
                     number: Joi.number(),
                     seal: Joi.string(),
                     token: Joi.string(),
-                    resolution: Joi.string()
+                    resolution: Joi.object().keys({
+                        fecha: Joi.string(),
+                        numero: Joi.number()
+                    })
                 })
             }
         }
@@ -510,6 +521,7 @@ export default [
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
+                        other: Joi.string().optional().allow(''),
                         value: Joi.number().optional().allow(0)
                     })).optional()
                 })
@@ -562,6 +574,7 @@ export default [
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
+                        other: Joi.string().optional().allow(''),
                         value: Joi.number().optional().allow(0)
                     })).optional()
                 })

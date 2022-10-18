@@ -1785,12 +1785,12 @@ async function sendData(type,memberID,invoiceID) {
         name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
 
         let Emisor = { //EMISOR DE PRUEBA
-            RUTEmisor: "76795561-8",
-            RznSocEmisor: "HAULMER SPA",
-            GiroEmisor: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
-            DirOrigen: "ARTURO PRAT 527   CURICO",
-            CmnaOrigen: "Curicó",
-            CdgSIISucur: "81303347"
+            RUTEmisor: parameters.emispr.RUTEmisor,
+            RznSocEmisor: parameters.emispr.RznSocEmisor,
+            GiroEmisor: parameters.emispr.GiroEmisor,
+            DirOrigen: parameters.emispr.DirOrigen,
+            CmnaOrigen: parameters.emispr.CmnaOrigen,
+            CdgSIISucur: parameters.emispr.CdgSIISucur
         }
 
 
@@ -1858,14 +1858,14 @@ async function sendData(type,memberID,invoiceID) {
 
 
         let Emisor = { //EMISOR DE PRUEBA
-            RUTEmisor: "76795561-8",
-            RznSoc: "HAULMER SPA",
-            GiroEmis: "VENTA AL POR MENOR POR CORREO, POR INTERNET Y VIA TELEFONICA",
-            Acteco: "479100",
-            DirOrigen: "ARTURO PRAT 527   CURICO",
-            CmnaOrigen: "Curicó",
-            Telefono: "0 0",
-            CdgSIISucur: "81303347"
+            RUTEmisor: parameters.emisor.RUTEmisor,
+            RznSoc: parameters.emisor.RznSoc,
+            GiroEmis: parameters.emisor.GiroEmis,
+            Acteco: parameters.emisor.Acteco,
+            DirOrigen: parameters.emisor.DirOrigen,
+            CmnaOrigen: parameters.emisor.CmnaOrigen,
+            Telefono: parameters.emisor.Telefono,
+            CdgSIISucur: parameters.emisor.CdgSIISucur
         }
 
         document = {

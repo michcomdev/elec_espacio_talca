@@ -270,6 +270,9 @@ export default [
                         if(lecturesLast[i]._id.toString()===lecture._id.toString()){
                             if(i>0){
                                 lastLecture = lecturesLast[i-1].logs[lecturesLast[i-1].logs.length-1].lecture
+                                if(lecturesLast[i-1].logs[lecturesLast[i-1].logs.length-1].lectureNewEnd !== undefined){
+                                    lastLecture = lecturesLast[i-1].logs[lecturesLast[i-1].logs.length-1].lectureNewEnd
+                                }
                             }
                             i = lecturesLast.length
                         }
