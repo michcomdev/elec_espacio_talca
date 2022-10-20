@@ -217,8 +217,8 @@ async function loadLectures(member) {
         if (lectures[i].invoice) {
             subtotal = dot_separators(lectures[i].invoice.invoiceSubTotal)
             total = dot_separators(lectures[i].invoice.invoiceTotal)
-            //btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printInvoice('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
-            btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printAnnulment('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+            btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printInvoice('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+            //btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printAnnulment('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
             invoiceID = lectures[i].invoice._id
             
             if(lectures[i].invoice.number){
@@ -411,286 +411,259 @@ function createModalBody(member) {
 
 
 <h5>Lecturas realizadas</h5>
-    <div class="col-md-12">
-        <div class="row">
-            <div class="col-md-12 table-responsive">
-                <br/>
-                <br />
-                <br />
-                <table id="tableLectures" class="display nowrap table table-condensed cell-border" cellspacing="0">
-                    <thead id="tableLecturesHead">
-                        <tr class="table-info">
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Mes</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Fecha</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Lectura</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Sub Total</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Crear/Editar</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Ver Boleta/Factura</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Pago</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Estado Pago</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Anular</th>
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Anulados</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableLecturesBody">
-                    </tbody>
-                </table>
-            </div>
-            <div class="col-md-4">
-                
+    <div class="col-md-12 table-responsive">
+        <br/>
+        <br />
+        <br />
+        <table id="tableLectures" class="display nowrap table table-condensed cell-border" cellspacing="0">
+            <thead id="tableLecturesHead">
+                <tr class="table-info">
+                    <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Mes</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Fecha</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Lectura</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Sub Total</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Crear/Editar</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Ver Boleta/Factura</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Pago</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Estado Pago</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Anular</th>
+                    <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Anulados</th>
+                </tr>
+            </thead>
+            <tbody id="tableLecturesBody">
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-2">
+    </div>
+
+    <div class="col-md-8">
+        <br />
+        <br />
+        <br />
+        <br />
+        <div id="divInvoice" class="card border-primary" style="display: none;">
+            <div class="card-header text-white bg-primary" style="text-align: center">
+                <b id="invoiceTitle">Registro de Boleta/Factura</b>
             </div>
 
-            <div class="col-md-2">
-            </div>
-            <div class="col-md-8">
-                <br />
-                <br />
-                <br />
-                <br />
-                <div id="divInvoice" class="card border-primary" style="display: none;">
-                    <div class="card-header text-white bg-primary" style="text-align: center">
-                        <b id="invoiceTitle">Registro de Boleta/Factura</b>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2">
+                        Tipo Documento
                     </div>
+                    <div class="col-md-3">
+                        <select id="invoiceType" class="form-control form-select form-control-sm">
+                            <option value="41">BOLETA</option>
+                            <option value="34">FACTURA</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        Fecha
+                    </div>
+                    <div class="col-md-2">
+                        <input id="invoiceDate" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
+                    </div>
+                    <div class="col-md-2">
+                        Fecha Vencimiento
+                    </div>
+                    <div class="col-md-2">
+                        <input id="invoiceDateExpire" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().add(15, 'days').format('DD/MM/YYYY')}">
+                    </div>
+                </div>
 
+                <div class="card border-primary">
                     <div class="card-body">
                         <div class="row">
+                            <div class="col-md-12" style="text-align: center">
+                                <b>Consumos</b>
+                            </div>
+
                             <div class="col-md-2">
-                                Tipo Documento
+                                <br>
+                                Consumo mts<sup>3</sup> 
+                            </div>
+                            <div class="col-md-3" style="text-align: center">
+                                Lectura Actual - Anterior
+                                <br>
+                                (<input id="invoiceLectureActual" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">
+                                -
+                                <input id="invoiceLectureLast" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">)
+                            </div>
+                            <div id="divLectureNew" class="col-md-4" style="text-align: center; visibility: hidden">
+                                Medidor Nuevo (Actual - Anterior)
+                                <br>
+                                + (<input id="invoiceLectureNewEnd" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">
+                                -
+                                <input id="invoiceLectureNewStart" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">)
+                                =
                             </div>
                             <div class="col-md-3">
-                                <select id="invoiceType" class="form-control form-select form-control-sm">
-                                    <option value="41">BOLETA</option>
-                                    <option value="34">FACTURA</option>
-                                </select>
+                                <br>
+                                <input id="invoiceLectureResult" type="text" class="form-control form-control-sm border-input numericValues consumption">
                             </div>
-                            <div class="col-md-1">
-                                Fecha
+
+                            <div class="col-md-8">
+                                Valor mt<sup>3</sup>
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(x)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceMeterValue" type="text" class="form-control form-control-sm border-input numericValues money">
+                            </div>
+
+                            <div class="col-md-8">
+                                Consumo $
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(=)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceConsumption1" type="text" class="form-control form-control-sm border-input numericValues money">
+                            </div>
+
+                            <div class="col-md-5">
+                                Subsidio
+                            </div>
+                            <div class="col-md-3">
+                                <input id="invoiceSubsidyPercentage" type="text" class="form-control form-control-sm border-input" style="display: inline-block; width: 50%"><span style="display: inline-block">%</span>
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(-)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceSubsidyValue" type="text" class="form-control form-control-sm border-input numericValues money" >
+                            </div>
+
+                            <div class="col-md-4">
+                                Sobreconsumo (<label id="invoiceConsumptionLimitLabel"></label> mts<sup>3</sup>)
                             </div>
                             <div class="col-md-2">
-                                <input id="invoiceDate" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
+                                <input id="invoiceConsumptionLimit" type="text" class="form-control form-control-sm border-input" style="display: none">
+                                <input id="invoiceConsumptionLimitOver" type="text" class="form-control form-control-sm border-input" style="display: inline-block; width: 60%"><span style="display: inline-block">mts<sup>3</sup></span>
                             </div>
                             <div class="col-md-2">
-                                Fecha Vencimiento
+                                <input id="invoiceConsumptionLimitValue" type="text" class="form-control form-control-sm border-input numericValues money">
                             </div>
-                            <div class="col-md-2">
-                                <input id="invoiceDateExpire" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().add(15, 'days').format('DD/MM/YYYY')}">
+                            <div class="col-md-1" style="text-align: center">(+)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceConsumptionLimitTotal" type="text" class="form-control form-control-sm border-input numericValues money" >
                             </div>
+
+
+                            <div class="col-md-8">
+                                Consumo a Cobro
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(=)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceConsumption2" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #b7ebd8">
+                            </div>
+
+
                         </div>
+                    </div>
+                </div>
 
-                        <div class="card border-primary">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-12" style="text-align: center">
-                                        <b>Consumos</b>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <br>
-                                        Consumo mts<sup>3</sup> 
-                                    </div>
-                                    <div class="col-md-3" style="text-align: center">
-                                        Lectura Actual - Anterior
-                                        <br>
-                                        (<input id="invoiceLectureActual" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">
-                                        -
-                                        <input id="invoiceLectureLast" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">)
-                                    </div>
-                                    <div id="divLectureNew" class="col-md-4" style="text-align: center; visibility: hidden">
-                                        Medidor Nuevo (Actual - Anterior)
-                                        <br>
-                                        + (<input id="invoiceLectureNewEnd" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">
-                                        -
-                                        <input id="invoiceLectureNewStart" type="text" class="form-control form-control-sm border-input numericValues consumption" style="display: inline-block; width: 40%; text-align: center;">)
-                                        =
-                                    </div>
-                                    <div class="col-md-3">
-                                        <br>
-                                        <input id="invoiceLectureResult" type="text" class="form-control form-control-sm border-input numericValues consumption">
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        Valor mt<sup>3</sup>
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(x)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceMeterValue" type="text" class="form-control form-control-sm border-input numericValues money">
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        Consumo $
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(=)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceConsumption1" type="text" class="form-control form-control-sm border-input numericValues money">
-                                    </div>
-
-                                    <div class="col-md-5">
-                                        Subsidio
-                                    </div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceSubsidyPercentage" type="text" class="form-control form-control-sm border-input" style="display: inline-block; width: 50%"><span style="display: inline-block">%</span>
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(-)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceSubsidyValue" type="text" class="form-control form-control-sm border-input numericValues money" >
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        Sobreconsumo mts<sup>3</sup>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <input id="invoiceConsumptionLimit" type="text" class="form-control form-control-sm border-input" style="display: inline-block; width: 60%"><span style="display: inline-block">mts<sup>3</sup></span>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <input id="invoiceConsumptionLimitValue" type="text" class="form-control form-control-sm border-input numericValues money">
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceConsumptionLimitTotal" type="text" class="form-control form-control-sm border-input numericValues money" >
-                                    </div>
-
-
-                                    <div class="col-md-8">
-                                        Consumo a Cobro
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(=)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceConsumption2" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #b7ebd8">
-                                    </div>
-
-
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card border-primary">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-12" style="text-align: center">
-                                        <b>Servicios</b>
-                                    </div>
-
-                                    <div class="col-md-12">
-                                        <table class="table" style="font-size: 12px">
-                                            <thead>
-                                                <tr>
-                                                    <th>Servicio</th>
-                                                    <th>Valor</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tableBodyServices">
-                                           
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div class="col-md-8">
-                                        Total Servicios $
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center"></div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceTotalServices" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
-                                    </div>
-                                    
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card border-primary">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-12" style="text-align: center">
-                                        <b>Montos $</b>
-                                    </div>
-                                    
-                                    <div class="col-md-8">
-                                        Cargo Fijo
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceCharge" type="text" class="form-control form-control-sm border-input numericValues money">
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        Consumo
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceConsumption2b" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #B7EBD8">
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        Servicios
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceTotalServicesb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        SubTotal (a generar en boleta SII)
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(=)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceSubTotal" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #B6D8FF">
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        Saldo Anterior
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money">
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        Total
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(=)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceTotal" type="text" class="form-control form-control-sm border-input numericValues money">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="card border-primary">
+                    <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3" style="text-align: center;">
-                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="invoiceCancel"><i ="color:#3498db;" class="fas fa-arrow-left"></i> Atrás</button></td>
+                            <div class="col-md-12" style="text-align: center">
+                                <b>Servicios</b>
                             </div>
-                            <div class="col-md-3" style="text-align: center;">
+
+                            <div class="col-md-12">
+                                <table class="table" style="font-size: 12px">
+                                    <thead>
+                                        <tr>
+                                            <th>Servicio</th>
+                                            <th>Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBodyServices">
+                                    
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="col-md-3" style="text-align: center;">
-                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="invoiceSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
+                            <div class="col-md-8">
+                                Total Servicios $
+                            </div>
+                            <div class="col-md-1" style="text-align: center"></div>
+                            <div class="col-md-3">
+                                <input id="invoiceTotalServices" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12" style="text-align: center">
+                                <b>Montos $</b>
+                            </div>
+                            
+                            <div class="col-md-8">
+                                Cargo Fijo
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(+)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceCharge" type="text" class="form-control form-control-sm border-input numericValues money">
+                            </div>
+
+                            <div class="col-md-8">
+                                Consumo
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(+)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceConsumption2b" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #B7EBD8">
+                            </div>
+
+                            <div class="col-md-8">
+                                Servicios
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(+)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceTotalServicesb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                            </div>
+
+                            <div class="col-md-8">
+                                SubTotal (a generar en boleta SII)
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(=)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceSubTotal" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #B6D8FF">
+                            </div>
+
+                            <div class="col-md-8">
+                                Saldo Anterior
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(+)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money">
+                            </div>
+
+                            <div class="col-md-8">
+                                Total
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(=)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceTotal" type="text" class="form-control form-control-sm border-input numericValues money">
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-3" style="text-align: center;">
+                        <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="invoiceCancel"><i ="color:#3498db;" class="fas fa-arrow-left"></i> Atrás</button></td>
+                    </div>
+                    <div class="col-md-3" style="text-align: center;">
+                    </div>
+                    <div class="col-md-3" style="text-align: center;">
+                        <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="invoiceSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
+                    </div>
+                </div>
             </div>
-            <!-- <div class="col-md-6" style="height:300px; overflow-y:scroll;">
-                <table id="tableLectures" class="display nowrap table table-condensed cell-border" cellspacing="0">
-                    <thead id="tableLecturesHead">
-                        <tr class="table-info">
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Mes</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Fecha</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Lectura</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Estado Pago</th>
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Ver Boleta/Factura</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableLecturesBody">
-                    </tbody>
-                </table>
-            </div>-->
         </div>
     </div>
-
-    <!--<div class="col-md-4">
-        
-    </div>-->
-    
 </div>
     
 `
@@ -796,15 +769,16 @@ function calculateTotal() {
         }
     }
     $("#invoiceSubsidyValue").val(subsidyValue)
+    $("#invoiceConsumptionLimitOver").val(0)
     let consumptionLimit = $("#invoiceConsumptionLimit").val()
     let consumptionLimitValue = $("#invoiceConsumptionLimitValue").val()
     let consumptionLimitTotal = 0 //Valor a pagar por sobreconsumo
     if(lectureValue>consumptionLimit){
         consumptionLimitTotal = (lectureValue - consumptionLimit) * consumptionLimitValue
+        $("#invoiceConsumptionLimitOver").val(lectureValue - consumptionLimit)
     }
     $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
 
-    console.log('consump',consumptionValue,subsidyValue,consumptionLimitTotal)
     let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal
     $("#invoiceConsumption2").val(lastConsumptionValue)
     $("#invoiceConsumption2b").val(lastConsumptionValue)
@@ -911,11 +885,14 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             $("#invoiceLectureNewStart").val(lecture.logs[lecture.logs.length - 1].lectureNewStart)
             $("#invoiceLectureNewEnd").val(lecture.logs[lecture.logs.length - 1].lectureNewEnd)
             $("#divLectureNew").css('visibility','visible')
+        }else{
+            $("#divLectureNew").css('visibility','hidden')
         }
 
         $("#invoiceSubsidyPercentage").val(subsidy)
         $("#invoiceMeterValue").val(parameters.meterValue)
 
+        $("#invoiceConsumptionLimitLabel").text(parameters.consumptionLimit)
         $("#invoiceConsumptionLimit").val(parameters.consumptionLimit)
         $("#invoiceConsumptionLimitValue").val(parameters.consumptionLimitValue)
 
@@ -948,7 +925,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
         let invoicesDebt = invoicesDebtData.data
 
-        console.log('debt', invoicesDebt)
         let debt = 0
         if(invoicesDebt.length>0){
             for(let i=0; i<invoicesDebt.length; i++){
@@ -1047,6 +1023,8 @@ console.log(invoiceData)
 
         let invoiceData = await axios.post('/api/invoiceSingle', { id: invoiceID })
         let invoice = invoiceData.data
+
+        console.log(invoice)
         
         if(invoice.number){
             $("#invoiceTitle").text("Boleta/Factura N° " + invoice.number)
@@ -1068,14 +1046,19 @@ console.log(invoiceData)
             $("#invoiceLectureNewStart").val(invoice.lectureNewStart)
             $("#invoiceLectureNewEnd").val(invoice.lectureNewEnd)
             $("#divLectureNew").css('visibility','visible')
+        }else{
+            $("#divLectureNew").css('visibility','hidden')
         }
 
 
         $("#invoiceSubsidyPercentage").val(invoice.subsidyPercentage)
         $("#invoiceMeterValue").val(invoice.meterValue)
 
+        $("#invoiceConsumptionLimitLabel").val(invoice.consumptionLimit)
         $("#invoiceConsumptionLimit").val(invoice.consumptionLimit)
         $("#invoiceConsumptionLimitValue").val(invoice.consumptionLimitValue)
+
+        $("#invoiceDebt").val(invoice.invoiceDebt)
         //$("#invoiceConsumptionLimitTotal").val(invoice.consumptionLimitTotal)
         
         /*
@@ -1106,8 +1089,8 @@ console.log(invoiceData)
                             <span>${invoice.services[i].services.name}</span>
                         </td>
                         <td><input type="text" class="form-control form-control-sm numericValues money" value="${(invoice.services[i].value!=0) ? invoice.services[i].value : '' }"/></td>
-                        <td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
                     </tr>`)
+                    //<td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
                 }
             }
         }
@@ -1317,19 +1300,22 @@ async function printInvoice(docType,type,memberID,invoiceID) {
         }
     }
 
-    console.log('lastInvoice',lastInvoice)
-
-    doc.text('Lectura Mes Anterior ' + ((lastInvoice) ? moment(lastInvoice.date).utc().format('DD/MM/YYYY') : ''), pdfX, pdfY + 33)
     doc.text('Lectura Mes Actual ' + moment(invoice.date).utc().format('DD/MM/YYYY'), pdfX, pdfY + 20)
+    doc.text('Lectura Mes Anterior ' + ((lastInvoice) ? moment(lastInvoice.date).utc().format('DD/MM/YYYY') : ''), pdfX, pdfY + 33)
+    pdfYLectureNew = 0
     if(invoice.lectureNewStart!==undefined){
         doc.text('Lectura Medidor Nuevo Inicial ', pdfX, pdfY + 46)
         doc.text('Lectura Medidor Nuevo Final ', pdfX, pdfY + 59)
+        pdfYLectureNew = 26
     }
-
-    doc.text('Límite Sobreconsumo (m3)', pdfX, pdfY + 72)
-    doc.text('Consumo Calculado', pdfX, pdfY + 85)
     doc.setFontType('bold')
-    doc.text('Consumo Facturado', pdfX, pdfY + 111)
+    doc.text('Consumo Calculado', pdfX, pdfY + 46 + pdfYLectureNew)
+    doc.setFontType('normal')
+
+    doc.text('Límite Sobreconsumo (m3)', pdfX, pdfY + 98)
+    doc.text('Sobreconsumo (m3)', pdfX, pdfY + 111)
+    doc.setFontType('bold')
+    doc.text('Consumo Facturado', pdfX, pdfY + 124)
 
 
     doc.setFontSize(10)
@@ -1342,11 +1328,18 @@ async function printInvoice(docType,type,memberID,invoiceID) {
         doc.text(dot_separators(invoice.lectureNewStart), pdfX + 250, pdfY + 46, 'right')
         doc.text(dot_separators(invoice.lectureNewEnd), pdfX + 250, pdfY + 59, 'right')
     }
-
-    doc.text(dot_separators(parameters.consumptionLimit), pdfX + 250, pdfY + 72, 'right')
-    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 85, 'right')
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 111, 'right') //Consultar diferencia facturado vs calculado
+    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 46 + pdfYLectureNew, 'right')
+    doc.setFontType('normal')
+    
+    doc.text(dot_separators(parameters.consumptionLimit), pdfX + 250, pdfY + 98, 'right')
+    if(invoice.lectureResult>parameters.consumptionLimit){
+        doc.text(dot_separators(invoice.lectureResult-parameters.consumptionLimit), pdfX + 250, pdfY + 111, 'right')
+    }else{
+        doc.text("0", pdfX + 250, pdfY + 111, 'right')
+    }
+    doc.setFontType('bold')
+    doc.text(dot_separators(invoice.lectureResult), pdfX + 250, pdfY + 124, 'right') //Consultar diferencia facturado vs calculado
 
 
 
@@ -1587,7 +1580,7 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     //for(let i=13; i>0; i--){ Max month test
     doc.setFontSize(8)
 
-    
+
     for (let i = 0; i < lastInvoices.length; i++) {
 
         if (i == 0) {
@@ -2492,10 +2485,10 @@ async function loadPayments(member) {
                     ${dot_separators(payments[i].amount)}
                 </td>
                 <td style="text-align: center;">
-                    <button class="btn btn-sm btn-info btnLecture" onclick="printVoucher('${member._id}','${payments[i]._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
+                    <button class="btn btn-sm btn-warning btnLecture" onclick="createPayment('${member._id}','${payments[i]._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
                 </td>
                 <td style="text-align: center;">
-                    <button class="btn btn-sm btn-warning btnLecture" onclick="createPayment('${member._id}','${payments[i]._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
+                    <button class="btn btn-sm btn-info btnLecture" onclick="printVoucher('${member._id}','${payments[i]._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>
                 </td>
             </tr>
         `)
@@ -2555,8 +2548,8 @@ function createModalPayment(member) {
                             <th style="text-align: center; background-color: #3B6FC9;">Medio Pago</th>
                             <th style="text-align: center; background-color: #3B6FC9;">N° Transacción</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Monto</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Comprobante</th>
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Editar</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Editar</th>
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Comprobante</th>
                         </tr>
                     </thead>
                     <tbody id="tablePaymentsBody">

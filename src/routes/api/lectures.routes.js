@@ -566,5 +566,56 @@ export default [
                 })
             }
         }
+    },
+    {
+        method: 'POST',
+        path: '/api/lecturesMacro',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let array = []
+                    /*for(let i=0; i<members.length ; i++){
+                        array.push(members[i]._id)
+                    }*/
+
+                    let query = {
+                        month: payload.month,
+                        year: payload.year
+                    }
+                    let queryInvoice = {
+                        typeInvoice: { $exists : false },
+                        lectures: { $ne: null }
+                    }
+
+                    let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
+                    let invoices = await Invoices.find(queryInvoice).sort({'date' : 'descending'}).lean().populate(['lectures','services.services'])
+                    for(let i=0;i<lectures.length;i++){
+                        if(invoices){
+                            lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                        }
+                    }
+
+                    return lectures
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    month: Joi.number().allow(0),
+                    year: Joi.number().allow(0)
+                })
+            }
+        }
     }
 ]

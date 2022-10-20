@@ -32,10 +32,17 @@ $(document).ready(async function () {
     })
     getParameters()
 
-    chargeMembersTable()
+    loadMacro()
 })
 
 async function getParameters() {
+
+    let firstYear = 2021
+    for (let i = firstYear; i <= moment().format('YYYY'); i++) {
+        $("#searchYear").append(`<option value="${i}">${i}</option>`)
+    }
+    $("#searchYear").val(moment().format('YYYY'))
+    $("#searchMonth").val(moment().format('MM'))
 
     let parametersData = await axios.get('/api/parameters')
     parameters = parametersData.data
@@ -69,7 +76,7 @@ async function getParameters() {
 
 }
 
-function chargeMembersTable() {
+function loadMacro() {
     try {
         if ($.fn.DataTable.isDataTable('#tableMembers')) {
             internals.members.table.clear().destroy()
@@ -97,22 +104,36 @@ function chargeMembersTable() {
                     url: spanishDataTableLang
                 },
                 responsive: true,
-                columnDefs: [{ targets: [0, 1, 4, 5, 6], className: 'dt-center' }],
+                //columnDefs: [{ targets: [0, 1, 4, 5, 6], className: 'dt-center' }],
                 order: [[0, 'asc']],
                 ordering: true,
                 rowCallback: function (row, data) {
                     //$(row).find('td:eq(1)').html(moment.utc(data.date).format('DD/MM/YYYY'))
-                    $(row).find('td:eq(5)').html(dot_separators(data.lastLecture))
+                    //$(row).find('td:eq(5)').html(dot_separators(data.lastLecture))
                     // $('td', row).css('background-color', 'White');
                 },
                 columns: [
-                    { data: 'number' },
-                    { data: 'typeString' },
-                    { data: 'name' },
-                    { data: 'sector' },
-                    { data: 'subsidyActive' },
-                    { data: 'lastLecture' },
-                    { data: 'paymentStatus' }
+                    { data: 'U' },
+                    { data: 'ORIGEN' },
+                    { data: 'RUT' },
+                    { data: 'DV_RUT' },
+                    { data: 'AP_PATERNO' },
+                    { data: 'AP_MATERNO' },
+                    { data: 'NOMBRES' },
+                    { data: 'DIRECCION' },
+                    { data: 'NUM_DEC' },
+                    { data: 'FEC_DEC' },
+                    { data: 'TRAMO_RSH' },
+                    { data: 'FEC_ENC' },
+                    { data: 'NUMUNICO' },
+                    { data: 'DV_NUMUNICO' },
+                    { data: 'NUMVIVTOT' },
+                    { data: 'CONSUMO' },
+                    { data: 'MONSUBS' },
+                    { data: 'MONCOBEN' },
+                    { data: 'NUMDEUD' },
+                    { data: 'MONDEUD' },
+                    { data: 'OBSERVACION' }
                 ],
                 initComplete: function (settings, json) {
                     getMembers()
@@ -142,30 +163,39 @@ function chargeMembersTable() {
 }
 
 async function getMembers() {
-    let lecturesData = await axios.post('api/membersLectures', {sector: $("#searchSector").val()})
-
+    let lecturesData = await axios.post('api/lecturesMacro', { year: $("#searchYear").val(), month: $("#searchMonth").val() })
+console.log(lecturesData.data)
+console.log(parameters)
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
-            
-            //el.datetime = moment(el.datetime).format('DD/MM/YYYY HH:mm')
-            if (el.type == 'personal') {
-                el.typeString = 'PERSONA'
-                el.name = el.personal.name + ' ' + el.personal.lastname1 + ' ' + el.personal.lastname2
-            } else {
-                el.typeString = 'EMPRESA'
-                el.name = el.enterprise.name
-            }
-            el.sector = el.address.sector.name
-            if(el.subsidies.length>0){
-                //Verificar que subsidio esté activo
-                el.subsidyActive = 'SI'
-            }else{
-                el.subsidyActive = 'NO'
+        
 
+            el.U = '0'+parameters.municipality.code
+            el.ORIGEN = 'CURICO'
+
+            let rut = replaceAll(el.members.rut, '.', '').split('-')
+            while (rut[0].length<11) {
+                rut[0] = '0' + rut[0]
             }
-            
-            el.lastLecture = 0
-            el.paymentStatus = 'AL DÍA'
+            el.RUT = rut[0]
+            el.DV_RUT = rut[1]
+            el.AP_PATERNO = el.members.personal.lastname1
+            el.AP_MATERNO = el.members.personal.lastname2
+            el.NOMBRES = el.members.personal.name
+            el.DIRECCION = ''
+            el.NUM_DEC = ''
+            el.FEC_DEC = ''
+            el.TRAMO_RSH = ''
+            el.FEC_ENC = ''
+            el.NUMUNICO = ''
+            el.DV_NUMUNICO = ''
+            el.NUMVIVTOT = ''
+            el.CONSUMO = ''
+            el.MONSUBS = ''
+            el.MONCOBEN = ''
+            el.NUMDEUD = ''
+            el.MONDEUD = ''
+            el.OBSERVACION = ''
 
             return el
         })
@@ -179,7 +209,7 @@ async function getMembers() {
 }
 
 $('#searchMembers').on('click', async function () {
-    chargeMembersTable()
+    loadMacro()
 })
 
 $('#updateLectures').on('click', async function () {
