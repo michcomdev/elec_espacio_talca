@@ -14,11 +14,11 @@ $(document).ready(async function () {
 async function chargeParameters() {
     let parametersData = await axios.get('api/parameters')
     parameters = parametersData.data
-    console.log(parameters)
     
     $("#expireDay").val(parameters.expireDay)
     $("#charge").val(parameters.charge)
     $("#meterValue").val(parameters.meterValue)
+    $("#meterValueB").val(parameters.meterValueB)
     $("#consumptionLimit").val(parameters.consumptionLimit)
     $("#consumptionLimitValue").val(parameters.consumptionLimitValue)
     $("#committeeEmail").val(parameters.email)
@@ -34,6 +34,13 @@ async function chargeParameters() {
     $("#municipalityCode").val(parameters.municipality.code)
     $("#municipalitySubsidyCode").val(parameters.municipality.subsidyCode)
     $("#subsidyLimit").val(parameters.subsidyLimit)
+    $("#feePercentageDebt").val(parameters.fees.percentageDebt)
+    $("#feePercentageIrregular").val(parameters.fees.percentageIrregular)
+    $("#feeReunion").val(parameters.fees.reunion)
+    $("#feeVote").val(parameters.fees.vote)
+    $("#text1").val(parameters.text1)
+    $("#text2").val(parameters.text2)
+    $("#text3").val(parameters.text3)
 
 }
 
@@ -42,7 +49,7 @@ $('#save').on('click', async function () {
     let numericClass = true, committeeClass = true, subsidyClass = true
 
     $(".numericClass").each(function() {
-        if(Number.isInteger($(this).val())){
+        if(!$.isNumeric($(this).val())){
             numericClass = false
         }
     })
@@ -54,7 +61,7 @@ $('#save').on('click', async function () {
     })
 
     $(".subsidyClass").each(function() {
-        if(Number.isInteger($(this).val())){
+        if(!$.isNumeric($(this).val())){
             subsidyClass = false
         }
     })
@@ -72,10 +79,16 @@ $('#save').on('click', async function () {
         return
     }
 
+    if($("#expireDay").val()>31 || $("#expireDay").val()<1){
+        toastr.warning('El día de vencimiento debe ser válido')
+        return
+    }
+
     let parameters = {
         expireDay: $("#expireDay").val(),
         charge: $("#charge").val(),
         meterValue: $("#meterValue").val(),
+        meterValueB: $("#meterValueB").val(),
         consumptionLimit: $("#consumptionLimit").val(),
         consumptionLimitValue: $("#consumptionLimitValue").val(),
         email: $("#committeeEmail").val(),
@@ -94,14 +107,19 @@ $('#save').on('click', async function () {
             code: $("#municipalityCode").val(),
             subsidyCode: $("#municipalitySubsidyCode").val()
         },
-        subsidyLimit: $("#subsidyLimit").val()
+        fees: {
+            percentageDebt: parseInt($("#feePercentageDebt").val()),
+            percentageIrregular: parseInt($("#feePercentageIrregular").val()),
+            reunion: parseInt($("#feeReunion").val()),
+            vote: parseInt($("#feeVote").val())
+        },
+        subsidyLimit: $("#subsidyLimit").val(),
+        text1: $("#text1").val(),
+        text2: $("#text2").val(),
+        text3: $("#text3").val()
     }
 
-    console.log(parameters)
-
-
     let saveParameters = await axios.post('/api/parametersSave', parameters)
-    console.log('saved',saveParameters)
     if(saveParameters.data){
         if(saveParameters.data._id){
             toastr.success('Datos almacenados correctamente')

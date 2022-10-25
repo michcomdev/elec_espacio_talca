@@ -205,8 +205,6 @@ async function loadLectures(member) {
     let lectureData = await axios.post('/api/lecturesSingleMember', { member: internals.dataRowSelected._id })
     let lectures = lectureData.data
 
-    console.log(lectures)
-
     $('#tableLecturesBody').html('')
 
     for (i = 0; i < lectures.length; i++) {
@@ -707,7 +705,6 @@ async function cleanInvoice() {
 async function showAnnulment(type,memberID,lecture){
     let invoices = await axios.post('/api/invoicesByLecture', { lecture: lecture })
 
-    console.log(invoices)
     $("#tableAnnulmentsBody").html('')
 
     for(let i=0; i<invoices.data.length; i++){
@@ -801,10 +798,9 @@ function calculateTotal() {
 
     //Montos
     let debt = $("#invoiceDebt").val()
-    console.log(parseInt(parameters.charge),parseInt(lastConsumptionValue),parseInt(totalServices))
     let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(totalServices)
     $("#invoiceSubTotal").val(subTotal)
-    $("#invoiceDebt").val(debt) //A asignar
+    $("#invoiceDebt").val(debt)
     $("#invoiceTotal").val(subTotal + parseInt(debt))
 
 
@@ -836,8 +832,6 @@ function calculateTotal() {
         })
     })    
 
-    
-
 }
 
 async function createInvoice(lectureID, invoiceID, memberID) {
@@ -864,7 +858,38 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             $("#invoiceType").val(34)
         }
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
-        $("#invoiceDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
+
+        console.log(parameters)
+        console.log(lecture)
+        let year = lecture.year
+        let month = lecture.month+1
+        let day = parameters.expireDay
+        if(month<10){
+            month = '0' + month
+        }
+        if(day<10){
+            day = '0' + day
+        }
+
+        let expireDate = year+''+month+''+day
+        
+        if(parseInt(day)>28){
+            while(!moment(expireDate).isValid()){
+                day = parseInt(day)-1
+                expireDate = year+''+month+''+day
+            }
+        }
+
+        if(moment()>=moment(expireDate)){
+            $("#invoiceDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
+            $('#modal_title').html(`Almacenado`)
+            $('#modal_body').html(`<h7 class="alert-heading">Las fechas podrían estar erróneas, favor revisar</h7>`)
+            $('#modal').modal('show')
+        }else{
+            $("#invoiceDateExpire").val(moment(expireDate).utc().format('DD/MM/YYYY'))
+        }
+        
+        
         $("#invoiceCharge").val(parameters.charge)
 
         let subsidy = 0
@@ -904,8 +929,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         })
 
         $("#tableBodyServices").html('')
-
-        console.log("services",member.services)
 
         if (member.services) {
             if (member.services.length > 0) {
@@ -995,7 +1018,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             /*if(services.length>0){
                 saleData.services = services
             }*/
-console.log(invoiceData)
 //return
             const res = validateInvoiceData(invoiceData)
             if (res.ok) {
@@ -1024,8 +1046,6 @@ console.log(invoiceData)
         let invoiceData = await axios.post('/api/invoiceSingle', { id: invoiceID })
         let invoice = invoiceData.data
 
-        console.log(invoice)
-        
         if(invoice.number){
             $("#invoiceTitle").text("Boleta/Factura N° " + invoice.number)
             $("#invoiceSave").attr('disabled',true)
@@ -1283,9 +1303,7 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.setFontSize(10)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
-    console.log(lectures)
-    console.log(invoice)
-
+    
     let lastInvoice, flagLastInvoice = 0
     for (let k = 0; k < lectures.length; k++) {
         if(flagLastInvoice==1){
@@ -1806,8 +1824,7 @@ async function printVoucher(memberID,paymentID) {
 
     let paymentData = await axios.post('/api/paymentSingle', { id: paymentID })
     let payment = paymentData.data
-    console.log(payment)
-
+    
     /*for(let i=0; i<invoicesPayment.invoices.length; i++){
         $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
             <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
@@ -2148,8 +2165,6 @@ async function sendData(type,memberID,invoiceID) {
                 Telefono: parameters.committee.phone,
                 CdgSIISucur: parameters.committee.siiCode
             }*/
-            console.log(invoice)
-
 
             let Emisor = { //EMISOR DE PRUEBA
                 RUTEmisor: parameters.emisor.RUTEmisor,
@@ -2371,9 +2386,6 @@ async function annulmentInvoice(type,memberID,invoiceID) {
             }
         }        
 
-        console.log(document)
-
-        console.log(JSON.stringify(document))
         var settings = {
             "url": "https://dev-api.haulmer.com/v2/dte/document",
             "method": "POST",
@@ -2402,7 +2414,6 @@ async function annulmentInvoice(type,memberID,invoiceID) {
                 token: response.TOKEN,
                 resolution: response.RESOLUCION
             }
-            console.log('dteData', dteData)
 
             let setDTEInvoice = await axios.post('/api/invoiceUpdateDTEAnnulment', dteData)
             loadingHandler('stop')
@@ -2448,8 +2459,6 @@ $('#updatePayment').on('click', async function () {
             <i ="color:#E74C3C;" class="fas fa-times"></i> CERRAR
         </button>
     `)
-
-    console.log(member)
 
     $('#memberPaymentNumber').val(member.number)
     $('#memberPaymentType').val(type)
@@ -2732,8 +2741,6 @@ async function createPayment(memberID,paymentID) {
         //$("#paymentToPay").val('')
         $("#paymentAmount").val(invoicesPayment.amount)
 
-        console.log(invoicesPayment.invoices)
-
         for(let i=0; i<invoicesPayment.invoices.length; i++){
             $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
                 <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
@@ -2885,8 +2892,6 @@ async function createPayment(memberID,paymentID) {
             amount: amount,
             invoices: invoices
         }
-
-        console.log(paymentData)
 
         let urlSave = 'paymentSave'
         if(paymentID){

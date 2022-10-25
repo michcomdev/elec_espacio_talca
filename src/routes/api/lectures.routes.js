@@ -147,7 +147,20 @@ export default [
                 try {
                     let payload = request.payload
 
-                    let members = await Member.find({'address.sector': payload.sector}).populate(['address.sector']).sort({orderIndex: 'asc'}).lean()
+                    let order = {orderIndex: 'asc'}
+                    if(payload.order){
+                        if(payload.order=="2"){
+                            order = {number: 'asc'}
+                        }else if(payload.order=="3"){
+                            order = {'personal.lastname1': 'asc'}
+                        }else if(payload.order=="4"){
+                            order = {'personal.name': 'asc'}
+                        }else if(payload.order=="5"){
+                            order = {'address.address': 'asc'}
+                        }
+                    }
+
+                    let members = await Member.find({'address.sector': payload.sector}).populate(['address.sector']).sort(order).lean()
                     let array = []
                     for(let i=0; i<members.length ; i++){
                         array.push(members[i]._id)
@@ -194,7 +207,8 @@ export default [
                 payload: Joi.object().keys({
                     sector: Joi.string().optional().allow(''),
                     month: Joi.number().allow(0),
-                    year: Joi.number().allow(0)
+                    year: Joi.number().allow(0),
+                    order: Joi.string().optional().allow('')
                 })
             }
         }

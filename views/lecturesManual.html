@@ -11,13 +11,12 @@
 
 <div class="row animate__animated animate__fadeIn">
     
-    <div class="col-md-1">
-        <label style="font-size: 14px;">Año</label>
-        <select id="searchYear" class="searchClass form-control form-select-sm form-select"></select>
-    </div>
     <div class="col-md-2">
-        <label style="font-size: 14px;">Mes</label>
-        <select id="searchMonth" class="searchClass form-control form-select-sm form-select">
+        <label style="font-size: 13px; display: inline-block; width: 25%">Año</label>
+        <select id="searchYear" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%"></select>
+        <br/>
+        <label style="font-size: 13px; display: inline-block; width: 25%">Mes</label>
+        <select id="searchMonth" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
             <option value="01">ENERO</option>
             <option value="02">FEBRERO</option>
             <option value="03">MARZO</option>
@@ -33,9 +32,18 @@
         </select>
     </div>
     <div class="col-md-2">
-        <label style="font-size: 14px;">Selecciona el sector</label>
-        <select id="searchSector" class="searchClass form-control form-select-sm form-select">
+        <label style="font-size: 13px; display: inline-block; width: 25%">Sector</label>
+        <select id="searchSector" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
             <option value="0">Seleccione</option>
+        </select>
+        <br/>
+        <label style="font-size: 13px; display: inline-block; width: 25%">Ordenar</label>
+        <select id="searchOrder" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
+            <option value="1">Orden planilla</option>
+            <option value="2">N° Socio</option>
+            <option value="3">Apellido</option>
+            <option value="4">Nombre</option>
+            <option value="5">Dirección</option>
         </select>
     </div>
     <div class="col-md-1">

@@ -886,13 +886,15 @@ function setModal(type){
                                                 
                                                 <div class="col-md-3">
                                                     Municipalidad
-                                                    <input id="subsidyMunicipality" type="text" class="form-control form-control-sm border-input" value="${parametersGeneral.municipality.code}">
-                                                </div>
+                                                    <select id="subsidyMunicipality" class="form-select form-select-sm custom-select">
+                                                        <option value="${parametersGeneral.municipality.code}">CURICÓ</option>
+                                                    </select>
+                                                    </div>
                                                 <div class="col-md-3">
                                                     Tipo
                                                     <select id="subsidyType" class="form-select form-select-sm custom-select">
-                                                        <option value="1">1</option>
-                                                        <option value="2">2</option>
+                                                        <option value="1">1 - Municipalidad</option>
+                                                        <option value="2">2 - Directiva</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-md-3">

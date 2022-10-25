@@ -11,34 +11,79 @@
 
 <div class="row animate__animated animate__fadeIn">
     <div class="row">
-        <div class="col-md-2">
-            Día Vencimiento
-            <select id="expireDay" class="numericClass form-control form-select-sm form-select">
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="15">15</option>
-                <option value="20">20</option>
-                <option value="25">25</option>
-                <option value="30">30</option>
-            </select>
+        <div class="col-md-8">
+            <br/>
+            <div class="card border-primary">
+                <div class="card-body">
+                    <label style="font-weight: bold;">Datos Generales</label>
+                    <div class="row">
+                        <div class="col-md-2">
+                            Día Vencimiento
+                            <input id="expireDay" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                        <div class="col-md-2">
+                            Cargo Fijo
+                            <input id="charge" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                        <div class="col-md-2">
+                            Valor Metro cúbico 1/2
+                            <input id="meterValue" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                        <div class="col-md-2">
+                            Valor Metro cúbico 3/4
+                            <input id="meterValueB" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                        <div class="col-md-2">
+                            Límite consumo (sobreconsumo)
+                            <input id="consumptionLimit" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                        <div class="col-md-2">
+                            Valor extra metro cúbico sobreconsumo
+                            <input id="consumptionLimitValue" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                        <div class="col-md-12">
+                            Corte en trámite
+                            <input id="text1" class="form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-12">
+                            Horario atención
+                            <input id="text2" class="form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-12">
+                            Observación general
+                            <input id="text3" class="form-control form-control-sm"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-2">
-            Cargo Fijo
-            <input id="charge" class="numericClass form-control form-control-sm" type="number" />
+        <div class="col-md-4">
+            <br/>
+            <div class="card border-primary">
+                <div class="card-body">
+                    <label style="font-weight: bold;">Multas</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            Interés mensual moroso (%)
+                            <input id="feePercentageDebt" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                        <div class="col-md-6">
+                            Interés mensual Socio (%)
+                            <input id="feePercentageIrregular" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                        <div class="col-md-6">
+                            Multa por asistencia reunión ($)
+                            <input id="feeReunion" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                        <div class="col-md-6">
+                            Multa votación
+                            <input id="feeVote" class="numericClass form-control form-control-sm" type="number" />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-2">
-            Valor Metro cúbico
-            <input id="meterValue" class="numericClass form-control form-control-sm" type="number" />
-        </div>
-        <div class="col-md-2">
-            Límite consumo (sobre consumo)
-            <input id="consumptionLimit" class="numericClass form-control form-control-sm" type="number" />
-        </div>
-        <div class="col-md-2">
-            Valor metro cúbico sobre consumo
-            <input id="consumptionLimitValue" class="numericClass form-control form-control-sm" type="number" />
-        </div>
-        <div class="col-md-12">
+        <div class="col-md-8">
             <br/>
             <div class="card border-primary">
                 <div class="card-body">
@@ -48,15 +93,15 @@
                             RUT
                             <input id="committeeRut" class="committeClass form-control form-control-sm"/>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-6">
                             Nombre
                             <input id="committeeName" class="committeClass form-control form-control-sm"/>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             Giro
                             <input id="committeeCategory" class="committeClass form-control form-control-sm"/>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             E-Mail
                             <input id="committeeEmail" class="committeClass form-control form-control-sm"/>
                         </div>
@@ -88,21 +133,21 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-12">
+        <div class="col-md-4">
             <br/>
             <div class="card border-primary">
                 <div class="card-body">
                     <label style="font-weight: bold;">Datos Subsidio</label>
                     <div class="row">
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                             Código Municipalidad
                             <input id="municipalityCode" class="subsidyClass form-control form-control-sm" type="number"/>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                             Código Subsidio
                             <input id="municipalitySubsidyCode" class="subsidyClass form-control form-control-sm" type="number"/>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                             Metros cúbicos máximos Subsidio
                             <input id="subsidyLimit" class="subsidyClass form-control form-control-sm" type="number" />
                         </div>

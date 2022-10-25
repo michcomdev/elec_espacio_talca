@@ -7,6 +7,7 @@ const parametersSchema = new Schema({
     consumptionLimit: { type: Number },
     subsidyLimit: { type: Number },
     meterValue: { type: Number },
+    meterValueB: { type: Number },
     charge: { type: Number },
     email: { type: String },
     phone: { type: String },
@@ -36,7 +37,16 @@ const parametersSchema = new Schema({
         CmnaOrigen: { type: String },
         Telefono: { type: String },
         CdgSIISucur: { type: String }
-    }
+    },
+    fees: {
+        percentageDebt: { type: Number },
+        percentageIrregular: { type: Number },
+        reunion: { type: Number },
+        vote: { type: Number }
+    },
+    text1: { type: String },
+    text2: { type: String },
+    text3: { type: String }
 }, {
     versionKey: false
 })

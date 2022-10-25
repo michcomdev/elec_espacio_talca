@@ -92,6 +92,25 @@ function chargeMembersTable() {
         if ($.fn.DataTable.isDataTable('#tableMembers')) {
             internals.members.table.clear().destroy()
         }
+
+        /*let order = [0, 'asc']
+
+        if($("#searchOrder").val()==2){
+            order = [1, 'asc']
+        }else if($("#searchOrder").val()==3){
+            //order = [3, 'asc']
+        }else if($("#searchOrder").val()==4){
+            order = [3, 'asc']
+        }else if($("#searchOrder").val()==5){
+            order = [4, 'asc']
+        }*/
+
+        if($("#searchOrder").val()==1){
+            $("#changeOrder").removeAttr('disabled')
+        }else{
+            $("#changeOrder").attr('disabled','disabled')
+        }
+
         internals.members.table = $('#tableMembers')
             .DataTable({
                 dom: 'Bfrtip',
@@ -125,7 +144,7 @@ function chargeMembersTable() {
                         visible: false
                     }
                 ],
-                order: [[0, 'asc']],
+                //order: [order],
                 ordering: false,
                 rowCallback: function (row, data) {
                     //$(row).find('td:eq(1)').html(moment.utc(data.date).format('DD/MM/YYYY'))
@@ -180,8 +199,10 @@ async function getMembers() {
     let query = {
         sector: sectorSelected, 
         year: yearSelected, 
-        month: monthSelected
+        month: monthSelected,
+        order: $("#searchOrder").val()
     }
+
     let lecturesData = await axios.post('api/lecturesSectorMembersManual', query)
     members = lecturesData.data
     let order = 1, rowIndex = 0
@@ -192,7 +213,11 @@ async function getMembers() {
             //el.datetime = moment(el.datetime).format('DD/MM/YYYY HH:mm')
             if (el.type == 'personal') {
                 el.typeString = 'PERSONA'
-                el.name = el.personal.name + ' ' + el.personal.lastname1 + ' ' + el.personal.lastname2
+                if($("#searchOrder").val()==3){
+                    el.name = el.personal.lastname1 + ' ' + el.personal.lastname2 + ' ' + el.personal.name
+                }else{
+                    el.name = el.personal.name + ' ' + el.personal.lastname1 + ' ' + el.personal.lastname2
+                }
             } else {
                 el.typeString = 'EMPRESA'
                 el.name = el.enterprise.name
@@ -228,23 +253,26 @@ async function getMembers() {
             //el.lastLecture = `<span id="lectureLast">${el.lastLecture}</span>`
             el.value = `<span id="lectureValue-${el._id}">${el.value}</span>`
 
-            
-
             el.order = ''
-            if(order==1){
-                el.up = ''
-            }else{
-                el.up = `<i class="fas fa-2x fa-arrow-alt-circle-up hoverUp" onclick="updateOrder('up',${rowIndex},${order},${lecturesData.data.length})"></i>`
-            }
-            if(order==lecturesData.data.length){
-                el.down = ''
-            }else{
-                el.down = `<i class="fas fa-2x fa-arrow-alt-circle-down hoverDown" onclick="updateOrder('down',${rowIndex},${order},${lecturesData.data.length})"></i>`
-            }
+            el.up = ''
+            el.down = ''
+            if($("#searchOrder").val()==1){
 
-            el.order = order
-            order++
-            rowIndex++
+                if(order==1){
+                    el.up = ''
+                }else{
+                    el.up = `<i class="fas fa-2x fa-arrow-alt-circle-up hoverUp" onclick="updateOrder('up',${rowIndex},${order},${lecturesData.data.length})"></i>`
+                }
+                if(order==lecturesData.data.length){
+                    el.down = ''
+                }else{
+                    el.down = `<i class="fas fa-2x fa-arrow-alt-circle-down hoverDown" onclick="updateOrder('down',${rowIndex},${order},${lecturesData.data.length})"></i>`
+                }
+
+                el.order = order
+                order++
+                rowIndex++
+            }
 
             return el
         })
