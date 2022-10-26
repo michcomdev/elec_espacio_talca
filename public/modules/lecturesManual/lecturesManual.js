@@ -566,7 +566,12 @@ async function printList() {
         let memberName = ''
 
         if (members[i].type == 'personal') {
-            memberName = members[i].personal.name + ' ' + members[i].personal.lastname1 + ' ' + members[i].personal.lastname2
+            if($("#searchOrder").val()==3){
+                memberName = members[i].personal.lastname1 + ' ' + members[i].personal.lastname2 + ' ' + members[i].personal.name
+            }else{
+                memberName = members[i].personal.name + ' ' + members[i].personal.lastname1 + ' ' + members[i].personal.lastname2
+            }
+            
         } else {
             memberName = members[i].enterprise.name
         }
