@@ -271,7 +271,7 @@ function createModalBody(){
                         Tipo
                         <br/>
                         <select id="serviceType" class="form-select form-select-sm">
-                            <option value="OTROS">OTROS</option>
+                            <option value="CONVENIO">CONVENIO</option>
                             <option value="ALCANTARILLADO">ALCANTARILLADO</option>
                         </select>
                     </div>

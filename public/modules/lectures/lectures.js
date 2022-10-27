@@ -545,6 +545,13 @@ function createModalBody(member) {
                             <div class="col-md-3">
                                 <input id="invoiceConsumptionLimitTotal" type="text" class="form-control form-control-sm border-input numericValues money" >
                             </div>
+                            <div class="col-md-8">
+                                Alcantarillado $
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(+)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceSewerage" type="text" class="form-control form-control-sm border-input numericValues money">
+                            </div>
 
 
                             <div class="col-md-8">
@@ -564,14 +571,15 @@ function createModalBody(member) {
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-12" style="text-align: center">
-                                <b>Servicios</b>
+                                <b>Convenios</b>
                             </div>
 
                             <div class="col-md-12">
                                 <table class="table" style="font-size: 12px">
                                     <thead>
                                         <tr>
-                                            <th>Servicio</th>
+                                            <th>Convenio</th>
+                                            <th>Cuota</th>
                                             <th>Valor</th>
                                         </tr>
                                     </thead>
@@ -581,7 +589,7 @@ function createModalBody(member) {
                                 </table>
                             </div>
                             <div class="col-md-8">
-                                Total Servicios $
+                                Total Convenios $
                             </div>
                             <div class="col-md-1" style="text-align: center"></div>
                             <div class="col-md-3">
@@ -616,7 +624,7 @@ function createModalBody(member) {
                             </div>
 
                             <div class="col-md-8">
-                                Servicios
+                                Convenios
                             </div>
                             <div class="col-md-1" style="text-align: center">(+)</div>
                             <div class="col-md-3">
@@ -651,12 +659,12 @@ function createModalBody(member) {
                 </div>
                 <div class="row">
                     <div class="col-md-3" style="text-align: center;">
-                        <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="invoiceCancel"><i ="color:#3498db;" class="fas fa-arrow-left"></i> Atrás</button></td>
+                        <button style="border-radius:5px" class="btn btn-warning" id="invoiceCancel"><i class="fas fa-arrow-left"></i> Atrás</button></td>
                     </div>
                     <div class="col-md-3" style="text-align: center;">
                     </div>
                     <div class="col-md-3" style="text-align: center;">
-                        <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="invoiceSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
+                        <button style="border-radius:5px" class="btn btn-info" id="invoiceSave"><i class="fas fa-check"></i> GUARDAR</button></td>
                     </div>
                 </div>
             </div>
@@ -776,7 +784,9 @@ function calculateTotal() {
     }
     $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
 
-    let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal
+    let sewerage = parseInt($("#invoiceSewerage").val())
+
+    let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
     $("#invoiceConsumption2").val(lastConsumptionValue)
     $("#invoiceConsumption2b").val(lastConsumptionValue)
 
@@ -785,10 +795,10 @@ function calculateTotal() {
     if($("#tableBodyServices > tr").length>0){
         $("#tableBodyServices > tr").each(function() {
             let value = 0
-            if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
+            if(!$.isNumeric($($($(this).children()[2]).children()[0]).val())){
                 value = 0
             }else{
-                value = $($($(this).children()[1]).children()[0]).val()
+                value = $($($(this).children()[2]).children()[0]).val()
             }
             totalServices += parseInt(value)
         })    
@@ -933,13 +943,19 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         if (member.services) {
             if (member.services.length > 0) {
                 for(let i=0; i<member.services.length; i++){
-                    $("#tableBodyServices").append(`<tr>
-                        <td>
-                            <input type="text" class="form-control form-control-sm" value="${member.services[i].services._id}" style="display: none"/>
-                            <span>${member.services[i].services.name}</span>
-                        </td>
-                        <td><input type="text" class="form-control form-control-sm numericValues money" value="${(member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value }"/></td>
-                    </tr>`)
+
+                    if(member.services[i].services.type=='ALCANTARILLADO'){
+                        $("#invoiceSewerage").val((member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value)
+                    }else{
+                        $("#tableBodyServices").append(`<tr>
+                            <td>
+                                <input type="text" class="form-control form-control-sm" value="${member.services[i].services._id}" style="display: none"/>
+                                <span>${member.services[i].services.name}</span>
+                            </td>
+                            <td>XX</td>
+                            <td><input type="text" class="form-control form-control-sm numericValues money" value="${(member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value }"/></td>
+                        </tr>`)
+                    }
                 }
             }
         }
@@ -973,10 +989,10 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             if($("#tableBodyServices > tr").length>0){
                 $("#tableBodyServices > tr").each(function() {
     
-                    if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
+                    if(!$.isNumeric(replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
                         value = 0
                     }else{
-                        value = replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
+                        value = replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
                     }
     
                     services.push({
@@ -1103,14 +1119,21 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         if (invoice.services) {
             if (invoice.services.length > 0) {
                 for(let i=0; i<invoice.services.length; i++){
-                    $("#tableBodyServices").append(`<tr>
-                        <td>
-                            <input type="text" class="form-control form-control-sm" value="${invoice.services[i].services._id}" style="display: none"/>
-                            <span>${invoice.services[i].services.name}</span>
-                        </td>
-                        <td><input type="text" class="form-control form-control-sm numericValues money" value="${(invoice.services[i].value!=0) ? invoice.services[i].value : '' }"/></td>
-                    </tr>`)
-                    //<td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
+
+                    if(member.services[i].services.type=='ALCANTARILLADO'){
+                        $("#invoiceSewerage").val((member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value)
+                    }else{
+
+                        $("#tableBodyServices").append(`<tr>
+                            <td>
+                                <input type="text" class="form-control form-control-sm" value="${invoice.services[i].services._id}" style="display: none"/>
+                                <span>${invoice.services[i].services.name}</span>
+                            </td>
+                            <td>XX</td>
+                            <td><input type="text" class="form-control form-control-sm numericValues money" value="${(invoice.services[i].value!=0) ? invoice.services[i].value : '' }"/></td>
+                        </tr>`)
+                        //<td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
+                    }
                 }
             }
         }
@@ -1127,10 +1150,10 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             if($("#tableBodyServices > tr").length>0){
                 $("#tableBodyServices > tr").each(function() {
     
-                    if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
+                    if(!$.isNumeric(replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
                         value = 0
                     }else{
-                        value = replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
+                        value = replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
                     }
     
                     services.push({
@@ -3014,10 +3037,10 @@ function calculatePaymentBalance() {
     if($("#tableBodyServices > tr").length>0){
         $("#tableBodyServices > tr").each(function() {
             let value = 0
-            if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
+            if(!$.isNumeric($($($(this).children()[2]).children()[0]).val())){
                 value = 0
             }else{
-                value = $($($(this).children()[1]).children()[0]).val()
+                value = $($($(this).children()[2]).children()[0]).val()
             }
             totalServices += parseInt(value)
         })    
