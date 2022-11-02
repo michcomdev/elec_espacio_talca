@@ -583,7 +583,7 @@ function createModalBody(member) {
                                             <th>Valor</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="tableBodyServices">
+                                    <tbody id="tableBodyAgreements">
                                     
                                     </tbody>
                                 </table>
@@ -593,7 +593,7 @@ function createModalBody(member) {
                             </div>
                             <div class="col-md-1" style="text-align: center"></div>
                             <div class="col-md-3">
-                                <input id="invoiceTotalServices" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                                <input id="invoiceTotalAgreements" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
                             </div>
                             
                         </div>
@@ -628,7 +628,7 @@ function createModalBody(member) {
                             </div>
                             <div class="col-md-1" style="text-align: center">(+)</div>
                             <div class="col-md-3">
-                                <input id="invoiceTotalServicesb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                                <input id="invoiceTotalAgreementsb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
                             </div>
 
                             <div class="col-md-8">
@@ -681,20 +681,6 @@ function createModalBody(member) {
 
         cleanInvoice()
 
-/*
-        $('#tableLectures tbody').on('click', 'tr', function () {
-            if ($(this).hasClass('table-primary')) {
-                $(this).removeClass('table-primary')
-                $('#tableInvoice').css('visibility', 'hidden')
-            } else {
-                $('#tableLecturesBody > tr').removeClass('table-primary')
-                $(this).addClass('table-primary')
-                $('#divInvoice').css('display', 'block')
-                $('#tableLectures tbody').off("click")
-                $('.btnLecture').attr('disabled',true)
-                createInvoice($(this).attr('id'), $(this).attr('data-invoice'), member)
-            //}
-        })*/
     })
 }
 
@@ -706,7 +692,7 @@ async function cleanInvoice() {
     $("#invoiceDate").val('')
     $("#invoiceDateExpire").val('')
     $("#invoiceSubsidyPercentage").val('')
-    $("#tableBodyServices").html('')
+    $("#tableBodyAgreements").html('')
     $('.btnLecture').removeAttr('disabled')
 }
 
@@ -790,25 +776,25 @@ function calculateTotal() {
     $("#invoiceConsumption2").val(lastConsumptionValue)
     $("#invoiceConsumption2b").val(lastConsumptionValue)
 
-    //Servicios
-    let totalServices = 0
-    if($("#tableBodyServices > tr").length>0){
-        $("#tableBodyServices > tr").each(function() {
+    //Convenios
+    let totalAgreements = 0
+    if($("#tableBodyAgreements > tr").length>0){
+        $("#tableBodyAgreements > tr").each(function() {
             let value = 0
             if(!$.isNumeric($($($(this).children()[2]).children()[0]).val())){
                 value = 0
             }else{
                 value = $($($(this).children()[2]).children()[0]).val()
             }
-            totalServices += parseInt(value)
+            totalAgreements += parseInt(value)
         })    
     }
-    $("#invoiceTotalServices").val(totalServices)
-    $("#invoiceTotalServicesb").val(totalServices)
+    $("#invoiceTotalAgreements").val(totalAgreements)
+    $("#invoiceTotalAgreementsb").val(totalAgreements)
 
     //Montos
     let debt = $("#invoiceDebt").val()
-    let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(totalServices)
+    let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(totalAgreements)
     $("#invoiceSubTotal").val(subTotal)
     $("#invoiceDebt").val(debt)
     $("#invoiceTotal").val(subTotal + parseInt(debt))
@@ -869,8 +855,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         }
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
 
-        console.log(parameters)
-        console.log(lecture)
         let year = lecture.year
         let month = lecture.month+1
         let day = parameters.expireDay
@@ -938,25 +922,37 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             autoApply: true
         })
 
-        $("#tableBodyServices").html('')
-
+        //Servicios
         if (member.services) {
             if (member.services.length > 0) {
                 for(let i=0; i<member.services.length; i++){
-
                     if(member.services[i].services.type=='ALCANTARILLADO'){
                         $("#invoiceSewerage").val((member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value)
-                    }else{
-                        $("#tableBodyServices").append(`<tr>
-                            <td>
-                                <input type="text" class="form-control form-control-sm" value="${member.services[i].services._id}" style="display: none"/>
-                                <span>${member.services[i].services.name}</span>
-                            </td>
-                            <td>XX</td>
-                            <td><input type="text" class="form-control form-control-sm numericValues money" value="${(member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value }"/></td>
-                        </tr>`)
                     }
                 }
+            }
+        }
+
+        let agreementData = await axios.post('/api/agreementsByDate', { 
+            year: parseInt(year),
+            month: parseInt(month),
+            member: memberID
+        })
+        console.log(agreementData)
+        let agreements = agreementData.data
+
+        $("#tableBodyAgreements").html('')
+
+        if (agreements.length > 0) {
+            for(let j=0; j<agreements.length; j++){
+                $("#tableBodyAgreements").append(`<tr>
+                    <td>
+                        <input value="${agreements[j]._id}" style="display: none;" />
+                        <span>${(agreements[j].services) ? agreements[j].services.name : agreements[j].other}</span>
+                    </td>
+                    <td>${agreements[j].due.number}</td>
+                    <td><input type="text" class="form-control form-control-sm numericValues money" value="${agreements[j].due.amount}"/></td>
+                </tr>`)
             }
         }
 
@@ -986,7 +982,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             let goSave = false
 
             let services = []
-            if($("#tableBodyServices > tr").length>0){
+            /*if($("#tableBodyServices > tr").length>0){
                 $("#tableBodyServices > tr").each(function() {
     
                     if(!$.isNumeric(replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
@@ -998,6 +994,15 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                     services.push({
                         services: $($($(this).children()[0]).children()[0]).val(),
                         value: value
+                    })
+                })
+            }*/
+            let agreements = []
+            if($("#tableBodyAgreements > tr").length>0){
+                $("#tableBodyAgreements > tr").each(function() {
+                    agreements.push({
+                        id: $($($(this).children()[0]).children()[0]).val(),
+                        number: $($(this).children()[1]).text()
                     })
                 })
             }
@@ -1023,7 +1028,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
-                services: services
+                services: services,
+                agreements: agreements
             }
 
             if($("#divLectureNew").css('visibility') == 'visible'){
@@ -1034,6 +1040,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             /*if(services.length>0){
                 saleData.services = services
             }*/
+            console.log(invoiceData)
+            return
 //return
             const res = validateInvoiceData(invoiceData)
             if (res.ok) {

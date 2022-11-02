@@ -9,9 +9,11 @@ const agreementsSchema = new Schema({
     other: { type: String },
     totalAmount: { type: Number },
     dues: [{
+        number: { type: Number },
         year: { type: Number },
         month: { type: Number },
-        amount: { type: Number }
+        amount: { type: Number },
+        invoices: { type: Schema.Types.ObjectId, ref: 'invoices' }
     }]
 }, {
     versionKey: false

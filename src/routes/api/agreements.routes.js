@@ -166,25 +166,22 @@ export default [
 
                     let date = new Date(payload.date)
 
-                    let invoices = payload.invoices
-
                     let query = {
                         members: payload.member,
                         date: payload.date,
-                        agreementMethod: payload.agreementMethod,
-                        transaction: payload.transaction,
-                        amount: payload.amount,
-                        invoices: invoices
+                        other: payload.other,
+                        totalAmount: payload.totalAmount,
+                        dues: payload.dues
+                    }
+
+                    if(payload.service){
+                        query.services = payload.service
+                    }else{
+                        query.services = undefined
                     }
 
                     let agreement = new Agreements(query)
                     const response = await agreement.save()
-
-                    for(let i=0; i<invoices.length; i++){
-                        let invoice = await Invoices.findById(invoices[i].invoices)
-                        invoice.invoicePaid += invoices[i].amount
-                        await invoice.save()
-                    }
 
                     return response
 
@@ -199,12 +196,14 @@ export default [
             validate: {
                 payload: Joi.object().keys({
                     member: Joi.string().allow(''),
+                    service: Joi.string().allow('').optional(),
                     date: Joi.string().allow(''),
-                    agreementMethod: Joi.string().allow(''),
-                    transaction: Joi.string().allow(''),
-                    amount: Joi.number().allow(0),
-                    invoices: Joi.array().items(Joi.object().keys({
-                        invoices: Joi.string().optional().allow(''),
+                    other: Joi.string().allow(''),
+                    totalAmount: Joi.number().allow(0),
+                    dues: Joi.array().items(Joi.object().keys({
+                        number: Joi.number().optional(),
+                        year: Joi.number().optional().allow(0),
+                        month: Joi.number().optional().allow(0),
                         amount: Joi.number().optional().allow(0)
                     })).optional()
                 })
@@ -223,79 +222,19 @@ export default [
                     let payload = request.payload
 
                     let agreement = await Agreements.findById(payload.id)
-                    
-   //Actualización de montos pagados boletas asociadas a pago antiguas, se utiliza por si hubiese alguna boleta que sea eliminada
-                    let invoicesOld = agreement.invoices
-                    for(let i=0; i<invoicesOld.length; i++){
 
-                        let invoiceQuery = {
-                            invoices: {
-                                $elemMatch: { 
-                                    invoices: invoicesOld[i].invoices
-                                }
-                            }
-                        }
-
-                        let invoiceAgreements = await Agreements.find(invoiceQuery) //Obtención de todos los pagos realizados a la boleta
-                        let invoice = await Invoices.findById(invoicesOld[i].invoices) //Obtención de registro de boleta
-                        
-                        for(let j=0; j<invoiceAgreements.length; j++){
-                            if(invoiceAgreements[j].invoices.find(x => x.invoices == invoicesOld[i].invoices)){
-                                invoice.invoicePaid = 0
-                            }
-                        }
-                        for(let k=0; k<invoiceAgreements.length; k++){
-                            if(invoiceAgreements[k].invoices.find(x => x.invoices == invoicesOld[i].invoices)){
-                                invoice.invoicePaid += invoiceAgreements[k].invoices.find(x => x.invoices == invoicesOld[i].invoices).amount
-                            }
-                        }
-                        
-                        await invoice.save()
-                    }
-
-
-////////////////////Actualización de registro//////////////////////
-
-
-                    let invoices = payload.invoices
-
-                    agreement.members = payload.member
                     agreement.date = payload.date
-                    agreement.agreementMethod = payload.agreementMethod
-                    agreement.transaction = payload.transaction
-                    agreement.amount = payload.amount
-                    agreement.invoices = payload.invoices
+                    agreement.other = payload.other
+                    agreement.totalAmount = payload.totalAmount
+                    agreement.dues = payload.dues
 
-                    const response = await agreement.save()
-
-                    //Actualización de montos pagados boletas asociadas a pago
-                    for(let i=0; i<invoices.length; i++){
-
-                        let invoiceQuery = {
-                            invoices: {
-                                $elemMatch: { 
-                                    invoices: invoices[i].invoices
-                                }
-                            }
-                        }
-
-                        console.log('invoiceQuery',invoiceQuery)
-                        let invoiceAgreements = await Agreements.find(invoiceQuery) //Obtención de todos los pagos realizados a la boleta
-                        let invoice = await Invoices.findById(invoices[i].invoices) //Obtención de registro de boleta
-                        console.log(invoice)
-                        for(let j=0; j<invoiceAgreements.length; j++){
-                            if(invoiceAgreements[j].invoices.find(x => x.invoices == invoices[i].invoices)){
-                                invoice.invoicePaid = 0
-                            }
-                        }
-                        for(let k=0; k<invoiceAgreements.length; k++){
-                            if(invoiceAgreements[k].invoices.find(x => x.invoices == invoices[i].invoices)){
-                                invoice.invoicePaid += invoiceAgreements[k].invoices.find(x => x.invoices == invoices[i].invoices).amount
-                            }
-                        }
-                        
-                        await invoice.save()
+                    if(payload.service){
+                        agreement.services = payload.service
+                    }else{
+                        agreement.services = undefined
                     }
+                        
+                    let response = await agreement.save()
 
                     return response
 
@@ -311,14 +250,65 @@ export default [
                 payload: Joi.object().keys({
                     id: Joi.string().allow(''),
                     member: Joi.string().allow(''),
+                    service: Joi.string().allow('').optional(),
                     date: Joi.string().allow(''),
-                    agreementMethod: Joi.string().allow(''),
-                    transaction: Joi.string().allow(''),
-                    amount: Joi.number().allow(0),
-                    invoices: Joi.array().items(Joi.object().keys({
-                        invoices: Joi.string().optional().allow(''),
+                    other: Joi.string().allow(''),
+                    totalAmount: Joi.number().allow(0),
+                    dues: Joi.array().items(Joi.object().keys({
+                        number: Joi.number().optional(),
+                        year: Joi.number().optional().allow(0),
+                        month: Joi.number().optional().allow(0),
                         amount: Joi.number().optional().allow(0)
                     })).optional()
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/agreementsByDate',
+        options: {
+            description: 'get agreement by date',
+            notes: 'get agreement by date',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let query = {
+                        'dues.year': payload.year, 
+                        'dues.month': payload.month, 
+                        members: payload.member
+                    }
+                    if(payload.invoiceID){
+                        query.dues.invoices = payload.invoiceID
+                    }
+
+                    let agreements = await Agreements.find(query).lean().populate(['services'])
+                    for(let i=0; i<agreements.length; i++){
+                        for(let j=0; j<agreements[i].dues.length; j++){
+                            if(agreements[i].dues[j].year==payload.year && agreements[i].dues[j].month==payload.month){
+                                agreements[i].due = agreements[i].dues[j]
+                            }
+                        }
+                    }
+
+                    return agreements
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    invoiceID: Joi.string().optional().allow(''),
+                    member: Joi.string().optional().allow(''),
+                    year: Joi.number(),
+                    month: Joi.number(),
                 })
             }
         }

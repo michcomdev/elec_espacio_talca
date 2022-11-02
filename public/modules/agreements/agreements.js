@@ -52,30 +52,10 @@ async function getParameters() {
 
     let servicesData = await axios.post('/api/servicesByFilter', {type: 'CONVENIO'})
     let services = servicesData.data
-
-    serviceList = `<tr><td>
-                        <select class="form-control form-control-sm form-select" onchange="serviceValue(this)"><option value="0" data-value="0">Seleccione</option>`
     for(let i=0; i<services.length; i++){
         serviceList += `<option value="${services[i]._id}" data-value="${services[i].value}">${services[i].name}</option>`
     }
-    serviceList += `</select></td>
-                    <td>
-                        <select class="form-select form-select-sm">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" class="form-control form-control-sm serviceValue" style="text-align: right" value="0"/>
-                    </td>
-                    <td>
-                        <button style="border-radius:5px;" class="btn btn-sm btn-danger" onclick="deleteService(this)"><i ="color:#3498db;" class="fas fa-times"></i></button>
-                    </td>
-                </tr>`
+    serviceList += `<option value="0">OTROS</option>`
 
 }
 
@@ -240,24 +220,16 @@ async function loadAgreements(member) {
     for (i = 0; i < agreements.length; i++) {
 
         let total = 0
-        let btn = '', btnGenerate = '', btnSII = '', btnAgreement = ''
         let agreementID = 0
         
-        total = dot_separators(agreements[i].agreementTotal)
-        //btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printAgreement('preview','${member.type}','${member._id}','${agreements[i]._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
-        
+        total = dot_separators(agreements[i].totalAmount)
         agreementID = agreements[i]._id
-        btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printVoucher('${member._id}','${agreementID}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>`
-        
-        /*if(agreements[i].number){
-            btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printAgreement('pdf','${member.type}','${member._id}','${agreements[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
-            btnAgreement = `<button class="btn btn-sm btn-info btnLecture" onclick="payAgreement('pdf','${member.type}','${member._id}','${agreements[i]._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
+        let agreement = ''
+        if(agreements[i].services){
+            agreement = agreements[i].services.name
         }else{
-            btnGenerate = `<button class="btn btn-sm btn-info btnLecture" onclick="sendData('${member.type}','${member._id}','${agreements[i]._id}')">Generar DTE</button>`
+            agreement = agreements[i].other
         }
-        if(agreements[i].token){
-            btnSII = `<button class="btn btn-sm btn-warning btnLecture" onclick="showSIIPDF('${agreements[i].token}')"><img src="/public/img/logo_sii.png" style="width: 24px"/></button>`
-        }*/
         
         $('#tableAgreementsBody').append(`
             <tr id="${agreements[i]._id}" data-agreement="${agreementID}">
@@ -265,13 +237,16 @@ async function loadAgreements(member) {
                     ${moment(agreements[i].date).utc().format('DD/MM/YYYY')}
                 </td>
                 <td style="text-align: center;">
+                    ${agreement}
+                </td>
+                <td style="text-align: center;">
+                    ${agreements[i].dues.length}
+                </td>
+                <td style="text-align: center;">
                     ${total}
                 </td>
                 <td style="text-align: center;">
                     <button class="btn btn-sm btn-warning btnLecture" onclick="createAgreement('${agreements[i]._id}','${member._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
-                </td>
-                <td style="text-align: center;">
-                    ${btn}
                 </td>
                 <td style="text-align: center;">
                     POR PAGAR
@@ -391,6 +366,7 @@ function createModalBody(member) {
                             <th style="text-align: center; background-color: #3B6FC9;">Convenio</th>
                             <th style="text-align: center; background-color: #3B6FC9;">N° Cuotas</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Monto Total</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Editar</th>
                             <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Estado Pago</th>
                         </tr>
                     </thead>
@@ -402,9 +378,9 @@ function createModalBody(member) {
                 
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-1">
             </div>
-            <div class="col-md-8">
+            <div class="col-md-10">
                 <br />
                 <br />
                 <br />
@@ -416,51 +392,60 @@ function createModalBody(member) {
 
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 Fecha
-                                <input id="agreementDate" type="text" class="form-control form-control-sm border-input agreementDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
+                                <input id="agreementDate" type="text" class="form-control form-control-sm border-input agreementDateClass" value="${moment.utc().format('DD/MM/YYYY')}" onchange="calculateDues()">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 Convenio
-                                <select id="agreementList" class="form-control form-select form-select-sm">
+                                <select id="agreementList" class="form-control form-select form-select-sm" onchange="setAgreement()">
                                     <option value="SELECCIONE">SELECCIONE</option>
+                                    ${serviceList}
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                Monto Total
-                                <input id="agreementAmount" type="text" class="form-control form-control-sm border-input">
+                            <div id="agreementDiv" class="col-md-2" style="display: none">
+                                Convenio
+                                <input id="agreementOther" type="text" class="form-control form-control-sm border-input">
                             </div>
-                            <div class="col-md-3" style="text-align: center">
+                            <div class="col-md-2">
+                                Monto Total
+                                <input id="agreementAmount" type="text" class="form-control form-control-sm border-input" onkeyup="calculateDues()">
+                            </div>
+                            <div class="col-md-2" style="text-align: center">
                                 Cuotas
-                                <select class="form-control form-select form-select-sm" onchange="calculateDues()">
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
-                                    <option value="6">6</option>
+                                <select id="agreementDues" class="form-control form-select form-select-sm" onchange="calculateDues()">
+                                    <option value="1" style="text-align: center">1</option>
+                                    <option value="2" style="text-align: center">2</option>
+                                    <option value="3" style="text-align: center">3</option>
+                                    <option value="4" style="text-align: center">4</option>
+                                    <option value="5" style="text-align: center">5</option>
+                                    <option value="6" style="text-align: center">6</option>
                                 </select>
                             </div>
 
                             <div class="col-md-12" style="text-align: center">
                                 <br/>
                                 <br/>
-                                <table id="tableDues class="table" style="font-size: 12px">
-                                    <thead>
-                                        <tr>
-                                            <th>N° Cuota</th>
-                                            <th>Mes</th>
-                                            <th>Monto</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tableBodyServices">
-                                    
-                                    </tbody>
-                                </table>
+                                <div class="card border-primary">
+                                    <table id="tableDues class="table" style="font-size: 12px; margin: 0 auto; width: 70%">
+                                        <thead>
+                                            <tr>
+                                                <th>N° Cuota</th>
+                                                <th>Mes</th>
+                                                <th>Monto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableBodyDues">
+                                        
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
                         <div class="row">
+                            <br/>
+                            <br/>
                             <div class="col-md-3" style="text-align: center;">
                                 <button style="border-radius:5px; " class="btn btn-warning" id="agreementCancel"><i class="fas fa-arrow-left"></i> Atrás</button></td>
                             </div>
@@ -482,12 +467,59 @@ function createModalBody(member) {
 
     $('#modalLecture_body').html(body)
 
-
     $("#agreementCancel").on('click', async function () {
 
         cleanAgreement()
 
     })
+}
+
+function setAgreement(){
+    if($("#agreementList").val()==0){
+        $("#agreementDiv").css('display','block')
+    }else{
+        $("#agreementDiv").css('display','none')
+        $("#agreementOther").val('')
+    }
+}
+
+function calculateDues(){
+
+    $("#tableBodyDues").html('')
+    let dueValue = 0
+    let lastDueValue = 0
+    if($.isNumeric($("#agreementAmount").val())){
+        dueValue = Math.trunc(parseInt($("#agreementAmount").val()) / parseInt($("#agreementDues").val()))
+        lastDueValue = parseInt($("#agreementAmount").val()) - (dueValue * parseInt($("#agreementDues").val()))
+    }
+
+    let year = $("#agreementDate").data('daterangepicker').startDate.format('YYYY')
+    let month = parseInt($("#agreementDate").data('daterangepicker').startDate.format('MM'))
+    let monthList = '<select class="form-control form-select form-select-sm">'
+
+    for(let j=0; j<12; j++){
+        monthList += `<option value="${year}_${month}" style="text-align: center;" data-list="${j}">${getMonthString(month)} / ${year}</option>`
+
+        if(month==12){
+            month = 1
+            year++
+        }else{
+            month++
+        }
+    }
+    monthList += '</select>'
+
+
+    for(let i=0; i<parseInt($("#agreementDues").val()); i++){
+        $("#tableBodyDues").append(`
+            <tr>
+                <td>${i+1}</td>
+                <td>${monthList.replace(`data-list="${i}"`,`data-list="${i}" selected`)}</td>
+                <td><input class="form-control form-control-sm" type="Number" style="text-align: center;" value="${(i+1<parseInt($("#agreementDues").val())) ? dueValue : dueValue + lastDueValue }" /></td>
+            </tr>
+        `)
+    }
+
 }
 
 function addService(id,value){
@@ -573,11 +605,12 @@ async function cleanAgreement() {
     $("#tableAgreementsBody > tr").removeClass('table-primary')
     $('#divAgreement').css('display', 'none')
     $("#agreementTitle").text('')
-    $(".numericValues").val('')
     $("#agreementDate").val('')
-    $("#agreementDateExpire").val('')
-    $("#agreementSubsidyPercentage").val('')
-    $("#tableBodyServices").html('')
+    $("#agreementList").val('SELECCIONE')
+    $("#agreementDiv").css('display','none')
+    $("#agreementOther").val('')
+    $("#agreementDues").val('1')
+    $("#tableBodyDues").html('')
     $('.btnLecture').removeAttr('disabled')
 }
 
@@ -657,94 +690,98 @@ async function createAgreement(agreementID, memberID) {
         $("#agreementDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
 
         addService()
-
         $('.agreementDateClass').daterangepicker({
             opens: 'right',
             locale: dateRangePickerDefaultLocale,
             singleDatePicker: true,
             autoApply: true
         })
-        
+
+        calculateDues() //Agrega 1ra cuota
+
         calculateTotal()
 
         $('#agreementSave').off("click")
 
         $("#agreementSave").on('click', async function () {
 
-            let goSave = false
+            let goSave = true
+            let totalAmount = replaceAll($("#agreementAmount").val(), '.', '').replace(' ', '').replace('$', '')
+            
+            if(!$.isNumeric(totalAmount)){
+                toastr.warning('Debe ingresar un monto total válido')
+                return
+            }else{
+                totalAmount = parseInt(totalAmount)
+            }
 
-            let services = []
-            if($("#tableBodyServices > tr").length>0){
-                $("#tableBodyServices > tr").each(function() {
+            let dues = []
+            let totalDues = 0
+            if($("#tableBodyDues > tr").length>0){
+                $("#tableBodyDues > tr").each(function() {
+                    let amount = replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
     
-                    if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
-                        value = 0
-                    }else{
-                        value = replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
-                    }
-
-                    if($($($(this).children()[0]).children()[0]).is('select')){
-                        services.push({
-                            services: $($($(this).children()[0]).children()[0]).val(),
-                            value: value
+                    if($.isNumeric(amount)){
+                        let dueDate = $($($(this).children()[1]).children()[0]).val().split('_')
+                        dues.push({
+                            number: $($(this).children()[0]).text(),
+                            year: dueDate[0],
+                            month: dueDate[1],
+                            amount: amount
                         })
+                        totalDues += parseInt(amount)
                     }else{
-                        services.push({
-                            other: $($($(this).children()[0]).children()[0]).val(),
-                            value: value
-                        })
+                        goSave = false
                     }
                 })    
             }
 
+            if(!goSave){
+                toastr.warning('1 o más cuotas tienen valores erróneos')
+                return
+            }
+
+            console.log(totalDues, totalAmount)
+            if(totalDues!=totalAmount){
+                toastr.warning('Las cuotas no coinciden con el total del convenio')
+                return
+            }
+
             let agreementData = {
-                //lectures: lectureID,
                 member: member._id,
-                //number: replaceAll($("#agreementNumber").val(), '.', '').replace(' ', ''),
                 date: $("#agreementDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
-                dateExpire: $("#agreementDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
-                /*charge: replaceAll($("#agreementCharge").val(), '.', '').replace(' ', '').replace('$', ''),
-                lectureActual: replaceAll($("#agreementLectureActual").val(), '.', '').replace(' ', '').replace('$', ''),
-                lectureLast: replaceAll($("#agreementLectureLast").val(), '.', '').replace(' ', '').replace('$', ''),
-                lectureResult: replaceAll($("#agreementLectureResult").val(), '.', '').replace(' ', '').replace('$', ''),
-                meterValue: replaceAll($("#agreementMeterValue").val(), '.', '').replace(' ', '').replace('$', ''),
-                subsidyPercentage: replaceAll($("#agreementSubsidyPercentage").val(), '.', '').replace(' ', '').replace('$', ''),
-                subsidyValue: replaceAll($("#agreementSubsidyValue").val(), '.', '').replace(' ', '').replace('$', ''),
-                consumptionLimit: replaceAll($("#agreementConsumptionLimit").val(), '.', '').replace(' ', '').replace('$', ''),
-                consumptionLimitValue: replaceAll($("#agreementConsumptionLimitValue").val(), '.', '').replace(' ', '').replace('$', ''),
-                consumptionLimitTotal: replaceAll($("#agreementConsumptionLimitTotal").val(), '.', '').replace(' ', '').replace('$', ''),
-                consumption: replaceAll($("#agreementConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
-                agreementDebt: replaceAll($("#agreementDebt").val(), '.', '').replace(' ', '').replace('$', ''),*/
-                agreementTotal: replaceAll($("#agreementTotal").val(), '.', '').replace(' ', '').replace('$', ''),
-                services: services
+                other: $("#agreementOther").val(),
+                totalAmount: totalAmount,
+                dues: dues
+            }
+
+            if($("#agreementList").val()!="0" && $("#agreementList").val()!="SELECCIONE"){
+                agreementData.service = $("#agreementList").val()
             }
 
             /*if(services.length>0){
                 saleData.services = services
             }*/
 
-            console.log(agreementData)
+            console.log('save',agreementData)
+            
+            let saveAgreement = await axios.post('/api/agreementSave', agreementData)
+            if (saveAgreement.data) {
+                if (saveAgreement.data._id) {
 
-            const res = validateAgreementData(agreementData)
-            if (res.ok) {
-                let saveAgreement = await axios.post('/api/agreementAgreementSave', res.ok)
-                if (saveAgreement.data) {
-                    if (saveAgreement.data._id) {
-
-                        $('#modal_title').html(`Almacenado`)
-                        $('#modal_body').html(`<h7 class="alert-heading">Ingreso almacenada correctamente</h7>`)
-                        cleanAgreement()
-                        loadAgreements(member)
-                    } else {
-                        $('#modal_title').html(`Error`)
-                        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
-                    }
+                    $('#modal_title').html(`Almacenado`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Ingreso almacenada correctamente</h7>`)
+                    cleanAgreement()
+                    loadAgreements(member)
                 } else {
                     $('#modal_title').html(`Error`)
                     $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
                 }
-                $('#modal').modal('show')
+            } else {
+                $('#modal_title').html(`Error`)
+                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
             }
+            $('#modal').modal('show')
 
         })
     } else {
@@ -752,12 +789,10 @@ async function createAgreement(agreementID, memberID) {
         let agreementData = await axios.post('/api/agreementSingle', { id: agreementID })
         let agreement = agreementData.data
         
-        $("#agreementTitle").text("Ingreso N° " + agreement.number)
+        $("#agreementTitle").text("Modificar Convenio")
 
         //$("#agreementNumber").val(agreement.number)
-        $("#agreementDate").val(moment(agreement.date).utc().format('DD/MM/YYYY'))
-        $("#agreementDateExpire").val(moment(agreement.dateExpire).utc().format('DD/MM/YYYY'))
-       
+        $("#agreementDate").val(moment(agreement.date).utc().format('DD/MM/YYYY'))       
 
         $('.agreementDateClass').daterangepicker({
             opens: 'right',
@@ -766,86 +801,125 @@ async function createAgreement(agreementID, memberID) {
             autoApply: true
         })
 
-        $("#tableBodyServices").html('')
-
-        console.log(agreement)
+        $("#tableBodyDues").html('')
 
         if (agreement.services) {
-            if (agreement.services.length > 0) {
-                for(let i=0; i<agreement.services.length; i++){
-                    if(agreement.services[i].other){
-                        addServiceOther(agreement.services[i].other,agreement.services[i].value)
-                    }else{
-                        addService(agreement.services[i].services._id,agreement.services[i].value)
-                    }
-                }
+            $("#agreementList").val(agreement.services._id)
+        }else{
+            $("#agreementList").val(0)
+            $("#agreementOther").val(agreement.other)
+        }
+        setAgreement()
+
+        $("#agreementAmount").val(agreement.totalAmount)
+        $("#agreementDues").val(agreement.dues.length)
+
+        let year = $("#agreementDate").data('daterangepicker').startDate.format('YYYY')
+        let month = parseInt($("#agreementDate").data('daterangepicker').startDate.format('MM'))
+        let monthList = '<select class="form-control form-select form-select-sm">'
+
+        for(let j=0; j<12; j++){
+            monthList += `<option value="${year}_${month}" style="text-align: center;" data-list="${j}">${getMonthString(month)} / ${year}</option>`
+                if(month==12){
+                month = 1
+                year++
+            }else{
+                month++
             }
         }
+        monthList += '</select>'
 
-        calculateTotal()
+        
+        for(let i=0; i<agreement.dues.length; i++){
+            let value = agreement.dues[i].year + '_' + agreement.dues[i].month
+            $("#tableBodyDues").append(`
+                <tr>
+                    <td>${agreement.dues[i].number}</td>
+                    <td>${monthList.replace(`value="${value}"`,`value="${value}" selected`)}</td>
+                    <td><input class="form-control form-control-sm" type="Number" style="text-align: center;" value="${agreement.dues[i].amount}" /></td>
+                </tr>
+            `)
+        }
 
         $('#agreementSave').off("click")
 
         $("#agreementSave").on('click', async function () {
 
-            let goSave = false
+            let goSave = true
+            let totalAmount = replaceAll($("#agreementAmount").val(), '.', '').replace(' ', '').replace('$', '')
+            
+            if(!$.isNumeric(totalAmount)){
+                toastr.warning('Debe ingresar un monto total válido')
+                return
+            }else{
+                totalAmount = parseInt(totalAmount)
+            }
 
-            let services = []
-            if($("#tableBodyServices > tr").length>0){
-                $("#tableBodyServices > tr").each(function() {
+            let dues = []
+            let totalDues = 0
+            if($("#tableBodyDues > tr").length>0){
+                $("#tableBodyDues > tr").each(function() {
+                    let amount = replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
     
-                    if(!$.isNumeric(replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
-                        value = 0
-                    }else{
-                        value = replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
-                    }
-    
-                    if($($($(this).children()[0]).children()[0]).is('select')){
-                        services.push({
-                            services: $($($(this).children()[0]).children()[0]).val(),
-                            value: value
+                    if($.isNumeric(amount)){
+                        let dueDate = $($($(this).children()[1]).children()[0]).val().split('_')
+                        dues.push({
+                            number: $($(this).children()[0]).text(),
+                            year: dueDate[0],
+                            month: dueDate[1],
+                            amount: amount
                         })
+                        totalDues += parseInt(amount)
                     }else{
-                        services.push({
-                            other: $($($(this).children()[0]).children()[0]).val(),
-                            value: value
-                        })
+                        goSave = false
                     }
                 })    
             }
 
-            let agreementData = {
-                id: agreementID,
-                //member: internals.dataRowSelected._id,
-                member: member._id,
-                date: $("#agreementDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
-                dateExpire: $("#agreementDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
-                agreementTotal: parseInt(replaceAll($("#agreementTotal").val(), '.', '').replace(' ', '').replace('$', '')),
-                services: services
+            if(!goSave){
+                toastr.warning('1 o más cuotas tienen valores erróneos')
+                return
             }
 
-            const res = validateAgreementData(agreementData)
-            if (res.ok) {
-                let updateAgreement = await axios.post('/api/agreementAgreementUpdate', res.ok)
-                if (updateAgreement.data) {
-                    if (updateAgreement.data._id) {
+            console.log(totalDues, totalAmount)
+            if(totalDues!=totalAmount){
+                toastr.warning('Las cuotas no coinciden con el total del convenio')
+                return
+            }
 
-                        $('#modal_title').html(`Almacenado`)
-                        $('#modal_body').html(`<h7 class="alert-heading">Ingreso almacenada correctamente</h7>`)
-                        cleanAgreement()
-                        loadAgreements(member)
-                    } else {
-                        $('#modal_title').html(`Error`)
-                        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
-                    }
+            let agreementData = {
+                id: agreementID,
+                member: member._id,
+                date: $("#agreementDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+                other: $("#agreementOther").val(),
+                totalAmount: totalAmount,
+                dues: dues
+            }
+
+            if($("#agreementList").val()!="0" && $("#agreementList").val()!="SELECCIONE"){
+                agreementData.service = $("#agreementList").val()
+            }
+            
+            let saveAgreement = await axios.post('/api/agreementUpdate', agreementData)
+            if (saveAgreement.data) {
+                if (saveAgreement.data._id) {
+
+                    $('#modal_title').html(`Almacenado`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Ingreso almacenada correctamente</h7>`)
+                    cleanAgreement()
+                    loadAgreements(member)
                 } else {
                     $('#modal_title').html(`Error`)
                     $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
                 }
-                $('#modal').modal('show')
+            } else {
+                $('#modal_title').html(`Error`)
+                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
             }
+            $('#modal').modal('show')
 
         })
+
     }
 }
 
