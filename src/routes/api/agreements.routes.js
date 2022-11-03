@@ -312,5 +312,44 @@ export default [
                 })
             }
         }
+    },
+    {
+        method: 'POST',
+        path: '/api/agreementsByInvoice',
+        options: {
+            description: 'get agreement by date',
+            notes: 'get agreement by date',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let agreements = await Agreements.find({'dues.invoices': payload.invoiceID}).lean().populate(['services'])
+                    for(let i=0; i<agreements.length; i++){
+                        for(let j=0; j<agreements[i].dues.length; j++){
+                            if(agreements[i].dues[j].invoices){
+                                if(agreements[i].dues[j].invoices.toString()==payload.invoiceID.toString()){
+                                    agreements[i].due = agreements[i].dues[j]
+                                }
+                            }
+                        }
+                    }
+
+                    return agreements
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    invoiceID: Joi.string().optional().allow('')
+                })
+            }
+        }
     }
 ]

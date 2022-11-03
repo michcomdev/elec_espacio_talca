@@ -1,6 +1,7 @@
 import Member from '../../models/Member'
 import Invoices from '../../models/Invoices'
 import Payments from '../../models/Payments'
+import Agreements from '../../models/Agreements'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 
@@ -125,6 +126,7 @@ export default [
                         consumptionLimit: payload.consumptionLimit,
                         consumptionLimitValue: payload.consumptionLimitValue,
                         consumptionLimitTotal: payload.consumptionLimitTotal,
+                        sewerage: payload.sewerage,
                         invoiceSubTotal: payload.invoiceSubTotal,
                         invoiceDebt: payload.invoiceDebt,
                         invoicePaid: 0,
@@ -147,6 +149,24 @@ export default [
 
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
+
+                    console.log('response',response)
+
+                    if(payload.agreements.length>0){
+                        console.log('1',payload.agreements)
+                        for(let i=0; i<payload.agreements.length; i++){
+                            let agreement = await Agreements.findById(payload.agreements[i].id)
+                            console.log('2',agreement)
+
+                            for(let j=0; j<agreement.dues.length; j++){
+                                if(agreement.dues[j].number==payload.agreements[i].number){
+                                    agreement.dues[j].invoices = response._id
+                                    await agreement.save()
+                                    j = agreement.dues.length
+                                }
+                            }
+                        }
+                    }
 
                     return response
 
@@ -180,12 +200,17 @@ export default [
                     consumptionLimit: Joi.number().allow(0),
                     consumptionLimitValue: Joi.number().allow(0),
                     consumptionLimitTotal: Joi.number().allow(0),
+                    sewerage: Joi.number().allow(0),
                     invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
                         value: Joi.number().optional().allow(0)
+                    })).optional(),
+                    agreements: Joi.array().items(Joi.object().keys({
+                        id: Joi.string().optional().allow(''),
+                        number: Joi.number().optional().allow(0)
                     })).optional()
                 })
             }
@@ -223,6 +248,7 @@ export default [
                     invoices.consumptionLimit = payload.consumptionLimit
                     invoices.consumptionLimitValue = payload.consumptionLimitValue
                     invoices.consumptionLimitTotal = payload.consumptionLimitTotal
+                    invoices.sewerage = payload.sewerage
                     invoices.invoiceSubTotal = payload.invoiceSubTotal
                     invoices.invoiceDebt = payload.invoiceDebt
                     //invoices.invoicePaid = payload.invoicePaid
@@ -269,12 +295,17 @@ export default [
                     consumptionLimit: Joi.number().allow(0),
                     consumptionLimitValue: Joi.number().allow(0),
                     consumptionLimitTotal: Joi.number().allow(0),
+                    sewerage: Joi.number().allow(0),
                     invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
                         value: Joi.number().optional().allow(0)
+                    })).optional(),
+                    agreements: Joi.array().items(Joi.object().keys({
+                        id: Joi.string().optional().allow(''),
+                        number: Joi.number().optional().allow(0)
                     })).optional()
                 })
             }

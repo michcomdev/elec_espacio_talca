@@ -578,9 +578,9 @@ function createModalBody(member) {
                                 <table class="table" style="font-size: 12px">
                                     <thead>
                                         <tr>
-                                            <th>Convenio</th>
-                                            <th>Cuota</th>
-                                            <th>Valor</th>
+                                            <th style="width: 60%">Convenio</th>
+                                            <th style="width: 10%; text-align: center">Cuota</th>
+                                            <th style="width: 30%; text-align: right">Valor</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tableBodyAgreements">
@@ -938,7 +938,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             month: parseInt(month),
             member: memberID
         })
-        console.log(agreementData)
+
         let agreements = agreementData.data
 
         $("#tableBodyAgreements").html('')
@@ -950,7 +950,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                         <input value="${agreements[j]._id}" style="display: none;" />
                         <span>${(agreements[j].services) ? agreements[j].services.name : agreements[j].other}</span>
                     </td>
-                    <td>${agreements[j].due.number}</td>
+                    <td style="text-align: center">${agreements[j].due.number} / ${agreements[j].dues.length}</td>
                     <td><input type="text" class="form-control form-control-sm numericValues money" value="${agreements[j].due.amount}"/></td>
                 </tr>`)
             }
@@ -1002,7 +1002,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 $("#tableBodyAgreements > tr").each(function() {
                     agreements.push({
                         id: $($($(this).children()[0]).children()[0]).val(),
-                        number: $($(this).children()[1]).text()
+                        number: $($(this).children()[1]).text().split(' / ')[0]
                     })
                 })
             }
@@ -1025,6 +1025,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 consumptionLimitValue: replaceAll($("#invoiceConsumptionLimitValue").val(), '.', '').replace(' ', '').replace('$', ''),
                 consumptionLimitTotal: replaceAll($("#invoiceConsumptionLimitTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
+                sewerage: replaceAll($("#invoiceSewerage").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
@@ -1040,12 +1041,12 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             /*if(services.length>0){
                 saleData.services = services
             }*/
-            console.log(invoiceData)
-            return
-//return
+            console.log('datos',invoiceData)
+
             const res = validateInvoiceData(invoiceData)
             if (res.ok) {
                 let saveInvoice = await axios.post('/api/invoiceSave', res.ok)
+                console.log('resultado',saveInvoice)
                 if (saveInvoice.data) {
                     if (saveInvoice.data._id) {
 
@@ -1101,6 +1102,9 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         $("#invoiceConsumptionLimitLabel").val(invoice.consumptionLimit)
         $("#invoiceConsumptionLimit").val(invoice.consumptionLimit)
         $("#invoiceConsumptionLimitValue").val(invoice.consumptionLimitValue)
+        if(invoice.sewerage){
+            $("#invoiceSewerage").val(invoice.sewerage)
+        }
 
         $("#invoiceDebt").val(invoice.invoiceDebt)
         //$("#invoiceConsumptionLimitTotal").val(invoice.consumptionLimitTotal)
@@ -1124,6 +1128,9 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#tableBodyServices").html('')
 
+
+
+        /*STAND BY
         if (invoice.services) {
             if (invoice.services.length > 0) {
                 for(let i=0; i<invoice.services.length; i++){
@@ -1143,6 +1150,28 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                         //<td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
                     }
                 }
+            }
+        }*/
+
+        let agreementData = await axios.post('/api/agreementsByInvoice', { 
+            invoiceID: invoiceID
+        })
+
+        let agreements = agreementData.data
+        console.log(agreements)
+
+        $("#tableBodyAgreements").html('')
+
+        if (agreements.length > 0) {
+            for(let j=0; j<agreements.length; j++){
+                $("#tableBodyAgreements").append(`<tr>
+                    <td>
+                        <input value="${agreements[j]._id}" style="display: none;" />
+                        <span>${(agreements[j].services) ? agreements[j].services.name : agreements[j].other}</span>
+                    </td>
+                    <td style="text-align: center">${agreements[j].due.number} / ${agreements[j].dues.length}</td>
+                    <td><input type="text" class="form-control form-control-sm numericValues money" value="${agreements[j].due.amount}"/></td>
+                </tr>`)
             }
         }
 
