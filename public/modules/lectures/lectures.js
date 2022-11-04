@@ -794,15 +794,12 @@ function calculateTotal() {
 
     //Montos
     let debt = $("#invoiceDebt").val()
-    let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(totalAgreements)
+    let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue)
     $("#invoiceSubTotal").val(subTotal)
     $("#invoiceDebt").val(debt)
-    $("#invoiceTotal").val(subTotal + parseInt(debt))
-
+    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements))
 
     $(".consumption").each(function() {
-        //$(this).val(dot_separators($(this).val()))
-
         new Cleave($(this), {
             prefix: '',
             numeral: true,
@@ -815,8 +812,6 @@ function calculateTotal() {
     })
 
     $(".money").each(function() {
-        //$(this).val(dot_separators($(this).val()))
-
         new Cleave($(this), {
             prefix: '$ ',
             numeral: true,
@@ -836,7 +831,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
     $("#"+lectureID).addClass('table-primary')
     $('#divInvoice').css('display', 'block')
     $('.btnLecture').attr('disabled',true)
-    //createInvoice($(this).attr('id'), $(this).attr('data-invoice'), member)
 
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
     let member = memberData.data
@@ -1001,8 +995,11 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             if($("#tableBodyAgreements > tr").length>0){
                 $("#tableBodyAgreements > tr").each(function() {
                     agreements.push({
-                        id: $($($(this).children()[0]).children()[0]).val(),
-                        number: $($(this).children()[1]).text().split(' / ')[0]
+                        services: $($($(this).children()[0]).children()[0]).val(),
+                        text: $($($(this).children()[0]).children()[1]).text(),
+                        number: parseInt($($(this).children()[1]).text().split(' / ')[0]),
+                        dueLength: parseInt($($(this).children()[1]).text().split(' / ')[1]),
+                        amount: replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
                     })
                 })
             }
@@ -1042,7 +1039,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 saleData.services = services
             }*/
             console.log('datos',invoiceData)
-
+            
             const res = validateInvoiceData(invoiceData)
             if (res.ok) {
                 let saveInvoice = await axios.post('/api/invoiceSave', res.ok)
@@ -1101,6 +1098,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#invoiceConsumptionLimitLabel").val(invoice.consumptionLimit)
         $("#invoiceConsumptionLimit").val(invoice.consumptionLimit)
+        console.log('haalo',invoice)
         $("#invoiceConsumptionLimitValue").val(invoice.consumptionLimitValue)
         if(invoice.sewerage){
             $("#invoiceSewerage").val(invoice.sewerage)
@@ -1184,7 +1182,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             let goSave = false
 
             let services = []
-            if($("#tableBodyServices > tr").length>0){
+            /*if($("#tableBodyServices > tr").length>0){
                 $("#tableBodyServices > tr").each(function() {
     
                     if(!$.isNumeric(replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
@@ -1198,6 +1196,19 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                         value: value
                     })
                 })    
+            }*/
+
+            let agreements = []
+            if($("#tableBodyAgreements > tr").length>0){
+                $("#tableBodyAgreements > tr").each(function() {
+                    agreements.push({
+                        services: $($($(this).children()[0]).children()[0]).val(),
+                        text: $($($(this).children()[0]).children()[1]).text(),
+                        number: parseInt($($(this).children()[1]).text().split(' / ')[0]),
+                        dueLength: parseInt($($(this).children()[1]).text().split(' / ')[1]),
+                        amount: replaceAll($($($(this).children()[2]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
+                    })
+                })
             }
 
             let invoiceData = {
@@ -1215,11 +1226,16 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 meterValue: replaceAll($("#invoiceMeterValue").val(), '.', '').replace(' ', '').replace('$', ''),
                 subsidyPercentage: replaceAll($("#invoiceSubsidyPercentage").val(), '.', '').replace(' ', '').replace('$', ''),
                 subsidyValue: replaceAll($("#invoiceSubsidyValue").val(), '.', '').replace(' ', '').replace('$', ''),
+                consumptionLimit: replaceAll($("#invoiceConsumptionLimit").val(), '.', '').replace(' ', '').replace('$', ''),
+                consumptionLimitValue: replaceAll($("#invoiceConsumptionLimitValue").val(), '.', '').replace(' ', '').replace('$', ''),
+                consumptionLimitTotal: replaceAll($("#invoiceConsumptionLimitTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
+                sewerage: replaceAll($("#invoiceSewerage").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
-                services: services
+                services: services,
+                agreements: agreements
             }
 
             if($("#divLectureNew").css('visibility') == 'visible'){
@@ -1234,6 +1250,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             /*if(services.length>0){
                 saleData.services = services
             }*/
+
+            console.log('send',invoiceData)
 
             const res = validateInvoiceData(invoiceData)
             if (res.ok) {
@@ -1450,7 +1468,7 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
 
     let index = 85 + 13
-    if(invoice.services){
+    /*if(invoice.services){
         for(let i=0; i<invoice.services.length; i++){
             if(invoice.services[i].services.type=='ALCANTARILLADO'){
                 doc.text('Alcantarillado', pdfX, pdfY + index)
@@ -1458,6 +1476,21 @@ async function printInvoice(docType,type,memberID,invoiceID) {
                 doc.text(invoice.services[i].services.name, pdfX, pdfY + index)
             }
             index += 13
+        }
+    }*/
+    if(invoice.sewerage){
+        doc.text('Alcantarillado', pdfX, pdfY + index)
+        index += 13
+    }
+
+    if(invoice.agreements){
+        let totalAgreement = 0
+        for(let i=0; i<invoice.agreements.length; i++){
+            totalAgreement += parseInt(invoice.agreements[i].amount)
+            if(i+1==invoice.agreements.length && totalAgreement > 0){
+                doc.text('Otros', pdfX, pdfY + index)
+                index += 13
+            }
         }
     }
 
@@ -1489,14 +1522,30 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.text(dot_separators(invoice.charge + invoice.consumption), pdfX + 250, pdfY + 85, 'right')
     
     index = 85 + 13
-    if(invoice.services){
+    /*if(invoice.services){
         for(let i=0; i<invoice.services.length; i++){
             doc.text(dot_separators(invoice.services[i].value), pdfX + 250, pdfY + index, 'right')
             index += 13
         }
+    }*/
+    if(invoice.sewerage){
+        doc.text(dot_separators(invoice.sewerage), pdfX + 250, pdfY + index, 'right')
+        index += 13
     }
+
+    let totalAgreement = 0
+    if(invoice.agreements){
+        for(let i=0; i<invoice.agreements.length; i++){
+            totalAgreement += parseInt(invoice.agreements[i].amount)
+            if(i+1==invoice.agreements.length && totalAgreement > 0){
+                doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
+                index += 13
+            }
+        }
+    }
+
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + index, 'right')
+    doc.text(dot_separators(parseInt(invoice.invoiceSubTotal) + parseInt(totalAgreement)), pdfX + 250, pdfY + index, 'right')
     doc.setFontType('normal')
     doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
     doc.setFontType('bold')

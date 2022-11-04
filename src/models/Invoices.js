@@ -43,16 +43,18 @@ const invoicesSchema = new Schema({
         number: { type: Number },
         seal: { type: String },
         token: { type: String },
-        resolution: { 
+        resolution: {
             fecha: {type: String },
             numero: {type: Number }
         }
-    }/*,
+    },
     agreements: [{ //A resolver, se debe identificar si se registrará acá además de la cuota del convenio
-        services: { type: Schema.Types.ObjectId, ref: 'services' },
-        other: { type: String },
-        value: { type: Number }
-    }],*/
+        services: { type: String },
+        text: { type: String },
+        number: { type: Number },
+        dueLength: { type: Number },
+        amount: { type: Number }
+    }],
 }, {
     versionKey: false
 })

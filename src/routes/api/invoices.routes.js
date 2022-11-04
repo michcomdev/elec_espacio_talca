@@ -147,17 +147,16 @@ export default [
                         query.lectureNewEnd = payload.lectureNewEnd
                     }
 
+                    if(payload.agreements.length>0){
+                        query.agreements = payload.agreements
+                    }
+
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
 
-                    console.log('response',response)
-
                     if(payload.agreements.length>0){
-                        console.log('1',payload.agreements)
                         for(let i=0; i<payload.agreements.length; i++){
-                            let agreement = await Agreements.findById(payload.agreements[i].id)
-                            console.log('2',agreement)
-
+                            let agreement = await Agreements.findById(payload.agreements[i].services)
                             for(let j=0; j<agreement.dues.length; j++){
                                 if(agreement.dues[j].number==payload.agreements[i].number){
                                     agreement.dues[j].invoices = response._id
@@ -209,8 +208,11 @@ export default [
                         value: Joi.number().optional().allow(0)
                     })).optional(),
                     agreements: Joi.array().items(Joi.object().keys({
-                        id: Joi.string().optional().allow(''),
-                        number: Joi.number().optional().allow(0)
+                        services: Joi.string().optional().allow(''),
+                        text: Joi.string().allow(''),
+                        number: Joi.number().optional().allow(0),
+                        dueLength: Joi.number().optional().allow(0),
+                        amount: Joi.number().optional().allow(0)
                     })).optional()
                 })
             }
@@ -254,6 +256,7 @@ export default [
                     //invoices.invoicePaid = payload.invoicePaid
                     invoices.invoiceTotal = payload.invoiceTotal
                     invoices.services = payload.services
+                    invoices.agreements = payload.agreements
 
                     if(payload.lectureNewStart){
                         invoices.lectureNewStart = payload.lectureNewStart
@@ -261,6 +264,20 @@ export default [
                     }
 
                     const response = await invoices.save()
+
+                    if(payload.agreements.length>0){
+                        for(let i=0; i<payload.agreements.length; i++){
+                            let agreement = await Agreements.findById(payload.agreements[i].services)
+
+                            for(let j=0; j<agreement.dues.length; j++){
+                                if(agreement.dues[j].number==payload.agreements[i].number){
+                                    agreement.dues[j].invoices = response._id
+                                    await agreement.save()
+                                    j = agreement.dues.length
+                                }
+                            }
+                        }
+                    }
 
                     return response
 
@@ -304,8 +321,11 @@ export default [
                         value: Joi.number().optional().allow(0)
                     })).optional(),
                     agreements: Joi.array().items(Joi.object().keys({
-                        id: Joi.string().optional().allow(''),
-                        number: Joi.number().optional().allow(0)
+                        services: Joi.string().optional().allow(''),
+                        text: Joi.string().allow(''),
+                        number: Joi.number().optional().allow(0),
+                        dueLength: Joi.number().optional().allow(0),
+                        amount: Joi.number().optional().allow(0)
                     })).optional()
                 })
             }
