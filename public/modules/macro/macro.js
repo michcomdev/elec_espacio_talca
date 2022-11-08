@@ -140,7 +140,7 @@ function loadMacro() {
                 }
             })
 
-        $('#tableMembers tbody').off("click")
+        /*$('#tableMembers tbody').off("click")
 
         $('#tableMembers tbody').on('click', 'tr', function () {
             if ($(this).hasClass('selected')) {
@@ -155,7 +155,7 @@ function loadMacro() {
                 //internals.members.data = internals.members.table.row($(this)).data()
                 internals.dataRowSelected = internals.members.table.row($(this)).data()
             }
-        })
+        })*/
     } catch (error) {
         console.log(error)
     }
@@ -169,9 +169,9 @@ console.log(parameters)
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
         
-
             el.U = '0'+parameters.municipality.code
             el.ORIGEN = 'CURICO'
+            console.log(el.members)
 
             let rut = replaceAll(el.members.rut, '.', '').split('-')
             while (rut[0].length<11) {
@@ -182,22 +182,44 @@ console.log(parameters)
             el.AP_PATERNO = el.members.personal.lastname1
             el.AP_MATERNO = el.members.personal.lastname2
             el.NOMBRES = el.members.personal.name
-            el.DIRECCION = ''
-            el.NUM_DEC = ''
-            el.FEC_DEC = ''
-            el.TRAMO_RSH = ''
-            el.FEC_ENC = ''
-            el.NUMUNICO = ''
-            el.DV_NUMUNICO = ''
-            el.NUMVIVTOT = ''
+            el.DIRECCION = el.members.address.address
+
+            let subsidy
+            for(let i=0; i<el.members.subsidies.length; i++){
+                if(el.members.subsidies[i].status=='active'){
+                    subsidy = el.members.subsidies[i]
+                }
+            }
+
+            while (subsidy.decreeNumber.toString().length<9) {
+                subsidy.decreeNumber = '0' + subsidy.decreeNumber.toString()
+            }
+            el.NUM_DEC = subsidy.decreeNumber.toString()
+            el.FEC_DEC = moment(subsidy.decreeDate).utc().format('DD-MM-YYYY')
+            while (subsidy.sectionRSH.toString().length<6) {
+                subsidy.sectionRSH = '0' + subsidy.sectionRSH.toString()
+            }
+            el.TRAMO_RSH = subsidy.sectionRSH.toString()
+            el.FEC_ENC = moment(subsidy.inscriptionDate).utc().format('DD-MM-YYYY')
+            while (el.members.subsidyNumber.toString().length<11) {
+                el.members.subsidyNumber = '0' + el.members.subsidyNumber.toString()
+            }
+            el.NUMUNICO = el.members.subsidyNumber.toString()
+            el.DV_NUMUNICO = '0'
+            while (subsidy.houseQuantity.toString().length<2) {
+                subsidy.houseQuantity = '0' + subsidy.houseQuantity.toString()
+            }
+            el.NUMVIVTOT = subsidy.houseQuantity.toString()
             el.CONSUMO = ''
             el.MONSUBS = ''
             el.MONCOBEN = ''
             el.NUMDEUD = ''
             el.MONDEUD = ''
-            el.OBSERVACION = ''
+            el.OBSERVACION = '10'
+
 
             return el
+
         })
 
         internals.members.table.rows.add(formatData).draw()

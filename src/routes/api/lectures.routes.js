@@ -605,16 +605,31 @@ export default [
                         typeInvoice: { $exists : false },
                         lectures: { $ne: null }
                     }
+                    let queryMembers = {
+                        'subsidies.status' : 'active'
+                    }
 
                     let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
                     let invoices = await Invoices.find(queryInvoice).sort({'date' : 'descending'}).lean().populate(['lectures','services.services'])
+                    let members = await Member.find(queryMembers).lean()
                     for(let i=0;i<lectures.length;i++){
+                        
+                        if(members.find(x => x._id.toString() === lectures[i].members._id.toString())){
+                            if(invoices){
+                                lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                            }
+                            array.push(lectures[i])
+                        }
+                    }
+                    return array
+
+                    /*for(let i=0;i<lectures.length;i++){
                         if(invoices){
                             lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
                         }
-                    }
+                    }*/
 
-                    return lectures
+                    //return lectures
 
                 } catch (error) {
                     console.log(error)

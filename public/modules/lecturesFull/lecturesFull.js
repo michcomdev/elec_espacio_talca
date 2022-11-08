@@ -547,8 +547,6 @@ async function saveMultiple(){
             if($("#chk"+internals.invoices[i].member).prop('checked')){
                 if(!internals.invoices[i].id){
 
-                    console.log('save',internals.invoices[i])
-                    return
                     let saveInvoice = await axios.post('/api/invoiceSave', internals.invoices[i])
                     if (saveInvoice.data) {
                         if (saveInvoice.data._id) {
