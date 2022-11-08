@@ -151,12 +151,14 @@ export default [
                         query.agreements = payload.agreements
                     }
 
+                    console.log(query)
+
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
 
                     if(payload.agreements.length>0){
                         for(let i=0; i<payload.agreements.length; i++){
-                            let agreement = await Agreements.findById(payload.agreements[i].services)
+                            let agreement = await Agreements.findById(payload.agreements[i].agreements)
                             for(let j=0; j<agreement.dues.length; j++){
                                 if(agreement.dues[j].number==payload.agreements[i].number){
                                     agreement.dues[j].invoices = response._id
@@ -208,7 +210,7 @@ export default [
                         value: Joi.number().optional().allow(0)
                     })).optional(),
                     agreements: Joi.array().items(Joi.object().keys({
-                        services: Joi.string().optional().allow(''),
+                        agreements: Joi.string().optional().allow(''),
                         text: Joi.string().allow(''),
                         number: Joi.number().optional().allow(0),
                         dueLength: Joi.number().optional().allow(0),
@@ -267,7 +269,7 @@ export default [
 
                     if(payload.agreements.length>0){
                         for(let i=0; i<payload.agreements.length; i++){
-                            let agreement = await Agreements.findById(payload.agreements[i].services)
+                            let agreement = await Agreements.findById(payload.agreements[i].agreements)
 
                             for(let j=0; j<agreement.dues.length; j++){
                                 if(agreement.dues[j].number==payload.agreements[i].number){
@@ -321,7 +323,7 @@ export default [
                         value: Joi.number().optional().allow(0)
                     })).optional(),
                     agreements: Joi.array().items(Joi.object().keys({
-                        services: Joi.string().optional().allow(''),
+                        agreements: Joi.string().optional().allow(''),
                         text: Joi.string().allow(''),
                         number: Joi.number().optional().allow(0),
                         dueLength: Joi.number().optional().allow(0),

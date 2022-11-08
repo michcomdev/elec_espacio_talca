@@ -995,7 +995,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             if($("#tableBodyAgreements > tr").length>0){
                 $("#tableBodyAgreements > tr").each(function() {
                     agreements.push({
-                        services: $($($(this).children()[0]).children()[0]).val(),
+                        agreements: $($($(this).children()[0]).children()[0]).val(),
                         text: $($($(this).children()[0]).children()[1]).text(),
                         number: parseInt($($(this).children()[1]).text().split(' / ')[0]),
                         dueLength: parseInt($($(this).children()[1]).text().split(' / ')[1]),
@@ -1098,7 +1098,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#invoiceConsumptionLimitLabel").val(invoice.consumptionLimit)
         $("#invoiceConsumptionLimit").val(invoice.consumptionLimit)
-        console.log('haalo',invoice)
         $("#invoiceConsumptionLimitValue").val(invoice.consumptionLimitValue)
         if(invoice.sewerage){
             $("#invoiceSewerage").val(invoice.sewerage)
@@ -1202,7 +1201,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             if($("#tableBodyAgreements > tr").length>0){
                 $("#tableBodyAgreements > tr").each(function() {
                     agreements.push({
-                        services: $($($(this).children()[0]).children()[0]).val(),
+                        agreements: $($($(this).children()[0]).children()[0]).val(),
                         text: $($($(this).children()[0]).children()[1]).text(),
                         number: parseInt($($(this).children()[1]).text().split(' / ')[0]),
                         dueLength: parseInt($($(this).children()[1]).text().split(' / ')[1]),
@@ -2762,14 +2761,10 @@ function createModalPayment(member) {
                                                 <input id="paymentAmount" type="text" class="form-control form-control-sm border-input numericValues">
                                             </div>
 
-                                            
-
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            
                         </div>
 
                         <div class="row">

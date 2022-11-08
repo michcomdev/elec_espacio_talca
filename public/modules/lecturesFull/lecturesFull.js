@@ -173,7 +173,10 @@ console.log(lecturesData.data)
             if(el.invoice){
 
                 let invoiceServices = [], sewerage = 0, others = 0
-                for(let j=0; j < el.invoice.services.length; j++){
+                if(el.invoice.sewerage){
+                    sewerage = el.invoice.sewerage
+                }
+                /*for(let j=0; j < el.invoice.services.length; j++){
                     if(el.invoice.services[j].services.type=='ALCANTARILLADO'){
                         sewerage += (parseInt(el.invoice.services[j].value)!=0) ? parseInt(el.invoice.services[j].value) : parseInt(el.invoice.services[j].services.value)//Indicar valor por defecto en caso de 0
                     }else{
@@ -184,6 +187,10 @@ console.log(lecturesData.data)
                         services: el.invoice.services[j].services._id,
                         value: el.invoice.services[j].value
                     })
+                }*/
+
+                for(let j=0; j < el.invoice.agreements.length; j++){
+                    others += parseInt(el.invoice.agreements[j].amount)
                 }
 
                 if(!el.invoice.token){
@@ -202,6 +209,8 @@ console.log(lecturesData.data)
                         meterValue: el.invoice.meterValue,
                         subsidyPercentage: el.invoice.subsidyPercentage,
                         subsidyValue: el.invoice.subsidyValue,
+                        sewerage: sewerage,
+                        others: others,
                         consumptionLimit: el.invoice.consumptionLimit,
                         consumptionLimitValue: el.invoice.consumptionLimitValue,
                         consumptionLimitTotal: el.invoice.consumptionLimitTotal,
@@ -256,9 +265,17 @@ console.log(lecturesData.data)
 }
 
 async function calculate(){
+
+    loadingHandler('start')
+
     let array = internals.members.data
     let newArray = []
     internals.invoices = []
+
+    if(array.length==0){
+        loadingHandler('stop')
+        return
+    }
 
     for(let i=0; i < array.length; i++){
 
@@ -283,8 +300,14 @@ async function calculate(){
 
             let el = array[i]
             
+            console.log(el)
+
             let invoiceServices = [], sewerage = 0, others = 0
-            for(let j=0; j < el.invoice.services.length; j++){
+
+            if(el.invoice.sewerage){
+                sewerage = el.invoice.sewerage
+            }
+            /*for(let j=0; j < el.invoice.services.length; j++){
                 if(el.invoice.services[j].services.type=='ALCANTARILLADO'){
                     sewerage += (parseInt(el.invoice.services[j].value)!=0) ? parseInt(el.invoice.services[j].value) : parseInt(el.invoice.services[j].services.value)//Indicar valor por defecto en caso de 0
                 }else{
@@ -295,7 +318,12 @@ async function calculate(){
                     services: el.invoice.services[j].services._id,
                     value: el.invoice.services[j].value
                 })
+            }*/
+
+            for(let j=0; j < el.invoice.agreements.length; j++){
+                others += parseInt(el.invoice.agreements[j].amount)
             }
+
 
             newArray.push(
                 {
@@ -377,15 +405,44 @@ async function calculate(){
                 for(let j=0; j < array[i].members.services.length; j++){
                     if(array[i].members.services[j].services.type=='ALCANTARILLADO'){
                         sewerage += (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value)//Indicar valor por defecto en caso de 0
-                    }else{
+                    }/*else{
                         others += (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value) //Indicar valor por defecto en caso de 0
                     }
 
                     services.push({
                         services: array[i].members.services[j].services._id,
                         value: (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value)
-                    })
+                    })*/
+                }
+            }
 
+            
+
+            //Carga de Convenios
+            let agreementData = await axios.post('/api/agreementsByDate', { 
+                year: parseInt(array[i].year),
+                month: parseInt(array[i].month),
+                member: array[i].members._id
+            })
+
+    
+            let agreementsData = agreementData.data
+            let agreements = []
+
+            if (agreementsData.length > 0) {
+                console.log({year: parseInt(array[i].year),
+                    month: parseInt(array[i].month),
+                    member: array[i].members._id})
+                console.log(agreementsData)
+                for(let j=0; j<agreementsData.length; j++){
+                    others += parseInt(agreementsData[j].due.amount)
+                    agreements.push({
+                        agreements: agreementsData[j]._id,
+                        text: (agreementsData[j].services) ? agreementsData[j].services.name : agreementsData[j].other,
+                        number: parseInt(agreementsData[j].due.number),
+                        dueLength: parseInt(agreementsData[j].dues.length),
+                        amount: parseInt(agreementsData[j].due.amount)
+                    })
                 }
             }
 
@@ -405,8 +462,8 @@ async function calculate(){
             }
 
             //Montos
-            let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(sewerage) + parseInt(others)
-            let total = parseInt(subTotal) + parseInt(debt)
+            let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(sewerage)
+            let total = parseInt(subTotal) + parseInt(debt) + parseInt(others)
 
             newArray.push(
                 {
@@ -434,6 +491,8 @@ async function calculate(){
                 lectures: array[i]._id,
                 member: array[i].members._id,
                 memberType: array[i].members.type,
+                type: 41, //Tipo documento: boleta/factura
+                //type: array[i].members.dte, //Tipo documento: boleta/factura
                 //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
                 date: moment.utc().format('YYYY-MM-DD'),
                 dateExpire: moment.utc().add(15, 'days').format('YYYY-MM-DD'),
@@ -448,10 +507,12 @@ async function calculate(){
                 consumptionLimitValue: consumptionLimitValue,
                 consumptionLimitTotal: consumptionLimitTotal,
                 consumption: lastConsumptionValue,
+                sewerage: sewerage,
                 invoiceSubTotal: subTotal,
                 invoiceDebt: debt,
                 invoiceTotal: total,
-                services: services
+                services: services,
+                agreements: agreements
             })
             
             if(lectureNewEnd !== undefined){
@@ -464,6 +525,8 @@ async function calculate(){
             internals.members.table.clear()
             internals.members.table.rows.add(newArray)
             internals.members.table.draw()
+
+            loadingHandler('stop')
         }
     }
 
@@ -483,7 +546,9 @@ async function saveMultiple(){
         for(let i=0; i<internals.invoices.length; i++){
             if($("#chk"+internals.invoices[i].member).prop('checked')){
                 if(!internals.invoices[i].id){
-                    
+
+                    console.log('save',internals.invoices[i])
+                    return
                     let saveInvoice = await axios.post('/api/invoiceSave', internals.invoices[i])
                     if (saveInvoice.data) {
                         if (saveInvoice.data._id) {
@@ -839,6 +904,13 @@ function createModalBody(member) {
                                     <div class="col-md-3">
                                         <input id="invoiceConsumptionLimitTotal" type="text" class="form-control form-control-sm border-input numericValues money" >
                                     </div>
+                                    <div class="col-md-8">
+                                        Alcantarillado $
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-3">
+                                        <input id="invoiceSewerage" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
 
 
                                     <div class="col-md-8">
@@ -848,8 +920,6 @@ function createModalBody(member) {
                                     <div class="col-md-3">
                                         <input id="invoiceConsumption2" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #b7ebd8">
                                     </div>
-
-
                                 </div>
                             </div>
                         </div>
@@ -858,28 +928,29 @@ function createModalBody(member) {
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-12" style="text-align: center">
-                                        <b>Servicios</b>
+                                        <b>Convenios (Otros)</b>
                                     </div>
 
                                     <div class="col-md-12">
                                         <table class="table" style="font-size: 12px">
                                             <thead>
                                                 <tr>
-                                                    <th>Servicio</th>
-                                                    <th>Valor</th>
+                                                    <th style="width: 60%">Convenio</th>
+                                                    <th style="width: 10%; text-align: center">Cuota</th>
+                                                    <th style="width: 30%; text-align: right">Valor</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="tableBodyServices">
+                                            <tbody id="tableBodyAgreements">
                                             
                                             </tbody>
                                         </table>
                                     </div>
                                     <div class="col-md-8">
-                                        Total Servicios $
+                                        Total Convenios $
                                     </div>
                                     <div class="col-md-1" style="text-align: center"></div>
                                     <div class="col-md-3">
-                                        <input id="invoiceTotalServices" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                                        <input id="invoiceTotalAgreements" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
                                     </div>
                                     
                                 </div>
@@ -910,11 +981,11 @@ function createModalBody(member) {
                                     </div>
 
                                     <div class="col-md-8">
-                                        Servicios
+                                        Convenios (Otros)
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(+)</div>
                                     <div class="col-md-3">
-                                        <input id="invoiceTotalServicesb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                                        <input id="invoiceTotalAgreementsb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
                                     </div>
 
                                     <div class="col-md-8">
@@ -1014,33 +1085,34 @@ function calculateTotal() {
         $("#invoiceConsumptionLimitOver").val(lectureValue - consumptionLimit)
     }
     $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
+    let sewerage = parseInt($("#invoiceSewerage").val())
 
-    let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal
+    let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
     $("#invoiceConsumption2").val(lastConsumptionValue)
     $("#invoiceConsumption2b").val(lastConsumptionValue)
 
-    //Servicios
-    let totalServices = 0
-    if($("#tableBodyServices > tr").length>0){
-        $("#tableBodyServices > tr").each(function() {
+    //Convenios
+    let totalAgreements = 0
+    if($("#tableBodyAgreements > tr").length>0){
+        $("#tableBodyAgreements > tr").each(function() {
             let value = 0
-            if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
+            if(!$.isNumeric($($($(this).children()[2]).children()[0]).val())){
                 value = 0
             }else{
-                value = $($($(this).children()[1]).children()[0]).val()
+                value = $($($(this).children()[2]).children()[0]).val()
             }
-            totalServices += parseInt(value)
+            totalAgreements += parseInt(value)
         })    
     }
-    $("#invoiceTotalServices").val(totalServices)
-    $("#invoiceTotalServicesb").val(totalServices)
+    $("#invoiceTotalAgreements").val(totalAgreements)
+    $("#invoiceTotalAgreementsb").val(totalAgreements)
 
     //Montos
     let debt = $("#invoiceDebt").val()
-    let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(totalServices)
+    let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue)
     $("#invoiceSubTotal").val(subTotal)
     $("#invoiceDebt").val(debt) //A asignar
-    $("#invoiceTotal").val(subTotal + parseInt(debt))
+    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements))
 
 
     $(".consumption").each(function() {
@@ -1158,17 +1230,37 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#tableBodyServices").html('')
 
+        //Servicios
         if (member.services) {
             if (member.services.length > 0) {
                 for(let i=0; i<member.services.length; i++){
-                    $("#tableBodyServices").append(`<tr>
-                        <td>
-                            <input type="text" class="form-control form-control-sm" value="${member.services[i].services._id}" style="display: none"/>
-                            <span>${member.services[i].services.name}</span>
-                        </td>
-                        <td><input type="text" class="form-control form-control-sm numericValues money" value="${(member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value }"/></td>
-                    </tr>`)
+                    if(member.services[i].services.type=='ALCANTARILLADO'){
+                        $("#invoiceSewerage").val((member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value)
+                    }
                 }
+            }
+        }
+
+        let agreementData = await axios.post('/api/agreementsByDate', { 
+            year: parseInt(year),
+            month: parseInt(month),
+            member: memberID
+        })
+
+        let agreements = agreementData.data
+
+        $("#tableBodyAgreements").html('')
+
+        if (agreements.length > 0) {
+            for(let j=0; j<agreements.length; j++){
+                $("#tableBodyAgreements").append(`<tr>
+                    <td>
+                        <input value="${agreements[j]._id}" style="display: none;" />
+                        <span>${(agreements[j].services) ? agreements[j].services.name : agreements[j].other}</span>
+                    </td>
+                    <td style="text-align: center">${agreements[j].due.number} / ${agreements[j].dues.length}</td>
+                    <td><input type="text" class="form-control form-control-sm numericValues money" value="${agreements[j].due.amount}"/></td>
+                </tr>`)
             }
         }
 
@@ -1225,6 +1317,9 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         $("#invoiceConsumptionLimitLabel").val(invoice.consumptionLimit)
         $("#invoiceConsumptionLimit").val(invoice.consumptionLimit)
         $("#invoiceConsumptionLimitValue").val(invoice.consumptionLimitValue)
+        if(invoice.sewerage){
+            $("#invoiceSewerage").val(invoice.sewerage)
+        }
 
         $("#invoiceDebt").val(invoice.invoiceDebt)
 
@@ -1237,18 +1332,25 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#tableBodyServices").html('')
 
-        if (invoice.services) {
-            if (invoice.services.length > 0) {
-                for(let i=0; i<invoice.services.length; i++){
-                    $("#tableBodyServices").append(`<tr>
-                        <td>
-                            <input type="text" class="form-control form-control-sm" value="${invoice.services[i].services._id}" style="display: none"/>
-                            <span>${invoice.services[i].services.name}</span>
-                        </td>
-                        <td><input type="text" class="form-control form-control-sm numericValues money" value="${(invoice.services[i].value!=0) ? invoice.services[i].value : '' }"/></td>
-                    </tr>`)
-                    //<td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
-                }
+        let agreementData = await axios.post('/api/agreementsByInvoice', { 
+            invoiceID: invoiceID
+        })
+
+        let agreements = agreementData.data
+        console.log(agreements)
+
+        $("#tableBodyAgreements").html('')
+
+        if (agreements.length > 0) {
+            for(let j=0; j<agreements.length; j++){
+                $("#tableBodyAgreements").append(`<tr>
+                    <td>
+                        <input value="${agreements[j]._id}" style="display: none;" />
+                        <span>${(agreements[j].services) ? agreements[j].services.name : agreements[j].other}</span>
+                    </td>
+                    <td style="text-align: center">${agreements[j].due.number} / ${agreements[j].dues.length}</td>
+                    <td><input type="text" class="form-control form-control-sm numericValues money" value="${agreements[j].due.amount}"/></td>
+                </tr>`)
             }
         }
 
@@ -1447,7 +1549,7 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
 
     let index = 85 + 13
-    if(invoice.services){
+    /*if(invoice.services){
         for(let i=0; i<invoice.services.length; i++){
             if(invoice.services[i].services.type=='ALCANTARILLADO'){
                 doc.text('Alcantarillado', pdfX, pdfY + index)
@@ -1456,7 +1558,25 @@ async function printInvoice(docType,type,memberID,invoiceID) {
             }
             index += 13
         }
+    }*/
+    if(invoice.sewerage){
+        doc.text('Alcantarillado', pdfX, pdfY + index)
+        index += 13
     }
+
+    if(invoice.agreements){
+        let totalAgreement = 0
+        for(let i=0; i<invoice.agreements.length; i++){
+            totalAgreement += parseInt(invoice.agreements[i].amount)
+            if(i+1==invoice.agreements.length && totalAgreement > 0){
+                doc.text('Otros', pdfX, pdfY + index)
+                index += 13
+            }
+        }
+    }
+
+
+
 
     doc.setFontType('bold')
     doc.text('SubTotal', pdfX, pdfY + index)
@@ -1486,12 +1606,28 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.text(dot_separators(invoice.charge + invoice.consumption), pdfX + 250, pdfY + 85, 'right')
     
     index = 85 + 13
-    if(invoice.services){
+    /*if(invoice.services){
         for(let i=0; i<invoice.services.length; i++){
             doc.text(dot_separators(invoice.services[i].value), pdfX + 250, pdfY + index, 'right')
             index += 13
         }
+    }*/
+    if(invoice.sewerage){
+        doc.text(dot_separators(invoice.sewerage), pdfX + 250, pdfY + index, 'right')
+        index += 13
     }
+
+    let totalAgreement = 0
+    if(invoice.agreements){
+        for(let i=0; i<invoice.agreements.length; i++){
+            totalAgreement += parseInt(invoice.agreements[i].amount)
+            if(i+1==invoice.agreements.length && totalAgreement > 0){
+                doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
+                index += 13
+            }
+        }
+    }
+
     doc.setFontType('bold')
     doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + index, 'right')
     doc.setFontType('normal')
@@ -2235,11 +2371,13 @@ async function printFinal(array){
             }
 
             if (flag > 0 && flag <= 13) {
-                lastInvoices.push(array[k].lectures[j].invoice)
                 flag++
 
-                if (array[k].lectures[j].invoice.lectureResult > maxValue) {
-                    maxValue = array[k].lectures[j].invoice.lectureResult
+                if (array[k].lectures[j].invoice !== undefined) {
+                    lastInvoices.push(array[k].lectures[j].invoice)
+                    if (array[k].lectures[j].invoice.lectureResult > maxValue) {
+                        maxValue = array[k].lectures[j].invoice.lectureResult
+                    }
                 }
             }
         }
@@ -2249,15 +2387,15 @@ async function printFinal(array){
         pdfY += 25
         doc.setFontSize(7)
         doc.setFontType('normal')
-
+    
         doc.setDrawColor(199, 199, 199)
-
+    
         if (maxValue < 5) {
             pdfY -= 5
             //Línea límite según lectura máxima
             doc.text(maxValue.toString(), pdfX - 2, pdfY, 'right')
             doc.line(pdfX, pdfY, pdfX + 250, pdfY)
-
+    
             if (maxValue == 4) {
                 doc.text('3', pdfX - 2, (pdfY + 2) + 25, 'right')
                 doc.text('2', pdfX - 2, (pdfY + 2) + 50, 'right')
@@ -2265,7 +2403,7 @@ async function printFinal(array){
                 doc.line(pdfX, pdfY + 25, pdfX + 250, pdfY + 25)
                 doc.line(pdfX, pdfY + 50, pdfX + 250, pdfY + 50)
                 doc.line(pdfX, pdfY + 75, pdfX + 250, pdfY + 75)
-
+    
             } else if (maxValue == 3) {
                 doc.text('2', pdfX - 2, pdfY + 34, 'right')
                 doc.text('1', pdfX - 2, pdfY + 69, 'right')
@@ -2275,69 +2413,67 @@ async function printFinal(array){
                 doc.text('1', pdfX - 2, pdfY + 51, 'right')
                 doc.line(pdfX, pdfY + 51, pdfX + 250, pdfY + 51)
             }
-
+    
             pdfY += 102
-
+    
         } else if (maxValue % 4 == 0) {
-
+            pdfY -= 5
             //Línea límite según lectura máxima
             doc.text(maxValue.toString(), pdfX - 2, pdfY, 'right')
             doc.line(pdfX, pdfY, pdfX + 250, pdfY)
-
+    
             let min = parseInt(maxValue / 4)
             doc.text((min * 3).toString(), pdfX - 2, pdfY + (min * meterPoints), 'right')
             doc.text((min * 2).toString(), pdfX - 2, pdfY + (min * 2 * meterPoints), 'right')
             doc.text((min).toString(), pdfX - 2, pdfY + (min * 3 * meterPoints), 'right')
-
+    
             doc.line(pdfX, pdfY + (min * meterPoints), pdfX + 250, pdfY + (min * meterPoints))
             doc.line(pdfX, pdfY + (min * 2 * meterPoints), pdfX + 250, pdfY + (min * 2 * meterPoints))
             doc.line(pdfX, pdfY + (min * 3 * meterPoints), pdfX + 250, pdfY + (min * 3 * meterPoints))
-
+    
             pdfY += 102
-
+    
         } else {
             pdfY -= 5
             //Línea límite según lectura máxima
             doc.text(maxValue.toString(), pdfX - 2, pdfY + (102 - (maxValue * meterPoints)), 'right')
             doc.line(pdfX, pdfY + (100 - (maxValue * meterPoints)), pdfX + 250, pdfY + (100 - (maxValue * meterPoints)))
-
+    
             let min = parseInt(maxValue / 4)
-
+    
             pdfY += 102
-
+    
             doc.text((min * 4).toString(), pdfX - 2, (pdfY + 2) - (min * 4 * meterPoints), 'right')
             doc.text((min * 3).toString(), pdfX - 2, (pdfY + 2) - (min * 3 * meterPoints), 'right')
             doc.text((min * 2).toString(), pdfX - 2, (pdfY + 2) - (min * 2 * meterPoints), 'right')
             doc.text((min).toString(), pdfX - 2, (pdfY + 2) - (min * meterPoints), 'right')
-
+    
             doc.line(pdfX, pdfY - (min * meterPoints), pdfX + 250, pdfY - (min * meterPoints))//Línea Inferior
             doc.line(pdfX, pdfY - (min * 2 * meterPoints), pdfX + 250, pdfY - (min * 2 * meterPoints))//Línea Inferior
             doc.line(pdfX, pdfY - (min * 3 * meterPoints), pdfX + 250, pdfY - (min * 3 * meterPoints))//Línea Inferior
             doc.line(pdfX, pdfY - (min * 4 * meterPoints), pdfX + 250, pdfY - (min * 4 * meterPoints))//Línea Inferior
         }
-
+    
         doc.text('0', pdfX - 2, pdfY, 'right')
-
+    
         //GRÁFICO DE CONSUMOS
         pdfY = 435
         pdfX = 263
         //for(let i=lastInvoices.length; i>0; i--){
         //for(let i=13; i>0; i--){ Max month test
         doc.setFontSize(8)
-
-
-
-
+    
+    
         for (let i = 0; i < lastInvoices.length; i++) {
-
+    
             if (i == 0) {
                 doc.setFillColor(23, 162, 184)
             } else {
                 doc.setFillColor(82, 82, 82)
             }
-
+    
             let offset = 100 - (lastInvoices[i].lectureResult * meterPoints) //Determina posición inicial respecto al máximo del gráfico
-
+    
             doc.rect(pdfX, pdfY + offset, 11, 99 - offset, 'F')
             //Posición X (descendente)
             //Posición Y suma offset según lectura

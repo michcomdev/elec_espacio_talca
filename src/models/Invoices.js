@@ -49,7 +49,7 @@ const invoicesSchema = new Schema({
         }
     },
     agreements: [{ //A resolver, se debe identificar si se registrará acá además de la cuota del convenio
-        services: { type: String },
+        agreements: { type: String },
         text: { type: String },
         number: { type: Number },
         dueLength: { type: Number },
