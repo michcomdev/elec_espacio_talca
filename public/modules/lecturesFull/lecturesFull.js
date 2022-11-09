@@ -143,6 +143,8 @@ function chargeMembersTable() {
 }
 
 async function getLectures() {
+
+    loadingHandler('start')
     //let lecturesData = await axios.post('api/membersLectures', {sector: $("#searchSector").val()})
     let query = {
         sector: $("#searchSector").val(), 
@@ -156,6 +158,7 @@ console.log(lecturesData.data)
     internals.invoices = []
 
     if (lecturesData.data.length > 0) {
+        //let index = 0
         let formatData = lecturesData.data.map(el => {
 
             el.select = `<input type="checkbox" class="chkClass" id="chk${el.members._id}" />`
@@ -257,6 +260,8 @@ console.log(lecturesData.data)
         })
 
         internals.members.table.rows.add(formatData).draw()
+
+        loadingHandler('stop')
         $('#loadingMembers').empty()
     } else {
         //toastr.warning('No se han encontrado ventas en el rango seleccionado')
