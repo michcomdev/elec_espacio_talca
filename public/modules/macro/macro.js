@@ -77,7 +77,7 @@ async function getParameters() {
 }
 
 function loadMacro() {
-    try {
+    /*try {
         if ($.fn.DataTable.isDataTable('#tableMembers')) {
             internals.members.table.clear().destroy()
         }
@@ -140,25 +140,10 @@ function loadMacro() {
                 }
             })
 
-        /*$('#tableMembers tbody').off("click")
-
-        $('#tableMembers tbody').on('click', 'tr', function () {
-            if ($(this).hasClass('selected')) {
-                $(this).removeClass('selected')
-                $('#updateLectures').prop('disabled', true)
-                $('#updatePayment').prop('disabled', true)
-            } else {
-                internals.members.table.$('tr.selected').removeClass('selected')
-                $(this).addClass('selected')
-                $('#updateLectures').prop('disabled', false)
-                $('#updatePayment').prop('disabled', false)
-                //internals.members.data = internals.members.table.row($(this)).data()
-                internals.dataRowSelected = internals.members.table.row($(this)).data()
-            }
-        })*/
     } catch (error) {
         console.log(error)
-    }
+    }*/
+    getMembers()
 
 }
 
@@ -171,8 +156,7 @@ console.log(parameters)
         
             el.U = '0'+parameters.municipality.code
             el.ORIGEN = 'CURICO'
-            console.log(el.members)
-
+            
             let rut = replaceAll(el.members.rut, '.', '').split('-')
             while (rut[0].length<11) {
                 rut[0] = '0' + rut[0]
@@ -210,19 +194,54 @@ console.log(parameters)
                 subsidy.houseQuantity = '0' + subsidy.houseQuantity.toString()
             }
             el.NUMVIVTOT = subsidy.houseQuantity.toString()
-            el.CONSUMO = ''
-            el.MONSUBS = ''
-            el.MONCOBEN = ''
-            el.NUMDEUD = ''
-            el.MONDEUD = ''
+            if(el.invoice){
+                el.CONSUMO = (el.invoice.lectureResult) ? el.invoice.lectureResult : ''
+                el.MONSUBS = (el.invoice.subsidyValue) ? el.invoice.subsidyValue : ''
+                el.MONCOBEN = ''
+                el.NUMDEUD = ''
+                el.MONDEUD = ''
+            }else{
+                el.CONSUMO = ''
+                el.MONSUBS = ''
+                el.MONCOBEN = ''
+                el.NUMDEUD = ''
+                el.MONDEUD = ''
+            }
             el.OBSERVACION = '10'
 
 
             return el
-
         })
 
-        internals.members.table.rows.add(formatData).draw()
+        //internals.members.table.rows.add(formatData).draw()
+        for(let i=0; i<formatData.length; i++){
+            $("#tableMembersBody").append(`
+                <tr>
+                    <td>${formatData[i].U}</td>
+                    <td>${formatData[i].ORIGEN}</td>
+                    <td>${formatData[i].RUT}</td>
+                    <td>${formatData[i].DV_RUT}</td>
+                    <td>${formatData[i].AP_PATERNO}</td>
+                    <td>${formatData[i].AP_MATERNO}</td>
+                    <td>${formatData[i].NOMBRES}</td>
+                    <td>${formatData[i].DIRECCION}</td>
+                    <td>${formatData[i].NUM_DEC}</td>
+                    <td>${formatData[i].FEC_DEC}</td>
+                    <td>${formatData[i].TRAMO_RSH}</td>
+                    <td>${formatData[i].FEC_ENC}</td>
+                    <td>${formatData[i].NUMUNICO}</td>
+                    <td>${formatData[i].DV_NUMUNICO}</td>
+                    <td>${formatData[i].NUMVIVTOT}</td>
+                    <td>${formatData[i].CONSUMO}</td>
+                    <td>${formatData[i].MONSUBS}</td>
+                    <td>${formatData[i].MONCOBEN}</td>
+                    <td>${formatData[i].NUMDEUD}</td>
+                    <td>${formatData[i].MONDEUD}</td>
+                    <td>${formatData[i].OBSERVACION}</td>
+                </tr>            
+            `)
+        }
+
         $('#loadingMembers').empty()
     } else {
         //toastr.warning('No se han encontrado ventas en el rango seleccionado')

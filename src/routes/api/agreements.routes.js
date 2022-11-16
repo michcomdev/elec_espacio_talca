@@ -351,5 +351,39 @@ export default [
                 })
             }
         }
+    },
+    {
+        method: 'POST',
+        path: '/api/agreementsPending',
+        options: {
+            description: 'get agreements by filters',
+            notes: 'get agreements by filters',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+                    let query = {
+                        members: payload.member
+                    }
+
+                    let agreements = await Agreements.find(query).lean().populate(['services'])//.populate([{ path: 'members', populate: { path: 'address.sector'} }, 'invoices.invoices'])
+                    return agreements
+
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    member: Joi.string(),
+                    invoice: Joi.string().optional()
+                })
+            }
+        }
     }
 ]

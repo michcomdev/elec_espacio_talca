@@ -13,7 +13,8 @@ const agreementsSchema = new Schema({
         year: { type: Number },
         month: { type: Number },
         amount: { type: Number },
-        invoices: { type: Schema.Types.ObjectId, ref: 'invoices' }
+        invoices: { type: Schema.Types.ObjectId, ref: 'invoices' },
+        invoicesIngreso: { type: Schema.Types.ObjectId, ref: 'invoices' }
     }]
 }, {
     versionKey: false

@@ -547,9 +547,11 @@ export default [
                         query.number = payload.number
                     }
                     
-                    if(payload.services.length>0){
-                        query.services = payload.services
+                    if(payload.agreements.length>0){
+                        query.agreements = payload.agreements
                     }
+
+                    /*FALTA AGREGAR ACTUALIZACIÓN DE CONVENIO ASOCIADO A INGRESO/BOLETA */
 
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
@@ -572,11 +574,18 @@ export default [
                     date: Joi.string().allow(''),
                     dateExpire: Joi.string().allow(''),
                     invoiceTotal: Joi.number().allow(0),
-                    services: Joi.array().items(Joi.object().keys({
+                    agreements: Joi.array().items(Joi.object().keys({
+                        agreements: Joi.string().optional().allow(''),
+                        text: Joi.string().allow(''),
+                        number: Joi.number().optional().allow(0),
+                        dueLength: Joi.number().optional().allow(0),
+                        amount: Joi.number().optional().allow(0)
+                    })).optional()
+                    /*services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
                         other: Joi.string().optional().allow(''),
                         value: Joi.number().optional().allow(0)
-                    })).optional()
+                    })).optional()*/
                 })
             }
         }
@@ -602,7 +611,8 @@ export default [
                     invoices.date = payload.date
                     invoices.dateExpire = payload.dateExpire
                     invoices.invoiceTotal = payload.invoiceTotal
-                    invoices.services = payload.services
+                    //invoices.services = payload.services
+                    invoices.agreements = payload.agreements
 
                     const response = await invoices.save()
 
@@ -625,11 +635,18 @@ export default [
                     date: Joi.string().allow(''),
                     dateExpire: Joi.string().allow(''),
                     invoiceTotal: Joi.number().allow(0),
-                    services: Joi.array().items(Joi.object().keys({
+                    agreements: Joi.array().items(Joi.object().keys({
+                        agreements: Joi.string().optional().allow(''),
+                        text: Joi.string().allow(''),
+                        number: Joi.number().optional().allow(0),
+                        dueLength: Joi.number().optional().allow(0),
+                        amount: Joi.number().optional().allow(0)
+                    })).optional()
+                    /*services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
                         other: Joi.string().optional().allow(''),
                         value: Joi.number().optional().allow(0)
-                    })).optional()
+                    })).optional()*/
                 })
             }
         }

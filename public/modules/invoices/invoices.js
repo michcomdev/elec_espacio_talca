@@ -11,12 +11,9 @@ let internals = {
     productRowSelected: {}
 }
 
-let clients = {}
-let containerTypes = {}
-let sites = {}
-let cranes = {}
-let sectors = {}
-let serviceList = ''
+//let serviceList = ''
+let agreementList = ''
+let agreementArray = []
 
 let parameters
 
@@ -49,24 +46,6 @@ async function getParameters() {
             return acc
         },'')
     )
-
-    let servicesData = await axios.post('/api/servicesByFilter', {invoice: 'INGRESO'})
-    let services = servicesData.data
-
-    serviceList = `<tr><td>
-                        <select class="form-control form-control-sm form-select" onchange="serviceValue(this)"><option value="0" data-value="0">Seleccione</option>`
-    for(let i=0; i<services.length; i++){
-        serviceList += `<option value="${services[i]._id}" data-value="${services[i].value}">${services[i].name}</option>`
-    }
-    serviceList += `</select></td>
-                    <td>
-                        <input type="text" class="form-control form-control-sm serviceValue" style="text-align: right" value="0"/>
-                    </td>
-                    <td>
-                        <button style="border-radius:5px;" class="btn btn-sm btn-danger" onclick="deleteService(this)"><i ="color:#3498db;" class="fas fa-times"></i></button>
-                    </td>
-                </tr>`
-
 }
 
 function chargeMembersTable() {
@@ -293,7 +272,7 @@ function validateInvoiceData(invoiceData) {
         errorMessage += '<br>Total'
     }
 
-    if (invoiceData.services) {
+    /*if (invoiceData.services) {
         for(let i=0; i<invoiceData.services.length; i++){
             if(invoiceData.services[i].services=='0'){
                 errorMessage += '<br>Seleccionar servicio(s)'
@@ -304,7 +283,7 @@ function validateInvoiceData(invoiceData) {
         }
     } else {
         errorMessage += '<br>Servicios'
-    }
+    }*/
 
 
     if (errorMessage.length === 0) {
@@ -424,40 +403,24 @@ function createModalBody(member) {
                         <div class="card border-primary">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-12" style="text-align: center">
-                                        <b>Servicios</b>
+                                    <div class="col-md-12" style="text-align: center;">
+                                        <button style="border-radius: 5px;" class="btn btn-sm btn-primary" onclick="addAgreement()"><i class="fas fa-plus-circle"></i> Agregar Convenio</button>
                                     </div>
-
-                                    <div class="col-md-6" style="text-align: center;">
-                                        <button style="border-radius: 5px;" class="btn btn-sm btn-primary" onclick="addService()"><i class="fas fa-plus-circle"></i> Agregar Servicio</button>
-                                    </div>
-                                    <div class="col-md-6" style="text-align: center;">
-                                        <button style="border-radius: 5px;" class="btn btn-sm btn-info" onclick="addServiceOther()"><i class="fas fa-plus-circle"></i> Agregar Otro</button>
-                                    </div>
-
+                                    
                                     <div class="col-md-12">
 
                                         <table class="table" style="font-size: 12px">
                                             <thead>
                                                 <tr>
-                                                    <th>Servicio</th>
-                                                    <th>Valor</th>
+                                                    <th>Convenio</th>
                                                     <th>Quitar</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="tableBodyServices">
+                                            <tbody id="tableBodyAgreements">
                                            
                                             </tbody>
                                         </table>
                                     </div>
-                                    <div class="col-md-6">
-                                        Total Servicios $
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center"></div>
-                                    <div class="col-md-4">
-                                        <input id="invoiceTotalServices" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
-                                    </div>
-                                    
                                 </div>
                             </div>
                         </div>
@@ -468,16 +431,6 @@ function createModalBody(member) {
                                     <div class="col-md-12" style="text-align: center">
                                         <b>Montos $</b>
                                     </div>
-                                    
-
-                                    <div class="col-md-6">
-                                        Servicios
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-4">
-                                        <input id="invoiceTotalServicesb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
-                                    </div>
-
                                     <div class="col-md-6">
                                         Total
                                     </div>
@@ -532,40 +485,16 @@ function createModalBody(member) {
     })
 }
 
-function addService(id,value){
+function addAgreement(id){
     if(id){
-        $("#tableBodyServices").append(serviceList.replace(`value="${id}"`,`value="${id}" selected`).replace(`style="text-align: right" value="0`,`style="text-align: right" value="${value}`))
+        $("#tableBodyAgreements").append(agreementList.replace(`value="${id}"`,`value="${id}" selected`))
+        console.log($($($("#tableBodyAgreements").last().children()[0]).children()[0]).children()[0])
+        agreementValue($($($("#tableBodyAgreements").last().children()[0]).children()[0]).children()[0])
     }else{
-        $("#tableBodyServices").append(serviceList)
+        $("#tableBodyAgreements").append(agreementList)
     }
 
-    $(".serviceValue").each(function() {
-        new Cleave($(this), {
-            prefix: '$ ',
-            numeral: true,
-            numeralThousandsGroupStyle: 'thousand',
-            numeralDecimalScale: 0,
-            numeralPositiveOnly: true,
-            numeralDecimalMark: ",",
-            delimiter: "."
-        })
-    })
-}
-
-function addServiceOther(other,value){
-    $("#tableBodyServices").append(`<tr>
-                    <td>
-                        <input type="text" class="form-control form-control-sm" value="${(other) ? other : ''}"/>
-                    </td>
-                    <td>
-                        <input type="text" class="form-control form-control-sm serviceValue" onkeyup="calculateTotal()" style="text-align: right" value="${(value) ? value : ''}"/>
-                    </td>
-                    <td>
-                        <button style="border-radius:5px;" class="btn btn-sm btn-danger" onclick="deleteService(this)"><i ="color:#3498db;" class="fas fa-times"></i></button>
-                    </td>
-                </tr>`)
-
-    $(".serviceValue").each(function() {
+    $(".agreementValue").each(function() {
         new Cleave($(this), {
             prefix: '$ ',
             numeral: true,
@@ -583,11 +512,33 @@ function deleteService(btn){
 }
 
 
-function serviceValue(select){
+function agreementValue(select){
     
-    $($($(select).parent().parent().children()[1]).children()[0]).val($('option:selected', select).attr('data-value'))
+    //$($($(select).parent().parent().children()[1]).children()[0]).val($('option:selected', select).attr('data-value'))
 
-    $(".serviceValue").each(function() {
+    $($($(select).parent().children()[1]).children()[1]).html(``)
+    let dues = agreementArray.find(x => x._id == $(select).val()).dues
+    for(let i=0; i<dues.length; i++){
+        $($($(select).parent().children()[1]).children()[1]).append(`
+            <tr>
+                <td style="text-align: center">${dues[i].number}</td>
+                <td style="text-align: center"><input type="checkbox" onchange="calculateTotal()" ${(dues[i].invoicesIngreso) ? 'checked disabled' : ''} /></td>
+                <td style="text-align: center">${dues[i].month} / ${dues[i].year}</td>
+                <td style="text-align: right">
+                    <input style="display: none" value="${dues[i].amount}" >
+                    <input style="display: none" value="${$(select).val()}" >
+                    <input style="display: none" value="${$('option:selected', select).text()}" >
+                    <input style="display: none" value="${dues[i].number}" >
+                    <input style="display: none" value="${dues.length}" >
+                    <input style="display: none" value="${dues[i].amount}" >
+                
+                    $ ${dot_separators(dues[i].amount)}
+                </td>
+            </tr>
+        `)
+    }
+
+    $(".agreementValue").each(function() {
         new Cleave($(this), {
             prefix: '$ ',
             numeral: true,
@@ -609,30 +560,30 @@ async function cleanInvoice() {
     $("#invoiceDate").val('')
     $("#invoiceDateExpire").val('')
     $("#invoiceSubsidyPercentage").val('')
-    $("#tableBodyServices").html('')
+    $("#tableBodyAgreements").html('')
     $('.btnLecture').removeAttr('disabled')
 }
 
 function calculateTotal() {
-    
-    //Servicios
-    let totalServices = 0
-    if($("#tableBodyServices > tr").length>0){
-        $("#tableBodyServices > tr").each(function() {
-            console.log($($($(this).children()[1]).children()[0]).val())
-            let value = 0
-            if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
-                value = 0
-            }else{
-                value = replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
-            }
-            totalServices += parseInt(value)
-        })    
-    }
-    $("#invoiceTotalServices").val(totalServices)
-    $("#invoiceTotalServicesb").val(totalServices)
 
-    $("#invoiceTotal").val(parseInt(totalServices))
+    console.log('calculating...')
+    let totalAgreements = 0
+
+    $(".tableDues > tr").each(function() {
+        if($($($(this).children()[1]).children()[0]).prop('checked') && !$($($(this).children()[1]).children()[0]).prop('disabled')){
+            totalAgreements += parseInt($($($(this).children()[3]).children()[0]).val())
+        }
+        /*let value = 0
+        if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
+            value = 0
+        }else{
+            value = replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
+        }
+        totalServices += parseInt(value)*/
+    })
+
+   
+    $("#invoiceTotal").val(parseInt(totalAgreements))
 
 
     $(".consumption").each(function() {
@@ -677,8 +628,32 @@ async function createInvoice(invoiceID, memberID) {
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
     let member = memberData.data
 
-    //let servicesData = await axios.post('/api/servicesByFilter', {invoice: 'INGRESO'})
-    //let services = servicesData.data
+    let agreementsData = await axios.post('/api/agreementsPending', {member: memberID, invoice: invoiceID})
+    agreementArray = agreementsData.data
+
+    agreementList = `<tr><td>
+                        <select class="form-control form-control-sm form-select" onchange="agreementValue(this)"><option value="0" data-value="0">Seleccione</option>`
+    for(let i=0; i<agreementArray.length; i++){
+        agreementList += `<option value="${agreementArray[i]._id}" data-value="${agreementArray[i].value}">${(agreementArray[i].services) ? agreementArray[i].services.name : agreementArray[i].other }</option>`
+    }
+    agreementList += `</select>
+                        <table class="table table-striped" style="font-size: 12px">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center">N° Cuota</th>
+                                    <th style="text-align: center">Sel.</th>
+                                    <th style="text-align: center">Mes</th>
+                                    <th style="text-align: center">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody class="tableDues">
+                            </tbody>
+                        </table>
+                    </td>
+                    <td>
+                        <button style="border-radius:5px;" class="btn btn-sm btn-danger" onclick="deleteService(this)"><i ="color:#3498db;" class="fas fa-times"></i></button>
+                    </td>
+                </tr>`
 
     if (invoiceID == 0) {
 
@@ -688,7 +663,7 @@ async function createInvoice(invoiceID, memberID) {
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
         $("#invoiceDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
 
-        addService()
+        addAgreement()
 
         $('.invoiceDateClass').daterangepicker({
             opens: 'right',
@@ -705,28 +680,31 @@ async function createInvoice(invoiceID, memberID) {
 
             let goSave = false
 
-            let services = []
-            if($("#tableBodyServices > tr").length>0){
-                $("#tableBodyServices > tr").each(function() {
+            let agreements = []
+            if($("#tableBodyAgreements > tr").length>0){
+                $("#tableBodyAgreements > tr").each(function() {
     
-                    if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
-                        value = 0
-                    }else{
-                        value = replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
+                    let tableDues = $($($($(this).children()[0]).children()[1]).children()[1]).children()
+                    for(let i=0; i < tableDues.length; i++){
+                        if($($($(tableDues[i]).children()[1]).children()[0]).prop('checked') && !$($($(tableDues[i]).children()[1]).children()[0]).prop('disabled')){
+                            agreements.push({
+                                agreements: $($($(tableDues[i]).children()[3]).children()[1]).val(),
+                                text: $($($(tableDues[i]).children()[3]).children()[2]).val(),
+                                number: parseInt($($($(tableDues[i]).children()[3]).children()[3]).val()),
+                                dueLength: parseInt($($($(tableDues[i]).children()[3]).children()[4]).val()),
+                                amount: parseInt($($($(tableDues[i]).children()[3]).children()[0]).val()),
+                            })
+                        }
+                        console.log($($($(tableDues[i]).children()[1]).children()[0]).prop('checked'))
                     }
-
-                    if($($($(this).children()[0]).children()[0]).is('select')){
-                        services.push({
-                            services: $($($(this).children()[0]).children()[0]).val(),
-                            value: value
-                        })
-                    }else{
-                        services.push({
-                            other: $($($(this).children()[0]).children()[0]).val(),
-                            value: value
-                        })
-                    }
+                    
                 })    
+            }
+
+            console.log('agreements', agreements)
+            if(agreements.length==0){
+                toastr.warning('Debe seleccionar al menos 1 cuota')
+                return
             }
 
             let invoiceData = {
@@ -748,14 +726,12 @@ async function createInvoice(invoiceID, memberID) {
                 consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),*/
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
-                services: services
+                agreements: agreements
             }
 
             /*if(services.length>0){
                 saleData.services = services
             }*/
-
-            console.log(invoiceData)
 
             const res = validateInvoiceData(invoiceData)
             if (res.ok) {
@@ -798,21 +774,22 @@ async function createInvoice(invoiceID, memberID) {
             autoApply: true
         })
 
-        $("#tableBodyServices").html('')
+        $("#tableBodyAgreements").html('')
 
         console.log(invoice)
 
-        if (invoice.services) {
+        /*if (invoice.services) {
             if (invoice.services.length > 0) {
                 for(let i=0; i<invoice.services.length; i++){
-                    if(invoice.services[i].other){
-                        addServiceOther(invoice.services[i].other,invoice.services[i].value)
-                    }else{
-                        addService(invoice.services[i].services._id,invoice.services[i].value)
-                    }
+                    addAgreement(invoice.services[i].services._id,invoice.services[i].value)
                 }
             }
+        }*/
+
+        for(let i=0; i<invoice.agreements.length; i++){
+            addAgreement(invoice.agreements[i].agreements)
         }
+            
 
         calculateTotal()
 
@@ -823,8 +800,8 @@ async function createInvoice(invoiceID, memberID) {
             let goSave = false
 
             let services = []
-            if($("#tableBodyServices > tr").length>0){
-                $("#tableBodyServices > tr").each(function() {
+            if($("#tableBodyAgreements > tr").length>0){
+                $("#tableBodyAgreements > tr").each(function() {
     
                     if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
                         value = 0
@@ -2218,8 +2195,8 @@ function calculatePaymentBalance() {
 
     //Servicios
     let totalServices = 0
-    if($("#tableBodyServices > tr").length>0){
-        $("#tableBodyServices > tr").each(function() {
+    if($("#tableBodyAgreements > tr").length>0){
+        $("#tableBodyAgreements > tr").each(function() {
             let value = 0
             if(!$.isNumeric($($($(this).children()[1]).children()[0]).val())){
                 value = 0
@@ -2229,8 +2206,8 @@ function calculatePaymentBalance() {
             totalServices += parseInt(value)
         })    
     }
-    $("#invoiceTotalServices").val(totalServices)
-    $("#invoiceTotalServicesb").val(totalServices)
+    $("#invoiceTotalAgreements").val(totalServices)
+    $("#invoiceTotalAgreementsb").val(totalServices)
 
     //Montos
     let debt = 0

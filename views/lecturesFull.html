@@ -37,7 +37,13 @@
             <i class="fas fa-dollar-sign"></i> PAGOS
         </button>
     </div>-->
-    <div class="col-md-2">
+    <div class="col-md-1">
+        <br/>
+        <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block" onclick="selectAll(this)">
+            <i class="far fa-check-square"></i> Sel. Todo
+        </button>
+    </div>
+    <div class="col-md-1">
         <label style="font-size: 14px;">Año</label>
         <select id="searchYear" class="form-control form-select-sm form-select filterClass"></select>
     </div>
@@ -177,7 +183,7 @@
                 <div class="modal-header">
                     <h6 class="modal-title" id="modal_title"></h6>
                     <button type="button" class="btn-close" data-dismiss="modal"
-                        aria-label="Close">
+                        aria-label="Close"> 
                         <span aria-hidden="true"></span>
                     </button>
                 </div>

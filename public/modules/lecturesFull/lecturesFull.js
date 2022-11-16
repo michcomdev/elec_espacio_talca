@@ -264,6 +264,7 @@ console.log(lecturesData.data)
         loadingHandler('stop')
         $('#loadingMembers').empty()
     } else {
+        loadingHandler('stop')
         //toastr.warning('No se han encontrado ventas en el rango seleccionado')
         $('#loadingMembers').empty()
     }
@@ -1194,7 +1195,33 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             $("#invoiceType").val(34)
         }
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
-        $("#invoiceDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
+
+
+        let year = lecture.year
+        let month = lecture.month+1
+        let day = parameters.expireDay
+        if(month<10){
+            month = '0' + month
+        }
+        if(day<10){
+            day = '0' + day
+        }
+
+        let expireDate = year+''+month+''+day
+        
+        if(parseInt(day)>28){
+            while(!moment(expireDate).isValid()){
+                day = parseInt(day)-1
+                expireDate = year+''+month+''+day
+            }
+        }
+
+        if(moment()>=moment(expireDate)){
+            $("#invoiceDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
+        }else{
+            $("#invoiceDateExpire").val(moment(expireDate).utc().format('DD/MM/YYYY'))
+        }
+
         $("#invoiceCharge").val(parameters.charge)
 
         let subsidy = 0
@@ -2505,4 +2532,18 @@ async function printFinal(array){
 
     //doc.autoPrint()
     //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
+}
+
+function selectAll(btn){
+    if($(btn).text().trim()=='Sel. Todo'){
+        $(".chkClass").each(function() {
+            $(this).prop('checked',true)
+        })
+        $(btn).html('<i class="far fa-square"></i> Desel. Todo')
+    }else{
+        $(".chkClass").each(function() {
+            $(this).prop('checked',false)
+        })
+        $(btn).html('<i class="far fa-check-square"></i> Sel. Todo')
+    }
 }
