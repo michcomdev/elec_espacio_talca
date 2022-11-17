@@ -14,6 +14,7 @@ let internals = {
 //let serviceList = ''
 let agreementList = ''
 let agreementArray = []
+let actualInvoiceID = 0
 
 let parameters
 
@@ -488,7 +489,6 @@ function createModalBody(member) {
 function addAgreement(id){
     if(id){
         $("#tableBodyAgreements").append(agreementList.replace(`value="${id}"`,`value="${id}" selected`))
-        console.log($($($("#tableBodyAgreements").last().children()[0]).children()[0]).children()[0])
         agreementValue($($($("#tableBodyAgreements").last().children()[0]).children()[0]).children()[0])
     }else{
         $("#tableBodyAgreements").append(agreementList)
@@ -518,11 +518,24 @@ function agreementValue(select){
 
     $($($(select).parent().children()[1]).children()[1]).html(``)
     let dues = agreementArray.find(x => x._id == $(select).val()).dues
+    console.log(dues)
     for(let i=0; i<dues.length; i++){
+        let checked = '', disabled = ''
+
+        if(dues[i].invoicesIngreso){
+            checked = 'checked'
+
+            if(dues[i].invoicesIngreso!=actualInvoiceID){
+                disabled = 'disabled'
+            }
+        }
+        
+
+
         $($($(select).parent().children()[1]).children()[1]).append(`
             <tr>
                 <td style="text-align: center">${dues[i].number}</td>
-                <td style="text-align: center"><input type="checkbox" onchange="calculateTotal()" ${(dues[i].invoicesIngreso) ? 'checked disabled' : ''} /></td>
+                <td style="text-align: center"><input type="checkbox" onchange="calculateTotal()" ${checked} ${disabled}/></td>
                 <td style="text-align: center">${dues[i].month} / ${dues[i].year}</td>
                 <td style="text-align: right">
                     <input style="display: none" value="${dues[i].amount}" >
@@ -617,6 +630,7 @@ function calculateTotal() {
 }
 
 async function createInvoice(invoiceID, memberID) {
+    actualInvoiceID = invoiceID
 //async function createInvoice(lectureID, invoiceID, memberID) {
 
     $('#tableInvoicesBody > tr').removeClass('table-primary')
@@ -628,7 +642,7 @@ async function createInvoice(invoiceID, memberID) {
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
     let member = memberData.data
 
-    let agreementsData = await axios.post('/api/agreementsPending', {member: memberID, invoice: invoiceID})
+    let agreementsData = await axios.post('/api/agreementsPending', {member: memberID, invoice: invoiceID.toString()})
     agreementArray = agreementsData.data
 
     agreementList = `<tr><td>
@@ -785,9 +799,12 @@ async function createInvoice(invoiceID, memberID) {
                 }
             }
         }*/
-
+        let repeated = []
         for(let i=0; i<invoice.agreements.length; i++){
-            addAgreement(invoice.agreements[i].agreements)
+            if(!repeated.find(x => x == invoice.agreements[i].agreements)){
+                addAgreement(invoice.agreements[i].agreements)
+                repeated.push(invoice.agreements[i].agreements)
+            }
         }
             
 
@@ -799,28 +816,31 @@ async function createInvoice(invoiceID, memberID) {
 
             let goSave = false
 
-            let services = []
+            let agreements = []
             if($("#tableBodyAgreements > tr").length>0){
                 $("#tableBodyAgreements > tr").each(function() {
     
-                    if(!$.isNumeric(replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', ''))){
-                        value = 0
-                    }else{
-                        value = replaceAll($($($(this).children()[1]).children()[0]).val(), '.', '').replace(' ', '').replace('$', '')
+                    let tableDues = $($($($(this).children()[0]).children()[1]).children()[1]).children()
+                    for(let i=0; i < tableDues.length; i++){
+                        if($($($(tableDues[i]).children()[1]).children()[0]).prop('checked') && !$($($(tableDues[i]).children()[1]).children()[0]).prop('disabled')){
+                            agreements.push({
+                                agreements: $($($(tableDues[i]).children()[3]).children()[1]).val(),
+                                text: $($($(tableDues[i]).children()[3]).children()[2]).val(),
+                                number: parseInt($($($(tableDues[i]).children()[3]).children()[3]).val()),
+                                dueLength: parseInt($($($(tableDues[i]).children()[3]).children()[4]).val()),
+                                amount: parseInt($($($(tableDues[i]).children()[3]).children()[0]).val()),
+                            })
+                        }
+                        console.log($($($(tableDues[i]).children()[1]).children()[0]).prop('checked'))
                     }
-    
-                    if($($($(this).children()[0]).children()[0]).is('select')){
-                        services.push({
-                            services: $($($(this).children()[0]).children()[0]).val(),
-                            value: value
-                        })
-                    }else{
-                        services.push({
-                            other: $($($(this).children()[0]).children()[0]).val(),
-                            value: value
-                        })
-                    }
+                    
                 })    
+            }
+
+            console.log('agreements', agreements)
+            if(agreements.length==0){
+                toastr.warning('Debe seleccionar al menos 1 cuota')
+                return
             }
 
             let invoiceData = {
@@ -830,7 +850,7 @@ async function createInvoice(invoiceID, memberID) {
                 date: $("#invoiceDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 dateExpire: $("#invoiceDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 invoiceTotal: parseInt(replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', '')),
-                services: services
+                agreements: agreements
             }
 
             const res = validateInvoiceData(invoiceData)

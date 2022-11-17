@@ -21,6 +21,7 @@ const invoicesSchema = new Schema({
     consumptionLimitValue: { type: Number },
     consumptionLimitTotal: { type: Number },
     sewerage: { type: Number },
+    fine: { type: Number },
     invoiceSubTotal: { type: Number },
     invoiceDebt: { type: Number },
     invoicePaid: { type: Number },

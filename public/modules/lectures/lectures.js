@@ -553,6 +553,22 @@ function createModalBody(member) {
                                 <input id="invoiceSewerage" type="text" class="form-control form-control-sm border-input numericValues money">
                             </div>
 
+                            <div class="col-md-8">
+                                Consumo $
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(=)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceConsumption2a" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #b7ebd8">
+                            </div>
+                            
+                            <div class="col-md-8">
+                                <input id="invoiceFineCheck" type="checkbox" />
+                                Multa 20% $
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(+)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceFine" type="text" class="form-control form-control-sm border-input numericValues money">
+                            </div>
 
                             <div class="col-md-8">
                                 Consumo a Cobro
@@ -561,7 +577,6 @@ function createModalBody(member) {
                             <div class="col-md-3">
                                 <input id="invoiceConsumption2" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #b7ebd8">
                             </div>
-
 
                         </div>
                     </div>
@@ -773,6 +788,18 @@ function calculateTotal() {
     let sewerage = parseInt($("#invoiceSewerage").val())
 
     let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
+    $("#invoiceConsumption2a").val(lastConsumptionValue)
+
+    let fine = 0
+    if($("#invoiceFineCheck").prop('checked')){
+        fine = lastConsumptionValue * 0.2 //Multa actual, parametrizar
+        $("#invoiceFine").val(fine)
+        lastConsumptionValue += fine
+    }else{
+        $("#invoiceFine").attr('disabled','disabled')
+        $("#invoiceFine").val(fine)
+    }
+
     $("#invoiceConsumption2").val(lastConsumptionValue)
     $("#invoiceConsumption2b").val(lastConsumptionValue)
 
@@ -839,6 +866,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         let lectureData = await axios.post('/api/lectureSingle', { id: lectureID })
         let lecture = lectureData.data
+        console.log('lecture',lecture)
 
         $("#invoiceTitle").text("Nueva Boleta/Factura")
         //$("#invoiceNumber").val('')
@@ -850,6 +878,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
 
         let year = lecture.year
+        let monthDue = lecture.month
         let month = lecture.month+1
         let day = parameters.expireDay
         if(month<10){
@@ -926,10 +955,14 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 }
             }
         }
+        
+        if(member.fine){
+            $("#invoiceFineCheck").prop('checked','checked')
+        }
 
         let agreementData = await axios.post('/api/agreementsByDate', { 
             year: parseInt(year),
-            month: parseInt(month),
+            month: parseInt(monthDue),
             member: memberID
         })
 
@@ -937,16 +970,20 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#tableBodyAgreements").html('')
 
+        console.log(agreements)
+
         if (agreements.length > 0) {
             for(let j=0; j<agreements.length; j++){
-                $("#tableBodyAgreements").append(`<tr>
-                    <td>
-                        <input value="${agreements[j]._id}" style="display: none;" />
-                        <span>${(agreements[j].services) ? agreements[j].services.name : agreements[j].other}</span>
-                    </td>
-                    <td style="text-align: center">${agreements[j].due.number} / ${agreements[j].dues.length}</td>
-                    <td><input type="text" class="form-control form-control-sm numericValues money" value="${agreements[j].due.amount}"/></td>
-                </tr>`)
+                if(agreements[j].due){
+                    $("#tableBodyAgreements").append(`<tr>
+                        <td>
+                            <input value="${agreements[j]._id}" style="display: none;" />
+                            <span>${(agreements[j].services) ? agreements[j].services.name : agreements[j].other}</span>
+                        </td>
+                        <td style="text-align: center">${agreements[j].due.number} / ${agreements[j].dues.length}</td>
+                        <td><input type="text" class="form-control form-control-sm numericValues money" value="${agreements[j].due.amount}"/></td>
+                    </tr>`)
+                }
             }
         }
 
@@ -1023,6 +1060,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 consumptionLimitTotal: replaceAll($("#invoiceConsumptionLimitTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
                 sewerage: replaceAll($("#invoiceSewerage").val(), '.', '').replace(' ', '').replace('$', ''),
+                fine: replaceAll($("#invoiceFine").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
@@ -1101,6 +1139,12 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         $("#invoiceConsumptionLimitValue").val(invoice.consumptionLimitValue)
         if(invoice.sewerage){
             $("#invoiceSewerage").val(invoice.sewerage)
+        }
+        if(invoice.fine){
+            if(invoice.fine>0){
+                $("#invoiceFineCheck").prop('checked','checked')
+                $("#invoiceFine").val(invoice.fine)
+            }
         }
 
         $("#invoiceDebt").val(invoice.invoiceDebt)
@@ -1230,6 +1274,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 consumptionLimitTotal: replaceAll($("#invoiceConsumptionLimitTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 consumption: replaceAll($("#invoiceConsumption2").val(), '.', '').replace(' ', '').replace('$', ''),
                 sewerage: replaceAll($("#invoiceSewerage").val(), '.', '').replace(' ', '').replace('$', ''),
+                fine: replaceAll($("#invoiceFine").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),

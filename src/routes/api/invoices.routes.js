@@ -127,6 +127,7 @@ export default [
                         consumptionLimitValue: payload.consumptionLimitValue,
                         consumptionLimitTotal: payload.consumptionLimitTotal,
                         sewerage: payload.sewerage,
+                        fine: payload.fine,
                         invoiceSubTotal: payload.invoiceSubTotal,
                         invoiceDebt: payload.invoiceDebt,
                         invoicePaid: 0,
@@ -202,6 +203,7 @@ export default [
                     consumptionLimitValue: Joi.number().allow(0),
                     consumptionLimitTotal: Joi.number().allow(0),
                     sewerage: Joi.number().allow(0),
+                    fine: Joi.number().allow(0),
                     invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
@@ -253,6 +255,7 @@ export default [
                     invoices.consumptionLimitValue = payload.consumptionLimitValue
                     invoices.consumptionLimitTotal = payload.consumptionLimitTotal
                     invoices.sewerage = payload.sewerage
+                    invoices.fine = payload.fine
                     invoices.invoiceSubTotal = payload.invoiceSubTotal
                     invoices.invoiceDebt = payload.invoiceDebt
                     //invoices.invoicePaid = payload.invoicePaid
@@ -315,6 +318,7 @@ export default [
                     consumptionLimitValue: Joi.number().allow(0),
                     consumptionLimitTotal: Joi.number().allow(0),
                     sewerage: Joi.number().allow(0),
+                    fine: Joi.number().allow(0),
                     invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
@@ -551,10 +555,24 @@ export default [
                         query.agreements = payload.agreements
                     }
 
-                    /*FALTA AGREGAR ACTUALIZACIÓN DE CONVENIO ASOCIADO A INGRESO/BOLETA */
 
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
+
+                    /*ACTUALIZACIÓN DE CONVENIO ASOCIADO A INGRESO/BOLETA */
+
+                    if(payload.agreements.length>0){
+                        for(let i=0; i<payload.agreements.length; i++){
+                            let agreement = await Agreements.findById(payload.agreements[i].agreements)
+                            for(let j=0; j<agreement.dues.length; j++){
+                                if(agreement.dues[j].number==payload.agreements[i].number){
+                                    agreement.dues[j].invoicesIngreso = response._id
+                                    await agreement.save()
+                                    j = agreement.dues.length
+                                }
+                            }
+                        }
+                    }
 
                     return response
 
@@ -615,6 +633,39 @@ export default [
                     invoices.agreements = payload.agreements
 
                     const response = await invoices.save()
+
+
+                    /*ACTUALIZACIÓN DE CONVENIO ASOCIADO A INGRESO/BOLETA */
+                    //Limpieza
+                    let agreements = await Agreements.find({ 'dues.invoicesIngreso': payload.id })
+
+                    //Eliminación de asignación, en caso que las cuotas hayan sido desmarcadas
+                    for(let k=0; k<agreements.length; k++){
+
+                        let agreement = await Agreements.findById(agreements[k]._id)
+                        //Eliminación de asignación, en caso que las cuotas hayan sido desmarcadas
+                        for(let j=0; j<agreement.dues.length; j++){
+                            if(agreement.dues[j].invoicesIngreso==payload.id){
+                                agreement.dues[j].invoicesIngreso = undefined
+                                await agreement.save()
+                            }
+                        }
+                    }
+                    
+                    //Reingreso
+                    if(payload.agreements.length>0){
+                        for(let i=0; i<payload.agreements.length; i++){
+                            let agreement = await Agreements.findById(payload.agreements[i].agreements)
+
+                            for(let j=0; j<agreement.dues.length; j++){
+                                if(agreement.dues[j].number==payload.agreements[i].number){
+                                    agreement.dues[j].invoicesIngreso = payload.id
+                                    await agreement.save()
+                                    j = agreement.dues.length
+                                }
+                            }
+                        }
+                    }
 
                     return response
 

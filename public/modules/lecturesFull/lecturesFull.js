@@ -109,6 +109,7 @@ function chargeMembersTable() {
                     { data: 'consumptionValue' },
                     { data: 'subsidy' },
                     { data: 'sewerage' },
+                    { data: 'fine' },
                     { data: 'others' },
                     { data: 'debt' },
                     { data: 'total' },
@@ -175,9 +176,12 @@ console.log(lecturesData.data)
             
             if(el.invoice){
 
-                let invoiceServices = [], sewerage = 0, others = 0
+                let invoiceServices = [], sewerage = 0, fine = 0, others = 0
                 if(el.invoice.sewerage){
                     sewerage = el.invoice.sewerage
+                }
+                if(el.invoice.fine){
+                    fine = el.invoice.fine
                 }
                 /*for(let j=0; j < el.invoice.services.length; j++){
                     if(el.invoice.services[j].services.type=='ALCANTARILLADO'){
@@ -213,6 +217,7 @@ console.log(lecturesData.data)
                         subsidyPercentage: el.invoice.subsidyPercentage,
                         subsidyValue: el.invoice.subsidyValue,
                         sewerage: sewerage,
+                        fine: fine,
                         others: others,
                         consumptionLimit: el.invoice.consumptionLimit,
                         consumptionLimitValue: el.invoice.consumptionLimitValue,
@@ -229,6 +234,7 @@ console.log(lecturesData.data)
                 el.consumptionValue = el.invoice.consumption
                 el.subsidy = el.invoice.subsidyValue
                 el.sewerage = sewerage
+                el.fine = el.invoice.fine
                 el.others = others
                 el.debt = el.invoice.invoiceDebt
                 el.total = el.invoice.invoiceTotal
@@ -249,6 +255,7 @@ console.log(lecturesData.data)
                 el.consumptionValue = 0
                 el.subsidy = 0
                 el.sewerage = 0
+                el.fine = 0
                 el.others = 0
                 el.debt = 0
                 el.total = 0
@@ -308,10 +315,13 @@ async function calculate(){
             
             console.log(el)
 
-            let invoiceServices = [], sewerage = 0, others = 0
+            let invoiceServices = [], sewerage = 0, fine = 0, others = 0
 
             if(el.invoice.sewerage){
                 sewerage = el.invoice.sewerage
+            }
+            if(el.invoice.fine){
+                fine = el.invoice.fine
             }
             /*for(let j=0; j < el.invoice.services.length; j++){
                 if(el.invoice.services[j].services.type=='ALCANTARILLADO'){
@@ -343,6 +353,7 @@ async function calculate(){
                     consumptionValue: el.invoice.consumption,
                     subsidy: el.invoice.subsidyValue,
                     sewerage: sewerage,
+                    fine: fine,
                     others: others,
                     subTotal: el.invoice.invoiceSubTotal,
                     debt: el.invoice.invoiceDebt,
@@ -401,7 +412,7 @@ async function calculate(){
                 consumptionLimitTotal = (lectureValue - consumptionLimit) * consumptionLimitValue
             }
 
-            let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal
+            
 
             //Servicios
             let sewerage = 0
@@ -422,6 +433,16 @@ async function calculate(){
                 }
             }
 
+            let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
+            if(array[i].members._id.toString()=='62631b789666da52dcc90718'){
+                console.log('last', lastConsumptionValue)
+            }
+
+            let fine = 0
+            if(array[i].members.fine){
+                fine = lastConsumptionValue * 0.2 //Parametrizar, valor del 20% actual
+                lastConsumptionValue += fine
+            }
             
 
             //Carga de Convenios
@@ -436,19 +457,17 @@ async function calculate(){
             let agreements = []
 
             if (agreementsData.length > 0) {
-                console.log({year: parseInt(array[i].year),
-                    month: parseInt(array[i].month),
-                    member: array[i].members._id})
-                console.log(agreementsData)
                 for(let j=0; j<agreementsData.length; j++){
-                    others += parseInt(agreementsData[j].due.amount)
-                    agreements.push({
-                        agreements: agreementsData[j]._id,
-                        text: (agreementsData[j].services) ? agreementsData[j].services.name : agreementsData[j].other,
-                        number: parseInt(agreementsData[j].due.number),
-                        dueLength: parseInt(agreementsData[j].dues.length),
-                        amount: parseInt(agreementsData[j].due.amount)
-                    })
+                    if(agreementsData[j].due){ //Sólo se asignarán cuotas de convenio no asociadas a ingreso (cuotas adelantadas)
+                        others += parseInt(agreementsData[j].due.amount)
+                        agreements.push({
+                            agreements: agreementsData[j]._id,
+                            text: (agreementsData[j].services) ? agreementsData[j].services.name : agreementsData[j].other,
+                            number: parseInt(agreementsData[j].due.number),
+                            dueLength: parseInt(agreementsData[j].dues.length),
+                            amount: parseInt(agreementsData[j].due.amount)
+                        })
+                    }
                 }
             }
 
@@ -468,7 +487,7 @@ async function calculate(){
             }
 
             //Montos
-            let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(sewerage)
+            let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) //+ parseInt(sewerage)
             let total = parseInt(subTotal) + parseInt(debt) + parseInt(others)
 
             newArray.push(
@@ -483,6 +502,7 @@ async function calculate(){
                     consumptionValue: lastConsumptionValue,
                     subsidy: subsidyValue,
                     sewerage: sewerage,
+                    fine: fine,
                     others: others,
                     subTotal: subTotal,
                     debt: debt,
@@ -514,6 +534,7 @@ async function calculate(){
                 consumptionLimitTotal: consumptionLimitTotal,
                 consumption: lastConsumptionValue,
                 sewerage: sewerage,
+                fine: fine,
                 invoiceSubTotal: subTotal,
                 invoiceDebt: debt,
                 invoiceTotal: total,
@@ -916,6 +937,23 @@ function createModalBody(member) {
                                         <input id="invoiceSewerage" type="text" class="form-control form-control-sm border-input numericValues money">
                                     </div>
 
+                                    <div class="col-md-8">
+                                        Consumo $
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(=)</div>
+                                    <div class="col-md-3">
+                                        <input id="invoiceConsumption2a" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #b7ebd8">
+                                    </div>
+                                    
+                                    <div class="col-md-8">
+                                        <input id="invoiceFineCheck" type="checkbox" />
+                                        Multa 20% $
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-3">
+                                        <input id="invoiceFine" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
+
 
                                     <div class="col-md-8">
                                         Consumo a Cobro
@@ -1092,6 +1130,18 @@ function calculateTotal() {
     let sewerage = parseInt($("#invoiceSewerage").val())
 
     let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
+    $("#invoiceConsumption2a").val(lastConsumptionValue)
+
+    let fine = 0
+    if($("#invoiceFineCheck").prop('checked')){
+        fine = lastConsumptionValue * 0.2 //Multa actual, parametrizar
+        $("#invoiceFine").val(fine)
+        lastConsumptionValue += fine
+    }else{
+        $("#invoiceFine").attr('disabled','disabled')
+        $("#invoiceFine").val(fine)
+    }
+
     $("#invoiceConsumption2").val(lastConsumptionValue)
     $("#invoiceConsumption2b").val(lastConsumptionValue)
 

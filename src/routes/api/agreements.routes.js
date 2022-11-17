@@ -287,7 +287,7 @@ export default [
                     let agreements = await Agreements.find(query).lean().populate(['services'])
                     for(let i=0; i<agreements.length; i++){
                         for(let j=0; j<agreements[i].dues.length; j++){
-                            if(agreements[i].dues[j].year==payload.year && agreements[i].dues[j].month==payload.month){
+                            if(agreements[i].dues[j].year==payload.year && agreements[i].dues[j].month==payload.month && !agreements[i].dues[j].invoicesIngreso){
                                 agreements[i].due = agreements[i].dues[j]
                             }
                         }
