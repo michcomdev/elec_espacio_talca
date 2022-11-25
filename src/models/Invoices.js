@@ -56,6 +56,9 @@ const invoicesSchema = new Schema({
         dueLength: { type: Number },
         amount: { type: Number }
     }],
+    text1: { type: String },
+    text2: { type: String },
+    text3: { type: String }
 }, {
     versionKey: false
 })

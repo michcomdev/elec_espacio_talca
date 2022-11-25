@@ -4,6 +4,7 @@ import Payments from '../../models/Payments'
 import Agreements from '../../models/Agreements'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
+import nodemailer from 'nodemailer'
 
 const fs = require("fs")
 const { promisify } = require("util");
@@ -132,7 +133,10 @@ export default [
                         invoiceDebt: payload.invoiceDebt,
                         invoicePaid: 0,
                         invoiceTotal: payload.invoiceTotal,
-                        type: payload.type
+                        type: payload.type,
+                        text1: payload.text1,
+                        text2: payload.text2,
+                        text3: payload.text3
                     }
 
                     if(payload.number){
@@ -217,7 +221,10 @@ export default [
                         number: Joi.number().optional().allow(0),
                         dueLength: Joi.number().optional().allow(0),
                         amount: Joi.number().optional().allow(0)
-                    })).optional()
+                    })).optional(),
+                    text1: Joi.string().optional().allow(''),
+                    text2: Joi.string().optional().allow(''),
+                    text3: Joi.string().optional().allow('')
                 })
             }
         }
@@ -262,6 +269,9 @@ export default [
                     invoices.invoiceTotal = payload.invoiceTotal
                     invoices.services = payload.services
                     invoices.agreements = payload.agreements
+                    invoices.text1 = payload.text1
+                    invoices.text2 = payload.text2
+                    invoices.text3 = payload.text3
 
                     if(payload.lectureNewStart){
                         invoices.lectureNewStart = payload.lectureNewStart
@@ -332,7 +342,10 @@ export default [
                         number: Joi.number().optional().allow(0),
                         dueLength: Joi.number().optional().allow(0),
                         amount: Joi.number().optional().allow(0)
-                    })).optional()
+                    })).optional(),
+                    text1: Joi.string().optional().allow(''),
+                    text2: Joi.string().optional().allow(''),
+                    text3: Joi.string().optional().allow('')
                 })
             }
         }
@@ -701,5 +714,114 @@ export default [
                 })
             }
         }
+    }, 
+    {
+        method: 'POST',
+        path: '/api/sendPdf',
+        options: {
+            description: 'response auth cot',
+            notes: 'response auth cot',
+            tags: ['api'],
+            payload: {
+                maxBytes: 1000 * 1000 * 6 // 4mb
+            },
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let res = await sendEmail({
+                        memberName: payload.memberName,
+                        memberMail: payload.memberMail,
+                        pdf: payload.pdf
+                    })
+
+                    return res
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    memberName: Joi.string().required(),
+                    memberMail: Joi.string().email().required(),
+                    pdf: Joi.string().required()
+                })
+            }
+        }
     }
 ]
+
+
+const sendEmail = async ({ // sendEmail
+    memberName,
+    memberMail,
+    pdf
+}) => {
+    try {
+        console.log(memberName, memberMail)
+        
+        let transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: 'zeosonic@gmail.com',
+                pass: 'mbfsckaczbtjmuek'
+            },
+            /*auth: {
+                user: process.env.EMAIL_SENDER,
+                pass: process.env.EMAIL_SENDER_PASSWORD
+            },*/
+            tls: {
+                // do not fail on invalid certs
+                //rejectUnauthorized: false,
+                ciphers: 'SSLv3'
+            }
+        })
+
+        let mailData = {
+            from: 'zeosonic@gmail.com', //process.env.EMAIL_SENDER,
+            to: [memberMail],//[clientMail],
+            subject: `Envío de Boleta Agua`,
+            //text: "Hello world?",
+            html: `
+                Estimado(a) <b>${memberName}</b>
+            `,
+
+            //<img src="cid:logo" />
+
+            /*attachments: [{
+                filename: 'logoMail.png',
+                path: 'public/img/logoMail.png',
+                cid: 'logo' //same cid value as in the html img src
+            }]*/
+        }
+
+        //mailData.to.push(toEmail)
+
+        mailData.attachments = [{
+            filename: `Boleta.pdf`,
+            content: pdf,
+            encoding: 'base64'
+        }]
+
+        
+
+        let info = await transporter.sendMail(mailData)
+
+        return info
+    } catch (error) {
+        console.log(error)
+        return null
+    }
+}
+
+const isEmail = (email) => {
+    let regexEmail = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/
+    return regexEmail.test(email)
+}

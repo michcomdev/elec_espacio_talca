@@ -385,6 +385,9 @@ async function calculate(){
             }
 
             let meterValue = parameters.meterValue
+            if(array[i].members.waterMeters.find(x => x.state === 'Activo').diameter=='TresCuartos'){
+                meterValue = parameters.meterValueB
+            }
             let consumptionValue = lectureValue * meterValue
 
             let subsidyPercentage = 0
@@ -433,7 +436,7 @@ async function calculate(){
                 }
             }
 
-            let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
+            let lastConsumptionValue = parseInt(parameters.charge) + consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
             if(array[i].members._id.toString()=='62631b789666da52dcc90718'){
                 console.log('last', lastConsumptionValue)
             }
@@ -487,7 +490,7 @@ async function calculate(){
             }
 
             //Montos
-            let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue) //+ parseInt(sewerage)
+            let subTotal = parseInt(lastConsumptionValue) //+ parseInt(sewerage)
             let total = parseInt(subTotal) + parseInt(debt) + parseInt(others)
 
             newArray.push(
@@ -511,6 +514,13 @@ async function calculate(){
                     pdf: '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
                 }
             )
+
+            let text1 = ''
+            let text2 = parameters.text2
+            let text3 = parameters.text3
+            if(debt>0){
+                text1 = parameters.text1
+            }
 
 
             internals.invoices.push({
@@ -539,7 +549,10 @@ async function calculate(){
                 invoiceDebt: debt,
                 invoiceTotal: total,
                 services: services,
-                agreements: agreements
+                agreements: agreements,
+                text1: text1,
+                text2: text2,
+                text3: text3
             })
             
             if(lectureNewEnd !== undefined){
@@ -864,6 +877,14 @@ function createModalBody(member) {
                                         <b>Consumos</b>
                                     </div>
 
+                                    <div class="col-md-8">
+                                        Cargo Fijo
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-3">
+                                        <input id="invoiceCharge" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
+
                                     <div class="col-md-2">
                                         <br>
                                         Consumo mts<sup>3</sup> 
@@ -1005,14 +1026,6 @@ function createModalBody(member) {
                                     <div class="col-md-12" style="text-align: center">
                                         <b>Montos $</b>
                                     </div>
-                                    
-                                    <div class="col-md-8">
-                                        Cargo Fijo
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceCharge" type="text" class="form-control form-control-sm border-input numericValues money">
-                                    </div>
 
                                     <div class="col-md-8">
                                         Consumo
@@ -1129,7 +1142,7 @@ function calculateTotal() {
     $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
     let sewerage = parseInt($("#invoiceSewerage").val())
 
-    let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
+    let lastConsumptionValue = parseInt(parameters.charge) + consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
     $("#invoiceConsumption2a").val(lastConsumptionValue)
 
     let fine = 0
@@ -1163,7 +1176,7 @@ function calculateTotal() {
 
     //Montos
     let debt = $("#invoiceDebt").val()
-    let subTotal = parseInt(parameters.charge) + parseInt(lastConsumptionValue)
+    let subTotal = parseInt(lastConsumptionValue)
     $("#invoiceSubTotal").val(subTotal)
     $("#invoiceDebt").val(debt) //A asignar
     $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements))
@@ -1295,8 +1308,13 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         }
 
         $("#invoiceSubsidyPercentage").val(subsidy)
-        $("#invoiceMeterValue").val(parameters.meterValue)
 
+        if(member.waterMeters.find(x => x.state === 'Activo').diameter=='TresCuartos'){
+            $("#invoiceMeterValue").val(parameters.meterValueB)
+        }else{
+            $("#invoiceMeterValue").val(parameters.meterValue)
+        }
+        
         $("#invoiceConsumptionLimitLabel").text(parameters.consumptionLimit)
         $("#invoiceConsumptionLimit").val(parameters.consumptionLimit)
         $("#invoiceConsumptionLimitValue").val(parameters.consumptionLimitValue)
@@ -1319,6 +1337,10 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                     }
                 }
             }
+        }
+
+        if(member.fine){
+            $("#invoiceFineCheck").prop('checked','checked')
         }
 
         let agreementData = await axios.post('/api/agreementsByDate', { 
@@ -1892,6 +1914,21 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     }
 
     pdfX = 30
+    pdfY += 150
+    doc.setFontSize(10)
+    doc.setFontType('bold')
+    //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
+    if(invoice.text1){
+        doc.setTextColor(249, 51, 6)
+        doc.text(invoice.text1, pdfX, pdfY)
+    }
+    if(invoice.text2){
+        doc.setTextColor(0, 0, 0)
+        doc.text(invoice.text2, pdfX, pdfY + 12)
+        doc.text(invoice.text3, pdfX, pdfY + 24)
+    }
+
+
     doc.setFillColor(26, 117, 187)
     doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
 
@@ -2355,7 +2392,6 @@ async function printFinal(array){
         doc.setFontType('bold')
         doc.text('Monto Total', pdfX, pdfY + index + 26)
 
-
         doc.setFontSize(10)
         doc.setFontType('normal')
 
@@ -2564,6 +2600,20 @@ async function printFinal(array){
         }
 
         pdfX = 30
+        pdfY += 210
+        doc.setFontSize(9)
+        doc.setFontType('bold')
+        //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
+        if(array[k].invoice.text1){
+            doc.setTextColor(249, 51, 6)
+            doc.text(array[k].invoice.text1, pdfX, pdfY)
+        }
+        if(array[k].invoice.text2){
+            doc.setTextColor(0, 0, 0)
+            doc.text(array[k].invoice.text2, pdfX, pdfY + 12)
+            doc.text(array[k].invoice.text3, pdfX, pdfY + 24)
+        }
+        
         doc.setFillColor(26, 117, 187)
         doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
 
