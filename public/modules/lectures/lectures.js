@@ -224,6 +224,12 @@ async function loadLectures(member) {
                 //btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
                 btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
                 btnAnnulment = `<button class="btn btn-sm btn-info btnLecture" onclick="annulmentInvoice('${member.type}','${member._id}','${lectures[i].invoice._id}')">Anular Boleta</button>`
+                
+                if(isEmail(member.email)){
+                    btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
+                }else{
+                    btnEmail = `<button class="btn btn-sm btn-dark btnLecture" onclick="noEmail()"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
+                }
             }else{
                 btnGenerate = `<button class="btn btn-sm btn-info btnLecture" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')">Generar Boleta</button>`
                 btnAnnulment = `<button class="btn btn-sm btn-dark" disabled>Anular</button>`
@@ -301,6 +307,9 @@ async function loadLectures(member) {
 
 }
 
+function noEmail(){
+    toastr.error('Socio no tiene correo electrónico')
+}
 
 function validateInvoiceData(invoiceData) {
 
@@ -678,6 +687,9 @@ function createModalBody(member) {
                     <div class="col-md-3" style="text-align: center;">
                         <button style="border-radius:5px" class="btn btn-info" id="invoiceSave"><i class="fas fa-check"></i> GUARDAR</button></td>
                     </div>
+                    <div class="col-md-3" style="text-align: right;">
+                        <button style="border-radius:5px; display: none" class="btn btn-danger" id="invoiceDelete"><i class="fas fa-times"></i> ELIMINAR</button></td>
+                    </div>
                 </div>
             </div>
         </div>
@@ -688,12 +700,10 @@ function createModalBody(member) {
 
     $('#modalLecture_body').html(body)
 
-
     $("#invoiceCancel").on('click', async function () {
-
         cleanInvoice()
-
     })
+
 }
 
 async function cleanInvoice() {
@@ -1212,7 +1222,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         })
 
         let agreements = agreementData.data
-        console.log(agreements)
 
         $("#tableBodyAgreements").html('')
 
@@ -1341,6 +1350,46 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 $('#modal').modal('show')
             }
 
+        })
+
+        if(invoice.number){
+            $("#invoiceDelete").css('display','none')
+        }else{
+            console.log('here')
+            $("#invoiceDelete").css('display','block') 
+        }
+
+        $("#invoiceDelete").on('click', async function () {
+            let deleteInvoiceMessage = await Swal.fire({
+                title: '¿Está seguro de eliminar estos datos?',
+                customClass: 'swal-wide',
+                html: ``,
+                showCloseButton: true,
+                showCancelButton: true,
+                showConfirmButton: true,
+                focusConfirm: false,
+                confirmButtonText: 'Aceptar',
+                cancelButtonText: 'Cancelar'
+            })
+        
+            if (deleteInvoiceMessage.value) {
+                let invoiceData = {
+                    id: invoiceID
+                }
+
+                let deleteInvoice = await axios.post('/api/invoiceDelete', invoiceData)
+                if (deleteInvoice.data) {
+                    $('#modal_title').html(`Eliminado`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Registro eliminado</h7>`)
+                    cleanInvoice()
+                    loadLectures(member)
+                } else {
+                    $('#modal_title').html(`Error`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Error al eliminar, favor reintente</h7>`)
+                }
+
+                $('#modal').modal('show')
+            }
         })
     }
 }
@@ -1823,7 +1872,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         try {
             loadingHandler('start')
             
-            let memberMail = 'zeosonic@gmail.com' //member.email
+            let memberMail = member.email
 
             let sendPdfRes = await axios.post('api/sendPdf', {
                 memberName: memberName,

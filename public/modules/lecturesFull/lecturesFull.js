@@ -242,7 +242,7 @@ console.log(lecturesData.data)
                 
                 if(el.invoice.token){
                     el.select = ''
-                    el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" />`
+                    el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>`
 
                     el.pdf = `<button class="btn btn-sm btn-danger" onclick="printInvoice('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
                 }else{
@@ -615,6 +615,33 @@ async function saveMultiple(){
         $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
         $('#modal').modal('show')
     }
+}
+
+async function sendMultiple(){
+
+    let array = []
+
+    let count = 0
+    $(".chkPrintClass").each(function() {
+        if($(this).prop('checked')){
+            count++
+        }
+    })
+    
+    if(count>0){
+        let countIndex = 0
+        $(".chkPrintClass").each(async function() {
+            if($(this).prop('checked')){
+                printInvoice('pdf',$(this).attr('data-member-type'),$(this).attr('data-member-id'),$(this).attr('data-invoice-id'),true)
+            }
+        })
+        
+    }else{
+        $('#modal_title').html(`Error`)
+        $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
+        $('#modal').modal('show')
+    }
+
 }
 
 $('#searchMembers').on('click', async function () {
@@ -1461,7 +1488,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
     }
 }
 
-async function printInvoice(docType,type,memberID,invoiceID) {
+async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     loadingHandler('start')
     
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
@@ -1937,9 +1964,37 @@ async function printInvoice(docType,type,memberID,invoiceID) {
     doc.setTextColor(255, 255, 255)
     doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
 
-    //doc.autoPrint()
-    window.open(doc.output('bloburl'), '_blank')
-    //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
+
+    if (sendEmail) {
+        let pdf = btoa(doc.output())
+
+        try {
+            loadingHandler('start')
+            
+            let memberMail = member.email
+
+            let sendPdfRes = await axios.post('api/sendPdf', {
+                memberName: memberName,
+                memberMail: memberMail,
+                pdf: pdf
+            })
+    
+            if (sendPdfRes.data.ok) {
+                toastr.success('Email enviado correctamente.')
+                loadingHandler('stop')
+            } else {
+                toastr.error('Ha ocurrido un error al enviar el email. Compruebe su email y contraseña.')
+                loadingHandler('stop')
+            }
+        } catch (error) {
+            loadingHandler('stop')
+            console.log(error)
+        }
+    }else{
+        //doc.autoPrint()
+        window.open(doc.output('bloburl'), '_blank')
+        //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
+    }
 
     loadingHandler('stop')
 }

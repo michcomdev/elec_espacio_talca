@@ -349,6 +349,37 @@ export default [
                 })
             }
         }
+    },{
+        method: 'POST',
+        path: '/api/invoiceDelete',
+        options: {
+            description: 'delete invoice',
+            notes: 'delete invoice',
+            tags: ['api'],
+            handler: async (request) => {
+                try {
+                    let payload = request.payload
+
+                    if (payload.id) {
+                        await Invoices.deleteOne({_id: payload.id})
+                        return true
+
+                    }
+
+                } catch (error) {
+                    console.log(error)
+
+                    return {
+                        error: 'Ha ocurrido un error al guardar datos de usuario'
+                    }
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    id: Joi.string()
+                })
+            }
+        }
     },
     {
         method: 'POST',
@@ -787,10 +818,13 @@ const sendEmail = async ({ // sendEmail
         let mailData = {
             from: 'zeosonic@gmail.com', //process.env.EMAIL_SENDER,
             to: [memberMail],//[clientMail],
-            subject: `Envío de Boleta Agua`,
+            subject: `Envío de Boleta Agua - Comité de Agua Los Cristales`,
             //text: "Hello world?",
             html: `
                 Estimado(a) <b>${memberName}</b>
+
+                Se adjunta boleta de consumo mensual de agua
+
             `,
 
             //<img src="cid:logo" />
@@ -819,9 +853,4 @@ const sendEmail = async ({ // sendEmail
         console.log(error)
         return null
     }
-}
-
-const isEmail = (email) => {
-    let regexEmail = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/
-    return regexEmail.test(email)
 }
