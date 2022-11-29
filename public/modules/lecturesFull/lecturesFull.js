@@ -104,12 +104,12 @@ function chargeMembersTable() {
                     { data: 'number' },
                     //{ data: 'typeString' },
                     { data: 'name' },
+                    { data: 'consumption' },
                     { data: 'charge' },
-                    { data: 'consumptionValue' },
                     { data: 'subsidy' },
                     { data: 'sewerage' },
                     { data: 'fine' },
-                    { data: 'consumption' },
+                    { data: 'consumptionValue' },
                     { data: 'others' },
                     { data: 'debt' },
                     { data: 'total' },
@@ -390,27 +390,38 @@ async function calculate(){
             }
             let consumptionValue = lectureValue * meterValue
 
-            if(array[i].members._id=='62757ddbb7bd193474e1bad9'){
-                console.log('subsidies',array[i].members.subsidies)
+
+
+            //Servicios
+            let sewerage = 0
+            let others = 0
+            let services = [] //Para almacenaje
+            if(array[i].members.services){
+                for(let j=0; j < array[i].members.services.length; j++){
+                    if(array[i].members.services[j].services.type=='ALCANTARILLADO'){
+                        sewerage += (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value)//Indicar valor por defecto en caso de 0
+                    }
+                }
             }
+
+            
             let subsidyPercentage = 0
             if (array[i].members.subsidies.length > 0) {
                 let subsidyActive = array[i].members.subsidies.find(x => x.status == 'active')
-                if(array[i].members._id=='62757ddbb7bd193474e1bad9'){
-                    console.log('subsidyActive',subsidyActive)
-                }
                 if(subsidyActive){
                     subsidyPercentage = subsidyActive.percentage
                 }
             }
 
+
+            let consumptionSubsidy = consumptionValue + parseInt(parameters.charge) + sewerage
             let subsidyValue = 0
 
             if (subsidyPercentage > 0) {
                 if (lectureValue <= parameters.subsidyLimit) {
-                    subsidyValue = Math.round(consumptionValue * (subsidyPercentage / 100))
+                    subsidyValue = Math.round(consumptionSubsidy * (subsidyPercentage / 100))
                 } else {
-                    subsidyValue = Math.round((parameters.subsidyLimit * meterValue) * (subsidyPercentage / 100))
+                    subsidyValue = Math.round(((parameters.subsidyLimit * meterValue) + parseInt(parameters.charge) + sewerage) * (subsidyPercentage / 100))
                 }
             }
 
@@ -421,32 +432,13 @@ async function calculate(){
                 consumptionLimitTotal = (lectureValue - consumptionLimit) * consumptionLimitValue
             }
 
-            
-
-            //Servicios
-            let sewerage = 0
-            let others = 0
-            let services = [] //Para almacenaje
-            if(array[i].members.services){
-                for(let j=0; j < array[i].members.services.length; j++){
-                    if(array[i].members.services[j].services.type=='ALCANTARILLADO'){
-                        sewerage += (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value)//Indicar valor por defecto en caso de 0
-                    }/*else{
-                        others += (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value) //Indicar valor por defecto en caso de 0
-                    }
-
-                    services.push({
-                        services: array[i].members.services[j].services._id,
-                        value: (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value)
-                    })*/
-                }
-            }
+           
 
             let lastConsumptionValue = parseInt(parameters.charge) + consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
 
             let fine = 0
             if(array[i].members.fine){
-                fine = lastConsumptionValue * 0.2 //Parametrizar, valor del 20% actual
+                fine = (consumptionSubsidy + consumptionLimitTotal) * 0.2 //Parametrizar, valor del 20% actual
                 lastConsumptionValue += fine
             }
             
@@ -1149,15 +1141,17 @@ function calculateTotal() {
     let meterValue = $("#invoiceMeterValue").val()
     let consumptionValue = lectureValue * meterValue
     $("#invoiceConsumption1").val(consumptionValue)
+    let sewerage = parseInt($("#invoiceSewerage").val())
 
     let subsidy = $("#invoiceSubsidyPercentage").val()
+    let consumptionSubsidy = consumptionValue + parseInt(parameters.charge) + sewerage
 
     let subsidyValue = 0
     if (subsidy > 0) {
         if (lectureValue <= parameters.subsidyLimit) {
-            subsidyValue = Math.round(consumptionValue * (subsidy / 100))
+            subsidyValue = Math.round(consumptionSubsidy * (subsidy / 100))
         } else {
-            subsidyValue = Math.round((parameters.subsidyLimit * meterValue) * (subsidy / 100))
+            subsidyValue = Math.round(((parameters.subsidyLimit * meterValue) + parseInt(parameters.charge) + sewerage) * (subsidy / 100))
         }
     }
     $("#invoiceSubsidyValue").val(subsidyValue)
@@ -1170,14 +1164,13 @@ function calculateTotal() {
         $("#invoiceConsumptionLimitOver").val(lectureValue - consumptionLimit)
     }
     $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
-    let sewerage = parseInt($("#invoiceSewerage").val())
 
     let lastConsumptionValue = parseInt(parameters.charge) + consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
     $("#invoiceConsumption2a").val(lastConsumptionValue)
 
     let fine = 0
     if($("#invoiceFineCheck").prop('checked')){
-        fine = lastConsumptionValue * 0.2 //Multa actual, parametrizar
+        fine = (consumptionSubsidy + consumptionLimitTotal) * 0.2 //Multa actual, parametrizar
         $("#invoiceFine").val(fine)
         lastConsumptionValue += fine
     }else{
@@ -2507,7 +2500,7 @@ async function printFinal(array){
             pdfYTemp += 13
             doc.text(dot_separators(array[k].invoice.sewerage), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
         }
-        
+
         if(array[k].invoice.fine){
             pdfYTemp += 13
             doc.text(dot_separators(array[k].invoice.fine), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')

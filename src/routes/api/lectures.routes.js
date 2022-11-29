@@ -477,7 +477,6 @@ export default [
                             let lecture = await Lectures.findById(lectures.find(x => x.members.toString() === payload.lectures[i].member.toString())._id)
                             console.log(payload.lectures[i].lectureNewStart)
                             if(payload.lectures[i].lectureNewStart !== undefined){
-                                console.log('here1')
                                 lecture.logs.push({
                                     users: payload.users,
                                     date: date,
@@ -486,7 +485,6 @@ export default [
                                     lectureNewEnd: payload.lectures[i].lectureNewEnd
                                 })
                             }else{
-                                console.log('here2')
                                 lecture.logs.push({
                                     users: payload.users,
                                     date: date,
@@ -523,6 +521,10 @@ export default [
                             let lecture = new Lectures(query)
                             await lecture.save()
                         }
+
+                        let member = await Member.findById(payload.lectures[i].member)
+                        member.fine = payload.lectures[i].fine
+                        await member.save()
                         
                         /*if(lectures[0]){
                             let lecture = await Lectures.findById(lectures[0]._id)
@@ -573,7 +575,8 @@ export default [
                             member: Joi.string().allow(''),
                             lecture: Joi.number().allow(0),
                             lectureNewStart: Joi.number().allow(0).optional(),
-                            lectureNewEnd: Joi.number().allow(0).optional()
+                            lectureNewEnd: Joi.number().allow(0).optional(),
+                            fine: Joi.boolean().optional()
                         })
                     ),
                     members: Joi.array().items()

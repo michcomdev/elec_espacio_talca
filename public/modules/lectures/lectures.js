@@ -770,15 +770,18 @@ function calculateTotal() {
     let meterValue = $("#invoiceMeterValue").val()
     let consumptionValue = lectureValue * meterValue
     $("#invoiceConsumption1").val(consumptionValue)
+    let sewerage = parseInt($("#invoiceSewerage").val())
+
 
     let subsidy = $("#invoiceSubsidyPercentage").val()
+    let consumptionSubsidy = consumptionValue + parseInt(parameters.charge) + sewerage
 
     let subsidyValue = 0
     if (subsidy > 0) {
         if (lectureValue <= parameters.subsidyLimit) {
-            subsidyValue = Math.round(consumptionValue * (subsidy / 100))
+            subsidyValue = Math.round(consumptionSubsidy * (subsidy / 100))
         } else {
-            subsidyValue = Math.round((parameters.subsidyLimit * meterValue) * (subsidy / 100))
+            subsidyValue = Math.round(((parameters.subsidyLimit * meterValue) + parseInt(parameters.charge) + sewerage) * (subsidy / 100))
         }
     }
     $("#invoiceSubsidyValue").val(subsidyValue)
@@ -792,14 +795,13 @@ function calculateTotal() {
     }
     $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
 
-    let sewerage = parseInt($("#invoiceSewerage").val())
 
     let lastConsumptionValue = parseInt(parameters.charge) + consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
     $("#invoiceConsumption2a").val(lastConsumptionValue)
 
     let fine = 0
     if($("#invoiceFineCheck").prop('checked')){
-        fine = lastConsumptionValue * 0.2 //Multa actual, parametrizar
+        fine = (consumptionSubsidy + consumptionLimitTotal)  * 0.2 //Multa actual, parametrizar
         $("#invoiceFine").val(fine)
         lastConsumptionValue += fine
     }else{

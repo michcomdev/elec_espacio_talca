@@ -42,6 +42,7 @@ $(document).ready(async function () {
             internals.members.table.column(9).visible(!internals.members.table.column(9).visible())
             internals.members.table.column(10).visible(!internals.members.table.column(10).visible())
             internals.members.table.column(11).visible(!internals.members.table.column(11).visible())
+            internals.members.table.column(12).visible(!internals.members.table.column(11).visible())
         }else{
             toastr.warning('No ha filtrado planilla ')
         }
@@ -137,10 +138,10 @@ function chargeMembersTable() {
                 responsive: true,
                 columnDefs: [
                     { 
-                        targets: [0, 1, 4, 5, 6, 7, 8, 9, 10, 11], 
+                        targets: [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12], 
                         className: 'dt-center' 
                     },{
-                        targets: [ 10, 11 ],
+                        targets: [ 11, 12 ],
                         visible: false
                     }
                 ],
@@ -162,6 +163,7 @@ function chargeMembersTable() {
                     { data: 'lecture' },
                     { data: 'lectureNew' },
                     { data: 'value' },
+                    { data: 'fine' },
                     { data: 'date' },
                     { data: 'up' },
                     { data: 'down' }                    
@@ -252,6 +254,12 @@ async function getMembers() {
             el.lastLecture = `<span id="lectureLast-${el._id}">${dot_separators(el.lastLecture)}</span>`
             //el.lastLecture = `<span id="lectureLast">${el.lastLecture}</span>`
             el.value = `<span id="lectureValue-${el._id}">${el.value}</span>`
+
+            if(el.fine){
+                el.fine = `<input id="lectureFine-${el._id}" type="checkbox" checked />`
+            }else{
+                el.fine = `<input id="lectureFine-${el._id}" type="checkbox" />`
+            }
 
             el.order = ''
             el.up = ''
@@ -352,7 +360,8 @@ $('#saveLectures').on('click', async function () {
                             member: members[i]._id,
                             lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
                             lectureNewStart: parseInt(replaceAll($("#lectureNewStart-"+members[i]._id).val(), '.', '').replace(' ', '')),
-                            lectureNewEnd: parseInt(replaceAll($("#lectureNewEnd-"+members[i]._id).val(), '.', '').replace(' ', ''))
+                            lectureNewEnd: parseInt(replaceAll($("#lectureNewEnd-"+members[i]._id).val(), '.', '').replace(' ', '')),
+                            fine: $(`#lectureFine-${members[i]._id}`).prop('checked')
                         })
                         array.members.push(members[i]._id)
                     }
@@ -361,7 +370,8 @@ $('#saveLectures').on('click', async function () {
             }else if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(69, 130, 236)'){
                 array.lectures.push({
                     member: members[i]._id,
-                    lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
+                    lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
+                    fine: $(`#lectureFine-${members[i]._id}`).prop('checked')
                 })
                 array.members.push(members[i]._id)
             }else if(members[i].lectures){
@@ -369,14 +379,22 @@ $('#saveLectures').on('click', async function () {
                 if(members[i].lectures.logs[members[i].lectures.logs.length-1].lectureNewStart !== undefined && !lectureInputNew){//Caso en que borren la lectura del medidor nuevo
                     array.lectures.push({
                         member: members[i]._id,
-                        lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', ''))
+                        lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
+                        fine: $(`#lectureFine-${members[i]._id}`).prop('checked')
+                    })
+                    array.members.push(members[i]._id)
+                }else if(members[i].fine!=$(`#lectureFine-${members[i]._id}`).prop('checked')){
+                    array.lectures.push({
+                        member: members[i]._id,
+                        lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
+                        fine: $(`#lectureFine-${members[i]._id}`).prop('checked')
                     })
                     array.members.push(members[i]._id)
                 }
             }
 
             if(i+1==members.length){
-                //console.log(array)
+                console.log(array)
 
                 if(array.lectures.length>0){
                     //ALMACENADO...
