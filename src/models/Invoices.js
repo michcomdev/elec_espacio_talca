@@ -39,6 +39,10 @@ const invoicesSchema = new Schema({
     number: { type: Number },
     seal: { type: String },
     token: { type: String },
+    resolution: {
+        fecha: {type: String },
+        numero: {type: Number }
+    },
     annulment: {
         type: { type: Number },
         number: { type: Number },

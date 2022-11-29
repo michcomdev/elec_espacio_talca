@@ -102,14 +102,14 @@ function chargeMembersTable() {
                     { data: 'select' },
                     { data: 'selectPrint' },
                     { data: 'number' },
-                    { data: 'typeString' },
+                    //{ data: 'typeString' },
                     { data: 'name' },
-                    { data: 'consumption' },
                     { data: 'charge' },
                     { data: 'consumptionValue' },
                     { data: 'subsidy' },
                     { data: 'sewerage' },
                     { data: 'fine' },
+                    { data: 'consumption' },
                     { data: 'others' },
                     { data: 'debt' },
                     { data: 'total' },
@@ -390,16 +390,22 @@ async function calculate(){
             }
             let consumptionValue = lectureValue * meterValue
 
+            if(array[i].members._id=='62757ddbb7bd193474e1bad9'){
+                console.log('subsidies',array[i].members.subsidies)
+            }
             let subsidyPercentage = 0
             if (array[i].members.subsidies.length > 0) {
-                for(let i=0; i < array[i].members.subsidies.length; i++){
-                    if(array[i].members.subsidies[i].status=='active'){
-                        subsidyPercentage = array[i].members.subsidies[i].percentage
-                    }
+                let subsidyActive = array[i].members.subsidies.find(x => x.status == 'active')
+                if(array[i].members._id=='62757ddbb7bd193474e1bad9'){
+                    console.log('subsidyActive',subsidyActive)
+                }
+                if(subsidyActive){
+                    subsidyPercentage = subsidyActive.percentage
                 }
             }
 
             let subsidyValue = 0
+
             if (subsidyPercentage > 0) {
                 if (lectureValue <= parameters.subsidyLimit) {
                     subsidyValue = Math.round(consumptionValue * (subsidyPercentage / 100))
@@ -437,9 +443,6 @@ async function calculate(){
             }
 
             let lastConsumptionValue = parseInt(parameters.charge) + consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
-            if(array[i].members._id.toString()=='62631b789666da52dcc90718'){
-                console.log('last', lastConsumptionValue)
-            }
 
             let fine = 0
             if(array[i].members.fine){
@@ -605,7 +608,7 @@ async function saveMultiple(){
 
             if(i+1==internals.invoices.length){
                 loadingHandler('stop')
-                $('#modal_title').html(`Error`)
+                $('#modal_title').html(`Almacenado`)
                 $('#modal_body').html(`<h6 class="alert-heading">Se han generado las boletas, favor recargar para revisar</h6>`)
                 $('#modal').modal('show')
             }
@@ -1288,6 +1291,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
 
         let year = lecture.year
+        let monthDue = lecture.month
         let month = lecture.month+1
         let day = parameters.expireDay
         if(month<10){
@@ -1372,24 +1376,31 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         let agreementData = await axios.post('/api/agreementsByDate', { 
             year: parseInt(year),
-            month: parseInt(month),
+            month: parseInt(monthDue),
             member: memberID
         })
 
+        console.log(parseInt(year), parseInt(month), memberID)
+
         let agreements = agreementData.data
 
+        console.log('agreements',agreements)
+
         $("#tableBodyAgreements").html('')
+        
 
         if (agreements.length > 0) {
             for(let j=0; j<agreements.length; j++){
-                $("#tableBodyAgreements").append(`<tr>
-                    <td>
-                        <input value="${agreements[j]._id}" style="display: none;" />
-                        <span>${(agreements[j].services) ? agreements[j].services.name : agreements[j].other}</span>
-                    </td>
-                    <td style="text-align: center">${agreements[j].due.number} / ${agreements[j].dues.length}</td>
-                    <td><input type="text" class="form-control form-control-sm numericValues money" value="${agreements[j].due.amount}"/></td>
-                </tr>`)
+                if(agreements[j].due){
+                    $("#tableBodyAgreements").append(`<tr>
+                        <td>
+                            <input value="${agreements[j]._id}" style="display: none;" />
+                            <span>${(agreements[j].services) ? agreements[j].services.name : agreements[j].other}</span>
+                        </td>
+                        <td style="text-align: center">${agreements[j].due.number} / ${agreements[j].dues.length}</td>
+                        <td><input type="text" class="form-control form-control-sm numericValues money" value="${agreements[j].due.amount}"/></td>
+                    </tr>`)
+                }
             }
         }
 
@@ -1567,14 +1578,19 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
 
     pdfX = 30
     pdfY += 120
-    doc.setFontSize(12)
+    doc.setFontSize(11)
     doc.text('SOCIO N° ' + member.number, pdfX, pdfY)
-    doc.text('R.U.T ' + member.rut, pdfX, pdfY + 13)
-    doc.setFontSize(13)
-    doc.text(memberName.toUpperCase(), pdfX, pdfY + 28)
-
-
-
+    doc.text('R.U.T ' + member.rut, pdfX, pdfY + 12)
+    doc.setFontSize(12)
+    doc.text(memberName.toUpperCase(), pdfX, pdfY + 24)
+    let subsidyNumber = member.subsidyNumber.toString()
+    while (subsidyNumber.length<11) {
+        subsidyNumber = '0' + subsidyNumber
+    }
+    doc.setFontSize(11)
+    doc.setFontType('normal')
+    doc.text('MIDEPLAN ' + subsidyNumber, pdfX, pdfY + 36)
+    doc.setFontType('bold')
 
     pdfY += 60
 
@@ -1674,10 +1690,20 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         pdfYTemp += 13
         doc.text('SobreConsumo', pdfX, pdfY + 33 + pdfYTemp)
     }
+    if(invoice.sewerage){
+        pdfYTemp += 13
+        doc.text('Alcantarillado', pdfX, pdfY + 33 + pdfYTemp)
+    }
+    if(invoice.fine){ //Multa 20%
+        pdfYTemp += 13
+        doc.text('Otros', pdfX, pdfY + 33 + pdfYTemp)
+    }
+
     
+    doc.setFontType('bold')
     doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
 
-    let index = 85 + 13
+    let index = 85 + 26
     /*if(invoice.services){
         for(let i=0; i<invoice.services.length; i++){
             if(invoice.services[i].services.type=='ALCANTARILLADO'){
@@ -1688,10 +1714,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
             index += 13
         }
     }*/
-    if(invoice.sewerage){
-        doc.text('Alcantarillado', pdfX, pdfY + index)
-        index += 13
-    }
+    doc.setFontType('normal')
 
     if(invoice.agreements){
         let totalAgreement = 0
@@ -1704,11 +1727,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         }
     }
 
-
-
-
-    doc.setFontType('bold')
-    doc.text('SubTotal', pdfX, pdfY + index)
+    //doc.setFontType('bold')
+    //doc.text('SubTotal', pdfX, pdfY + index)
     doc.setFontType('normal')
     doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
     doc.setFontType('bold')
@@ -1730,22 +1750,26 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         pdfYTemp += 13
         doc.text(dot_separators(invoice.consumptionLimitTotal), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
     }
-
-
-    doc.text(dot_separators(invoice.charge + invoice.consumption), pdfX + 250, pdfY + 85, 'right')
+    if(invoice.sewerage){
+        pdfYTemp += 13
+        doc.text(dot_separators(invoice.sewerage), pdfX + 250,  pdfY + 33 + pdfYTemp, 'right')
+    }
+    if(invoice.fine){
+        pdfYTemp += 13
+        doc.text(dot_separators(invoice.fine), pdfX + 250,  pdfY + 33 + pdfYTemp, 'right')
+    }
+    doc.setFontType('bold')
+    doc.text(dot_separators(invoice.consumption), pdfX + 250, pdfY + 85, 'right')
     
-    index = 85 + 13
+    index = 85 + 26
     /*if(invoice.services){
         for(let i=0; i<invoice.services.length; i++){
             doc.text(dot_separators(invoice.services[i].value), pdfX + 250, pdfY + index, 'right')
             index += 13
         }
     }*/
-    if(invoice.sewerage){
-        doc.text(dot_separators(invoice.sewerage), pdfX + 250, pdfY + index, 'right')
-        index += 13
-    }
 
+    doc.setFontType('normal')
     let totalAgreement = 0
     if(invoice.agreements){
         for(let i=0; i<invoice.agreements.length; i++){
@@ -1757,8 +1781,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         }
     }
 
-    doc.setFontType('bold')
-    doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + index, 'right')
+    //doc.setFontType('bold')
+    //doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + index, 'right')
     doc.setFontType('normal')
     doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
     doc.setFontType('bold')
@@ -1799,7 +1823,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
             doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
 
             doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
-            doc.text('Res. 80 del 22-08-2014 Verifique Documento: www.sii.cl', pdfX + 130, pdfY + 330, 'center')
+            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 330, 'center')
         }
     }
 
@@ -1941,8 +1965,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     }
 
     pdfX = 30
-    pdfY += 150
-    doc.setFontSize(10)
+    pdfY += 210
+    doc.setFontSize(9)
     doc.setFontType('bold')
     //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
     if(invoice.text1){
@@ -1978,12 +2002,14 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
                 memberMail: memberMail,
                 pdf: pdf
             })
+
+            console.log(sendPdfRes)
     
-            if (sendPdfRes.data.ok) {
+            if (sendPdfRes.data.accepted.length>0) {
                 toastr.success('Email enviado correctamente.')
                 loadingHandler('stop')
             } else {
-                toastr.error('Ha ocurrido un error al enviar el email. Compruebe su email y contraseña.')
+                toastr.error('Ha ocurrido un error al enviar el email. Compruebe email.')
                 loadingHandler('stop')
             }
         } catch (error) {
@@ -2066,9 +2092,8 @@ async function sendData(type,memberID,invoiceID) {
             CdgSIISucur: parameters.emisor.CdgSIISucur
         }
 
-
         document = {
-            response: ["TIMBRE","FOLIO"],
+            response: ["TIMBRE","FOLIO","RESOLUCION"],
             dte: {
                 Encabezado: {
                     IdDoc:{
@@ -2140,7 +2165,7 @@ async function sendData(type,memberID,invoiceID) {
         }
 
         document = {
-            response: ["TIMBRE","FOLIO"],
+            response: ["TIMBRE","FOLIO","RESOLUCION"],
             dte: {
                 Encabezado: {
                     IdDoc:{
@@ -2210,8 +2235,11 @@ async function sendData(type,memberID,invoiceID) {
             type: dteType,
             number: response.FOLIO,
             seal: response.TIMBRE,
-            token: response.TOKEN
+            token: response.TOKEN,
+            resolution: response.RESOLUCION
         }
+
+        console.log(dteData)
 
         let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
         //loadingHandler('stop')
@@ -2359,17 +2387,21 @@ async function printFinal(array){
 
         pdfX = 30
         pdfY += 120
-        doc.setFontSize(12)
+        doc.setFontSize(11)
         doc.text('SOCIO N° ' + array[k].member.number, pdfX, pdfY)
-        doc.text('R.U.T ' + array[k].member.rut, pdfX, pdfY + 13)
-        doc.setFontSize(13)
-        doc.text(memberName.toUpperCase(), pdfX, pdfY + 28)
-
-
-
+        doc.text('R.U.T ' + array[k].member.rut, pdfX, pdfY + 12)
+        doc.setFontSize(12)
+        doc.text(memberName.toUpperCase(), pdfX, pdfY + 24)
+        let subsidyNumber = array[k].member.subsidyNumber.toString()
+        while (subsidyNumber.length<11) {
+            subsidyNumber = '0' + subsidyNumber
+        }
+        doc.setFontSize(11)
+        doc.setFontType('normal')
+        doc.text('MIDEPLAN ' + subsidyNumber, pdfX, pdfY + 36)
+        doc.setFontType('bold')
 
         pdfY += 60
-
 
         //////////////TABLA CONSUMOS//////////////
         doc.setFillColor(26, 117, 187)
@@ -2428,18 +2460,26 @@ async function printFinal(array){
             pdfYTemp += 13
             doc.text('SobreConsumo', pdfX, pdfY + 33 + pdfYTemp)
         }
-        
+        if(array[k].invoice.sewerage){
+            pdfYTemp += 13
+            doc.text(dot_separators('Alcantarillado'), pdfX, pdfY + 33 + pdfYTemp, 'right')
+        }
+        if(array[k].invoice.fine){
+            pdfYTemp += 13
+            doc.text(dot_separators('Otros'), pdfX, pdfY + 33 + pdfYTemp, 'right')
+        }
         doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
 
-        let index = 85 + 13
-        if(array[k].invoice.services){
-            for(let i=0; i<array[k].invoice.services.length; i++){
-                if(array[k].invoice.services[i].services.type=='ALCANTARILLADO'){
-                    doc.text('Alcantarillado', pdfX, pdfY + index)
-                }else{
-                    doc.text(array[k].invoice.services[i].services.name, pdfX, pdfY + index)
+        index = 85 + 26
+    
+        if(array[k].invoice.agreements){
+            let totalAgreement = 0
+            for(let i=0; i<array[k].invoice.agreements.length; i++){
+                totalAgreement += parseInt(array[k].invoice.agreements[i].amount)
+                if(i+1==array[k].invoice.agreements.length && totalAgreement > 0){
+                    doc.text('Otros', pdfX, pdfY + index)
+                    index += 13
                 }
-                index += 13
             }
         }
 
@@ -2462,15 +2502,29 @@ async function printFinal(array){
             pdfYTemp += 13
             doc.text(dot_separators(array[k].invoice.consumptionLimitTotal), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
         }
-
-
-        doc.text(dot_separators(array[k].invoice.charge + array[k].invoice.consumption), pdfX + 250, pdfY + 85, 'right')
         
-        index = 85 + 13
-        if(array[k].invoice.services){
-            for(let i=0; i<array[k].invoice.services.length; i++){
-                doc.text(dot_separators(array[k].invoice.services[i].value), pdfX + 250, pdfY + index, 'right')
-                index += 13
+        if(array[k].invoice.sewerage){
+            pdfYTemp += 13
+            doc.text(dot_separators(array[k].invoice.sewerage), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
+        }
+        
+        if(array[k].invoice.fine){
+            pdfYTemp += 13
+            doc.text(dot_separators(array[k].invoice.fine), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
+        }
+
+        doc.text(dot_separators(array[k].invoice.consumption), pdfX + 250, pdfY + 85, 'right')
+
+
+        index = 85 + 26
+        let totalAgreement = 0
+        if(array[k].invoice.agreements){
+            for(let i=0; i<array[k].invoice.agreements.length; i++){
+                totalAgreement += parseInt(array[k].invoice.agreements[i].amount)
+                if(i+1==array[k].invoice.agreements.length && totalAgreement > 0){
+                    doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
+                    index += 13
+                }
             }
         }
 
@@ -2513,7 +2567,7 @@ async function printFinal(array){
                 doc.addImage(array[k].invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
 
                 doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
-                doc.text('Res. 80 del 22-08-2014 Verifique Documento: www.sii.cl', pdfX + 130, pdfY + 330, 'center')
+                doc.text(`Res. ${array[k].invoice.resolution.numero} del ${moment(array[k].invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 330, 'center')
             }
         }
 
@@ -2694,9 +2748,15 @@ function selectAll(btn){
         $(".chkClass").each(function() {
             $(this).prop('checked',true)
         })
+        $(".chkPrintClass").each(function() {
+            $(this).prop('checked',true)
+        })
         $(btn).html('<i class="far fa-square"></i> Desel. Todo')
     }else{
         $(".chkClass").each(function() {
+            $(this).prop('checked',false)
+        })
+        $(".chkPrintClass").each(function() {
             $(this).prop('checked',false)
         })
         $(btn).html('<i class="far fa-check-square"></i> Sel. Todo')

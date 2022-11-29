@@ -1473,11 +1473,19 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
 
     pdfX = 30
     pdfY += 120
-    doc.setFontSize(12)
+    doc.setFontSize(11)
     doc.text('SOCIO N° ' + member.number, pdfX, pdfY)
-    doc.text('R.U.T ' + member.rut, pdfX, pdfY + 13)
-    doc.setFontSize(13)
-    doc.text(memberName.toUpperCase(), pdfX, pdfY + 28)
+    doc.text('R.U.T ' + member.rut, pdfX, pdfY + 12)
+    doc.setFontSize(12)
+    doc.text(memberName.toUpperCase(), pdfX, pdfY + 24)
+    let subsidyNumber = member.subsidyNumber.toString()
+    while (subsidyNumber.length<11) {
+        subsidyNumber = '0' + subsidyNumber
+    }
+    doc.setFontSize(11)
+    doc.setFontType('normal')
+    doc.text('MIDEPLAN ' + subsidyNumber, pdfX, pdfY + 36)
+    doc.setFontType('bold')
 
 
 
@@ -1580,25 +1588,23 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         pdfYTemp += 13
         doc.text('SobreConsumo', pdfX, pdfY + 33 + pdfYTemp)
     }
-    
-    doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
 
-    let index = 85 + 13
-    /*if(invoice.services){
-        for(let i=0; i<invoice.services.length; i++){
-            if(invoice.services[i].services.type=='ALCANTARILLADO'){
-                doc.text('Alcantarillado', pdfX, pdfY + index)
-            }else{
-                doc.text(invoice.services[i].services.name, pdfX, pdfY + index)
-            }
-            index += 13
-        }
-    }*/
     if(invoice.sewerage){
-        doc.text('Alcantarillado', pdfX, pdfY + index)
-        index += 13
+        pdfYTemp += 13
+        doc.text('Alcantarillado', pdfX, pdfY + 33 + pdfYTemp)
     }
 
+    if(invoice.fine){ //Multa 20%
+        pdfYTemp += 13
+        doc.text('Otros', pdfX, pdfY + 33 + pdfYTemp)
+    }
+
+    doc.setFontType('bold')
+    doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
+
+    let index = 85 + 26
+
+    doc.setFontType('normal')
     if(invoice.agreements){
         let totalAgreement = 0
         for(let i=0; i<invoice.agreements.length; i++){
@@ -1610,13 +1616,12 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         }
     }
 
-    doc.setFontType('bold')
-    doc.text('SubTotal', pdfX, pdfY + index)
+    //doc.setFontType('bold')
+    //doc.text('SubTotal', pdfX, pdfY + index)
     doc.setFontType('normal')
     doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
     doc.setFontType('bold')
     doc.text('Monto Total', pdfX, pdfY + index + 39)
-
 
     doc.setFontSize(10)
     doc.setFontType('normal')
@@ -1633,22 +1638,28 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         pdfYTemp += 13
         doc.text(dot_separators(invoice.consumptionLimitTotal), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
     }
+    if(invoice.sewerage){
+        pdfYTemp += 13
+        doc.text(dot_separators(invoice.sewerage), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
+    }
+    if(invoice.fine){
+        pdfYTemp += 13
+        doc.text(dot_separators(invoice.fine), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
+    }
 
-
+    doc.setFontType('bold')
     doc.text(dot_separators(invoice.consumption), pdfX + 250, pdfY + 85, 'right')
-    
-    index = 85 + 13
+
+
+    index = 85 + 26
     /*if(invoice.services){
         for(let i=0; i<invoice.services.length; i++){
             doc.text(dot_separators(invoice.services[i].value), pdfX + 250, pdfY + index, 'right')
             index += 13
         }
     }*/
-    if(invoice.sewerage){
-        doc.text(dot_separators(invoice.sewerage), pdfX + 250, pdfY + index, 'right')
-        index += 13
-    }
-
+    
+    doc.setFontType('normal')
     let totalAgreement = 0
     if(invoice.agreements){
         for(let i=0; i<invoice.agreements.length; i++){
@@ -1660,8 +1671,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         }
     }
 
-    doc.setFontType('bold')
-    doc.text(dot_separators(parseInt(invoice.invoiceSubTotal) + parseInt(totalAgreement)), pdfX + 250, pdfY + index, 'right')
+    //doc.setFontType('bold')
+    //doc.text(dot_separators(parseInt(invoice.invoiceSubTotal) + parseInt(totalAgreement)), pdfX + 250, pdfY + index, 'right')
     doc.setFontType('normal')
     doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
     doc.setFontType('bold')
@@ -1702,7 +1713,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
             doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
 
             doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
-            doc.text('Res. 80 del 22-08-2014 Verifique Documento: www.sii.cl', pdfX + 130, pdfY + 330, 'center')
+            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 330, 'center')
         }
     }
 
@@ -2033,11 +2044,11 @@ async function printAnnulment(docType,type,memberID,invoiceID) {
     }else if(docType=='pdf'){
         doc.setFillColor(255, 255, 255)
         doc.rect(pdfX, pdfY + 200, 260, 106, 'F')
-        if(invoice.seal){
-            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
+        if(invoice.annulment.seal){
+            doc.addImage(invoice.annulment.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
 
             doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
-            doc.text('Res. 80 del 22-08-2014 Verifique Documento: www.sii.cl', pdfX + 130, pdfY + 330, 'center')
+            doc.text(`Res. ${invoice.annulment.resolution.numero} del ${moment(invoice.annulment.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 330, 'center')
         }
     }
 

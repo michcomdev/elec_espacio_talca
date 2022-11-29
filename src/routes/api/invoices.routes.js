@@ -822,7 +822,8 @@ const sendEmail = async ({ // sendEmail
             //text: "Hello world?",
             html: `
                 Estimado(a) <b>${memberName}</b>
-
+                <br/>
+                <br/>
                 Se adjunta boleta de consumo mensual de agua
 
             `,
