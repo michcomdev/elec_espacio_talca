@@ -77,7 +77,7 @@ function chargeMembersTable() {
                     },
 
                 ],
-                iDisplayLength: 10,
+                iDisplayLength: -1,
                 oLanguage: {
                     sSearch: 'buscar:'
                 },
@@ -87,8 +87,8 @@ function chargeMembersTable() {
                 },
                 responsive: true,
                 columnDefs: [
-                            { targets: [0, 1, 2, 3, 12, 13], className: 'dt-center' },
-                            { targets: [5, 6, 7, 8, 9, 10, 11], className: 'dt-right' },
+                            { targets: [0, 1, 2, 3, 4, 13, 14], className: 'dt-center' },
+                            { targets: [5, 6, 7, 8, 9, 10, 11, 12], className: 'dt-right' },
                             { targets: [1], visible: false }
                         ],
                 order: [[1, 'asc']],
@@ -651,124 +651,6 @@ $('#calculateLectures').on('click', async function () {
     calculate()
 })
 
-$('#updateLectures').on('click', async function () {
-
-    let memberData = await axios.post('/api/memberSingle', { id: internals.dataRowSelected._id })
-    let member = memberData.data
-    $('#lectureModal').modal('show')
-
-    let name = ''
-    let type = ''
-    if (member.type == 'personal') {
-        type = 'PERSONAL'
-        name = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
-    } else {
-        type = 'EMPRESA'
-        name = member.enterprise.name
-    }
-
-    $('#modalLecture_title').html(`Lecturas Socio N° ${member.number} - ${member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2}`)
-    createModalBody(member)
-
-    $('#modalLecture_footer').html(`
-        <button style="border-radius: 5px;" class="btn btn-dark" data-dismiss="modal">
-            <i ="color:#E74C3C;" class="fas fa-times"></i> CERRAR
-        </button>
-    `)
-
-    $('#memberNumber').val(member.number)
-    $('#memberType').val(type)
-    $('#memberRUT').val(member.rut)
-    $('#memberName').val(name)
-    $('#memberWaterMeter').val(member.waterMeters.find(x => x.state === 'Activo').number)
-    $('#memberAddress').val(member.address.address)
-
-    loadLectures(member)
-
-})
-
-
-async function loadLectures(member) {
-
-    let lectureData = await axios.post('/api/lecturesSingleMember', { member: internals.dataRowSelected._id })
-    let lectures = lectureData.data
-
-    $('#tableLecturesBody').html('')
-
-    for (i = 0; i < lectures.length; i++) {
-
-        let total = 0
-        let btn = '', btnGenerate = '', btnSII = '', btnPayment = ''
-        let invoiceID = 0
-        if (lectures[i].invoice) {
-            total = dot_separators(lectures[i].invoice.invoiceTotal)
-            btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printInvoice('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
-            invoiceID = lectures[i].invoice._id
-            
-            if(lectures[i].invoice.number){
-                btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
-                btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
-            }else{
-                btnGenerate = `<button class="btn btn-sm btn-info btnLecture" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')">Generar DTE</button>`
-            }
-            if(lectures[i].invoice.token){
-                btnSII = `<button class="btn btn-sm btn-warning btnLecture" onclick="showSIIPDF('${lectures[i].invoice.token}')"><img src="/public/img/logo_sii.png" style="width: 24px"/></button>`
-            }
-        }else{
-            total = 'NO CALCULADO'
-            btn = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>`
-            btnGenerate = `<button class="btn btn-sm btn-dark" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
-        }
-
-        $('#tableLecturesBody').append(`
-            <tr id="${lectures[i]._id}" data-invoice="${invoiceID}">
-                <td style="text-align: center;">
-                    ${getMonthString(lectures[i].month)}
-                </td>
-                <td style="text-align: center;">
-                    ${moment(lectures[i].logs[lectures[i].logs.length - 1].date).utc().format('DD/MM/YYYY')}
-                </td>
-                <td style="text-align: center;">
-                    ${dot_separators(lectures[i].logs[lectures[i].logs.length - 1].lecture)}
-                </td>
-                <td style="text-align: center;">
-                    ${total}
-                </td>
-                <td style="text-align: center;">
-                    <button class="btn btn-sm btn-warning btnLecture" onclick="createInvoice('${lectures[i]._id}','${invoiceID}','${member._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
-                </td>
-                <td style="text-align: center;">
-                    ${btn}
-                </td>
-                <td style="text-align: center;">
-                    ${btnGenerate}
-                </td>
-                <td style="text-align: center;">
-                    ${btnSII}
-                </td>
-                <td style="text-align: center;">
-                    ${btnPayment}
-                </td>
-                <td style="text-align: center;">
-                    POR PAGAR
-                </td>
-            </tr>
-        `)
-    }
-
-    /*$('#tableLectures tbody').off("click")
-
-    $('#tableLectures tbody').on('click', 'tr', function () {
-            $('#tableLecturesBody > tr').removeClass('table-primary')
-            $(this).addClass('table-primary')
-            $('#divInvoice').css('display', 'block')
-            $('#tableLectures tbody').off("click")
-            $('.btnLecture').attr('disabled',true)
-            createInvoice($(this).attr('id'), $(this).attr('data-invoice'), member)
-    
-    })*/
-
-}
 
 
 function validateInvoiceData(productData) {

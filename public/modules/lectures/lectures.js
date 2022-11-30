@@ -665,7 +665,7 @@ function createModalBody(member) {
                             </div>
                             <div class="col-md-1" style="text-align: center">(+)</div>
                             <div class="col-md-3">
-                                <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money">
+                                <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money" onkeyup="calculateDebt()">
                             </div>
 
                             <div class="col-md-8">
@@ -859,6 +859,16 @@ function calculateTotal() {
         })
     })    
 
+}
+
+function calculateDebt() {
+    let subTotal = replaceAll($("#invoiceConsumption2b").val(), '.', '').replace(' ', '').replace('$', '')
+    let agreements = replaceAll($("#invoiceTotalAgreementsb").val(), '.', '').replace(' ', '').replace('$', '')
+    let debt = replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', '')
+
+    let total = parseInt(subTotal) + parseInt(debt) + parseInt(agreements)
+    
+    $("#invoiceTotal").val('$ ' + dot_separators(total))
 }
 
 async function createInvoice(lectureID, invoiceID, memberID) {
