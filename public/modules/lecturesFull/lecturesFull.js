@@ -1352,6 +1352,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#tableBodyServices").html('')
 
+        $("#invoiceSewerage").val(0)
         //Servicios
         if (member.services) {
             if (member.services.length > 0) {
@@ -1372,8 +1373,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             month: parseInt(monthDue),
             member: memberID
         })
-
-        console.log(parseInt(year), parseInt(month), memberID)
 
         let agreements = agreementData.data
 
@@ -1452,6 +1451,16 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         $("#invoiceConsumptionLimitValue").val(invoice.consumptionLimitValue)
         if(invoice.sewerage){
             $("#invoiceSewerage").val(invoice.sewerage)
+        }else{
+            $("#invoiceSewerage").val(0)
+        }
+
+        $("#invoiceFine").val(0)
+        if(invoice.fine){
+            if(invoice.fine>0){
+                $("#invoiceFineCheck").prop('checked','checked')
+                $("#invoiceFine").val(invoice.fine)
+            }
         }
 
         $("#invoiceDebt").val(invoice.invoiceDebt)

@@ -243,10 +243,17 @@ async function getMembers() {
                 el.date = moment(el.lectures.logs[el.lectures.logs.length-1].date).utc().format('DD/MM/YYYY HH:mm')
                 el.value = dot_separators(el.lectures.logs[el.lectures.logs.length-1].lecture - el.lastLecture)
 
+                console.log(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd)
+
                 if(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd){
                     el.lectureNew = `<input id="lectureNewStart-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewStart)}"></input>
                                     <input id="lectureNewEnd-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd)}"></input>
                                     <i class="fas fa-times" style="width: 20%; display: inline-block" onclick="removeLectureNew(this,'${el._id}')"></i>`
+                }else if(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd==0){
+                    el.lectureNew = `<input id="lectureNewStart-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewStart)}"></input>
+                                    <input id="lectureNewEnd-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd)}"></input>
+                                    <i class="fas fa-times" style="width: 20%; display: inline-block" onclick="removeLectureNew(this,'${el._id}')"></i>`
+
                 }
             }
 
