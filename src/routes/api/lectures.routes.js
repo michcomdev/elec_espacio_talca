@@ -475,7 +475,7 @@ export default [
 
                         if(go){
                             let lecture = await Lectures.findById(lectures.find(x => x.members.toString() === payload.lectures[i].member.toString())._id)
-                            console.log(payload.lectures[i].lectureNewStart)
+                            
                             if(payload.lectures[i].lectureNewStart !== undefined){
                                 lecture.logs.push({
                                     users: payload.users,

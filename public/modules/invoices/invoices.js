@@ -387,16 +387,22 @@ function createModalBody(member) {
 
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-1">
+                                N°
+                            </div>
+                            <div class="col-md-2">
+                                <input id="invoiceNumber" type="text" class="form-control form-control-sm border-input" value="${parameters.invoiceCorrelative}">
+                            </div>
+                            <div class="col-md-2">
                                 Fecha
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input id="invoiceDate" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 Fecha Vencimiento
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input id="invoiceDateExpire" type="text" class="form-control form-control-sm border-input invoiceDateClass" value="${moment.utc().add(15, 'days').format('DD/MM/YYYY')}">
                             </div>
                         </div>
@@ -724,7 +730,7 @@ async function createInvoice(invoiceID, memberID) {
             let invoiceData = {
                 //lectures: lectureID,
                 member: member._id,
-                //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
+                number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
                 date: $("#invoiceDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 dateExpire: $("#invoiceDateExpire").data('daterangepicker').startDate.format('YYYY-MM-DD'),
                 /*charge: replaceAll($("#invoiceCharge").val(), '.', '').replace(' ', '').replace('$', ''),
@@ -776,7 +782,7 @@ async function createInvoice(invoiceID, memberID) {
         
         $("#invoiceTitle").text("Ingreso N° " + invoice.number)
 
-        //$("#invoiceNumber").val(invoice.number)
+        $("#invoiceNumber").val(invoice.number)
         $("#invoiceDate").val(moment(invoice.date).utc().format('DD/MM/YYYY'))
         $("#invoiceDateExpire").val(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'))
        
@@ -902,8 +908,8 @@ async function printVoucher(memberID,invoiceID) {
         </tr>`)
     }*/
 
-    let parametersData = await axios.get('/api/parameters')
-    let parameters = parametersData.data
+    //let parametersData = await axios.get('/api/parameters')
+    //let parameters = parametersData.data
 
     if (member.type == 'personal') {
         memberName = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
@@ -958,7 +964,7 @@ async function printVoucher(memberID,invoiceID) {
 
     doc.setFontSize(12)
     doc.setFontType('bold')
-    doc.text('Pago',  + 300, pdfY)
+    //doc.text('Pago',  + 300, pdfY)
     doc.setFontSize(10)
     doc.setFontType('normal')
     /*doc.text('Medio de Pago: ' + payment.paymentMethod,  + 300, pdfY + 15)
@@ -978,7 +984,14 @@ async function printVoucher(memberID,invoiceID) {
     pdfY += 18
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
-    for(let i=0; i<invoice.services.length; i++){
+    for(let i=0; i<invoice.agreements.length; i++){
+        pdfY += 13
+        doc.text(invoice.agreements[i].text + ' - Cuota ' + invoice.agreements[i].number + ' de ' + invoice.agreements[i].dueLength, pdfX, pdfY)
+
+        doc.text('$ ' + dot_separators(invoice.agreements[i].amount), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
+
+    }
+    /*for(let i=0; i<invoice.services.length; i++){
         pdfY += 13
         if(invoice.services[i].others){
             doc.text(invoice.services[i].others, pdfX, pdfY)
@@ -988,7 +1001,7 @@ async function printVoucher(memberID,invoiceID) {
 
         doc.text('$ ' + dot_separators(invoice.services[i].value), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
 
-    }
+    }*/
 
     pdfY = 300
     
@@ -2087,7 +2100,7 @@ async function createPayment(memberID,paymentID) {
         
         let paymentData = {
             member: member._id,
-            //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
+            number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
             date: $("#paymentDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
             paymentMethod: $("#paymentType").val(),
             transaction: $("#paymentNumber").val(),

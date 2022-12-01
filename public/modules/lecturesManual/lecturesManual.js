@@ -345,6 +345,7 @@ $('#saveLectures').on('click', async function () {
         }
         
         for(let i=0; i < members.length; i++){
+
             //Gris por defecto: rgba(0, 0, 0, 0.1)
             //Rojo: rgb(0, 0, 0, 0.1)
             //Azul: rgb(69, 130, 236)

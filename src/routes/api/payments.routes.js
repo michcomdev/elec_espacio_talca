@@ -3,6 +3,7 @@ import Invoices from '../../models/Invoices'
 import Payments from '../../models/Payments'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
+import Lectures from '../../models/Lectures'
 
 const fs = require("fs")
 const { promisify } = require("util");
@@ -95,7 +96,10 @@ export default [
                     let payload = request.payload   
 
                     let payment = await Payments.findById(payload.id).lean().populate(['members','invoices.invoices'])
-
+                    for(let i=0; i<payment.invoices.length; i++){ // Se recorren las boletas pagadas y se asigna su monto cancelado a las boletas generales
+                        let lecture = await Lectures.findById(payment.invoices[i].invoices.lectures).lean()
+                        payment.invoices[i].invoices.lectureData = lecture
+                    }
 /*
                     let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
 

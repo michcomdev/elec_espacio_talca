@@ -2,6 +2,7 @@ import Member from '../../models/Member'
 import Invoices from '../../models/Invoices'
 import Payments from '../../models/Payments'
 import Agreements from '../../models/Agreements'
+import Parameters from '../../models/Parameters'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 import nodemailer from 'nodemailer'
@@ -491,10 +492,10 @@ export default [
                     let payload = request.payload
                     let query = {
                         members: payload.member,
-                        number: {
+                        /*number: {
                             $exists: true,
                             $ne: 0
-                        },
+                        },*/
                         $where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
                         
                     }
@@ -621,6 +622,11 @@ export default [
                             }
                         }
                     }
+
+                    /*ACTUALIZACIÓN DE CORRELATIVO*/
+                    let parameters = await Parameters.findById('6263033665a0afa3096a6a62')
+                    parameters.invoiceCorrelative++
+                    await parameters.save()
 
                     return response
 
@@ -798,7 +804,6 @@ const sendEmail = async ({ // sendEmail
     pdf
 }) => {
     try {
-        console.log(memberName, memberMail)
         
         let transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
