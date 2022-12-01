@@ -131,6 +131,7 @@ export default [
                         fine: payload.fine,
                         invoiceSubTotal: payload.invoiceSubTotal,
                         invoiceDebt: payload.invoiceDebt,
+                        debtFine: payload.debtFine,
                         invoicePaid: 0,
                         invoiceTotal: payload.invoiceTotal,
                         type: payload.type,
@@ -210,6 +211,7 @@ export default [
                     fine: Joi.number().allow(0),
                     invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
+                    debtFine: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
@@ -265,6 +267,7 @@ export default [
                     invoices.fine = payload.fine
                     invoices.invoiceSubTotal = payload.invoiceSubTotal
                     invoices.invoiceDebt = payload.invoiceDebt
+                    invoices.debtFine = payload.debtFine
                     //invoices.invoicePaid = payload.invoicePaid
                     invoices.invoiceTotal = payload.invoiceTotal
                     invoices.services = payload.services
@@ -331,6 +334,7 @@ export default [
                     fine: Joi.number().allow(0),
                     invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
+                    debtFine: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),

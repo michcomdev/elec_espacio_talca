@@ -645,14 +645,6 @@ function createModalBody(member) {
                             </div>
 
                             <div class="col-md-8">
-                                Convenios
-                            </div>
-                            <div class="col-md-1" style="text-align: center">(+)</div>
-                            <div class="col-md-3">
-                                <input id="invoiceTotalAgreementsb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
-                            </div>
-
-                            <div class="col-md-8">
                                 SubTotal (a generar en boleta SII)
                             </div>
                             <div class="col-md-1" style="text-align: center">(=)</div>
@@ -661,11 +653,26 @@ function createModalBody(member) {
                             </div>
 
                             <div class="col-md-8">
+                                Convenios
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(+)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceTotalAgreementsb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                            </div>
+
+                            <div class="col-md-8">
                                 Saldo Anterior
                             </div>
                             <div class="col-md-1" style="text-align: center">(+)</div>
                             <div class="col-md-3">
                                 <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money" onkeyup="calculateDebt()">
+                            </div>
+                            <div class="col-md-8">
+                                Multa por atraso (3%)
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(+)</div>
+                            <div class="col-md-3">
+                                <input id="invoiceDebtFine" type="text" class="form-control form-control-sm border-input numericValues money">
                             </div>
 
                             <div class="col-md-8">
@@ -833,7 +840,12 @@ function calculateTotal() {
     let subTotal = parseInt(lastConsumptionValue)
     $("#invoiceSubTotal").val(subTotal)
     $("#invoiceDebt").val(debt)
-    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements))
+    let debtFine = 0
+    if(debt>0){
+        debtFine = debt * 0.03
+    }
+    $("#invoiceDebtFine").val(parseInt(debtFine))
+    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(debtFine) + parseInt(totalAgreements))
 
     $(".consumption").each(function() {
         new Cleave($(this), {
@@ -865,8 +877,10 @@ function calculateDebt() {
     let subTotal = replaceAll($("#invoiceConsumption2b").val(), '.', '').replace(' ', '').replace('$', '')
     let agreements = replaceAll($("#invoiceTotalAgreementsb").val(), '.', '').replace(' ', '').replace('$', '')
     let debt = replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', '')
+    //let debtFine = replaceAll($("#invoiceDebtFine").val(), '.', '').replace(' ', '').replace('$', '')
+    let debtFine = debt * 0.03
 
-    let total = parseInt(subTotal) + parseInt(debt) + parseInt(agreements)
+    let total = parseInt(subTotal) + parseInt(debt) + parseInt(debtFine) + parseInt(agreements)
     
     $("#invoiceTotal").val('$ ' + dot_separators(total))
 }
@@ -876,7 +890,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
     $('#tableLecturesBody > tr').removeClass('table-primary')
     $("#"+lectureID).addClass('table-primary')
     $('#divInvoice').css('display', 'block')
-    $('.btnLecture').attr('disabled',true)
+    $('.btnLecture').attr('disabled', true)
 
 
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
@@ -1029,6 +1043,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         }
 
         $("#invoiceDebt").val(debt)
+        //$("#invoiceDebtFine").val(0)
 
         calculateTotal()
 
@@ -1096,6 +1111,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 fine: replaceAll($("#invoiceFine").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
+                debtFine: replaceAll($("#invoiceDebtFine").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 services: services,
                 agreements: agreements,
@@ -1188,6 +1204,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         }
 
         $("#invoiceDebt").val(invoice.invoiceDebt)
+        $("#invoiceDebtFine").val(invoice.invoiceDebtFine)
         //$("#invoiceConsumptionLimitTotal").val(invoice.consumptionLimitTotal)
         
         /*
@@ -1323,6 +1340,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 fine: replaceAll($("#invoiceFine").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
+                debtFine: replaceAll($("#invoiceDebtFine").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 services: services,
                 agreements: agreements,
@@ -1581,6 +1599,9 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
 
 
     //////////////TABLA VALORES//////////////
+    let value1 = 0 //Valor tributable
+    let value2 = 0 //Valor no tributable
+    let value3 = 0 //Saldo Anterior
     pdfX += 300
 
     doc.setFillColor(26, 117, 187)
@@ -1605,19 +1626,23 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         pdfYTemp += 13
         doc.text('SobreConsumo', pdfX, pdfY + 33 + pdfYTemp)
     }
-
     if(invoice.sewerage){
         pdfYTemp += 13
         doc.text('Alcantarillado', pdfX, pdfY + 33 + pdfYTemp)
     }
-
+    if(invoice.debtFine){
+        pdfYTemp += 13
+        doc.text('Interés por atraso', pdfX, pdfY + 33 + pdfYTemp)
+    }
     if(invoice.fine){ //Multa 20%
         pdfYTemp += 13
         doc.text('Otros', pdfX, pdfY + 33 + pdfYTemp)
     }
 
+
+
     doc.setFontType('bold')
-    doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
+    doc.text('SubTotal Consumo Mes Tributable', pdfX, pdfY + 85)
 
     let index = 85 + 26
 
@@ -1629,16 +1654,18 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
             if(i+1==invoice.agreements.length && totalAgreement > 0){
                 doc.text('Otros', pdfX, pdfY + index)
                 index += 13
+                doc.setFontType('bold')
+                doc.text('SubTotal no Tributable', pdfX, pdfY + index)
+                index += 13
             }
         }
     }
 
     //doc.setFontType('bold')
     //doc.text('SubTotal', pdfX, pdfY + index)
-    doc.setFontType('normal')
-    doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
     doc.setFontType('bold')
-    doc.text('Monto Total', pdfX, pdfY + index + 39)
+    doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
+    //doc.text('Monto Total', pdfX, pdfY + index + 26)
 
     doc.setFontSize(10)
     doc.setFontType('normal')
@@ -1659,6 +1686,10 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         pdfYTemp += 13
         doc.text(dot_separators(invoice.sewerage), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
     }
+    if(invoice.debtFine){
+        pdfYTemp += 13
+        doc.text(dot_separators(invoice.debtFine), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
+    }
     if(invoice.fine){
         pdfYTemp += 13
         doc.text(dot_separators(invoice.fine), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
@@ -1666,15 +1697,10 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
 
     doc.setFontType('bold')
     doc.text(dot_separators(invoice.consumption), pdfX + 250, pdfY + 85, 'right')
-
+    value1 = invoice.consumption
 
     index = 85 + 26
-    /*if(invoice.services){
-        for(let i=0; i<invoice.services.length; i++){
-            doc.text(dot_separators(invoice.services[i].value), pdfX + 250, pdfY + index, 'right')
-            index += 13
-        }
-    }*/
+    
     
     doc.setFontType('normal')
     let totalAgreement = 0
@@ -1684,53 +1710,60 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
             if(i+1==invoice.agreements.length && totalAgreement > 0){
                 doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
                 index += 13
+                doc.setFontType('bold')
+                doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
+                index += 13
+                value2 = totalAgreement
             }
         }
     }
 
     //doc.setFontType('bold')
     //doc.text(dot_separators(parseInt(invoice.invoiceSubTotal) + parseInt(totalAgreement)), pdfX + 250, pdfY + index, 'right')
-    doc.setFontType('normal')
-    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + index + 39, 'right')
+    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
+    value3 = invoice.invoiceDebt
+    //doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + index + 26, 'right')
 
 
     //////TOTALES Y CÓDIGO SII//////
     pdfY += 50
-    doc.setFontSize(12)
 
     doc.setFillColor(23, 162, 184)
-    doc.rect(pdfX - 3, pdfY + 137, 260, 35, 'F')
+    doc.rect(pdfX - 3, pdfY + 118, 260, 78, 'F')
 
+    doc.text('Valor Tributable', pdfX, pdfY + 130)
+    doc.text('Valor No Tributable', pdfX, pdfY + 143)
+    doc.text('Saldo Anterior', pdfX, pdfY + 156)
+    doc.text('+ $ ', pdfX + 180, pdfY + 130, 'center')
+    doc.text('+ $ ', pdfX + 180, pdfY + 143, 'center')
+    doc.text('+ $ ', pdfX + 180, pdfY + 156, 'center')
+    doc.text(dot_separators(value1), pdfX + 250, pdfY + 130, 'right')
+    doc.text(dot_separators(value2), pdfX + 250, pdfY + 143, 'right')
+    doc.text(dot_separators(value3), pdfX + 250, pdfY + 156, 'right')
+    
+    doc.setFontSize(12)
     doc.setTextColor(255, 255, 255)
-    doc.text('TOTAL A PAGAR', pdfX, pdfY + 150)
-    doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 165)
-    doc.text('$ ' + dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 150, 'right')
-    doc.text(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 165, 'right')
-
+    doc.text('TOTAL A PAGAR', pdfX, pdfY + 173)
+    doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 188)
+    doc.text('= $ ', pdfX + 180, pdfY + 173, 'center')
+    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 173, 'right')
+    doc.text(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 188, 'right')
 
     doc.setFontSize(8)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
-    let net = parseInt(invoice.invoiceTotal / 1.19)
-    let iva = invoice.invoiceTotal - net
-    //doc.text('Datos Tributarios: ', pdfX + 100, pdfY + 180)
-    //doc.text('Neto ', pdfX + 190, pdfY + 180)
-    //doc.text('IVA ', pdfX + 190, pdfY + 190)
-    //doc.text(dot_separators(net), pdfX + 250, pdfY + 180, 'right')
-    //doc.text(dot_separators(iva), pdfX + 250, pdfY + 190, 'right')
 
     if(docType=='preview'){
-        doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 200, 260, 106)
+        doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 220, 260, 106)
     }else if(docType=='pdf'){
         doc.setFillColor(255, 255, 255)
-        doc.rect(pdfX, pdfY + 200, 260, 106, 'F')
+        doc.rect(pdfX, pdfY + 220, 260, 106, 'F')
         if(invoice.seal){
-            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
+            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 220, 260, 106)
 
-            doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
-            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 330, 'center')
+            doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 335, 'center')
+            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 345, 'center')
         }
     }
 

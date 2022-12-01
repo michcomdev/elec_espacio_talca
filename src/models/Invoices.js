@@ -24,6 +24,7 @@ const invoicesSchema = new Schema({
     fine: { type: Number },
     invoiceSubTotal: { type: Number },
     invoiceDebt: { type: Number },
+    debtFine: { type: Number },
     invoicePaid: { type: Number },
     invoiceTotal: { type: Number },
     services: [{

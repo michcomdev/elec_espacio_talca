@@ -87,8 +87,8 @@ function chargeMembersTable() {
                 },
                 responsive: true,
                 columnDefs: [
-                            { targets: [0, 1, 2, 3, 4, 13, 14], className: 'dt-center' },
-                            { targets: [5, 6, 7, 8, 9, 10, 11, 12], className: 'dt-right' },
+                            { targets: [0, 1, 2, 3, 4, 14, 15], className: 'dt-center' },
+                            { targets: [5, 6, 7, 8, 9, 10, 11, 12, 13], className: 'dt-right' },
                             { targets: [1], visible: false }
                         ],
                 order: [[1, 'asc']],
@@ -112,6 +112,7 @@ function chargeMembersTable() {
                     { data: 'consumptionValue' },
                     { data: 'others' },
                     { data: 'debt' },
+                    { data: 'debtFine' },
                     { data: 'total' },
                     { data: 'detail' },
                     { data: 'pdf' }
@@ -224,6 +225,7 @@ console.log(lecturesData.data)
                         consumptionLimitTotal: el.invoice.consumptionLimitTotal,
                         consumption: el.invoice.consumption,
                         invoiceDebt: el.invoice.invoiceDebt,
+                        debtFine: el.invoice.debtFine,
                         invoiceTotal: el.invoice.invoiceTotal,
                         services: invoiceServices
                     })
@@ -237,6 +239,7 @@ console.log(lecturesData.data)
                 el.fine = el.invoice.fine
                 el.others = others
                 el.debt = el.invoice.invoiceDebt
+                el.debtFine = el.invoice.debtFine
                 el.total = el.invoice.invoiceTotal
                 el.detail = `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
                 
@@ -258,6 +261,7 @@ console.log(lecturesData.data)
                 el.fine = 0
                 el.others = 0
                 el.debt = 0
+                el.debtFine = 0
                 el.total = 0
                 el.detail = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>'
                 el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
@@ -315,13 +319,16 @@ async function calculate(){
             
             console.log(el)
 
-            let invoiceServices = [], sewerage = 0, fine = 0, others = 0
+            let invoiceServices = [], sewerage = 0, fine = 0, others = 0, debtFine = 0
 
             if(el.invoice.sewerage){
                 sewerage = el.invoice.sewerage
             }
             if(el.invoice.fine){
                 fine = el.invoice.fine
+            }
+            if(el.invoice.debtFine){
+                debtFine = parseInt(el.invoice.debtFine)
             }
             /*for(let j=0; j < el.invoice.services.length; j++){
                 if(el.invoice.services[j].services.type=='ALCANTARILLADO'){
@@ -357,6 +364,7 @@ async function calculate(){
                     others: others,
                     subTotal: el.invoice.invoiceSubTotal,
                     debt: el.invoice.invoiceDebt,
+                    debtFine: el.invoice.debtFine,
                     total: el.invoice.invoiceTotal,
                     detail: `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`,
                     pdf: `<button class="btn btn-sm btn-danger" onclick="printInvoice('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
@@ -483,10 +491,14 @@ async function calculate(){
                     }
                 }
             }
+            let debtFine = 0
+            if(debt>0){
+                debtFine = parseInt(debt * 0.03)
+            }
 
             //Montos
             let subTotal = parseInt(lastConsumptionValue) //+ parseInt(sewerage)
-            let total = parseInt(subTotal) + parseInt(debt) + parseInt(others)
+            let total = parseInt(subTotal) + parseInt(debt) + parseInt(debtFine) + parseInt(others)
 
             newArray.push(
                 {
@@ -504,6 +516,7 @@ async function calculate(){
                     others: others,
                     subTotal: subTotal,
                     debt: debt,
+                    debtFine: debtFine,
                     total: total,
                     detail: `<button class="btn btn-sm btn-info" onclick="createInvoice('${array[i]._id}','0','${array[i].members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`,
                     pdf: '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
@@ -542,6 +555,7 @@ async function calculate(){
                 fine: fine,
                 invoiceSubTotal: subTotal,
                 invoiceDebt: debt,
+                debtFine: debtFine,
                 invoiceTotal: total,
                 services: services,
                 agreements: agreements,
@@ -940,14 +954,6 @@ function createModalBody(member) {
                                     </div>
 
                                     <div class="col-md-8">
-                                        Convenios (Otros)
-                                    </div>
-                                    <div class="col-md-1" style="text-align: center">(+)</div>
-                                    <div class="col-md-3">
-                                        <input id="invoiceTotalAgreementsb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
-                                    </div>
-
-                                    <div class="col-md-8">
                                         SubTotal (a generar en boleta SII)
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(=)</div>
@@ -956,11 +962,26 @@ function createModalBody(member) {
                                     </div>
 
                                     <div class="col-md-8">
+                                        Convenios (Otros)
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-3">
+                                        <input id="invoiceTotalAgreementsb" type="text" class="form-control form-control-sm border-input numericValues money" style="background-color: #FAE3C2">
+                                    </div>
+
+                                    <div class="col-md-8">
                                         Saldo Anterior
                                     </div>
                                     <div class="col-md-1" style="text-align: center">(+)</div>
                                     <div class="col-md-3">
                                         <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
+                                    <div class="col-md-8">
+                                        Multa por atraso (3%)
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(+)</div>
+                                    <div class="col-md-3">
+                                        <input id="invoiceDebtFine" type="text" class="form-control form-control-sm border-input numericValues money">
                                     </div>
 
                                     <div class="col-md-8">
@@ -1084,7 +1105,12 @@ function calculateTotal() {
     let subTotal = parseInt(lastConsumptionValue)
     $("#invoiceSubTotal").val(subTotal)
     $("#invoiceDebt").val(debt) //A asignar
-    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements))
+    let debtFine = 0
+    if(debt>0){
+        debtFine = debt * 0.03
+    }
+    $("#invoiceDebtFine").val(parseInt(debtFine))
+    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(debtFine) + parseInt(totalAgreements))
 
 
     $(".consumption").each(function() {
@@ -1550,6 +1576,9 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
 
 
     //////////////TABLA VALORES//////////////
+    let value1 = 0 //Valor tributable
+    let value2 = 0 //Valor no tributable
+    let value3 = 0 //Saldo Anterior
     pdfX += 300
 
     doc.setFillColor(26, 117, 187)
@@ -1578,6 +1607,10 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         pdfYTemp += 13
         doc.text('Alcantarillado', pdfX, pdfY + 33 + pdfYTemp)
     }
+    if(invoice.debtFine){
+        pdfYTemp += 13
+        doc.text('Interés por atraso', pdfX, pdfY + 33 + pdfYTemp)
+    }
     if(invoice.fine){ //Multa 20%
         pdfYTemp += 13
         doc.text('Otros', pdfX, pdfY + 33 + pdfYTemp)
@@ -1585,7 +1618,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
 
     
     doc.setFontType('bold')
-    doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
+    doc.text('SubTotal Consumo Mes Tributable', pdfX, pdfY + 85)
 
     let index = 85 + 26
     /*if(invoice.services){
@@ -1607,16 +1640,17 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
             if(i+1==invoice.agreements.length && totalAgreement > 0){
                 doc.text('Otros', pdfX, pdfY + index)
                 index += 13
+                doc.setFontType('bold')
+                doc.text('SubTotal no Tributable', pdfX, pdfY + index)
+                index += 13
             }
         }
     }
 
     //doc.setFontType('bold')
     //doc.text('SubTotal', pdfX, pdfY + index)
-    doc.setFontType('normal')
-    doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
     doc.setFontType('bold')
-    doc.text('Monto Total', pdfX, pdfY + index + 39)
+    doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
 
 
     doc.setFontSize(10)
@@ -1638,20 +1672,20 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         pdfYTemp += 13
         doc.text(dot_separators(invoice.sewerage), pdfX + 250,  pdfY + 33 + pdfYTemp, 'right')
     }
+    if(invoice.debtFine){
+        pdfYTemp += 13
+        doc.text(dot_separators(invoice.debtFine), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
+    }
     if(invoice.fine){
         pdfYTemp += 13
         doc.text(dot_separators(invoice.fine), pdfX + 250,  pdfY + 33 + pdfYTemp, 'right')
     }
     doc.setFontType('bold')
     doc.text(dot_separators(invoice.consumption), pdfX + 250, pdfY + 85, 'right')
-    
+    value1 = invoice.consumption
+
     index = 85 + 26
-    /*if(invoice.services){
-        for(let i=0; i<invoice.services.length; i++){
-            doc.text(dot_separators(invoice.services[i].value), pdfX + 250, pdfY + index, 'right')
-            index += 13
-        }
-    }*/
+    
 
     doc.setFontType('normal')
     let totalAgreement = 0
@@ -1661,53 +1695,56 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
             if(i+1==invoice.agreements.length && totalAgreement > 0){
                 doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
                 index += 13
+                doc.setFontType('bold')
+                doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
+                index += 13
+                value2 = totalAgreement
             }
         }
     }
 
-    //doc.setFontType('bold')
-    //doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + index, 'right')
-    doc.setFontType('normal')
-    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + index + 39, 'right')
+    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
+    value3 = invoice.invoiceDebt
 
 
     //////TOTALES Y CÓDIGO SII//////
     pdfY += 50
-    doc.setFontSize(12)
-
     doc.setFillColor(23, 162, 184)
-    doc.rect(pdfX - 3, pdfY + 137, 260, 35, 'F')
+    doc.rect(pdfX - 3, pdfY + 118, 260, 78, 'F')
 
+    doc.text('Valor Tributable', pdfX, pdfY + 130)
+    doc.text('Valor No Tributable', pdfX, pdfY + 143)
+    doc.text('Saldo Anterior', pdfX, pdfY + 156)
+    doc.text('+ $ ', pdfX + 180, pdfY + 130, 'center')
+    doc.text('+ $ ', pdfX + 180, pdfY + 143, 'center')
+    doc.text('+ $ ', pdfX + 180, pdfY + 156, 'center')
+    doc.text(dot_separators(value1), pdfX + 250, pdfY + 130, 'right')
+    doc.text(dot_separators(value2), pdfX + 250, pdfY + 143, 'right')
+    doc.text(dot_separators(value3), pdfX + 250, pdfY + 156, 'right')
+    
+    doc.setFontSize(12)
     doc.setTextColor(255, 255, 255)
-    doc.text('TOTAL A PAGAR', pdfX, pdfY + 150)
-    doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 165)
-    doc.text('$ ' + dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 150, 'right')
-    doc.text(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 165, 'right')
-
-
+    doc.text('TOTAL A PAGAR', pdfX, pdfY + 173)
+    doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 188)
+    doc.text('= $ ', pdfX + 180, pdfY + 173, 'center')
+    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 173, 'right')
+    doc.text(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 188, 'right')
+   
     doc.setFontSize(8)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
-    let net = parseInt(invoice.invoiceTotal / 1.19)
-    let iva = invoice.invoiceTotal - net
-    //doc.text('Datos Tributarios: ', pdfX + 100, pdfY + 180)
-    //doc.text('Neto ', pdfX + 190, pdfY + 180)
-    //doc.text('IVA ', pdfX + 190, pdfY + 190)
-    //doc.text(dot_separators(net), pdfX + 250, pdfY + 180, 'right')
-    //doc.text(dot_separators(iva), pdfX + 250, pdfY + 190, 'right')
-
+    
     if(docType=='preview'){
-        doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 200, 260, 106)
+        doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 220, 260, 106)
     }else if(docType=='pdf'){
         doc.setFillColor(255, 255, 255)
-        doc.rect(pdfX, pdfY + 200, 260, 106, 'F')
+        doc.rect(pdfX, pdfY + 220, 260, 106, 'F')
         if(invoice.seal){
-            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
+            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 220, 260, 106)
 
-            doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
-            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 330, 'center')
+            doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 335, 'center')
+            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 345, 'center')
         }
     }
 
@@ -1867,8 +1904,6 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     doc.setFillColor(26, 117, 187)
     doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
 
-    doc.setFontSize(10)
-    doc.setFontType('bold')
     doc.setTextColor(255, 255, 255)
     doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
 
@@ -2299,12 +2334,37 @@ async function printFinal(array){
         doc.setFontSize(10)
         doc.setFontType('normal')
         doc.setTextColor(0, 0, 0)
-        doc.text('Lectura Actual ' + moment(array[k].invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 20)
-        doc.text('Lectura Anterior ' + moment(array[k].invoice.date).format('DD/MM/YYYY'), pdfX, pdfY + 33)
-        doc.text('Límite Sobreconsumo (m3)', pdfX, pdfY + 46)
-        doc.text('Consumo Calculado', pdfX, pdfY + 59)
+        
+        let lastInvoice, flagLastInvoice = 0
+        for (let j = 0; j < array[k].lectures.length; j++) {
+            if(flagLastInvoice==1){
+                if (array[k].lectures[j].invoice !== undefined) {
+                    lastInvoice = array[k].lectures[j].invoice
+                    j = array[k].lectures.length
+                }
+            }else{
+                if (array[k].lectures[j]._id == array[k].invoice.lectures._id) {
+                    flagLastInvoice++
+                }
+            }
+        }
+
+        doc.text('Lectura Mes Actual ' + moment(array[k].invoice.date).utc().format('DD/MM/YYYY'), pdfX, pdfY + 20)
+        doc.text('Lectura Mes Anterior ' + ((lastInvoice) ? moment(lastInvoice.date).utc().format('DD/MM/YYYY') : ''), pdfX, pdfY + 33)
+        pdfYLectureNew = 0
+        if(array[k].invoice.lectureNewStart!==undefined){
+            doc.text('Lectura Medidor Nuevo Inicial ', pdfX, pdfY + 46)
+            doc.text('Lectura Medidor Nuevo Final ', pdfX, pdfY + 59)
+            pdfYLectureNew = 26
+        }
         doc.setFontType('bold')
-        doc.text('Consumo Facturado', pdfX, pdfY + 85)
+        doc.text('Consumo Calculado', pdfX, pdfY + 46 + pdfYLectureNew)
+        doc.setFontType('normal')
+
+        doc.text('Límite Sobreconsumo (m3)', pdfX, pdfY + 98)
+        doc.text('Sobreconsumo (m3)', pdfX, pdfY + 111)
+        doc.setFontType('bold')
+        doc.text('Consumo Facturado', pdfX, pdfY + 124)
 
 
         doc.setFontSize(10)
@@ -2312,14 +2372,31 @@ async function printFinal(array){
 
         doc.text(dot_separators(array[k].invoice.lectureActual), pdfX + 250, pdfY + 20, 'right')
         doc.text(dot_separators(array[k].invoice.lectureLast), pdfX + 250, pdfY + 33, 'right')
-        doc.text(dot_separators(parameters.consumptionLimit), pdfX + 250, pdfY + 46, 'right')
-        doc.text(dot_separators(array[k].invoice.lectureResult), pdfX + 250, pdfY + 59, 'right')
+
+        if(array[k].invoice.lectureNewStart!==undefined){
+            doc.text(dot_separators(array[k].invoice.lectureNewStart), pdfX + 250, pdfY + 46, 'right')
+            doc.text(dot_separators(array[k].invoice.lectureNewEnd), pdfX + 250, pdfY + 59, 'right')
+        }
         doc.setFontType('bold')
-        doc.text(dot_separators(array[k].invoice.lectureResult), pdfX + 250, pdfY + 85, 'right') //Consultar diferencia facturado vs calculado
+        doc.text(dot_separators(array[k].invoice.lectureResult), pdfX + 250, pdfY + 46 + pdfYLectureNew, 'right')
+        doc.setFontType('normal')
+        
+        doc.text(dot_separators(parameters.consumptionLimit), pdfX + 250, pdfY + 98, 'right')
+        if(array[k].invoice.lectureResult>parameters.consumptionLimit){
+            doc.text(dot_separators(array[k].invoice.lectureResult-parameters.consumptionLimit), pdfX + 250, pdfY + 111, 'right')
+        }else{
+            doc.text("0", pdfX + 250, pdfY + 111, 'right')
+        }
+        doc.setFontType('bold')
+        doc.text(dot_separators(array[k].invoice.lectureResult), pdfX + 250, pdfY + 124, 'right') //Consultar diferencia facturado vs calculado
+
 
 
 
         //////////////TABLA VALORES//////////////
+        let value1 = 0 //Valor tributable
+        let value2 = 0 //Valor no tributable
+        let value3 = 0 //Saldo Anterior
         pdfX += 300
 
         doc.setFillColor(26, 117, 187)
@@ -2346,16 +2423,22 @@ async function printFinal(array){
         }
         if(array[k].invoice.sewerage){
             pdfYTemp += 13
-            doc.text(dot_separators('Alcantarillado'), pdfX, pdfY + 33 + pdfYTemp, 'right')
+            doc.text('Alcantarillado', pdfX, pdfY + 33 + pdfYTemp)
+        }
+        if(array[k].invoice.debtFine){
+            pdfYTemp += 13
+            doc.text('Interés por atraso', pdfX, pdfY + 33 + pdfYTemp)
         }
         if(array[k].invoice.fine){
             pdfYTemp += 13
-            doc.text(dot_separators('Otros'), pdfX, pdfY + 33 + pdfYTemp, 'right')
+            doc.text('Otros', pdfX, pdfY + 33 + pdfYTemp)
         }
-        doc.text('SubTotal Consumo Mes', pdfX, pdfY + 85)
+        doc.setFontType('bold')
+        doc.text('SubTotal Consumo Mes Tributable', pdfX, pdfY + 85)
 
         index = 85 + 26
-    
+
+        doc.setFontType('normal')    
         if(array[k].invoice.agreements){
             let totalAgreement = 0
             for(let i=0; i<array[k].invoice.agreements.length; i++){
@@ -2363,13 +2446,15 @@ async function printFinal(array){
                 if(i+1==array[k].invoice.agreements.length && totalAgreement > 0){
                     doc.text('Otros', pdfX, pdfY + index)
                     index += 13
+                    doc.setFontType('bold')
+                    doc.text('SubTotal no Tributable', pdfX, pdfY + index)
+                    index += 13
                 }
             }
         }
 
-        doc.text('Saldo Anterior', pdfX, pdfY + index)
         doc.setFontType('bold')
-        doc.text('Monto Total', pdfX, pdfY + index + 26)
+        doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
 
         doc.setFontSize(10)
         doc.setFontType('normal')
@@ -2391,16 +2476,21 @@ async function printFinal(array){
             pdfYTemp += 13
             doc.text(dot_separators(array[k].invoice.sewerage), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
         }
+        if(array[k].invoice.debtFine){
+            pdfYTemp += 13
+            doc.text(dot_separators(array[k].invoice.debtFine), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
+        }
 
         if(array[k].invoice.fine){
             pdfYTemp += 13
             doc.text(dot_separators(array[k].invoice.fine), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
         }
-
+        doc.setFontType('bold')
         doc.text(dot_separators(array[k].invoice.consumption), pdfX + 250, pdfY + 85, 'right')
-
+        value1 = array[k].invoice.consumption
 
         index = 85 + 26
+        doc.setFontType('normal')
         let totalAgreement = 0
         if(array[k].invoice.agreements){
             for(let i=0; i<array[k].invoice.agreements.length; i++){
@@ -2408,50 +2498,57 @@ async function printFinal(array){
                 if(i+1==array[k].invoice.agreements.length && totalAgreement > 0){
                     doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
                     index += 13
+                    doc.setFontType('bold')
+                    doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
+                    index += 13
+                    value2 = totalAgreement
                 }
             }
         }
 
-        doc.text(dot_separators(array[k].invoice.invoiceDebt), pdfX + 250, pdfY + index, 'right')
         doc.setFontType('bold')
-        doc.text(dot_separators(array[k].invoice.invoiceTotal), pdfX + 250, pdfY + index + 26, 'right')
+        doc.text(dot_separators(array[k].invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
+        value3 = array[k].invoice.invoiceDebt
 
 
         //////TOTALES Y CÓDIGO SII//////
         pdfY += 50
-        doc.setFontSize(12)
-
         doc.setFillColor(23, 162, 184)
-        doc.rect(pdfX - 3, pdfY + 137, 260, 35, 'F')
-
+        doc.rect(pdfX - 3, pdfY + 118, 260, 78, 'F')
+    
+        doc.text('Valor Tributable', pdfX, pdfY + 130)
+        doc.text('Valor No Tributable', pdfX, pdfY + 143)
+        doc.text('Saldo Anterior', pdfX, pdfY + 156)
+        doc.text('+ $ ', pdfX + 180, pdfY + 130, 'center')
+        doc.text('+ $ ', pdfX + 180, pdfY + 143, 'center')
+        doc.text('+ $ ', pdfX + 180, pdfY + 156, 'center')
+        doc.text(dot_separators(value1), pdfX + 250, pdfY + 130, 'right')
+        doc.text(dot_separators(value2), pdfX + 250, pdfY + 143, 'right')
+        doc.text(dot_separators(value3), pdfX + 250, pdfY + 156, 'right')
+        
+        doc.setFontSize(12)
         doc.setTextColor(255, 255, 255)
-        doc.text('TOTAL A PAGAR', pdfX, pdfY + 150)
-        doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 165)
-        doc.text('$ ' + dot_separators(array[k].invoice.invoiceTotal), pdfX + 250, pdfY + 150, 'right')
-        doc.text(moment(array[k].invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 165, 'right')
+        doc.text('TOTAL A PAGAR', pdfX, pdfY + 173)
+        doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 188)
+        doc.text('= $ ', pdfX + 180, pdfY + 173, 'center')
+        doc.text(dot_separators(array[k].invoice.invoiceTotal), pdfX + 250, pdfY + 173, 'right')
+        doc.text(moment(array[k].invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 188, 'right')
 
 
         doc.setFontSize(8)
         doc.setFontType('normal')
         doc.setTextColor(0, 0, 0)
-        let net = parseInt(array[k].invoice.invoiceTotal / 1.19)
-        let iva = array[k].invoice.invoiceTotal - net
-        //doc.text('Datos Tributarios: ', pdfX + 100, pdfY + 180)
-        //doc.text('Neto ', pdfX + 190, pdfY + 180)
-        //doc.text('IVA ', pdfX + 190, pdfY + 190)
-        //doc.text(dot_separators(net), pdfX + 250, pdfY + 180, 'right')
-        //doc.text(dot_separators(iva), pdfX + 250, pdfY + 190, 'right')
 
         if(docType=='preview'){
-            doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 200, 260, 106)
+            doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 220, 260, 106)
         }else if(docType=='pdf'){
             doc.setFillColor(255, 255, 255)
-            doc.rect(pdfX, pdfY + 200, 260, 106, 'F')
+            doc.rect(pdfX, pdfY + 220, 260, 106, 'F')
             if(array[k].invoice.seal){
-                doc.addImage(array[k].invoice.seal, 'PNG', pdfX, pdfY + 200, 260, 106)
+                doc.addImage(array[k].invoice.seal, 'PNG', pdfX, pdfY + 220, 260, 106)
 
-                doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 320, 'center')
-                doc.text(`Res. ${array[k].invoice.resolution.numero} del ${moment(array[k].invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 330, 'center')
+                doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 335, 'center')
+                doc.text(`Res. ${array[k].invoice.resolution.numero} del ${moment(array[k].invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 345, 'center')
             }
         }
 
@@ -2610,8 +2707,6 @@ async function printFinal(array){
         doc.setFillColor(26, 117, 187)
         doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
 
-        doc.setFontSize(10)
-        doc.setFontType('bold')
         doc.setTextColor(255, 255, 255)
         doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
 
