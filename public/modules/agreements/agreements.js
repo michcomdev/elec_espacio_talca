@@ -66,7 +66,7 @@ function chargeMembersTable() {
         }
         internals.members.table = $('#tableMembers')
             .DataTable({
-                dom: 'Bfrtip',
+                dom: 'Blfrtip',
                 buttons: [
                     {
                         extend: 'excel',
@@ -79,10 +79,10 @@ function chargeMembersTable() {
 
                 ],
                 iDisplayLength: 10,
+                lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "Todo"] ],
                 oLanguage: {
                     sSearch: 'buscar:'
                 },
-                lengthMenu: [[50, 100, 500, -1], [50, 100, 500, 'Todos los registros']],
                 language: {
                     url: spanishDataTableLang
                 },
