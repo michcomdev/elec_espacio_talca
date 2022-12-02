@@ -2023,6 +2023,8 @@ async function sendData(type,memberID,invoiceID) {
                         TipoDTE: dteType,
                         Folio: 0,
                         FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
+                        FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
+                        //IndServicio: "2", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios, 3=Venta o servicios
                         IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
                     },
                     Emisor: Emisor,
@@ -2132,6 +2134,7 @@ async function sendData(type,memberID,invoiceID) {
         }
     }
 
+    console.log(document)
     console.log(JSON.stringify(document))
     var settings = {
         "url": "https://dev-api.haulmer.com/v2/dte/document",

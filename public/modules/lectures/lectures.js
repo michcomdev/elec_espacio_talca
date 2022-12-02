@@ -1559,8 +1559,10 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         }
     }
 
-    doc.text('Lectura Mes Actual ' + moment(invoice.date).utc().format('DD/MM/YYYY'), pdfX, pdfY + 20)
-    doc.text('Lectura Mes Anterior ' + ((lastInvoice) ? moment(lastInvoice.date).utc().format('DD/MM/YYYY') : ''), pdfX, pdfY + 33)
+    //doc.text('Lectura Mes Actual ' + moment(invoice.date).utc().format('DD/MM/YYYY'), pdfX, pdfY + 20)
+    //doc.text('Lectura Mes Anterior ' + ((lastInvoice) ? moment(lastInvoice.date).utc().format('DD/MM/YYYY') : ''), pdfX, pdfY + 33)
+    doc.text('Lectura Mes Actual ', pdfX, pdfY + 20)
+    doc.text('Lectura Mes Anterior ', pdfX, pdfY + 33)
     pdfYLectureNew = 0
     if(invoice.lectureNewStart!==undefined){
         doc.text('Lectura Medidor Nuevo Inicial ', pdfX, pdfY + 46)
@@ -2443,14 +2445,18 @@ async function sendData(type,memberID,invoiceID) {
 
 
             document = {
-                response: ["TIMBRE","FOLIO","RESOLUCION"],
+                response: ["TIMBRE","FOLIO","RESOLUCION",'XML'],
                 dte: {
                     Encabezado: {
                         IdDoc:{
                             TipoDTE: invoice.type,
                             Folio: 0,
                             FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
-                            IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
+                            FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
+                            //IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios, 3=boleta de venta o servicio
+                            IndServicio: "2", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
+                            PeriodoDesde: moment.utc(invoice.date).startOf('month').format('YYYY-MM-DD'),
+                            PeriodoHasta: moment.utc(invoice.date).endOf('month').format('YYYY-MM-DD')
                         },
                         Emisor: Emisor,
                         Receptor:{
@@ -2515,7 +2521,7 @@ async function sendData(type,memberID,invoiceID) {
             }
 
             document = {
-                response: ["TIMBRE","FOLIO","RESOLUCION"],
+                response: ["TIMBRE","FOLIO","RESOLUCION","XML"],
                 dte: {
                     Encabezado: {
                         IdDoc:{
@@ -2578,7 +2584,7 @@ async function sendData(type,memberID,invoiceID) {
 
         }).done(async function (response) {
             
-            console.log(response)
+            console.log('response',response)
             
             let dteData = {
                 id: invoiceID,
@@ -2588,6 +2594,7 @@ async function sendData(type,memberID,invoiceID) {
                 token: response.TOKEN,
                 resolution: response.RESOLUCION
             }
+            
 
             let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
             loadingHandler('stop')

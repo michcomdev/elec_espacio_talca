@@ -158,8 +158,6 @@ export default [
                         query.agreements = payload.agreements
                     }
 
-                    console.log(query)
-
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
 
