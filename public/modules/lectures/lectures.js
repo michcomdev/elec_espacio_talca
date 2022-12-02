@@ -69,6 +69,7 @@ function chargeMembersTable() {
                     },
 
                 ],
+                lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "Todo"] ],
                 iDisplayLength: 10,
                 oLanguage: {
                     sSearch: 'buscar:'
@@ -1812,8 +1813,11 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         }
     }
 
+    if(maxValue==0){
+        maxValue = 1
+    }
     let meterPoints = 100 / maxValue //Puntos en PDF por mt3
-
+    
     pdfY += 25
     doc.setFontSize(7)
     doc.setFontType('normal')
@@ -1903,7 +1907,6 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         }
 
         let offset = 100 - (lastInvoices[i].lectureResult * meterPoints) //Determina posición inicial respecto al máximo del gráfico
-
         doc.rect(pdfX, pdfY + offset, 11, 99 - offset, 'F')
         //Posición X (descendente)
         //Posición Y suma offset según lectura
@@ -1928,10 +1931,6 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         doc.text(invoice.text3, pdfX, pdfY + 24)
     }
 
-
-
-    
-    
     doc.setFillColor(26, 117, 187)
     doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
 
