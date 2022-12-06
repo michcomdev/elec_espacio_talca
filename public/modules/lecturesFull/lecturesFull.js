@@ -399,7 +399,6 @@ async function calculate(){
             let consumptionValue = lectureValue * meterValue
 
 
-
             //Servicios
             let sewerage = 0
             let others = 0
@@ -531,6 +530,40 @@ async function calculate(){
             }
 
 
+            //FECHA DE VENCIMIENTO
+            let year = array[i].year
+            let month = array[i].month+1
+            let day = parameters.expireDay
+            if(month>12){
+                month = 1
+                year++
+            }
+            if(month<10){
+                month = '0' + month
+            }
+            if(day<10){
+                day = '0' + day
+            }
+
+            let expireDate = year+''+month+''+day
+            
+            if(parseInt(day)>28){
+                while(!moment(expireDate).isValid()){
+                    day = parseInt(day)-1
+                    expireDate = year+''+month+''+day
+                }
+            }
+
+            if(moment()>=moment(expireDate)){
+                expireDate = moment.utc().add(15, 'days').format('YYYY-MM-DD')
+            }else{
+                expireDate = moment(expireDate).utc().format('YYYY-MM-DD')
+            }
+
+            console.log(i,array[i])
+            console.log('expireDate',expireDate)
+
+
             internals.invoices.push({
                 lectures: array[i]._id,
                 member: array[i].members._id,
@@ -539,7 +572,7 @@ async function calculate(){
                 //type: array[i].members.dte, //Tipo documento: boleta/factura
                 //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
                 date: moment.utc().format('YYYY-MM-DD'),
-                dateExpire: moment.utc().add(15, 'days').format('YYYY-MM-DD'),
+                dateExpire: expireDate,
                 charge: parameters.charge,
                 lectureActual: lectureActual,
                 lectureLast: lectureLast,
@@ -2001,6 +2034,49 @@ async function sendData(type,memberID,invoiceID) {
     let name = '', category = ''
     let document = ''
 
+    /*DETALLE*/
+
+    let detail = [{
+        NroLinDet: 1,
+        NmbItem: "Servicio de Agua",
+        QtyItem: 1,
+        PrcItem: invoice.invoiceSubTotal,
+        MontoItem: invoice.invoiceSubTotal,
+        IndExe: 1 //1=exento o afecto / 2=no facturable
+    }]
+
+    let totalAgreement = 0
+    if(invoice.agreements){
+        for(let i=0; i<invoice.agreements.length; i++){
+            totalAgreement += parseInt(invoice.agreements[i].amount)
+        }
+    }
+    if(totalAgreement>0){
+        detail.push({
+            NroLinDet: 2,
+            NmbItem: "Otros",
+            QtyItem: 1,
+            PrcItem: totalAgreement,
+            MontoItem: totalAgreement,
+            IndExe: 2 //1=exento o afecto / 2=no facturable
+        })
+    }
+    /////////////////////////
+    let debt = 0
+    if(invoice.invoiceDebt){
+        debt = invoice.invoiceDebt
+    }
+
+    let totals = {
+        MntExe: invoice.invoiceSubTotal,
+        MntTotal: invoice.invoiceSubTotal,
+        MontoNF: totalAgreement, //No facturable
+        TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //No facturable
+        SaldoAnterior: debt,
+        VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt
+    }
+    /////////////////////////////
+
     if(type=='personal'){
 
         dteType = 41 //Boleta exenta electrónica
@@ -2024,8 +2100,10 @@ async function sendData(type,memberID,invoiceID) {
                         Folio: 0,
                         FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
                         FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
-                        //IndServicio: "2", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios, 3=Venta o servicios
-                        IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
+                        //IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios, 3=Venta o servicios
+                        IndServicio: "2", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
+                        PeriodoDesde: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').startOf('month').format('YYYY-MM-DD'), //Revisar fechas, si corresponde a la toma de estado (desde el 1 al 30 del mes)
+                        PeriodoHasta: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').endOf('month').format('YYYY-MM-DD')
                     },
                     Emisor: Emisor,
                     Receptor:{
@@ -2035,22 +2113,9 @@ async function sendData(type,memberID,invoiceID) {
                         CmnaRecep: parameters.committee.commune,
                         CiudadRecep: parameters.committee.city
                     },
-                    Totales:{
-                        MntExe: invoice.invoiceSubTotal,
-                        MntTotal: invoice.invoiceSubTotal,
-                        VlrPagar: invoice.invoiceSubTotal
-                    }
+                    Totales: totals
                 },
-                Detalle:[
-                    {
-                        NroLinDet: 1,
-                        NmbItem: "Servicio de Agua",
-                        QtyItem: 1,
-                        PrcItem: invoice.invoiceSubTotal,
-                        MontoItem: invoice.invoiceSubTotal,
-                        IndExe: 1 //1=exento o afecto / 2=no facturable
-                    }
-                ]
+                Detalle: detail
             }
         }
 
@@ -2110,26 +2175,9 @@ async function sendData(type,memberID,invoiceID) {
                         DirRecep: member.address.address,
                         CmnaRecep: parameters.committee.commune,
                     },
-                    Totales:{
-                        //MntNeto: net,
-                        //TasaIVA: "19",
-                        //IVA: iva,
-                        MntExe: invoice.invoiceTotal,
-                        MntTotal: invoice.invoiceTotal,
-                        MontoPeriodo: invoice.invoiceTotal, //Consultar si se separa monto adeudado anterior
-                        VlrPagar: invoice.invoiceTotal
-                    }
+                    Totales: totals
                 },
-                Detalle:[
-                    {
-                        NroLinDet: 1,
-                        NmbItem: "Servicio de Agua",
-                        QtyItem: 1,
-                        PrcItem: invoice.invoiceTotal,
-                        MontoItem: invoice.invoiceTotal,
-                        IndExe: 1 //1=exento o afecto / 2=no facturable
-                    }
-                ]
+                Detalle: detail
             }
         }
     }
@@ -2356,8 +2404,10 @@ async function printFinal(array){
             }
         }
 
-        doc.text('Lectura Mes Actual ' + moment(array[k].invoice.date).utc().format('DD/MM/YYYY'), pdfX, pdfY + 20)
-        doc.text('Lectura Mes Anterior ' + ((lastInvoice) ? moment(lastInvoice.date).utc().format('DD/MM/YYYY') : ''), pdfX, pdfY + 33)
+        //doc.text('Lectura Mes Actual ' + moment(array[k].invoice.date).utc().format('DD/MM/YYYY'), pdfX, pdfY + 20)
+        //doc.text('Lectura Mes Anterior ' + ((lastInvoice) ? moment(lastInvoice.date).utc().format('DD/MM/YYYY') : ''), pdfX, pdfY + 33)
+        doc.text('Lectura Mes Actual ', pdfX, pdfY + 20)
+        doc.text('Lectura Mes Anterior ', pdfX, pdfY + 33)
         pdfYLectureNew = 0
         if(array[k].invoice.lectureNewStart!==undefined){
             doc.text('Lectura Medidor Nuevo Inicial ', pdfX, pdfY + 46)

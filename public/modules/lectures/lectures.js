@@ -918,6 +918,10 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         let monthDue = lecture.month
         let month = lecture.month+1
         let day = parameters.expireDay
+        if(month>12){
+            month = 1
+            year++
+        }
         if(month<10){
             month = '0' + month
         }
@@ -1459,7 +1463,12 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     }
 
     let doc = new jsPDF('p', 'pt', 'letter')
-    //let doc = new jsPDF('p', 'pt', [302, 451])
+    //let doc = new jsPDF('l', 'pt', [140, 251.9])
+    //let doc = new jsPDF('l', 'pt', [396, 612])
+    
+    console.log('width', doc.internal.pageSize.getWidth())
+    console.log('height', doc.internal.pageSize.getHeight())
+    
 
     let pdfX = 150
     let pdfY = 20
@@ -2420,11 +2429,57 @@ async function sendData(type,memberID,invoiceID) {
         let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
         let lectures = lecturesData.data
 
+        console.log('invoice', invoice)
+        console.log('lectures', lectures)
+
         let parametersData = await axios.get('/api/parameters')
         let parameters = parametersData.data
 
         let name = '', category = ''
         let document = ''
+
+        /*DETALLE*/
+
+        let detail = [{
+            NroLinDet: 1,
+            NmbItem: "Servicio de Agua",
+            QtyItem: 1,
+            PrcItem: invoice.invoiceSubTotal,
+            MontoItem: invoice.invoiceSubTotal,
+            IndExe: 1 //1=exento o afecto / 2=no facturable
+        }]
+
+        let totalAgreement = 0
+        if(invoice.agreements){
+            for(let i=0; i<invoice.agreements.length; i++){
+                totalAgreement += parseInt(invoice.agreements[i].amount)
+            }
+        }
+        if(totalAgreement>0){
+            detail.push({
+                NroLinDet: 2,
+                NmbItem: "Otros",
+                QtyItem: 1,
+                PrcItem: totalAgreement,
+                MontoItem: totalAgreement,
+                IndExe: 2 //1=exento o afecto / 2=no facturable
+            })
+        }
+        /////////////////////////
+        let debt = 0
+        if(invoice.invoiceDebt){
+            debt = invoice.invoiceDebt
+        }
+
+        let totals = {
+            MntExe: invoice.invoiceSubTotal, //Facturable, suma de detalle con indicador exento "1"
+            MntTotal: invoice.invoiceSubTotal,
+            MontoNF: totalAgreement, //No facturable, suma de detalle con indicador exento "2"
+            TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
+            SaldoAnterior: debt, //Saldo anterior, sólo informativo
+            VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt //Valor Total + Saldo anterior
+        }
+        /////////////////////////////
 
         if(invoice.type==41){
 
@@ -2443,7 +2498,6 @@ async function sendData(type,memberID,invoiceID) {
                 CdgSIISucur: parameters.emisor.CdgSIISucur
             }
 
-
             document = {
                 response: ["TIMBRE","FOLIO","RESOLUCION",'XML'],
                 dte: {
@@ -2455,8 +2509,8 @@ async function sendData(type,memberID,invoiceID) {
                             FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
                             //IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios, 3=boleta de venta o servicio
                             IndServicio: "2", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
-                            PeriodoDesde: moment.utc(invoice.date).startOf('month').format('YYYY-MM-DD'),
-                            PeriodoHasta: moment.utc(invoice.date).endOf('month').format('YYYY-MM-DD')
+                            PeriodoDesde: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').startOf('month').format('YYYY-MM-DD'), //Revisar fechas, si corresponde a la toma de estado (desde el 1 al 30 del mes)
+                            PeriodoHasta: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').endOf('month').format('YYYY-MM-DD')
                         },
                         Emisor: Emisor,
                         Receptor:{
@@ -2466,22 +2520,9 @@ async function sendData(type,memberID,invoiceID) {
                             CmnaRecep: parameters.committee.commune,
                             CiudadRecep: parameters.committee.city
                         },
-                        Totales:{
-                            MntExe: invoice.invoiceSubTotal,
-                            MntTotal: invoice.invoiceSubTotal,
-                            VlrPagar: invoice.invoiceSubTotal
-                        }
+                        Totales: totals
                     },
-                    Detalle:[
-                        {
-                            NroLinDet: 1,
-                            NmbItem: "Servicio de Agua",
-                            QtyItem: 1,
-                            PrcItem: invoice.invoiceSubTotal,
-                            MontoItem: invoice.invoiceSubTotal,
-                            IndExe: 1 //1=exento o afecto / 2=no facturable
-                        }
-                    ]
+                    Detalle: detail
                 }
             }
 
@@ -2541,31 +2582,16 @@ async function sendData(type,memberID,invoiceID) {
                             DirRecep: member.address.address,
                             CmnaRecep: parameters.committee.commune,
                         },
-                        Totales:{
-                            //MntNeto: net,
-                            //TasaIVA: "19",
-                            //IVA: iva,
-                            MntExe: invoice.invoiceSubTotal,
-                            MntTotal: invoice.invoiceSubTotal,
-                            MontoPeriodo: invoice.invoiceSubTotal, //Consultar si se separa monto adeudado anterior
-                            VlrPagar: invoice.invoiceSubTotal
-                        }
+                        Totales: totals
                     },
-                    Detalle:[
-                        {
-                            NroLinDet: 1,
-                            NmbItem: "Servicio de Agua",
-                            QtyItem: 1,
-                            PrcItem: invoice.invoiceSubTotal,
-                            MontoItem: invoice.invoiceSubTotal,
-                            IndExe: 1 //1=exento o afecto / 2=no facturable
-                        }
-                    ]
+                    Detalle: detail
                 }
             }
         }
 
+        console.log('document',document)
         console.log(JSON.stringify(document))
+
         var settings = {
             "url": "https://dev-api.haulmer.com/v2/dte/document",
             "method": "POST",
