@@ -954,9 +954,10 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         if(moment()>=moment(expireDate)){
             $("#invoiceDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
-            $('#modal_title').html(`Almacenado`)
-            $('#modal_body').html(`<h7 class="alert-heading">Las fechas podrían estar erróneas, favor revisar</h7>`)
-            $('#modal').modal('show')
+            /*$('#modal_title').html(`Almacenado`)
+            $('#modal_body').html(`<h7 class="alert-heading">Las fechas podrían estar erróneas, favor revisar</h7>`)*/
+            toastr.success('Favor verificar fechas')
+            //$('#modal').modal('show')
         }else{
             $("#invoiceDateExpire").val(moment(expireDate).utc().format('DD/MM/YYYY'))
         }
@@ -1161,19 +1162,22 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 if (saveInvoice.data) {
                     if (saveInvoice.data._id) {
 
-                        $('#modal_title').html(`Almacenado`)
-                        $('#modal_body').html(`<h7 class="alert-heading">Boleta almacenada correctamente</h7>`)
+                        /*$('#modal_title').html(`Almacenado`)
+                        $('#modal_body').html(`<h7 class="alert-heading">Boleta almacenada correctamente</h7>`)*/
+                        toastr.success('Boleta almacenada correctamente')
                         cleanInvoice()
                         loadLectures(member)
                     } else {
-                        $('#modal_title').html(`Error`)
-                        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                        /*$('#modal_title').html(`Error`)
+                        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)*/
+                        toastr.error('Error al almacenar, favor reintente')
                     }
                 } else {
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                    /*$('#modal_title').html(`Error`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)*/
+                    toastr.error('Error al almacenar, favor reintente')
                 }
-                $('#modal').modal('show')
+                //$('#modal').modal('show')
             }
 
         })
@@ -1398,19 +1402,22 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 if (updateInvoice.data) {
                     if (updateInvoice.data._id) {
 
-                        $('#modal_title').html(`Almacenado`)
-                        $('#modal_body').html(`<h7 class="alert-heading">Boleta almacenada correctamente</h7>`)
+                        /*$('#modal_title').html(`Almacenado`)
+                        $('#modal_body').html(`<h7 class="alert-heading">Boleta almacenada correctamente</h7>`)*/
+                        toastr.success('Boleta almacenada correctamente')
                         cleanInvoice()
                         loadLectures(member)
                     } else {
-                        $('#modal_title').html(`Error`)
-                        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                        /*$('#modal_title').html(`Error`)
+                        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)*/
+                        toastr.error('Error al almacenar, favor reintente')
                     }
                 } else {
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                    /*$('#modal_title').html(`Error`)
+                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)*/
+                    toastr.error('Error al almacenar, favor reintente')
                 }
-                $('#modal').modal('show')
+                //$('#modal').modal('show')
             }
 
         })
@@ -1442,16 +1449,18 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
                 let deleteInvoice = await axios.post('/api/invoiceDelete', invoiceData)
                 if (deleteInvoice.data) {
-                    $('#modal_title').html(`Eliminado`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Registro eliminado</h7>`)
+                    //$('#modal_title').html(`Eliminado`)
+                    //$('#modal_body').html(`<h7 class="alert-heading">Registro eliminado</h7>`)
+                    toastr.success('Registro eliminado')
                     cleanInvoice()
                     loadLectures(member)
                 } else {
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Error al eliminar, favor reintente</h7>`)
+                    //$('#modal_title').html(`Error`)
+                    //$('#modal_body').html(`<h7 class="alert-heading">Error al eliminar, favor reintente</h7>`)
+                    toastr.success('Error al eliminar, favor reintente')
                 }
 
-                $('#modal').modal('show')
+                //$('#modal').modal('show')
             }
         })
     }
@@ -2485,21 +2494,7 @@ async function sendData(type,memberID,invoiceID) {
                 IndExe: 2 //1=exento o afecto / 2=no facturable
             })
         }
-        /////////////////////////
-        let debt = 0
-        if(invoice.invoiceDebt){
-            debt = invoice.invoiceDebt
-        }
-
-        let totals = {
-            MntExe: invoice.invoiceSubTotal, //Facturable, suma de detalle con indicador exento "1"
-            MntTotal: invoice.invoiceSubTotal,
-            MontoNF: totalAgreement, //No facturable, suma de detalle con indicador exento "2"
-            TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
-            SaldoAnterior: debt, //Saldo anterior, sólo informativo
-            VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt //Valor Total + Saldo anterior
-        }
-        /////////////////////////////
+        
 
         if(invoice.type==41){
 
@@ -2517,6 +2512,22 @@ async function sendData(type,memberID,invoiceID) {
                 CmnaOrigen: parameters.emisor.CmnaOrigen,
                 CdgSIISucur: parameters.emisor.CdgSIISucur
             }
+
+            /////////////////////////
+            let debt = 0
+            if(invoice.invoiceDebt){
+                debt = invoice.invoiceDebt
+            }
+
+            let totals = {
+                MntExe: invoice.invoiceSubTotal, //Facturable, suma de detalle con indicador exento "1"
+                MntTotal: invoice.invoiceSubTotal,
+                MontoNF: totalAgreement, //No facturable, suma de detalle con indicador exento "2"
+                TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
+                SaldoAnterior: debt, //Saldo anterior, sólo informativo
+                VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt //Valor Total + Saldo anterior
+            }
+            /////////////////////////////
 
             document = {
                 response: ["TIMBRE","FOLIO","RESOLUCION",'XML'],
@@ -2556,6 +2567,10 @@ async function sendData(type,memberID,invoiceID) {
                 category = 'TEST'
             }
 
+            let address = member.address.address
+            if(member.enterprise.address){
+                address = member.enterprise.address
+            }
             //let net = parseInt(invoice.invoiceTotal / 1.19)
             //let iva = invoice.invoiceTotal - net
 
@@ -2581,6 +2596,23 @@ async function sendData(type,memberID,invoiceID) {
                 CdgSIISucur: parameters.emisor.CdgSIISucur
             }
 
+            /////////////////////////
+            let debt = 0
+            if(invoice.invoiceDebt){
+                debt = invoice.invoiceDebt
+            }
+
+            let totals = {
+                MntExe: invoice.invoiceSubTotal, //Facturable, suma de detalle con indicador exento "1"
+                MntTotal: invoice.invoiceSubTotal,
+                MontoNF: totalAgreement, //No facturable, suma de detalle con indicador exento "2"
+                //TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
+                MontoPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
+                SaldoAnterior: debt, //Saldo anterior, sólo informativo
+                VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt //Valor Total + Saldo anterior
+            }
+            /////////////////////////////
+
             document = {
                 response: ["TIMBRE","FOLIO","RESOLUCION","XML"],
                 dte: {
@@ -2589,9 +2621,14 @@ async function sendData(type,memberID,invoiceID) {
                             TipoDTE: invoice.type,
                             Folio: 0,
                             FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
+                            FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
                             TpoTranCompra:"1",
                             TpoTranVenta:"1",
-                            FmaPago:"2"
+                            //FmaPago:"2",
+                            FmaPago:"1", //1=Contado 2=Crédito 3=Sin costo (entrega gratuita)
+                            IndServicio: "1", //1=Serv. periódicos domiciliarios
+                            PeriodoDesde: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').startOf('month').format('YYYY-MM-DD'), //Revisar fechas, si corresponde a la toma de estado (desde el 1 al 30 del mes)
+                            PeriodoHasta: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').endOf('month').format('YYYY-MM-DD')
                         },
                         Emisor: Emisor,
                         Receptor:{
@@ -2599,7 +2636,7 @@ async function sendData(type,memberID,invoiceID) {
                             RznSocRecep: name,
                             GiroRecep: category,
                             CdgIntRecep: member.number,
-                            DirRecep: member.address.address,
+                            DirRecep: address,
                             CmnaRecep: parameters.committee.commune,
                         },
                         Totales: totals
@@ -2645,9 +2682,10 @@ async function sendData(type,memberID,invoiceID) {
             let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
             loadingHandler('stop')
 
-            $('#modal_title').html(`Almacenado`)
+            /*$('#modal_title').html(`Almacenado`)
             $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
-            $('#modal').modal('show')
+            $('#modal').modal('show')*/
+            toastr.success('Documento generado correctamente')
 
             printInvoice('pdf',member.type,member._id,invoiceID)
 
@@ -2811,10 +2849,10 @@ async function annulmentInvoice(type,memberID,invoiceID) {
             let pdfWindow = window.open("")
             pdfWindow.document.write("<iframe width='100%' height='100%' src='data:application/pdf;base64, " +encodeURI(response.PDF) + "'></iframe>")
 
-            $('#modal_title').html(`Almacenado`)
+            /*$('#modal_title').html(`Almacenado`)
             $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
-            $('#modal').modal('show')
-
+            $('#modal').modal('show')*/
+            toastr.success('Documento generado correctamente')
             loadLectures(member)
             
         })
@@ -3201,8 +3239,9 @@ async function createPayment(memberID,paymentID) {
                 }
             }
         }else{
-            $('#modal_title').html(`Al día`)
-            $('#modal_body').html(`<h7 class="alert-heading">Socio no tiene deuda activa</h7>`)
+            //$('#modal_title').html(`Al día`)
+            //$('#modal_body').html(`<h7 class="alert-heading">Socio no tiene deuda activa</h7>`)
+            toastr.success('Socio no tiene deuda activa')
         }
 
     }
@@ -3249,9 +3288,10 @@ async function createPayment(memberID,paymentID) {
         }
 
         if(!goSave){
-            $('#modal').modal('show')
+            /*$('#modal').modal('show')
             $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">Debe seleccionar al menos 1 boleta a cancelar</h7>`)
+            $('#modal_body').html(`<h7 class="alert-heading">Debe seleccionar al menos 1 boleta a cancelar</h7>`)*/
+            toastr.success('Debe seleccionar al menos 1 boleta a cancelar')
             return
         }
 
@@ -3259,29 +3299,33 @@ async function createPayment(memberID,paymentID) {
         let amount = parseInt(replaceAll($("#paymentAmount").val(), '.', '').replace(' ', '').replace('$', ''))
 
         if(!$.isNumeric(amount)){
-            $('#modal').modal('show')
+            /*$('#modal').modal('show')
             $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">Monto no válido</h7>`)
+            $('#modal_body').html(`<h7 class="alert-heading">Monto no válido</h7>`)*/
+            toastr.warning('Monto no válido')
             return
         }
 
         if(amount<=0){
-            $('#modal').modal('show')
+            /*$('#modal').modal('show')
             $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">Monto no válido</h7>`)
+            $('#modal_body').html(`<h7 class="alert-heading">Monto no válido</h7>`)*/
+            toastr.warning('Monto no válido')
             return
         }
         
         if(amount>toPay){
-            $('#modal').modal('show')
+            /*$('#modal').modal('show')
             $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">El monto a pagar no puede ser mayor al saldo</h7>`)
+            $('#modal_body').html(`<h7 class="alert-heading">El monto a pagar no puede ser mayor al saldo</h7>`)*/
+            toastr.warning('El monto a pagar no puede ser mayor al saldo')
             return
         }
         if($("#paymentType").val()=='SELECCIONE'){
-            $('#modal').modal('show')
+            /*$('#modal').modal('show')
             $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">Debe seleccionar medio de pago</h7>`)
+            $('#modal_body').html(`<h7 class="alert-heading">Debe seleccionar medio de pago</h7>`)*/
+            toastr.success('Debe seleccionar medio de pago')
             return
         }
         
@@ -3305,19 +3349,22 @@ async function createPayment(memberID,paymentID) {
         if (savePayment.data) {
             if (savePayment.data._id) {
 
-                $('#modal_title').html(`Almacenado`)
-                $('#modal_body').html(`<h7 class="alert-heading">Pago almacenado correctamente</h7>`)
+                /*$('#modal_title').html(`Almacenado`)
+                $('#modal_body').html(`<h7 class="alert-heading">Pago almacenado correctamente</h7>`)*/
+                toastr.success('Pago almacenado correctamente')
                 loadPayments(member)
                 cleanPayment()
             } else {
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                /*$('#modal_title').html(`Error`)
+                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)*/
+                toastr.error('Error al almacenar, favor reintente')
             }
         } else {
-            $('#modal_title').html(`Error`)
-            $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+            /*$('#modal_title').html(`Error`)
+            $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)*/
+            toastr.error('Error al almacenar, favor reintente')
         }
-        $('#modal').modal('show')
+        //$('#modal').modal('show')
 
     })
 }

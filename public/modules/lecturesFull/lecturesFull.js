@@ -647,15 +647,17 @@ async function saveMultiple(){
 
             if(i+1==internals.invoices.length){
                 loadingHandler('stop')
-                $('#modal_title').html(`Almacenado`)
+                /*$('#modal_title').html(`Almacenado`)
                 $('#modal_body').html(`<h6 class="alert-heading">Se han generado las boletas, favor recargar para revisar</h6>`)
-                $('#modal').modal('show')
+                $('#modal').modal('show')*/
+                toastr.success('Se han generado las boletas, favor recargar para revisar')
             }
         }
     }else{
-        $('#modal_title').html(`Error`)
+        /*$('#modal_title').html(`Error`)
         $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
-        $('#modal').modal('show')
+        $('#modal').modal('show')*/
+        toastr.warning('Debe seleccionar al menos un socio')
     }
 }
 
@@ -679,9 +681,10 @@ async function sendMultiple(){
         })
         
     }else{
-        $('#modal_title').html(`Error`)
+        /*$('#modal_title').html(`Error`)
         $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
-        $('#modal').modal('show')
+        $('#modal').modal('show')*/
+        toastr.warning('Debe seleccionar al menos un socio')
     }
 
 }
@@ -2061,21 +2064,7 @@ async function sendData(type,memberID,invoiceID) {
             IndExe: 2 //1=exento o afecto / 2=no facturable
         })
     }
-    /////////////////////////
-    let debt = 0
-    if(invoice.invoiceDebt){
-        debt = invoice.invoiceDebt
-    }
-
-    let totals = {
-        MntExe: invoice.invoiceSubTotal,
-        MntTotal: invoice.invoiceSubTotal,
-        MontoNF: totalAgreement, //No facturable
-        TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //No facturable
-        SaldoAnterior: debt,
-        VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt
-    }
-    /////////////////////////////
+    
 
     if(type=='personal'){
 
@@ -2090,6 +2079,22 @@ async function sendData(type,memberID,invoiceID) {
             CmnaOrigen: parameters.emisor.CmnaOrigen,
             CdgSIISucur: parameters.emisor.CdgSIISucur
         }
+
+        /////////////////////////
+        let debt = 0
+        if(invoice.invoiceDebt){
+            debt = invoice.invoiceDebt
+        }
+
+        let totals = {
+            MntExe: invoice.invoiceSubTotal,
+            MntTotal: invoice.invoiceSubTotal,
+            MontoNF: totalAgreement, //No facturable
+            TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //No facturable
+            SaldoAnterior: debt,
+            VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt
+        }
+        /////////////////////////////
 
         document = {
             response: ["TIMBRE","FOLIO","RESOLUCION"],
@@ -2154,6 +2159,22 @@ async function sendData(type,memberID,invoiceID) {
             CdgSIISucur: parameters.emisor.CdgSIISucur
         }
 
+        /////////////////////////
+        let debt = 0
+        if(invoice.invoiceDebt){
+            debt = invoice.invoiceDebt
+        }
+
+        let totals = {
+            MntExe: invoice.invoiceSubTotal,
+            MntTotal: invoice.invoiceSubTotal,
+            MontoNF: totalAgreement, //No facturable
+            //TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //No facturable
+            SaldoAnterior: debt,
+            VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt
+        }
+        /////////////////////////////
+
         document = {
             response: ["TIMBRE","FOLIO","RESOLUCION"],
             dte: {
@@ -2164,7 +2185,10 @@ async function sendData(type,memberID,invoiceID) {
                         FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
                         TpoTranCompra:"1",
                         TpoTranVenta:"1",
-                        FmaPago:"2"
+                        FmaPago:"2",
+                        IndServicio: "1", //1=Serv. periódicos domiciliarios
+                        PeriodoDesde: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').startOf('month').format('YYYY-MM-DD'), //Revisar fechas, si corresponde a la toma de estado (desde el 1 al 30 del mes)
+                        PeriodoHasta: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').endOf('month').format('YYYY-MM-DD')
                     },
                     Emisor: Emisor,
                     Receptor:{
@@ -2278,9 +2302,10 @@ async function printMultiple() {
         })
         
     }else{
-        $('#modal_title').html(`Error`)
+        /*$('#modal_title').html(`Error`)
         $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
-        $('#modal').modal('show')
+        $('#modal').modal('show')*/
+        toastr.warning('Debe seleccionar al menos un socio')
     }
 
     return
