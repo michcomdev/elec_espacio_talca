@@ -648,7 +648,7 @@ function createModalBody(member) {
                             </div>
                             <div class="col-md-1" style="text-align: center">(+)</div>
                             <div class="col-md-3">
-                                <input id="invoiceDebtFine" type="text" class="form-control form-control-sm border-input numericValues money">
+                                <input id="invoiceDebtFine" type="text" class="form-control form-control-sm border-input numericValues money" onkeyup="calculateDebt()">
                             </div>
 
                             <div class="col-md-8">
@@ -877,10 +877,11 @@ function calculateDebt() {
     let subTotal = replaceAll($("#invoiceConsumption2b").val(), '.', '').replace(' ', '').replace('$', '')
     let agreements = replaceAll($("#invoiceTotalAgreementsb").val(), '.', '').replace(' ', '').replace('$', '')
     let debt = replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', '')
-    //let debtFine = replaceAll($("#invoiceDebtFine").val(), '.', '').replace(' ', '').replace('$', '')
-    let debtFine = debt * 0.03
-    $("#invoiceDebtFine").val('$ ' + dot_separators(parseInt(debtFine)))
+    let debtFine = replaceAll($("#invoiceDebtFine").val(), '.', '').replace(' ', '').replace('$', '')
+    //let debtFine = debt * 0.03
+    //$("#invoiceDebtFine").val('$ ' + dot_separators(parseInt(debtFine)))
 
+    console.log(parseInt(subTotal) + ' + ' + parseInt(debt) + ' + ' + parseInt(debtFine) + ' + ' + parseInt(agreements))
     let total = parseInt(subTotal) + parseInt(debt) + parseInt(debtFine) + parseInt(agreements)
     
     $("#invoiceSubTotal").val('$ ' + dot_separators(parseInt(subTotal) + parseInt(debtFine)))
