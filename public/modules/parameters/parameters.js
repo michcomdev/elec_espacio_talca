@@ -39,6 +39,7 @@ async function chargeParameters() {
     $("#feeReunion").val(parameters.fees.reunion)
     $("#feeVote").val(parameters.fees.vote)
     $("#text1").val(parameters.text1)
+    $("#text1b").val(parameters.text1b)
     $("#text2").val(parameters.text2)
     $("#text3").val(parameters.text3)
 
@@ -115,6 +116,7 @@ $('#save').on('click', async function () {
         },
         subsidyLimit: $("#subsidyLimit").val(),
         text1: $("#text1").val(),
+        text1b: $("#text1b").val(),
         text2: $("#text2").val(),
         text3: $("#text3").val()
     }

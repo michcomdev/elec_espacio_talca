@@ -65,6 +65,7 @@ export default [
                     parameters.fees.reunion = payload.fees.reunion 
                     parameters.fees.vote = payload.fees.vote
                     parameters.text1 = payload.text1
+                    parameters.text1b = payload.text1b
                     parameters.text2 = payload.text2
                     parameters.text3 = payload.text3
                     
@@ -112,6 +113,7 @@ export default [
                         vote: Joi.number().allow(0)
                     }),
                     text1: Joi.string().allow(''),
+                    text1b: Joi.string().allow(''),
                     text2: Joi.string().allow(''),
                     text3: Joi.string().allow('')
                 })

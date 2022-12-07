@@ -682,6 +682,17 @@ function createModalBody(member) {
                             <div class="col-md-3">
                                 <input id="invoiceTotal" type="text" class="form-control form-control-sm border-input numericValues money">
                             </div>
+
+                            <div class="col-md-6">
+                                Mensaje Corte
+                            </div>
+                            <div class="col-md-6">
+                                <select id="invoiceText1" type="text" class="form-control form-control-sm form-select form-select-sm">">
+                                    <option value=""></option>
+                                    <option value="${parameters.text1}">${parameters.text1}</option>
+                                    <option value="${parameters.text1b}">${parameters.text1b}</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -841,6 +852,9 @@ function calculateTotal() {
     let debtFine = 0
     if(debt>0){
         debtFine = debt * 0.03
+
+        $("#invoiceText1").val(parameters.text1)
+        
     }
     $("#invoiceDebtFine").val(parseInt(debtFine))
     let subTotal = parseInt(lastConsumptionValue) + parseInt(debtFine)
@@ -870,7 +884,6 @@ function calculateTotal() {
             delimiter: "."
         })
     })    
-
 }
 
 function calculateDebt() {
@@ -1094,6 +1107,9 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             let text3 = parameters.text3
             if(parseInt(replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''))>0){
                 text1 = parameters.text1
+            }
+            if($("#invoiceText1").val()!=''){
+                text1 = $("#invoiceText1").val()
             }
 
             let invoiceData = {
@@ -1323,6 +1339,9 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             let text3 = parameters.text3
             if(parseInt(replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''))>0){
                 text1 = parameters.text1
+            }
+            if($("#invoiceText1").val()!=''){
+                text1 = $("#invoiceText1").val()
             }
 
             let invoiceData = {

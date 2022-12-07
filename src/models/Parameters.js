@@ -45,6 +45,7 @@ const parametersSchema = new Schema({
         vote: { type: Number }
     },
     text1: { type: String },
+    text1b: { type: String },
     text2: { type: String },
     text3: { type: String },
     invoiceCorrelative: { type: Number }
