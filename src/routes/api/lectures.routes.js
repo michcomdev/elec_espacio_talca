@@ -618,8 +618,22 @@ export default [
                     for(let i=0;i<lectures.length;i++){
                         
                         if(members.find(x => x._id.toString() === lectures[i].members._id.toString())){
+                            lectures[i].invoiceDebts = 0
                             if(invoices){
                                 lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                                
+                                let invoicesMember = invoices.filter(x => x.members.toString() === lectures[i].members._id.toString())
+                                if(invoicesMember){
+                                    console.log(lectures[i].members._id.toString(),invoicesMember,invoicesMember.length)
+                                    for(let j=0; j<invoicesMember.length; j++){
+
+                                        console.log(invoicesMember[j].invoicePaid,invoicesMember[j].invoiceSubTotal)
+                                        if(invoicesMember[j].invoicePaid<invoicesMember[j].invoiceSubTotal){
+                                            lectures[i].invoiceDebts++
+                                        }
+                                    }
+                                }
+
                             }
                             array.push(lectures[i])
                         }
@@ -646,6 +660,108 @@ export default [
                 payload: Joi.object().keys({
                     month: Joi.number().allow(0),
                     year: Joi.number().allow(0)
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/defaulters',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let array = []
+                    /*for(let i=0; i<members.length ; i++){
+                        array.push(members[i]._id)
+                    }*/
+
+                    let query = { $where: "this.invoicePaid < this.invoiceSubTotal"}
+                    /*let queryInvoice = {
+                        typeInvoice: { $exists : false },
+                        lectures: { $ne: null }
+                    }
+                    let queryMembers = {
+                        'subsidies.status' : 'active'
+                    }*/
+
+                    let invoices = await Invoices.find(query).sort({'date' : 'descending'}).lean().populate(['lectures','members'])
+
+                    for(let i=0; i<invoices.length; i++){
+                        let member = array.find(x => x.member_id.toString() === invoices[i].members._id.toString())
+
+                        if(member){
+                            member.toPay += invoices[i].invoiceSubTotal
+                            member.paid += invoices[i].invoicePaid
+                            member.balance += invoices[i].invoiceSubTotal-invoices[i].invoicePaid
+                            member.months++
+                        }else{
+                            let name = invoices[i].members.personal.lastname1 + ' ' + invoices[i].members.personal.lastname1 + ' ' + invoices[i].members.personal.name
+                            if(invoices[i].members.type=='enterprise'){
+                                name = invoices[i].members.enterprise.name
+                            }
+                            array.push({
+                                number: invoices[i].members.number,
+                                member_id: invoices[i].members._id,
+                                name: name,
+                                address: invoices[i].members.address.address,
+                                rut: invoices[i].members.rut,
+                                toPay: invoices[i].invoiceSubTotal,
+                                paid: invoices[i].invoicePaid,
+                                balance: invoices[i].invoiceSubTotal-invoices[i].invoicePaid,
+                                months: 1
+                            })
+                        }
+
+
+                    }
+
+
+                    return array
+
+                    /*let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
+                    let members = await Member.find(queryMembers).lean()
+                    for(let i=0;i<lectures.length;i++){
+                        
+                        if(members.find(x => x._id.toString() === lectures[i].members._id.toString())){
+                            lectures[i].invoiceDebts = 0
+                            if(invoices){
+                                lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                                
+                                let invoicesMember = invoices.filter(x => x.members.toString() === lectures[i].members._id.toString())
+                                if(invoicesMember){
+                                    console.log(lectures[i].members._id.toString(),invoicesMember,invoicesMember.length)
+                                    for(let j=0; j<invoicesMember.length; j++){
+
+                                        console.log(invoicesMember[j].invoicePaid,invoicesMember[j].invoiceSubTotal)
+                                        if(invoicesMember[j].invoicePaid<invoicesMember[j].invoiceSubTotal){
+                                            lectures[i].invoiceDebts++
+                                        }
+                                    }
+                                }
+
+                            }
+                            array.push(lectures[i])
+                        }
+                    }
+                    return array*/
+
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    sector: Joi.string().allow('').optional()
                 })
             }
         }

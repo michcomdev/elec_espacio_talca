@@ -385,5 +385,37 @@ export default [
                 })
             }
         }
+    },
+    {
+        method: 'POST',
+        path: '/api/agreementDelete',
+        options: {
+            description: 'delete agreement',
+            notes: 'delete agreement',
+            tags: ['api'],
+            handler: async (request) => {
+                try {
+                    let payload = request.payload
+
+                    if (payload.id) {
+                        await Agreements.deleteOne({_id: payload.id})
+                        return true
+
+                    }
+
+                } catch (error) {
+                    console.log(error)
+
+                    return {
+                        error: 'Ha ocurrido un error al guardar datos de usuario'
+                    }
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    id: Joi.string()
+                })
+            }
+        }
     }
 ]

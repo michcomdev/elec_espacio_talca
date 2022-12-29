@@ -352,7 +352,8 @@ export default [
                 })
             }
         }
-    },{
+    },
+    {
         method: 'POST',
         path: '/api/invoiceDelete',
         options: {

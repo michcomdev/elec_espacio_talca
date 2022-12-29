@@ -149,8 +149,7 @@ function loadMacro() {
 
 async function getMembers() {
     let lecturesData = await axios.post('api/lecturesMacro', { year: $("#searchYear").val(), month: $("#searchMonth").val() })
-console.log(lecturesData.data)
-console.log(parameters)
+   //console.log(lecturesData.data)
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
         
@@ -195,11 +194,38 @@ console.log(parameters)
             }
             el.NUMVIVTOT = subsidy.houseQuantity.toString()
             if(el.invoice){
-                el.CONSUMO = (el.invoice.lectureResult) ? el.invoice.lectureResult : ''
-                el.MONSUBS = (el.invoice.subsidyValue) ? el.invoice.subsidyValue : ''
-                el.MONCOBEN = ''
-                el.NUMDEUD = ''
-                el.MONDEUD = ''
+
+                if(el.AP_PATERNO=='ACEVEDO' && el.AP_MATERNO=='LORCA'){
+                    console.log(el)
+                }
+
+                let consumo = el.invoice.lectureResult
+                while (consumo.toString().length<3) {
+                    consumo = '0' + consumo.toString()
+                }
+                let monsubs = el.invoice.subsidyValue
+                while (monsubs.toString().length<6) {
+                    monsubs = '0' + monsubs.toString()
+                }
+
+                let moncoben = el.invoice.charge + el.invoice.sewerage + (el.invoice.lectureResult * el.invoice.meterValue)
+                while (moncoben.toString().length<6) {
+                    moncoben = '0' + moncoben.toString()
+                }
+                let numdeud = el.invoiceDebts
+                while (numdeud.toString().length<6) {
+                    numdeud = '0' + numdeud.toString()
+                }
+                let mondeud = el.invoice.invoiceTotal
+                while (mondeud.toString().length<6) {
+                    mondeud = '0' + mondeud.toString()
+                }
+
+                el.CONSUMO = consumo
+                el.MONSUBS = monsubs
+                el.MONCOBEN = moncoben
+                el.NUMDEUD = numdeud
+                el.MONDEUD = mondeud
             }else{
                 el.CONSUMO = ''
                 el.MONSUBS = ''
@@ -212,6 +238,10 @@ console.log(parameters)
 
             return el
         })
+
+        formatData.sort((a,b) => (a.AP_MATERNO > b.AP_MATERNO) ? 1 : ((b.AP_MATERNO > a.AP_MATERNO) ? -1 : 0))
+        formatData.sort((a,b) => (a.AP_PATERNO > b.AP_PATERNO) ? 1 : ((b.AP_PATERNO > a.AP_PATERNO) ? -1 : 0))
+
 
         //internals.members.table.rows.add(formatData).draw()
         for(let i=0; i<formatData.length; i++){

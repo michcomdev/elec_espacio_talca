@@ -773,7 +773,14 @@ async function addLecture() {
     let saveLecture = await axios.post('/api/lectureSave', lecture)
 }
 
-function calculateTotal() {
+function calculateTotal(type) {
+
+    let parametersCharge = parameters.charge
+    //if(type=='edit'){
+        //parametersCharge = $("#invoiceCharge").val()
+    //}
+    console.log('charge',parametersCharge)
+
     let net = 0
     //Consumos
     let lectureActual = $("#invoiceLectureActual").val()
@@ -792,14 +799,14 @@ function calculateTotal() {
 
 
     let subsidy = $("#invoiceSubsidyPercentage").val()
-    let consumptionSubsidy = consumptionValue + parseInt(parameters.charge) + sewerage
+    let consumptionSubsidy = consumptionValue + parseInt(parametersCharge) + sewerage
 
     let subsidyValue = 0
     if (subsidy > 0) {
         if (lectureValue <= parameters.subsidyLimit) {
             subsidyValue = Math.round(consumptionSubsidy * (subsidy / 100))
         } else {
-            subsidyValue = Math.round(((parameters.subsidyLimit * meterValue) + parseInt(parameters.charge) + sewerage) * (subsidy / 100))
+            subsidyValue = Math.round(((parameters.subsidyLimit * meterValue) + parseInt(parametersCharge) + sewerage) * (subsidy / 100))
         }
     }
     $("#invoiceSubsidyValue").val(subsidyValue)
@@ -814,7 +821,7 @@ function calculateTotal() {
     $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
 
 
-    let lastConsumptionValue = parseInt(parameters.charge) + consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
+    let lastConsumptionValue = parseInt(parametersCharge) + consumptionValue - subsidyValue + consumptionLimitTotal + sewerage
     $("#invoiceConsumption2a").val(lastConsumptionValue)
 
     let fine = 0
@@ -1031,8 +1038,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         $("#tableBodyAgreements").html('')
 
-        console.log(agreements)
-
         if (agreements.length > 0) {
             for(let j=0; j<agreements.length; j++){
                 if(agreements[j].due){
@@ -1186,6 +1191,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         let invoiceData = await axios.post('/api/invoiceSingle', { id: invoiceID })
         let invoice = invoiceData.data
 
+        console.log('invoice',invoice)
+
         if(invoice.number){
             $("#invoiceTitle").text("Boleta/Factura N° " + invoice.number)
             $("#invoiceSave").attr('disabled',true)
@@ -1300,7 +1307,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             }
         }
 
-        calculateTotal()
+        calculateTotal('edit')
 
         $('#invoiceSave').off("click")
 

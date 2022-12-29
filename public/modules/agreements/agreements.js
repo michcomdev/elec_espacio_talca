@@ -449,10 +449,15 @@ function createModalBody(member) {
                             <div class="col-md-3" style="text-align: center;">
                                 <button style="border-radius:5px; " class="btn btn-warning" id="agreementCancel"><i class="fas fa-arrow-left"></i> Atrás</button></td>
                             </div>
-                            <div class="col-md-3" style="text-align: center;">
+                            <div class="col-md-1" style="text-align: center;">
                             </div>
                             <div class="col-md-3" style="text-align: center;">
                                 <button style="border-radius:5px; " class="btn btn-info" id="agreementSave"><i class="fas fa-check"></i> GUARDAR</button></td>
+                            </div>
+                            <div class="col-md-2" style="text-align: center;">
+                            </div>
+                            <div class="col-md-3" style="text-align: right;">
+                                <button style="border-radius:5px; " class="btn btn-danger" id="agreementDelete"><i class="fas fa-times"></i> ELIMINAR</button></td>
                             </div>
                         </div>
                     </div>
@@ -685,6 +690,7 @@ async function createAgreement(agreementID, memberID) {
 
         //Definir parámetros
         $("#agreementTitle").text("Nuevo Convenio")
+        $("#agreementDelete").css("display","none")
         //$("#agreementNumber").val('')
         $("#agreementDate").val(moment.utc().format('DD/MM/YYYY'))
         $("#agreementDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
@@ -790,6 +796,7 @@ async function createAgreement(agreementID, memberID) {
         let agreement = agreementData.data
         
         $("#agreementTitle").text("Modificar Convenio")
+        $("#agreementDelete").css("display","block")
 
         //$("#agreementNumber").val(agreement.number)
         $("#agreementDate").val(moment(agreement.date).utc().format('DD/MM/YYYY'))       
@@ -918,6 +925,42 @@ async function createAgreement(agreementID, memberID) {
             }
             $('#modal').modal('show')
 
+        })
+
+
+        $("#agreementDelete").on('click', async function () {
+            let deleteAgreementMessage = await Swal.fire({
+                title: '¿Está seguro de eliminar estos datos?',
+                customClass: 'swal-wide',
+                html: ``,
+                showCloseButton: true,
+                showCancelButton: true,
+                showConfirmButton: true,
+                focusConfirm: false,
+                confirmButtonText: 'Aceptar',
+                cancelButtonText: 'Cancelar'
+            })
+        
+            if (deleteAgreementMessage.value) {
+                let agreementData = {
+                    id: agreementID
+                }
+
+                let deleteAgreement = await axios.post('/api/agreementDelete', agreementData)
+                if (deleteAgreement.data) {
+                    //$('#modal_title').html(`Eliminado`)
+                    //$('#modal_body').html(`<h7 class="alert-heading">Registro eliminado</h7>`)
+                    toastr.success('Registro eliminado')
+                    cleanAgreement()
+                    loadAgreements(member)
+                } else {
+                    //$('#modal_title').html(`Error`)
+                    //$('#modal_body').html(`<h7 class="alert-heading">Error al eliminar, favor reintente</h7>`)
+                    toastr.success('Error al eliminar, favor reintente')
+                }
+
+                //$('#modal').modal('show')
+            }
         })
 
     }
