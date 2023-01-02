@@ -60,7 +60,8 @@ function chargeMembersTable() {
                 //{ data: 'dateStart' },
                 { data: 'status' },
                 { data: 'subsidyNumber' },
-                { data: 'subsidyActive' }
+                { data: 'subsidyActive' },
+                { data: 'fine20' }
             ],
             initComplete: function (settings, json) {
                 getMembersEnabled()
@@ -141,13 +142,17 @@ async function getMembersEnabled() {
                 el.status = 'INACTIVO'
             }
 
+            el.subsidyActive = 'NO'
             if(el.subsidies.length>0){
-                //for(let i=0; i<el.subsidies)
-                //Verificar que subsidio esté activo
-                el.subsidyActive = 'SI'
-            }else{
-                el.subsidyActive = 'NO'
+                if(el.subsidies.find(x => x.status=='active')){
+                    el.subsidyActive = 'SI'
+                }
+            }
 
+
+            el.fine20 = 'NO'
+            if(el.fine){
+                el.fine20 = 'SI'
             }
 
             return el
@@ -244,9 +249,7 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
         }
         
         if(serviceError){
-            $('#modal_title').html(`Error`)
-            $('#modal_body').html(`<h7 class="alert-heading">1 o más servicios tienen valores erróneos</h7>`)
-            $('#modal').modal('show')
+            toastr.warning('1 o más servicios tienen valores erróneos')
             return
         }
         
@@ -288,9 +291,8 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             if (saveMember.data) {
                 if (saveMember.data._id) {
                     $('#modalMember').modal('hide')
+                    toastr.success('Socio almacenado correctamente')
 
-                    $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Socio almacenado correctamente</h7>`)
                     chargeMembersTable()
 
                 /*} else if (saveMember.data == 'created') {
@@ -300,12 +302,12 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
                 }else{
                     $('#modal_title').html(`Error`)
                     $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                    toastr.error('Error al almacenar, favor reintente')
                 }
             } else {
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                toastr.error('Error al almacenar, favor reintente')
             }
-            $('#modal').modal('show')
+            
 
         } else {
 
@@ -487,9 +489,7 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
 
 
         if(serviceError){
-            $('#modal_title').html(`Error`)
-            $('#modal_body').html(`<h7 class="alert-heading">1 o más servicios tienen valores erróneos</h7>`)
-            $('#modal').modal('show')
+            toastr.warning('1 o más servicios tienen valores erróneos')
             return
         }
 
@@ -533,24 +533,18 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             if (saveMember.data) {
                 if (saveMember.data._id) {
                     $('#modalMember').modal('hide')
-
-                    $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Socio almacenado correctamente</h7>`)
+                    toastr.success('Socio almacenado correctamente')
                     chargeMembersTable()
 
                 } else if (saveMember.data == 'created') {
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h7 class="alert-heading">RUT ya registrado, favor corroborar</h7>`)
+                    toastr.warning('RUT ya registrado, favor corroborar')
                 
                 }else{
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                    toastr.error('Error al almacenar, favor reintente')
                 }
             } else {
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                toastr.error('Error al almacenar, favor reintente')
             }
-            $('#modal').modal('show')
 
         } else {
 
@@ -859,7 +853,7 @@ function setModal(type){
                                 </div>
 
                                 
-                                <div class="col-md-6">
+                                <div class="col-md-8">
                                     <div class="card border-primary">
                                         <div class="card-body">
                                             <b id="subsidyTitle" style="display: inline-block">Subsidio Activo</b>
@@ -946,7 +940,7 @@ function setModal(type){
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="card border-primary">
                                         <div class="card-body">
                                             <b>Histórico</b>
@@ -1127,6 +1121,11 @@ async function loadSubsidies(member){
     $('#btnSubsidyNew').on('click', async function () {
         $("#subsidyTitle").text('Subsidio Activo')
         $("#subsidyRow").css('display','flex')
+
+        $("#subsidyRUT").val($("#memberRUT").val())
+        $("#subsidyName").val($("#memberName").val())
+        $("#subsidyLastname1").val($("#memberLastname1").val())
+        $("#subsidyLastname2").val($("#memberLastname2").val())
         $(this).css('display','none')
     })
 
@@ -1150,43 +1149,31 @@ async function loadSubsidies(member){
 async function saveSubsidy(id){
 
     if (!validateRut($("#subsidyRUT").val())) {
-        $('#modal_title').html(`Verificar`)
-        $('#modal_body').html(`<h7 class="alert-heading">El RUT ingresado no es válido</h7>`)
-        $('#modal').modal('show')
+        toastr.warning('El RUT ingresado no es válido')
         return
     }
 
     if(!$.isNumeric($("#subsidyDecreeNumber").val())){
-        $('#modal_title').html(`Verificar`)
-        $('#modal_body').html(`<h7 class="alert-heading">N° de Decreto no válido</h7>`)
-        $('#modal').modal('show')
+        toastr.warning('N° de Decreto no válido')
         return
     }
     if(!$.isNumeric($("#subsidyInscriptionScore").val())){
         $("#subsidyInscriptionScore").val(0)
-        /*$('#modal_title').html(`Verificar`)
-        $('#modal_body').html(`<h7 class="alert-heading">Puntaje Ficha CAS</h7>`)
-        $('#modal').modal('show')
-        return*/
+        //toastr.warning('Puntaje Ficha CAS')
+        return
     }
     if(!$.isNumeric($("#subsidySectionRSH").val())){
-        $('#modal_title').html(`Verificar`)
-        $('#modal_body').html(`<h7 class="alert-heading">Tramo RSH</h7>`)
-        $('#modal').modal('show')
+        toastr.warning('Debe ingresar Tramo RSH')
         return
     }
 
     let percentage = $("#subsidyPercentage").val()
     if(!$.isNumeric($("#subsidyPercentage").val() )){
-        $('#modal_title').html(`Verificar`)
-        $('#modal_body').html(`<h7 class="alert-heading">Porcentaje no válido (debe ser entre 1% y 100%)</h7>`)
-        $('#modal').modal('show')
+        toastr.warning('Porcentaje no válido (debe ser entre 1% y 100%)')
         return
     }else{
         if(percentage<=0 || percentage>100){
-            $('#modal_title').html(`Verificar`)
-            $('#modal_body').html(`<h7 class="alert-heading">Porcentaje no válido (debe ser entre 1% y 100%)</h7>`)
-            $('#modal').modal('show')
+            toastr.warning('Porcentaje no válido (debe ser entre 1% y 100%)')
             return
         }
     }
@@ -1221,19 +1208,15 @@ async function saveSubsidy(id){
     if(saveSubsidy.data){
         if(saveSubsidy.data._id){
 
-            $('#modal_title').html(`Almacenado`)
-            $('#modal_body').html(`<h7 class="alert-heading">Subsidio almacenado correctamente</h7>`)
+            toastr.success('Subsidio almacenado correctamente')
             loadSubsidies(internals.dataRowSelected._id)
         
         }else{
-            $('#modal_title').html(`Error`)
-            $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+            toastr.error('Error al almacenar, favor reintente')
         }
     }else{
-        $('#modal_title').html(`Error`)
-        $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+        toastr.error('Error al almacenar, favor reintente')
     }
-    $('#modal').modal('show')
 
 }
 
@@ -1262,20 +1245,15 @@ async function deactivateSubsidy(id){
         let saveSubsidy = await axios.post('/api/subsidyDeactivate', subsidyData)
         if(saveSubsidy.data){
             if(saveSubsidy.data._id){
-
-                $('#modal_title').html(`Almacenado`)
-                $('#modal_body').html(`<h7 class="alert-heading">Subsidio almacenado correctamente</h7>`)
+                toastr.success('Subsidio dado de baja correctamente')
                 loadSubsidies(internals.dataRowSelected._id)
-            
+
             }else{
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                toastr.error('Error al almacenar, favor reintente')
             }
         }else{
-            $('#modal_title').html(`Error`)
-            $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+            toastr.error('Error al almacenar, favor reintente')
         }
-        $('#modal').modal('show')
     }
 
 }
@@ -1299,8 +1277,6 @@ function addService(){
 
 async function deleteService(btn){
     $(btn).parent().parent().remove()
-    
-    $('#modal_title').html(`Eliminado`)
-    $('#modal_body').html(`<h7 class="alert-heading">Registro eliminado correctamente</h7>`)
-    $('#modal').modal('show')
+   
+    toastr.success('Registro eliminado correctamente')
 }

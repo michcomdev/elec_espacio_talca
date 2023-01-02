@@ -405,8 +405,10 @@ $('#saveLectures').on('click', async function () {
                 console.log(array)
 
                 if(array.lectures.length>0){
+                    loadingHandler('start')
                     //ALMACENADO...
                     let saveLecture = await axios.post('/api/lectureSaveManual', array)
+                    loadingHandler('stop')
 
                     console.log(saveLecture)
                     if(saveLecture.data=='OK'){
