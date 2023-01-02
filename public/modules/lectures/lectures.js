@@ -32,7 +32,6 @@ $(document).ready(async function () {
 
     chargeMembersTable()
 
-    printInvoice('preview','personal','62631b789666da52dcc90718','63a49fc20b8ce27b400d2c32')
 })
 
 async function getParameters() {
