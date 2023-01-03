@@ -1804,7 +1804,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     doc.text(dot_separators(invoice.invoiceTotal), pdfX + 178, pdfY + 173, 'right')
     doc.text(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 178, pdfY + 188, 'right')
 
-    doc.setFontSize(8)
+    doc.setFontSize(7)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
 
@@ -1812,12 +1812,12 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 220, 178, 106)
     }else if(docType=='pdf'){
         doc.setFillColor(255, 255, 255)
-        doc.rect(pdfX, pdfY + 220, 178, 106, 'F')
+        doc.rect(pdfX, pdfY + 220, 178, 72, 'F')
         if(invoice.seal){
-            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 220, 178, 106)
+            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 220, 178, 72)
 
-            doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 235, 'center')
-            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 245, 'center')
+            doc.text('Timbre Electrónico S.I.I. ', pdfX + 89, pdfY + 300, 'center')
+            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 89, pdfY + 308, 'center')
         }
     }
 
@@ -1961,7 +1961,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     }
 
     pdfX = 10
-    pdfY += 160
+    pdfY += 165
     doc.setFontSize(8)
     doc.setFontType('bold')
     //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
@@ -1979,7 +1979,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     doc.rect(pdfX - 5, doc.internal.pageSize.getHeight() - 20, (doc.internal.pageSize.getWidth() / 2) - 17, 17, 'F')
 
     doc.setTextColor(255, 255, 255)
-    doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 8)
+    doc.text('Fono oficina Comité: ' + parameters.phone + ' - Correo elect.:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 8)
     
     if (sendEmail) {
         let pdf = btoa(doc.output())
@@ -3200,6 +3200,7 @@ async function sendData(type,memberID,invoiceID) {
         console.log('document',document)
         console.log(JSON.stringify(document))
 
+        
         var settings = {
             "url": "https://dev-api.haulmer.com/v2/dte/document",
             "method": "POST",
