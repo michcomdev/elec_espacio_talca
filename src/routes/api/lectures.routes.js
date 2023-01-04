@@ -765,5 +765,39 @@ export default [
                 })
             }
         }
+    },
+    {
+        method: 'POST',
+        path: '/api/lectureDelete',
+        options: {
+            description: 'delete lecture',
+            notes: 'delete lecture',
+            tags: ['api'],
+            handler: async (request) => {
+                try {
+                    let payload = request.payload
+                    //Falta comprobación de boleta/factura activa
+
+                    await Lectures.deleteOne({members: payload.member, year: payload.year, month: payload.month})
+
+                    return 'OK'
+
+
+                } catch (error) {
+                    console.log(error)
+
+                    return {
+                        error: 'Ha ocurrido un error al guardar datos de usuario'
+                    }
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    member: Joi.string(),
+                    year: Joi.number(),
+                    month: Joi.number()
+                })
+            }
+        }
     }
 ]

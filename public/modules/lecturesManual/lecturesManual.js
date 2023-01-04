@@ -57,9 +57,21 @@ async function getParameters() {
     for (let i = firstYear; i <= moment().format('YYYY'); i++) {
         $("#searchYear").append(`<option value="${i}">${i}</option>`)
     }
-    $("#searchYear").val(moment().format('YYYY'))
-    $("#searchMonth").val(moment().format('MM'))
-    //$("#searchMonth").val('05')
+    
+    let setYear = moment().format('YYYY')
+    let setMonth = moment().format('MM')
+
+    if(moment().day()<20){
+        if(setMonth=='01'){
+            setYear = moment().add(-1,'y').format('YYYY')
+            setMonth = '12'
+        }else{
+            setMonth = moment().add(-1,'M').format('MM')
+        }
+    }
+
+    $("#searchYear").val(setYear)
+    $("#searchMonth").val(setMonth)
 
     let parametersData = await axios.get('/api/parameters')
     parameters = parametersData.data
@@ -211,6 +223,8 @@ async function getMembers() {
 
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
+
+            console.log(el)
             
             //el.datetime = moment(el.datetime).format('DD/MM/YYYY HH:mm')
             if (el.type == 'personal') {
@@ -253,9 +267,10 @@ async function getMembers() {
                     el.lectureNew = `<input id="lectureNewStart-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewStart)}"></input>
                                     <input id="lectureNewEnd-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lectureNewEnd)}"></input>
                                     <i class="fas fa-times" style="width: 20%; display: inline-block" onclick="removeLectureNew(this,'${el._id}')"></i>`
-
                 }
             }
+
+            el.date += `<i class="fas fa-times" title="Eliminar registro" style="width: 20%; display: inline-block" onclick="removeLecture(this,'${el._id}',${$("#searchYear").val()},${$("#searchMonth").val()})"></i>`
 
             //el.lastLecture = `<span id="lectureLast-${el._id}">${el.lastLecture}</span>`
             el.lastLecture = `<span id="lectureLast-${el._id}">${dot_separators(el.lastLecture)}</span>`
@@ -403,7 +418,7 @@ $('#saveLectures').on('click', async function () {
 
             if(i+1==members.length){
                 console.log(array)
-
+                
                 if(array.lectures.length>0){
                     loadingHandler('start')
                     //ALMACENADO...
@@ -723,5 +738,53 @@ async function updateOrder(type, row, actual, max){
 
         await axios.post('/api/memberOrderUpdate', { id: affectedRow._id, orderIndex: affectedRow.order})
 
+    }
+}
+
+async function removeLecture(btn,id,year,month){
+console.log($(btn).parent().html())
+    if(!$.isNumeric($(btn).parent().html()[0])){
+        $($(btn).parent().parent().children()[7]).html(`<i class="fas fa-plus" onclick="addLectureNew(this,'${id}')"></i>`)
+        $($($(btn).parent().parent().children()[6]).children()[0]).val(0)
+        $($($(btn).parent().parent().children()[6]).children()[0]).css('border', '')
+        $($(btn).parent().parent().children()[8]).val(0)
+
+    }else{
+
+        let deleteLecture = await Swal.fire({
+            title: '¿Está seguro de eliminar esta lectura?',
+            customClass: 'swal-wide',
+            html: ``,
+            showCloseButton: true,
+            showCancelButton: true,
+            showConfirmButton: true,
+            focusConfirm: false,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar'
+        })
+
+        if (deleteLecture.value) {
+            let lectureData = {
+                member: id,
+                year: year,
+                month: month
+            }
+
+            console.log(lectureData)
+            let lectureDelete = await axios.post('/api/lectureDelete', lectureData)
+            console.log(lectureDelete)
+            if (lectureDelete.data == 'OK') {
+                $($(btn).parent().parent().children()[7]).html(`<i class="fas fa-plus" onclick="addLectureNew(this,'${id}')"></i>`)
+                $($($(btn).parent().parent().children()[6]).children()[0]).val(0)
+                $($($(btn).parent().parent().children()[6]).children()[0]).css('border', '')
+                $($(btn).parent().parent().children()[8]).html(0)
+                $($(btn).parent().parent().children()[10]).html(`<i class="fas fa-times" title="Eliminar registro" style="width: 20%; display: inline-block" onclick="removeLecture(this,'${id}','${year}','${month}')"></i>`)
+                toastr.success('No puede eliminar lecturas asociadas a boleta/factura')
+            }else if (lectureDelete == 'invoice') {
+                toastr.warning('No puede eliminar lecturas asociadas a boleta/factura')
+            }else{
+                toastr.error('Ha ocurrido un error, favor reintente o llame al administrador')
+            }
+        }
     }
 }

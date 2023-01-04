@@ -40,8 +40,21 @@ async function getParameters() {
     for (let i = firstYear; i <= moment().format('YYYY'); i++) {
         $("#searchYear").append(`<option value="${i}">${i}</option>`)
     }
-    $("#searchYear").val(moment().format('YYYY'))
-    $("#searchMonth").val(moment().format('MM'))
+    
+    let setYear = moment().format('YYYY')
+    let setMonth = moment().format('MM')
+
+    if(moment().day()<20){
+        if(setMonth=='01'){
+            setYear = moment().add(-1,'y').format('YYYY')
+            setMonth = '12'
+        }else{
+            setMonth = moment().add(-1,'M').format('MM')
+        }
+    }
+
+    $("#searchYear").val(setYear)
+    $("#searchMonth").val(setMonth)
 
     let parametersData = await axios.get('/api/parameters')
     parameters = parametersData.data
@@ -1991,7 +2004,7 @@ async function showSIIPDF(token) {
     let parameters = parametersData.data
 
     var settings = {
-        "url": "https://dev-api.haulmer.com/v2/dte/document/"+token+"/pdf",
+        "url": "https://api.haulmer.com/v2/dte/document/"+token+"/pdf",
         "method": "GET",
         "timeout": 0,
         "headers": {
@@ -2209,7 +2222,7 @@ async function sendData(type,memberID,invoiceID) {
     console.log(document)
     console.log(JSON.stringify(document))
     var settings = {
-        "url": "https://dev-api.haulmer.com/v2/dte/document",
+        "url": "https://api.haulmer.com/v2/dte/document",
         "method": "POST",
         "timeout": 0,
         "headers": {

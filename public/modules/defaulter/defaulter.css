@@ -8,11 +8,8 @@
     text-transform:uppercase;
 }
 
-#cartolaTable thead tr {
-    background-color:#1C508A;
-}
-#cartolaTable thead th {
-    color: beige;
+#tableDefaulter {
+    font-size: 12px;
 }
 
 @media (min-width: 992px) {

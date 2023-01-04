@@ -1499,6 +1499,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     }
 
     let doc = new jsPDF('l', 'pt', 'letter')
+    //let doc = new jsPDF('p', 'pt', [396, 612])
     
     console.log('width', doc.internal.pageSize.getWidth())
     console.log('height', doc.internal.pageSize.getHeight())
@@ -2956,7 +2957,7 @@ async function showSIIPDF(token) {
     let parameters = parametersData.data
 
     var settings = {
-        "url": "https://dev-api.haulmer.com/v2/dte/document/"+token+"/pdf",
+        "url": "https://api.haulmer.com/v2/dte/document/"+token+"/pdf",
         "method": "GET",
         "timeout": 0,
         "headers": {
@@ -3202,7 +3203,7 @@ async function sendData(type,memberID,invoiceID) {
 
         
         var settings = {
-            "url": "https://dev-api.haulmer.com/v2/dte/document",
+            "url": "https://api.haulmer.com/v2/dte/document",
             "method": "POST",
             "timeout": 0,
             "headers": {
@@ -3367,7 +3368,7 @@ async function annulmentInvoice(type,memberID,invoiceID) {
         }        
 
         var settings = {
-            "url": "https://dev-api.haulmer.com/v2/dte/document",
+            "url": "https://api.haulmer.com/v2/dte/document",
             "method": "POST",
             "timeout": 0,
             "headers": {

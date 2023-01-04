@@ -45,17 +45,14 @@ function loadDefaulter() {
             buttons: [
                 {
                     extend: 'excel',
-                    className: 'btn-excel',
+                    className: 'btn-excel'/*,
                     exportOptions: {
                         columns: [ 0, 1, 2, 3, 4, 5 ]
-                    }
+                    }*/
                 },
                 {
                     extend: 'pdf',
-                    className: 'btn-pdf',
-                    exportOptions: {
-                        columns: [ 0, 1, 2, 3, 4, 5 ]
-                    }
+                    className: 'btn-pdf'
                 },
             ],
             iDisplayLength: 10,
