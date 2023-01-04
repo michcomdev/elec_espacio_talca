@@ -398,7 +398,7 @@ function createModalBody(member) {
                             </div>
                             <div class="col-md-2">
                                 Convenio
-                                <select id="agreementList" class="form-control form-select form-select-sm" onchange="setAgreement()">
+                                <select id="agreementList" class="form-control form-select form-select-sm" onchange="setAgreement(this)">
                                     <option value="SELECCIONE">SELECCIONE</option>
                                     ${serviceList}
                                 </select>
@@ -479,12 +479,14 @@ function createModalBody(member) {
     })
 }
 
-function setAgreement(){
+function setAgreement(select){
     if($("#agreementList").val()==0){
         $("#agreementDiv").css('display','block')
+        $("#agreementAmount").val(0)
     }else{
         $("#agreementDiv").css('display','none')
         $("#agreementOther").val('')
+        $("#agreementAmount").val($('option:selected', select).attr('data-value'))
     }
 }
 
@@ -812,11 +814,13 @@ async function createAgreement(agreementID, memberID) {
 
         if (agreement.services) {
             $("#agreementList").val(agreement.services._id)
+            $("#agreementDiv").css('display','none')
         }else{
             $("#agreementList").val(0)
             $("#agreementOther").val(agreement.other)
+            $("#agreementDiv").css('display','block')
         }
-        setAgreement()
+        //setAgreement()
 
         $("#agreementAmount").val(agreement.totalAmount)
         $("#agreementDues").val(agreement.dues.length)
