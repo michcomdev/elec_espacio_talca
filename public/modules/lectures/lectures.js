@@ -937,6 +937,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
 
         let year = lecture.year
+        let yearDue = lecture.year
         let monthDue = lecture.month
         let month = lecture.month+1
         let day = parameters.expireDay
@@ -1030,10 +1031,12 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         }
 
         let agreementData = await axios.post('/api/agreementsByDate', { 
-            year: parseInt(year),
+            year: parseInt(yearDue),
             month: parseInt(monthDue),
             member: memberID
         })
+
+        console.log('agreements',yearDue,monthDue, memberID )
 
         let agreements = agreementData.data
 
