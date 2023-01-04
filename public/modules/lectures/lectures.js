@@ -1020,7 +1020,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             if (member.services.length > 0) {
                 for(let i=0; i<member.services.length; i++){
                     if(member.services[i].services.type=='ALCANTARILLADO'){
-                        $("#invoiceSewerage").val((member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value)
+                        //$("#invoiceSewerage").val((member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value)
+                        $("#invoiceSewerage").val(member.services[i].services.value)
                     }
                 }
             }

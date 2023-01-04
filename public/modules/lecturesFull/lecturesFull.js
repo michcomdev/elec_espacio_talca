@@ -419,7 +419,8 @@ async function calculate(){
             if(array[i].members.services){
                 for(let j=0; j < array[i].members.services.length; j++){
                     if(array[i].members.services[j].services.type=='ALCANTARILLADO'){
-                        sewerage += (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value)//Indicar valor por defecto en caso de 0
+                        //sewerage += (parseInt(array[i].members.services[j].value)!=0) ? parseInt(array[i].members.services[j].value) : parseInt(array[i].members.services[j].services.value)//Indicar valor por defecto en caso de 0
+                        sewerage += parseInt(array[i].members.services[j].services.value)//Indicar valor por defecto en caso de 0
                     }
                 }
             }
@@ -1315,7 +1316,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             if (member.services.length > 0) {
                 for(let i=0; i<member.services.length; i++){
                     if(member.services[i].services.type=='ALCANTARILLADO'){
-                        $("#invoiceSewerage").val((member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value)
+                        //$("#invoiceSewerage").val((member.services[i].value!=0) ? member.services[i].value : member.services[i].services.value)
+                        $("#invoiceSewerage").val(member.services[i].services.value)
                     }
                 }
             }

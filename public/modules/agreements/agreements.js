@@ -488,6 +488,7 @@ function setAgreement(select){
         $("#agreementOther").val('')
         $("#agreementAmount").val($('option:selected', select).attr('data-value'))
     }
+    calculateDues()
 }
 
 function calculateDues(){
