@@ -172,15 +172,7 @@ async function getMembers() {
             el.U = '0'+parameters.municipality.code
             el.ORIGEN = 'CURICO'
             
-            let rut = replaceAll(el.members.rut, '.', '').split('-')
-            while (rut[0].length<11) {
-                rut[0] = '0' + rut[0]
-            }
-            el.RUT = rut[0]
-            el.DV_RUT = rut[1]
-            el.AP_PATERNO = el.members.personal.lastname1
-            el.AP_MATERNO = el.members.personal.lastname2
-            el.NOMBRES = el.members.personal.name
+            
             el.DIRECCION = el.members.address.address
 
             let subsidy
@@ -189,6 +181,16 @@ async function getMembers() {
                     subsidy = el.members.subsidies[i]
                 }
             }
+
+            let rut = replaceAll(subsidy.rut, '.', '').split('-')
+            while (rut[0].length<11) {
+                rut[0] = '0' + rut[0]
+            }
+            el.RUT = rut[0]
+            el.DV_RUT = rut[1]
+            el.AP_PATERNO = subsidy.lastname1
+            el.AP_MATERNO = subsidy.lastname2
+            el.NOMBRES = subsidy.name
 
             while (subsidy.decreeNumber.toString().length<9) {
                 subsidy.decreeNumber = '0' + subsidy.decreeNumber.toString()
