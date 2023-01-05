@@ -3383,10 +3383,12 @@ async function annulmentInvoice(type,memberID,invoiceID) {
 
         let Emisor = { //EMISOR DE PRUEBA
             RUTEmisor: parameters.emisor.RUTEmisor,
-            RznSocEmisor: parameters.emisor.RznSocEmisor,
-            GiroEmisor: parameters.emisor.GiroEmisor,
+            RznSoc: parameters.emisor.RznSocEmisor,
+            GiroEmis: parameters.emisor.GiroEmisor,
+            Acteco: parameters.emisor.Acteco,
             DirOrigen: parameters.emisor.DirOrigen,
             CmnaOrigen: parameters.emisor.CmnaOrigen,
+            Telefono: parameters.emisor.Telefono,
             CdgSIISucur: parameters.emisor.CdgSIISucur
             /*Acteco: "479100",
             DirOrigen: "ARTURO PRAT 527   CURICO",
@@ -3403,7 +3405,10 @@ async function annulmentInvoice(type,memberID,invoiceID) {
                         TipoDTE: dteType,
                         Folio: 0,
                         FchEmis: moment.utc().format('YYYY-MM-DD'), //Fecha
-                        IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
+                        FchVenc: moment().add(15,'days').utc().format('YYYY-MM-DD'),
+                        IndServicio: "2", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
+                        PeriodoDesde: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').startOf('month').format('YYYY-MM-DD'), //Revisar fechas, si corresponde a la toma de estado (desde el 1 al 30 del mes)
+                        PeriodoHasta: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').endOf('month').format('YYYY-MM-DD')
                     },
                     Emisor: Emisor,
                     Receptor: Receptor,

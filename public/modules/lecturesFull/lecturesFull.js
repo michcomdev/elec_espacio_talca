@@ -2451,7 +2451,7 @@ async function printFinal(array){
         doc.setFontSize(11)
         doc.setFontType('normal')
         doc.text('MIDEPLAN ' + subsidyNumber, pdfX, pdfY + 36)
-        doc.text('Sector: ' + member.address.sector.name, pdfX + 300, pdfY + 36)
+        doc.text('Sector: ' + array[k].member.address.sector.name, pdfX + 300, pdfY + 36)
         doc.setFontType('bold')
 
         pdfY += 60
