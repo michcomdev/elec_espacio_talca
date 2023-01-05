@@ -12,6 +12,9 @@ let internals = {
     productRowSelected: {}
 }
 
+let progressValue = 0
+let progressTotal = 0
+
 let clients = {}
 let containerTypes = {}
 let sites = {}
@@ -221,6 +224,7 @@ console.log(lecturesData.data)
                         lectures: el.invoice.lectures._id,
                         member: el.invoice.members,
                         memberType: el.members.type,
+                        type: el.invoice.type,
                         date: moment.utc(el.invoice.date).format('YYYY-MM-DD'),
                         dateExpire: moment.utc(el.invoice.dateExpire).format('YYYY-MM-DD'),
                         charge: el.invoice.charge,
@@ -232,11 +236,12 @@ console.log(lecturesData.data)
                         subsidyValue: el.invoice.subsidyValue,
                         sewerage: sewerage,
                         fine: fine,
-                        others: others,
+                        //others: others,
                         consumptionLimit: el.invoice.consumptionLimit,
                         consumptionLimitValue: el.invoice.consumptionLimitValue,
                         consumptionLimitTotal: el.invoice.consumptionLimitTotal,
                         consumption: el.invoice.consumption,
+                        invoiceSubTotal: el.invoice.invoiceSubTotal,
                         invoiceDebt: el.invoice.invoiceDebt,
                         debtFine: el.invoice.debtFine,
                         invoiceTotal: el.invoice.invoiceTotal,
@@ -309,13 +314,20 @@ async function calculate(){
 
     for(let i=0; i < array.length; i++){
 
-        let typeString = '', name = ''
+        let typeString = '', name = '', typeDTE = 41
         if (array[i].members.type == 'personal') {
             typeString = 'PERSONA'
             name = array[i].members.personal.name + ' ' + array[i].members.personal.lastname1 + ' ' + array[i].members.personal.lastname2
         } else {
             typeString = 'EMPRESA'
             name = array[i].members.enterprise.name
+            typeDTE = 34
+        }
+
+        if (array[i].members.dte == 'BOLETA') {
+            typeDTE = 41
+        }else{
+            typeDTE = 34
         }
 
 
@@ -367,6 +379,7 @@ async function calculate(){
                     selectPrint: `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" />`,
                     number: el.members.number,
                     typeString: typeString,
+                    type: typeDTE,
                     name: name,
                     consumption: el.invoice.lectureResult,
                     charge: el.invoice.charge,
@@ -519,6 +532,7 @@ async function calculate(){
                     selectPrint: '',
                     number: array[i].members.number,
                     typeString: typeString,
+                    type: typeDTE,
                     name: name,
                     consumption: lectureValue,
                     charge: parameters.charge,
@@ -638,9 +652,15 @@ async function saveMultiple(){
     })
 
     if(goGenerate){
-        loadingHandler('start')
+        //loadingHandler('start')
+        console.log(internals.invoices.length)
+        progressValue = 0
+        progressTotal = internals.invoices.length
+        $('#modalProgress').modal('show')
+        progressBar()
         for(let i=0; i<internals.invoices.length; i++){
             if($("#chk"+internals.invoices[i].member).prop('checked')){
+                console.log(internals.invoices[i])
                 if(!internals.invoices[i].id){
 
                     let saveInvoice = await axios.post('/api/invoiceSave', internals.invoices[i])
@@ -660,11 +680,11 @@ async function saveMultiple(){
             }
 
             if(i+1==internals.invoices.length){
-                loadingHandler('stop')
+                //loadingHandler('stop')
                 /*$('#modal_title').html(`Almacenado`)
                 $('#modal_body').html(`<h6 class="alert-heading">Se han generado las boletas, favor recargar para revisar</h6>`)
                 $('#modal').modal('show')*/
-                toastr.success('Se han generado las boletas, favor recargar para revisar')
+                toastr.success('Se están generando las boletas, favor esperar mensaje de confirmación')
             }
         }
     }else{
@@ -1736,8 +1756,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         doc.text(dot_separators(invoice.fine), pdfX + 250,  pdfY + 33 + pdfYTemp, 'right')
     }
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.consumption), pdfX + 250, pdfY + 111, 'right')
-    value1 = invoice.consumption
+    doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + 111, 'right')
+    value1 = invoice.invoiceSubTotal
 
     index = 85 + 39
     
@@ -1837,6 +1857,10 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
                 }
             }
         }
+    }
+
+    if(maxValue==0){
+        maxValue = 1
     }
 
     let meterPoints = 100 / maxValue //Puntos en PDF por mt3
@@ -1947,12 +1971,12 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
     if(invoice.text1){
         doc.setTextColor(249, 51, 6)
-        doc.text(invoice.text1, pdfX, pdfY)
+        doc.text(invoice.text1, pdfX, pdfY, {maxWidth: doc.internal.pageSize.getWidth() - 60})
     }
     if(invoice.text2){
         doc.setTextColor(0, 0, 0)
-        doc.text(invoice.text2, pdfX, pdfY + 12)
-        doc.text(invoice.text3, pdfX, pdfY + 24)
+        doc.text(invoice.text2, pdfX, pdfY + 12, {maxWidth: doc.internal.pageSize.getWidth() - 60})
+        doc.text(invoice.text3, pdfX, pdfY + 24, {maxWidth: doc.internal.pageSize.getWidth() - 60})
     }
 
 
@@ -2006,7 +2030,7 @@ async function showSIIPDF(token) {
     let parameters = parametersData.data
 
     var settings = {
-        "url": "https://api.haulmer.com/v2/dte/document/"+token+"/pdf",
+        "url": "https://"+parameters.emisor.link+"/v2/dte/document/"+token+"/pdf",
         "method": "GET",
         "timeout": 0,
         "headers": {
@@ -2112,7 +2136,7 @@ async function sendData(type,memberID,invoiceID) {
         /////////////////////////////
 
         document = {
-            response: ["TIMBRE","FOLIO","RESOLUCION"],
+            response: ["TIMBRE","FOLIO","RESOLUCION",'XML'],
             dte: {
                 Encabezado: {
                     IdDoc:{
@@ -2165,15 +2189,15 @@ async function sendData(type,memberID,invoiceID) {
 
         let Emisor = { //EMISOR DE PRUEBA
             RUTEmisor: parameters.emisor.RUTEmisor,
-            RznSoc: parameters.emisor.RznSoc,
-            GiroEmis: parameters.emisor.GiroEmis,
+            RznSoc: parameters.emisor.RznSocEmisor,
+            GiroEmis: parameters.emisor.GiroEmisor,
             Acteco: parameters.emisor.Acteco,
             DirOrigen: parameters.emisor.DirOrigen,
             CmnaOrigen: parameters.emisor.CmnaOrigen,
             Telefono: parameters.emisor.Telefono,
             CdgSIISucur: parameters.emisor.CdgSIISucur
         }
-
+        
         /////////////////////////
         let debt = 0
         if(invoice.invoiceDebt){
@@ -2191,7 +2215,7 @@ async function sendData(type,memberID,invoiceID) {
         /////////////////////////////
 
         document = {
-            response: ["TIMBRE","FOLIO","RESOLUCION"],
+            response: ["TIMBRE","FOLIO","RESOLUCION","XML"],
             dte: {
                 Encabezado: {
                     IdDoc:{
@@ -2224,7 +2248,7 @@ async function sendData(type,memberID,invoiceID) {
     console.log(document)
     console.log(JSON.stringify(document))
     var settings = {
-        "url": "https://api.haulmer.com/v2/dte/document",
+        "url": "https://"+parameters.emisor.link+"/v2/dte/document",
         "method": "POST",
         "timeout": 0,
         "headers": {
@@ -2232,6 +2256,9 @@ async function sendData(type,memberID,invoiceID) {
         },
         "data": JSON.stringify(document)
     };  
+    //console.log(settings)
+    //console.log('Generado Folio:')
+//return
     
     $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
     
@@ -2256,7 +2283,7 @@ async function sendData(type,memberID,invoiceID) {
 
         let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
         //loadingHandler('stop')
-
+        progressBar()
         console.log('Generado Folio:',response.FOLIO)
         /*$('#modal_title').html(`Almacenado`)
         $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
@@ -2298,7 +2325,7 @@ async function printMultiple() {
         $(".chkPrintClass").each(async function() {
             if($(this).prop('checked')){
                 let object = {}
-    
+                console.log($(this).attr('data-member-id'))
                 let memberData = await axios.post('/api/memberSingle', {id: $(this).attr('data-member-id') })
                 object.member = memberData.data
 
@@ -2311,6 +2338,7 @@ async function printMultiple() {
                 array.push(object)
                 countIndex++
                 if(countIndex==count){
+                    array.sort((a,b) => (a.member.orderIndex > b.member.orderIndex) ? 1 : ((b.member.orderIndex > a.member.orderIndex) ? -1 : 0))
                     printFinal(array)
                 }
             }
@@ -2587,8 +2615,8 @@ async function printFinal(array){
             doc.text(dot_separators(array[k].invoice.fine), pdfX + 250, pdfY + 33 + pdfYTemp, 'right')
         }
         doc.setFontType('bold')
-        doc.text(dot_separators(array[k].invoice.consumption), pdfX + 250, pdfY + 111, 'right')
-        value1 = array[k].invoice.consumption
+        doc.text(dot_separators(array[k].invoice.invoiceSubTotal), pdfX + 250, pdfY + 111, 'right')
+        value1 = array[k].invoice.invoiceSubTotal
 
         index = 85 + 39
         doc.setFontType('normal')
@@ -2689,6 +2717,10 @@ async function printFinal(array){
             }
         }
 
+        if(maxValue==0){
+            maxValue = 1
+        }
+
         let meterPoints = 100 / maxValue //Puntos en PDF por mt3
 
         pdfY += 25
@@ -2778,7 +2810,7 @@ async function printFinal(array){
             } else {
                 doc.setFillColor(82, 82, 82)
             }
-    
+    console.log('Num',array[k].invoice.number)
             let offset = 100 - (lastInvoices[i].lectureResult * meterPoints) //Determina posición inicial respecto al máximo del gráfico
     
             doc.rect(pdfX, pdfY + offset, 11, 99 - offset, 'F')
@@ -2797,12 +2829,12 @@ async function printFinal(array){
         //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
         if(array[k].invoice.text1){
             doc.setTextColor(249, 51, 6)
-            doc.text(array[k].invoice.text1, pdfX, pdfY)
+            doc.text(array[k].invoice.text1, pdfX, pdfY, {maxWidth: doc.internal.pageSize.getWidth() - 60})
         }
         if(array[k].invoice.text2){
             doc.setTextColor(0, 0, 0)
-            doc.text(array[k].invoice.text2, pdfX, pdfY + 12)
-            doc.text(array[k].invoice.text3, pdfX, pdfY + 24)
+            doc.text(array[k].invoice.text2, pdfX, pdfY + 12, {maxWidth: doc.internal.pageSize.getWidth() - 60})
+            doc.text(array[k].invoice.text3, pdfX, pdfY + 24, {maxWidth: doc.internal.pageSize.getWidth() - 60})
         }
         
         doc.setFillColor(26, 117, 187)
@@ -2841,4 +2873,17 @@ function selectAll(btn){
         })
         $(btn).html('<i class="far fa-check-square"></i> Sel. Todo')
     }
+}
+
+function progressBar(){
+    progressValue++
+
+    $("#progressTitle").text('Generando boleta ' + progressValue + ' de '+ progressTotal)
+    let percentage = parseInt(100 / progressTotal * progressValue)
+    $("#progressBar").css('width', percentage + '%')
+
+    if(progressTotal==progressValue){
+        toastr.success('Boletas generadas, favor recargar para mostrar')
+    }
+
 }

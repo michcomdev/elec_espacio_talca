@@ -282,15 +282,17 @@ export default [
 
                     const response = await invoices.save()
 
-                    if(payload.agreements.length>0){
-                        for(let i=0; i<payload.agreements.length; i++){
-                            let agreement = await Agreements.findById(payload.agreements[i].agreements)
+                    if(payload.agreements){
+                        if(payload.agreements.length>0){
+                            for(let i=0; i<payload.agreements.length; i++){
+                                let agreement = await Agreements.findById(payload.agreements[i].agreements)
 
-                            for(let j=0; j<agreement.dues.length; j++){
-                                if(agreement.dues[j].number==payload.agreements[i].number){
-                                    agreement.dues[j].invoices = response._id
-                                    await agreement.save()
-                                    j = agreement.dues.length
+                                for(let j=0; j<agreement.dues.length; j++){
+                                    if(agreement.dues[j].number==payload.agreements[i].number){
+                                        agreement.dues[j].invoices = response._id
+                                        await agreement.save()
+                                        j = agreement.dues.length
+                                    }
                                 }
                             }
                         }
@@ -769,9 +771,15 @@ export default [
                 try {
                     let payload = request.payload
 
+                    let member = await Member.findById(payload.memberID)
+                    member.email = payload.memberMail
+                    await member.save()
+
                     let res = await sendEmail({
                         memberName: payload.memberName,
                         memberMail: payload.memberMail,
+                        memberSubject: payload.memberSubject,
+                        memberText: payload.memberText,
                         pdf: payload.pdf
                     })
 
@@ -787,8 +795,11 @@ export default [
             },
             validate: {
                 payload: Joi.object().keys({
+                    memberID: Joi.string().required(),
                     memberName: Joi.string().required(),
                     memberMail: Joi.string().email().required(),
+                    memberSubject: Joi.string().required().allow(''),
+                    memberText: Joi.string().required().allow(''),
                     pdf: Joi.string().required()
                 })
             }
@@ -800,6 +811,8 @@ export default [
 const sendEmail = async ({ // sendEmail
     memberName,
     memberMail,
+    memberSubject,
+    memberText,
     pdf
 }) => {
     try {
@@ -808,14 +821,14 @@ const sendEmail = async ({ // sendEmail
             host: 'smtp.gmail.com',
             port: 587,
             secure: false, // true for 465, false for other ports
-            auth: {
+            /*auth: {
                 user: 'zeosonic@gmail.com',
                 pass: 'mbfsckaczbtjmuek'
-            },
-            /*auth: {
+            },*/
+            auth: {
                 user: process.env.EMAIL_SENDER,
                 pass: process.env.EMAIL_SENDER_PASSWORD
-            },*/
+            },
             tls: {
                 // do not fail on invalid certs
                 //rejectUnauthorized: false,
@@ -823,18 +836,21 @@ const sendEmail = async ({ // sendEmail
             }
         })
 
-        let mailData = {
-            from: 'zeosonic@gmail.com', //process.env.EMAIL_SENDER,
-            to: [memberMail],//[clientMail],
+        /*
             subject: `Envío de Boleta Agua - Comité de Agua Los Cristales`,
-            //text: "Hello world?",
             html: `
                 Estimado(a) <b>${memberName}</b>
                 <br/>
                 <br/>
                 Se adjunta boleta de consumo mensual de agua
+            `,*/
 
-            `,
+        let mailData = {
+            from: 'zeosonic@gmail.com', //process.env.EMAIL_SENDER,
+            to: [memberMail],//[clientMail],
+            subject: memberSubject,
+            //text: "Hello world?",
+            html: memberText,
 
             //<img src="cid:logo" />
 

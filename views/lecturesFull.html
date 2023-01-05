@@ -99,17 +99,17 @@
         </button>
     </div>
     
-    <div class="col-md-1 btn-print" style="display: none">
+    <div class="col-md-2 btn-print" style="display: none">
         <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block" onclick="printMultiple()">
             <i class="fas fa-print"></i> Imprimir
         </button>
     </div>
 
-    <div class="col-md-1 btn-print" style="display: none">
+    <!--<div class="col-md-1 btn-print" style="display: none">
         <button style="border-radius: 5px;" class="btn btn-sm btn-warning btn-block" onclick="sendMultiple()">
             <i class="fas fa-envelope-open-text"></i> Enviar E-Mail
         </button>
-    </div>
+    </div>-->
 
     <div class="col-md-12 table-responsive">
         <br/>
@@ -195,6 +195,25 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalProgress" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="progressTitle"></span>
+                </div>
+                <div class="modal-body">
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar" style="width:70%"></div>
+                    </div>
+                </div>
+                <div class="modal-footer" id="modal_footer">
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"> 
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{#extend "js"}}
     <script src="/public/modules/default/logoWallImg.js"></script>

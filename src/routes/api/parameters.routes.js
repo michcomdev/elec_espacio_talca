@@ -15,7 +15,22 @@ export default [
             tags: ['api'],
             handler: async (request, h) => {
                 try {                    
-                    let parameters = await Parameters.findById('6263033665a0afa3096a6a62')
+                    let parameters = await Parameters.findById('6263033665a0afa3096a6a62').lean()
+
+                    if(parameters.apiState=='test'){
+                        parameters.emisor.RUTEmisor = parameters.emisorTEST.RUTEmisor
+                        parameters.emisor.RznSoc = parameters.emisorTEST.RznSoc
+                        parameters.emisor.RznSocEmisor = parameters.emisorTEST.RznSocEmisor
+                        parameters.emisor.GiroEmisor = parameters.emisorTEST.GiroEmisor
+                        parameters.emisor.Acteco = parameters.emisorTEST.Acteco
+                        parameters.emisor.DirOrigen = parameters.emisorTEST.DirOrigen
+                        parameters.emisor.CmnaOrigen = parameters.emisorTEST.CmnaOrigen
+                        parameters.emisor.Telefono = parameters.emisorTEST.Telefono
+                        parameters.emisor.CdgSIISucur = parameters.emisorTEST.CdgSIISucur
+                        parameters.emisor.link = parameters.emisorTEST.link
+                        parameters.apikey = parameters.apikeyTEST
+                    }
+
                     return parameters
                 } catch (error) {
                     console.log(error)

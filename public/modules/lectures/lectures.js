@@ -39,6 +39,8 @@ async function getParameters() {
     let parametersData = await axios.get('/api/parameters')
     parameters = parametersData.data
 
+    console.log('parameters',parameters)
+
     let sectorsData = await axios.get('api/sectors')
     sectors = sectorsData.data
 
@@ -211,26 +213,27 @@ async function loadLectures(member) {
     for (i = 0; i < lectures.length; i++) {
 
         let subtotal = 0, total = 0
-        let btn = '', btnGenerate = '', btnSII = '', btnEmail = '', btnAnnulment = '', btnAnnulmentHistory = ''
+        let btn = '', btnPrint = '', btnGenerate = '', btnSII = '', btnEmail = '', btnAnnulment = '', btnAnnulmentHistory = ''
         let invoiceID = 0
         if (lectures[i].invoice) {
             subtotal = dot_separators(lectures[i].invoice.invoiceSubTotal)
             total = dot_separators(lectures[i].invoice.invoiceTotal)
-            btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printInvoice('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+            btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printInvoicePortrait('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
             //btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printAnnulment('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
             invoiceID = lectures[i].invoice._id
             
             if(lectures[i].invoice.number){
-                btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+                btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>`
+                btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
                 //btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
-                btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
+                btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
                 btnAnnulment = `<button class="btn btn-sm btn-info btnLecture" onclick="annulmentInvoice('${member.type}','${member._id}','${lectures[i].invoice._id}')">Anular Boleta</button>`
                 
-                if(isEmail(member.email)){
-                    btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
-                }else{
-                    btnEmail = `<button class="btn btn-sm btn-dark btnLecture" onclick="noEmail()"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
-                }
+                //if(isEmail(member.email)){
+                    btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
+                //}else{
+                    //btnEmail = `<button class="btn btn-sm btn-dark btnLecture" onclick="noEmail()"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
+                //}
             }else{
                 btnGenerate = `<button class="btn btn-sm btn-info btnLecture" onclick="sendData('${member.type}','${member._id}','${lectures[i].invoice._id}')">Generar Boleta</button>`
                 btnAnnulment = `<button class="btn btn-sm btn-dark" disabled>Anular</button>`
@@ -277,6 +280,9 @@ async function loadLectures(member) {
                 </td>
                 <td style="text-align: center;">
                     ${btnGenerate}
+                </td>
+                <td style="text-align: center;">
+                    ${btnPrint}
                 </td>
                 <td style="text-align: center;">
                     ${btnSII}
@@ -431,7 +437,8 @@ function createModalBody(member) {
                     <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Crear/Editar</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
-                    <th style="text-align: center; background-color: #3B6FC9;">Ver Boleta/Factura</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">PDF Boleta/Fact</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Imprimir</th>
                     <th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Enviar</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Anular</th>
@@ -747,7 +754,7 @@ async function showAnnulment(type,memberID,lecture){
             <tr>
                 <td>${invoices.data[i].number}</td>
                 <td>${moment(invoices.data[i].date).utc().format('DD/MM/YYYY')}</td>
-                <td><button class="btn btn-sm btn-danger btnLecture" onclick="printInvoice('pdf','${type}','${memberID}','${invoices.data[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
+                <td><button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${type}','${memberID}','${invoices.data[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
                 <td>${invoices.data[i].annulment.number}</td>
                 <td>${moment(invoices.data[i].annulment.date).utc().format('DD/MM/YYYY')}</td>
                 <td><button class="btn btn-sm btn-danger btnLecture" onclick="showSIIPDF('${invoices.data[i].annulment.token}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
@@ -1502,26 +1509,31 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         memberName = member.enterprise.name
     }
 
-    let doc = new jsPDF('l', 'pt', 'letter')
-    //let doc = new jsPDF('p', 'pt', [396, 612])
+    //let doc = new jsPDF('l', 'pt', 'letter')
+    let doc = new jsPDF('l', 'pt', [396, 612])
     
     console.log('width', doc.internal.pageSize.getWidth())
     console.log('height', doc.internal.pageSize.getHeight())
     
 
-    let pdfX = 75
-    let pdfY = 10
+    //let pdfX = 75
+    let pdfX = 125
+    let pdfY = 396
 
     doc.setFontSize(9)
     doc.addImage(logoWallImg, 'PNG', 0, 0, doc.internal.pageSize.getWidth()/2, doc.internal.pageSize.getHeight()) //Fondo
 
     doc.addImage(logoImg, 'PNG', pdfX, pdfY, 77, 60)
-    pdfY += 50
-    doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX + 25, pdfY + 23, 'center')
-    doc.text(`Y SERVICIOS SANITARIOS LOS CRISTALES`, pdfX + 25, pdfY + 32, 'center')
-    doc.text(`Los Cristales S/N - Curicó`, pdfX + 25, pdfY + 41, 'center')
+    pdfY -= 50
+    doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX + 25, pdfY + 23, {angle: 90, align: 'center'})
+    doc.text(`Y SERVICIOS SANITARIOS LOS CRISTALES`, pdfX + 25, pdfY + 32, {angle: 90, align: 'center'})
+    doc.text(`Los Cristales S/N - Curicó`, pdfX + 25, pdfY + 41, {angle: 90, align: 'center'})
 
-
+    doc.setTextColor(249, 51, 6)
+    doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX + 25, pdfY + 23, 'center', 90)
+    doc.text(`Y SERVICIOS SANITARIOS LOS CRISTALES`, pdfX + 25, pdfY + 32, 'center', 90)
+    doc.text(`Los Cristales S/N - Curicó`, pdfX + 25, pdfY + 41, 'center', 90)
+/*
     pdfY = 25
     doc.setDrawColor(249, 51, 6)
     doc.setLineWidth(2)
@@ -1755,8 +1767,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     }
 
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.consumption), pdfX + 175, pdfY + 90, 'right')
-    value1 = invoice.consumption
+    doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 175, pdfY + 90, 'right')
+    value1 = invoice.invoiceSubTotal
 
     index = 85 + 28
     
@@ -1978,6 +1990,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         doc.setTextColor(0, 0, 0)
         doc.text(invoice.text2, pdfX, pdfY + 12, {maxWidth: (doc.internal.pageSize.getWidth() / 2)})
         doc.text(invoice.text3, pdfX, pdfY + 24, {maxWidth: (doc.internal.pageSize.getWidth() / 2)})
+        doc.text(invoice.text3, pdfX, pdfY + 24, {maxWidth: (doc.internal.pageSize.getWidth() / 2), angle: 90})
     }
 
     doc.setFillColor(26, 117, 187)
@@ -1985,7 +1998,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
 
     doc.setTextColor(255, 255, 255)
     doc.text('Fono oficina Comité: ' + parameters.phone + ' - Correo elect.:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 8)
-    
+    */
     if (sendEmail) {
         let pdf = btoa(doc.output())
 
@@ -2301,8 +2314,10 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     }
 
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.consumption), pdfX + 250, pdfY + 111, 'right')
-    value1 = invoice.consumption
+    //doc.text(dot_separators(invoice.consumption), pdfX + 250, pdfY + 111, 'right')
+    //value1 = invoice.consumption
+    doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 250, pdfY + 111, 'right')
+    value1 = invoice.invoiceSubTotal
 
     index = 85 + 39
     
@@ -2518,12 +2533,12 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
     if(invoice.text1){
         doc.setTextColor(249, 51, 6)
-        doc.text(invoice.text1, pdfX, pdfY)
+        doc.text(invoice.text1, pdfX, pdfY, {maxWidth: doc.internal.pageSize.getWidth() - 10})
     }
     if(invoice.text2){
         doc.setTextColor(0, 0, 0)
-        doc.text(invoice.text2, pdfX, pdfY + 12)
-        doc.text(invoice.text3, pdfX, pdfY + 24)
+        doc.text(invoice.text2, pdfX, pdfY + 12, {maxWidth: doc.internal.pageSize.getWidth() - 10})
+        doc.text(invoice.text3, pdfX, pdfY + 24, {maxWidth: doc.internal.pageSize.getWidth() - 10})
     }
 
     doc.setFillColor(26, 117, 187)
@@ -2533,31 +2548,79 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
     
     if (sendEmail) {
-        let pdf = btoa(doc.output())
+        loadingHandler('stop')
 
-        console.log(pdf)
+        let memberMail = member.email
 
-        try {
-            loadingHandler('start')
-            
-            let memberMail = member.email
+        let sendDTE = await Swal.fire({
+            title: 'Enviar Correo',
+            customClass: 'swal-wide',
+            html: `<div class="container">
+                <div class="row">
+                    <div class="col-md-2">Correo Electrónico</div>
+                    <div class="col-md-3">
+                        <input id="sendEmail" type="text" placeholder="Correo electrónico" class="form-control form-control-sm border-input" value="${memberMail}">
+                    </div>
+                    <div class="col-md-2">Asunto</div>
+                    <div class="col-md-4">
+                        <input id="sendSubject" type="text" placeholder="Asunto" class="form-control form-control-sm border-input" value="Envío de Boleta Agua - Comité de Agua Los Cristales">
+                    </div>
+                    <div class="col-md-12">Mensaje</div>
+                    <div class="col-md-12">
+                        <input id="sendText" type="text" placeholder="Texto" class="form-control form-control-sm border-input">
+                    </div>
+                </div>
+            </div>`,
+            showCloseButton: true,
+            showCancelButton: true,
+            showConfirmButton: true,
+            focusConfirm: false,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar'/*,
+            preConfirm: () => {
 
-            let sendPdfRes = await axios.post('api/sendPdf', {
-                memberName: memberName,
-                memberMail: memberMail,
-                pdf: pdf
-            })
+                console.log('preconfirm',isEmail($("#sendEmail").val()))
+                if(isEmail(memberData.email)){
+                    return true    
+                }else{
+                    toastr.success('Correo erróneo, favor revisar')
+                    return false
+                }
+            }*/
+        })
     
-            if (sendPdfRes.data.ok) {
-                toastr.success('Email enviado correctamente.')
+        if (sendDTE.value) {
+
+            let pdf = btoa(doc.output())
+            //console.log(pdf)
+
+            try {
+                loadingHandler('start')
+                
+                console.log($("#sendEmail").val(),$("#sendSubject").val(),$("#sendText").val())
+
+                let sendPdfRes = await axios.post('api/sendPdf', {
+                    memberID: member._id,
+                    memberName: memberName,
+                    memberMail: $("#sendEmail").val(),
+                    memberSubject: $("#sendSubject").val(),
+                    memberText: $("#sendText").val(),
+                    pdf: pdf
+                })
+
+                console.log(sendPdfRes)
+        
+                if (sendPdfRes.statusText == 'OK') {
+                    toastr.success('Email enviado correctamente.')
+                    loadingHandler('stop')
+                } else {
+                    toastr.error('Ha ocurrido un error al enviar el email. Compruebe su email y contraseña.')
+                    loadingHandler('stop')
+                }
+            } catch (error) {
                 loadingHandler('stop')
-            } else {
-                toastr.error('Ha ocurrido un error al enviar el email. Compruebe su email y contraseña.')
-                loadingHandler('stop')
+                console.log(error)
             }
-        } catch (error) {
-            loadingHandler('stop')
-            console.log(error)
         }
     }else{
         //doc.autoPrint()
@@ -2782,7 +2845,8 @@ async function printVoucher(memberID,paymentID) {
         memberName = member.enterprise.name
     }
 
-    let doc = new jsPDF('p', 'pt', 'letter')
+    //let doc = new jsPDF('p', 'pt', 'letter')
+    let doc = new jsPDF('l', 'pt', 'A5')
     //let doc = new jsPDF('p', 'pt', [302, 451])
 
     let pdfX = 150
@@ -2798,7 +2862,7 @@ async function printVoucher(memberID,paymentID) {
     doc.setTextColor(143, 143, 143)
     doc.text(`Código Interno N° ${payment._id}`, pdfX, pdfY + 38)
 
-    pdfX = 280
+    pdfX = 480
     doc.addImage(logoImg, 'PNG', pdfX, pdfY, 77, 60)
     doc.setTextColor(0, 0, 0)
     doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX + 80, pdfY + 23)
@@ -2829,12 +2893,12 @@ async function printVoucher(memberID,paymentID) {
 
     doc.setFontSize(12)
     doc.setFontType('bold')
-    doc.text('Pago',  + 300, pdfY)
+    doc.text('Pago', 400, pdfY)
     doc.setFontSize(10)
     doc.setFontType('normal')
-    doc.text('Medio de Pago: ' + payment.paymentMethod,  + 300, pdfY + 15)
-    doc.text('N° Transacción: ' + payment.transaction,  + 300, pdfY + 28)
-    doc.text('Fecha Pago: ' + moment(payment.date).utc().format('DD / MM / YYYY'),  + 300, pdfY + 41)
+    doc.text('Medio de Pago: ' + payment.paymentMethod, 400, pdfY + 15)
+    doc.text('N° Transacción: ' + payment.transaction, 400, pdfY + 28)
+    doc.text('Fecha Pago: ' + moment(payment.date).utc().format('DD / MM / YYYY'), 400, pdfY + 41)
 
     pdfY += 60
 
@@ -2844,7 +2908,7 @@ async function printVoucher(memberID,paymentID) {
     doc.setFontType('bold')
     doc.setTextColor(255, 255, 255)
     doc.text('DETALLE', pdfX, pdfY + 10)
-    doc.text('SUBTOTAL', pdfX + 300, pdfY + 10)
+    doc.text('SUBTOTAL', pdfX + 500, pdfY + 10)
     doc.text('VALOR PAGADO', doc.internal.pageSize.getWidth() - 40, pdfY + 10, 'right')
 
     pdfY += 18
@@ -2852,24 +2916,26 @@ async function printVoucher(memberID,paymentID) {
     doc.setTextColor(0, 0, 0)
     for(let i=0; i<payment.invoices.length; i++){
         pdfY += 13
+
+        let number = (payment.invoices[i].invoices.number) ? 'N° ' + payment.invoices[i].invoices.number : ''
         if(payment.invoices[i].invoices.type==41){
-            doc.text(`Boleta N° ${payment.invoices[i].invoices.number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
+            doc.text(`Boleta ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
         }else{
-            doc.text(`Factura N° ${payment.invoices[i].invoices.number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
+            doc.text(`Factura ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
         }
-        doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal), pdfX + 300, pdfY)
+        doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal), pdfX + 500, pdfY)
         doc.text('$ ' + dot_separators(payment.invoices[i].amount), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
     }
 
     pdfY = 300
     
     doc.setFillColor(0, 0, 0)
-    doc.rect(pdfX + 345, pdfY, 200, 15, 'F')
+    doc.rect(pdfX + 490, pdfY, 290, 15, 'F')
 
     doc.setFontType('bold')
     doc.setFontSize(10)
     doc.setTextColor(255, 255, 255)
-    doc.text(`Total Pagado`, pdfX + 350, pdfY + 11)
+    doc.text(`Total Pagado`, pdfX + 500, pdfY + 11)
     doc.text('$ ' + dot_separators(payment.amount), doc.internal.pageSize.getWidth() - 40, pdfY + 11, 'right')
 
 
@@ -2961,7 +3027,7 @@ async function showSIIPDF(token) {
     let parameters = parametersData.data
 
     var settings = {
-        "url": "https://api.haulmer.com/v2/dte/document/"+token+"/pdf",
+        "url": "https://"+parameters.emisor.link+"/v2/dte/document/"+token+"/pdf",
         "method": "GET",
         "timeout": 0,
         "headers": {
@@ -3060,7 +3126,7 @@ async function sendData(type,memberID,invoiceID) {
                 name = member.enterprise.fullName
             }
 
-            let Emisor = { //EMISOR DE PRUEBA
+            let Emisor = { //emission=real / test
                 RUTEmisor: parameters.emisor.RUTEmisor,
                 RznSocEmisor: parameters.emisor.RznSocEmisor,
                 GiroEmisor: parameters.emisor.GiroEmisor,
@@ -3144,7 +3210,7 @@ async function sendData(type,memberID,invoiceID) {
             let Emisor = { //EMISOR DE PRUEBA
                 RUTEmisor: parameters.emisor.RUTEmisor,
                 RznSoc: parameters.emisor.RznSoc,
-                GiroEmis: parameters.emisor.GiroEmis,
+                GiroEmis: parameters.emisor.GiroEmisor,
                 Acteco: parameters.emisor.Acteco,
                 DirOrigen: parameters.emisor.DirOrigen,
                 CmnaOrigen: parameters.emisor.CmnaOrigen,
@@ -3202,19 +3268,16 @@ async function sendData(type,memberID,invoiceID) {
             }
         }
 
-        console.log('document',document)
-        console.log(JSON.stringify(document))
-
         
         var settings = {
-            "url": "https://api.haulmer.com/v2/dte/document",
+            "url": "https://"+parameters.emisor.link+"/v2/dte/document",
             "method": "POST",
             "timeout": 0,
             "headers": {
             "apikey": parameters.apikey
             },
             "data": JSON.stringify(document)
-        };  
+        }
         
         $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
         
@@ -3244,7 +3307,7 @@ async function sendData(type,memberID,invoiceID) {
             $('#modal').modal('show')*/
             toastr.success('Documento generado correctamente')
 
-            printInvoice('pdf',member.type,member._id,invoiceID)
+            printInvoicePortrait('pdf',member.type,member._id,invoiceID)
 
             loadLectures(member)
             
@@ -3372,7 +3435,7 @@ async function annulmentInvoice(type,memberID,invoiceID) {
         }        
 
         var settings = {
-            "url": "https://api.haulmer.com/v2/dte/document",
+            "url": "https://"+parameters.emisor.link+"/v2/dte/document",
             "method": "POST",
             "timeout": 0,
             "headers": {
@@ -3655,7 +3718,7 @@ function createModalPayment(member) {
                             </div>
 
                             <div class="col-md-3" style="text-align: center;">
-                                <button style="border-radius:5px; " class="btn btn-danger" id="paymentDelete"><i ="color:#3498db;" class="fas fa-times"></i> ELIMINAR</button></td>
+                                <button style="border-radius:5px; display: none;" class="btn btn-danger" id="paymentDelete"><i ="color:#3498db;" class="fas fa-times"></i> ELIMINAR</button></td>
                             </div>
 
                         </div>
@@ -3725,7 +3788,7 @@ async function createPayment(memberID,paymentID) {
         for(let i=0; i<invoicesPayment.invoices.length; i++){
             $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
                 <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
-                <td style="text-align: center">${invoicesPayment.invoices[i].invoices.number}</td>
+                <td style="text-align: center">${(invoicesPayment.invoices[i].invoices.number) ? invoicesPayment.invoices[i].invoices.number : ''}</td>
                 <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
                 <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
                 <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal)}</td>
@@ -3746,7 +3809,7 @@ async function createPayment(memberID,paymentID) {
 
                 $("#tableBodyDebtInvoices").append(`<tr>
                     <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
-                    <td style="text-align: center">${invoicesDebt[i].number}</td>
+                    <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
                     <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}</td>
@@ -3769,7 +3832,7 @@ async function createPayment(memberID,paymentID) {
                 if(!invoicesDebt[i].typeInvoice){
                     $("#tableBodyDebtInvoices").append(`<tr>
                         <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
-                        <td style="text-align: center">${invoicesDebt[i].number}</td>
+                        <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
                         <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                         <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
                         <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}</td>
@@ -3784,7 +3847,7 @@ async function createPayment(memberID,paymentID) {
 
                     $("#tableBodyDebtInvoices").append(`<tr>
                         <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
-                        <td style="text-align: center">${invoicesDebt[i].number}</td>
+                        <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : '' }</td>
                         <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                         <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
                         <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal)}</td>
