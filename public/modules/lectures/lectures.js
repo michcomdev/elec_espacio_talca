@@ -2131,6 +2131,8 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.setFontSize(11)
     doc.setFontType('normal')
     doc.text('MIDEPLAN ' + subsidyNumber, pdfX, pdfY + 36)
+    console.log(member)
+    doc.text('Sector: ' + member.address.sector.name, pdfX + 300, pdfY + 36)
     doc.setFontType('bold')
 
 

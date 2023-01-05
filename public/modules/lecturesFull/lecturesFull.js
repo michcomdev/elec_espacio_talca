@@ -1577,6 +1577,9 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     doc.setFontSize(11)
     doc.setFontType('normal')
     doc.text('MIDEPLAN ' + subsidyNumber, pdfX, pdfY + 36)
+
+    console.log(member)
+    doc.text('Sector: ', pdfX, pdfY + 300)
     doc.setFontType('bold')
 
     pdfY += 60
