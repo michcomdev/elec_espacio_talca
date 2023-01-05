@@ -8,6 +8,10 @@
     min-width: 70%;
 }
 
+.stringMS {
+    mso-number-format:"\@";
+}
+
 /*#tableProductHead tr:nth-child(1) th{
     position: sticky;
     top: 0;

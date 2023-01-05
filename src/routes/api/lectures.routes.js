@@ -609,7 +609,8 @@ export default [
                         lectures: { $ne: null }
                     }
                     let queryMembers = {
-                        'subsidies.status' : 'active'
+                        'subsidies.status' : 'active',
+                        'subsidies.type': 1
                     }
 
                     let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
@@ -624,10 +625,10 @@ export default [
                                 
                                 let invoicesMember = invoices.filter(x => x.members.toString() === lectures[i].members._id.toString())
                                 if(invoicesMember){
-                                    console.log(lectures[i].members._id.toString(),invoicesMember,invoicesMember.length)
+                                    //console.log(lectures[i].members._id.toString(),invoicesMember,invoicesMember.length)
                                     for(let j=0; j<invoicesMember.length; j++){
 
-                                        console.log(invoicesMember[j].invoicePaid,invoicesMember[j].invoiceSubTotal)
+                                        //console.log(invoicesMember[j].invoicePaid,invoicesMember[j].invoiceSubTotal)
                                         if(invoicesMember[j].invoicePaid<invoicesMember[j].invoiceSubTotal){
                                             lectures[i].invoiceDebts++
                                         }

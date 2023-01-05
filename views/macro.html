@@ -6,7 +6,6 @@
 {{/extend}}
 <br />
 <h3 class="text-center animate__animated animate__fadeIn">MACRO SUBSIDIOS</h3>
-<h6 class="text-center animate__animated animate__fadeIn">(En construcción)</h6>
 
 <br>
 
@@ -72,6 +71,14 @@
         <button style="border-radius: 5px;" class="btn btn-primary btn-block"
             id="searchMembers">
             <i class="fas fa-search"></i> FILTRAR
+        </button>
+    </div>
+    <div class="col-md-2">
+        <br/>
+    </div>
+    <div class="col-md-3">
+        <button style="border-radius: 5px;" class="btn btn-success btn-block" onclick="ExportToExcel('xlsx')">
+            <i class="fas fa-file-excel"></i> Exportar a Excel
         </button>
     </div>
     <div class="col-md-12 table-responsive">
@@ -171,4 +178,6 @@
     <script src="/public/modules/default/test2D.js"></script>
     <script src="/public/js/jspdf.plugin.autotable.js"></script>
     <script src="/public/modules/macro/macro.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
+
     {{/extend}}

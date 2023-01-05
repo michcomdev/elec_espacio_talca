@@ -223,7 +223,7 @@ async function loadLectures(member) {
             invoiceID = lectures[i].invoice._id
             
             if(lectures[i].invoice.number){
-                btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>`
+                //btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>`
                 btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
                 //btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
                 btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
@@ -280,9 +280,6 @@ async function loadLectures(member) {
                 </td>
                 <td style="text-align: center;">
                     ${btnGenerate}
-                </td>
-                <td style="text-align: center;">
-                    ${btnPrint}
                 </td>
                 <td style="text-align: center;">
                     ${btnSII}
@@ -438,7 +435,6 @@ function createModalBody(member) {
                     <th style="text-align: center; background-color: #3B6FC9;">Crear/Editar</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
                     <th style="text-align: center; background-color: #3B6FC9;">PDF Boleta/Fact</th>
-                    <th style="text-align: center; background-color: #3B6FC9;">Imprimir</th>
                     <th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Enviar</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Anular</th>
@@ -3645,6 +3641,8 @@ function createModalPayment(member) {
                                                     <th style="text-align: center">N° Boleta</th>
                                                     <th style="text-align: center">Fecha</th>
                                                     <th style="text-align: center">Vencimiento</th>
+                                                    <th style="text-align: center">Consumo</th>
+                                                    <th style="text-align: center">Convenios/Multas</th>
                                                     <th style="text-align: center">Monto Total</th>
                                                     <th style="text-align: center">Saldo Adeudado</th>
                                                     <th style="text-align: center">Saldo Final</th>
