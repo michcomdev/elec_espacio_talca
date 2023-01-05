@@ -212,9 +212,12 @@ console.log(lecturesData.data)
                         value: el.invoice.services[j].value
                     })
                 }*/
-
-                for(let j=0; j < el.invoice.agreements.length; j++){
-                    others += parseInt(el.invoice.agreements[j].amount)
+                if(el.invoice.agreements){
+                    if(el.invoice.agreements.length>0){
+                        for(let j=0; j < el.invoice.agreements.length; j++){
+                            others += parseInt(el.invoice.agreements[j].amount)
+                        }
+                    }
                 }
 
                 if(!el.invoice.token){
@@ -321,13 +324,12 @@ async function calculate(){
         } else {
             typeString = 'EMPRESA'
             name = array[i].members.enterprise.name
-            typeDTE = 34
         }
 
-        if (array[i].members.dte == 'BOLETA') {
-            typeDTE = 41
-        }else{
+        if (array[i].members.dte == 'FACTURA') {
             typeDTE = 34
+        }else{
+            typeDTE = 41
         }
 
 
@@ -645,9 +647,11 @@ async function calculate(){
 async function saveMultiple(){
     
     let goGenerate = false
+    let totalRows = 0
     $(".chkClass").each(function() {
         if($(this).prop('checked')){
             goGenerate = true
+            totalRows++
         }
     })
 
@@ -655,7 +659,7 @@ async function saveMultiple(){
         //loadingHandler('start')
         console.log(internals.invoices.length)
         progressValue = 0
-        progressTotal = internals.invoices.length
+        progressTotal = totalRows
         $('#modalProgress').modal('show')
         progressBar()
         for(let i=0; i<internals.invoices.length; i++){
@@ -664,6 +668,7 @@ async function saveMultiple(){
                 if(!internals.invoices[i].id){
 
                     let saveInvoice = await axios.post('/api/invoiceSave', internals.invoices[i])
+                    console.log(saveInvoice.data)
                     if (saveInvoice.data) {
                         if (saveInvoice.data._id) {
                             sendData(internals.invoices[i].memberType,internals.invoices[i].member,saveInvoice.data._id)
@@ -671,6 +676,7 @@ async function saveMultiple(){
                     }
                 }else{
                     let updateInvoice = await axios.post('/api/invoiceUpdate', internals.invoices[i])
+                    console.log(updateInvoice.data)
                     if (updateInvoice.data) {
                         if (updateInvoice.data._id) {
                             sendData(internals.invoices[i].memberType,internals.invoices[i].member,updateInvoice.data._id)
@@ -1180,7 +1186,7 @@ function calculateTotal() {
     $("#invoiceDebtFine").val(parseInt(debtFine))
     let subTotal = parseInt(lastConsumptionValue) + parseInt(debtFine)
     $("#invoiceSubTotal").val(subTotal)
-    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(debtFine) + parseInt(totalAgreements))
+    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements))
 
 
     $(".consumption").each(function() {
@@ -2105,10 +2111,13 @@ async function sendData(type,memberID,invoiceID) {
     }
     
 
-    if(type=='personal'){
+    if(invoice.type==41){
 
-        dteType = 41 //Boleta exenta electrónica
-        name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+        if(type=='personal'){
+            name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+        }else{
+            name = member.enterprise.fullName
+        }
 
         let Emisor = { //EMISOR DE PRUEBA
             RUTEmisor: parameters.emisor.RUTEmisor,
@@ -2140,7 +2149,7 @@ async function sendData(type,memberID,invoiceID) {
             dte: {
                 Encabezado: {
                     IdDoc:{
-                        TipoDTE: dteType,
+                        TipoDTE: invoice.type,
                         Folio: 0,
                         FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
                         FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
