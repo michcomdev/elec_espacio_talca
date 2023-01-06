@@ -283,10 +283,10 @@ export default [
                             }
                         }
 
-                        console.log('invoiceQuery',invoiceQuery)
+                        //console.log('invoiceQuery',invoiceQuery)
                         let invoicePayments = await Payments.find(invoiceQuery) //Obtención de todos los pagos realizados a la boleta
                         let invoice = await Invoices.findById(invoices[i].invoices) //Obtención de registro de boleta
-                        console.log(invoice)
+                        //console.log(invoice)
                         for(let j=0; j<invoicePayments.length; j++){
                             if(invoicePayments[j].invoices.find(x => x.invoices == invoices[i].invoices)){
                                 invoice.invoicePaid = 0
@@ -323,6 +323,46 @@ export default [
                         invoices: Joi.string().optional().allow(''),
                         amount: Joi.number().optional().allow(0)
                     })).optional()
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/paymentDelete',
+        options: {
+            description: 'delete payment',
+            notes: 'delete payment',
+            tags: ['api'],
+            handler: async (request) => {
+                try {
+                    let payload = request.payload
+
+                    if (payload.id) {
+
+                        let payment = await Payments.findById(payload.id)
+                        for(let i=0; i<payment.invoices.length; i++){
+                            let invoice = await Invoices.findById(payment.invoices[i].invoices)
+                            invoice.invoicePaid -= payment.invoices[i].amount
+                            await invoice.save()
+                        }
+
+                        await Payments.deleteOne({_id: payload.id})
+                        return true
+
+                    }
+
+                } catch (error) {
+                    console.log(error)
+
+                    return {
+                        error: 'Ha ocurrido un error al guardar datos de usuario'
+                    }
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    id: Joi.string()
                 })
             }
         }

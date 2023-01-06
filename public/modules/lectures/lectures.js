@@ -968,7 +968,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             $("#invoiceDateExpire").val(moment.utc().add(15, 'days').format('DD/MM/YYYY'))
             /*$('#modal_title').html(`Almacenado`)
             $('#modal_body').html(`<h7 class="alert-heading">Las fechas podrían estar erróneas, favor revisar</h7>`)*/
-            toastr.success('Favor verificar fechas')
+            toastr.warning('Favor verificar fechas')
             //$('#modal').modal('show')
         }else{
             $("#invoiceDateExpire").val(moment(expireDate).utc().format('DD/MM/YYYY'))
@@ -1472,7 +1472,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 } else {
                     //$('#modal_title').html(`Error`)
                     //$('#modal_body').html(`<h7 class="alert-heading">Error al eliminar, favor reintente</h7>`)
-                    toastr.success('Error al eliminar, favor reintente')
+                    toastr.error('Error al eliminar, favor reintente')
                 }
 
                 //$('#modal').modal('show')
@@ -2920,7 +2920,16 @@ async function printVoucher(memberID,paymentID) {
         }else{
             doc.text(`Factura ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
         }
-        doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal), pdfX + 500, pdfY)
+
+        let agreements = 0
+        if(payment.invoices[i].invoices.agreements){
+            for(let j=0; j<payment.invoices[i].invoices.agreements.length; j++){
+                agreements += payment.invoices[i].invoices.agreements[j].amount
+            }
+        }
+
+
+        doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal + agreements), pdfX + 500, pdfY)
         doc.text('$ ' + dot_separators(payment.invoices[i].amount), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
     }
 
@@ -3722,7 +3731,7 @@ function createModalPayment(member) {
                             </div>
 
                             <div class="col-md-3" style="text-align: center;">
-                                <button style="border-radius:5px; display: none;" class="btn btn-danger" id="paymentDelete"><i ="color:#3498db;" class="fas fa-times"></i> ELIMINAR</button></td>
+                                <button style="border-radius:5px;" class="btn btn-danger" id="paymentDelete"><i ="color:#3498db;" class="fas fa-times"></i> ELIMINAR</button></td>
                             </div>
 
                         </div>
@@ -3780,6 +3789,8 @@ async function createPayment(memberID,paymentID) {
     $("#paymentAmount").val('')
 
     if(paymentID){
+        $("#paymentDelete").css("display","block")
+
         let invoicesPaymentData = await axios.post('/api/paymentSingle', { id: paymentID })
         let invoicesPayment = invoicesPaymentData.data
 
@@ -3790,16 +3801,24 @@ async function createPayment(memberID,paymentID) {
         $("#paymentAmount").val(invoicesPayment.amount)
 
         for(let i=0; i<invoicesPayment.invoices.length; i++){
+            let agreements = 0
+            if(invoicesPayment.invoices[i].invoices.agreements){
+                for(let j=0; j<invoicesPayment.invoices[i].invoices.agreements.length; j++){
+                    agreements += invoicesPayment.invoices[i].invoices.agreements[j].amount
+                }
+            }
             $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
                 <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
                 <td style="text-align: center">${(invoicesPayment.invoices[i].invoices.number) ? invoicesPayment.invoices[i].invoices.number : ''}</td>
                 <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
                 <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
-                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal)}</td>
-                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
-                    <input value="${invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
+                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements)}</td>
+                <td style="text-align: right">${dot_separators(agreements)}</td>
+                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements)}</td>
+                <td style="text-align: right">${dot_separators((invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
+                    <input value="${(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
                 </td>
-                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}</td>
+                <td style="text-align: right">${dot_separators((invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}</td>
             </tr>`)
         }
 
@@ -3807,32 +3826,49 @@ async function createPayment(memberID,paymentID) {
         //Carga de boletas adeudadas
         let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID, paymentID: paymentID})
         let invoicesDebt = invoicesDebtData.data
+        console.log(invoicesDebt)
         
         if(invoicesDebt.length>0){
             for(let i=0; i<invoicesDebt.length; i++){
-
+                let agreements = 0
+                if(invoicesDebt[i].agreements){
+                    for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                        agreements += invoicesDebt[i].agreements[j].amount
+                    }
+                }
                 $("#tableBodyDebtInvoices").append(`<tr>
                     <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
                     <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}</td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}
-                        <input value="${invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid}" style="display: none;"/>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
+                    <td style="text-align: right">${dot_separators(agreements)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
+                    <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid)}
+                        <input value="${(invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid}" style="display: none;"/>
                     </td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}</td>
+                    <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid)}</td>
                 </tr>`)
             }
         }
 
     }else{
         
+        $("#paymentDelete").css("display","none")
         //Carga de boletas adeudadas
         let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
         let invoicesDebt = invoicesDebtData.data
         console.log(invoicesDebt)
         if(invoicesDebt.length>0){
             for(let i=0; i<invoicesDebt.length; i++){
+                let agreements = 0
+                if(invoicesDebt[i].agreements){
+                    for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                        agreements += invoicesDebt[i].agreements[j].amount
+                    }
+                }
+
+
                 if(!invoicesDebt[i].typeInvoice){
                     $("#tableBodyDebtInvoices").append(`<tr>
                         <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
@@ -3840,8 +3876,10 @@ async function createPayment(memberID,paymentID) {
                         <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                         <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
                         <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}</td>
-                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}
-                            <input value="${invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid}" style="display: none;"/>
+                        <td style="text-align: right">${dot_separators(agreements)}</td>
+                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
+                        <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid)}
+                            <input value="${(invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid}" style="display: none;"/>
                         </td>
                         <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}</td>
                     </tr>`)
@@ -3855,10 +3893,12 @@ async function createPayment(memberID,paymentID) {
                         <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                         <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
                         <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal)}</td>
-                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - paid)}
-                            <input value="${invoicesDebt[i].invoiceTotal - paid}" style="display: none;"/>
+                        <td style="text-align: right">${dot_separators(agreements)}</td>
+                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal + agreements)}</td>
+                        <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceTotal + agreements) - paid)}
+                            <input value="${(invoicesDebt[i].invoiceTotal + agreements) - paid}" style="display: none;"/>
                         </td>
-                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal - paid)}</td>
+                        <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceTotal + agreements) - paid)}</td>
                     </tr>`)
                 }
             }
@@ -3901,7 +3941,7 @@ async function createPayment(memberID,paymentID) {
                 if($($($(this).children()[0]).children()[0]).prop('checked')){
                     goSave = true
 
-                    let invoiceAmount = parseInt($($($(this).children()[5]).children()[0]).val()) - parseInt(replaceAll($($(this).children()[6]).text(), '.',''))
+                    let invoiceAmount = parseInt($($($(this).children()[7]).children()[0]).val()) - parseInt(replaceAll($($(this).children()[8]).text(), '.',''))
 
                     invoices.push({
                         invoices: $($($(this).children()[0]).children()[1]).val(),
@@ -3912,10 +3952,7 @@ async function createPayment(memberID,paymentID) {
         }
 
         if(!goSave){
-            /*$('#modal').modal('show')
-            $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">Debe seleccionar al menos 1 boleta a cancelar</h7>`)*/
-            toastr.success('Debe seleccionar al menos 1 boleta a cancelar')
+            toastr.warning('Debe seleccionar al menos 1 boleta a cancelar')
             return
         }
 
@@ -3923,33 +3960,21 @@ async function createPayment(memberID,paymentID) {
         let amount = parseInt(replaceAll($("#paymentAmount").val(), '.', '').replace(' ', '').replace('$', ''))
 
         if(!$.isNumeric(amount)){
-            /*$('#modal').modal('show')
-            $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">Monto no válido</h7>`)*/
             toastr.warning('Monto no válido')
             return
         }
 
         if(amount<=0){
-            /*$('#modal').modal('show')
-            $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">Monto no válido</h7>`)*/
             toastr.warning('Monto no válido')
             return
         }
         
         if(amount>toPay){
-            /*$('#modal').modal('show')
-            $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">El monto a pagar no puede ser mayor al saldo</h7>`)*/
             toastr.warning('El monto a pagar no puede ser mayor al saldo')
             return
         }
         if($("#paymentType").val()=='SELECCIONE'){
-            /*$('#modal').modal('show')
-            $('#modal_title').html(`Error al almacenar pago`)
-            $('#modal_body').html(`<h7 class="alert-heading">Debe seleccionar medio de pago</h7>`)*/
-            toastr.success('Debe seleccionar medio de pago')
+            toastr.warning('Debe seleccionar medio de pago')
             return
         }
         
@@ -3968,28 +3993,56 @@ async function createPayment(memberID,paymentID) {
             urlSave = 'paymentUpdate'
             paymentData.id = paymentID
         }
-        
+        console.log('paymentData',paymentData)
         let savePayment = await axios.post('/api/'+urlSave, paymentData)
         if (savePayment.data) {
             if (savePayment.data._id) {
 
-                /*$('#modal_title').html(`Almacenado`)
-                $('#modal_body').html(`<h7 class="alert-heading">Pago almacenado correctamente</h7>`)*/
                 toastr.success('Pago almacenado correctamente')
                 loadPayments(member)
                 cleanPayment()
             } else {
-                /*$('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)*/
                 toastr.error('Error al almacenar, favor reintente')
             }
         } else {
-            /*$('#modal_title').html(`Error`)
-            $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)*/
             toastr.error('Error al almacenar, favor reintente')
         }
-        //$('#modal').modal('show')
 
+    })
+
+    $("#paymentDelete").on('click', async function () {
+        let deletePaymentMessage = await Swal.fire({
+            title: '¿Está seguro de eliminar este registro?',
+            customClass: 'swal-wide',
+            html: ``,
+            showCloseButton: true,
+            showCancelButton: true,
+            showConfirmButton: true,
+            focusConfirm: false,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar'
+        })
+    
+        if (deletePaymentMessage.value) {
+            let paymentData = {
+                id: paymentID
+            }
+
+            let deletePayment = await axios.post('/api/paymentDelete', paymentData)
+            if (deletePayment.data) {
+                //$('#modal_title').html(`Eliminado`)
+                //$('#modal_body').html(`<h7 class="alert-heading">Registro eliminado</h7>`)
+                toastr.success('Registro eliminado')
+                cleanPayment()
+                loadPayments(member)
+            } else {
+                //$('#modal_title').html(`Error`)
+                //$('#modal_body').html(`<h7 class="alert-heading">Error al eliminar, favor reintente</h7>`)
+                toastr.error('Error al eliminar, favor reintente')
+            }
+
+            //$('#modal').modal('show')
+        }
     })
 }
 
@@ -3999,11 +4052,11 @@ function calculatePaymentBalance() {
     $("#tableBodyDebtInvoices > tr").each(function() {
         let value = 0
         if($($($(this).children()[0]).children()[0]).prop('checked')){
-            value = $($($(this).children()[5]).children()[0]).val()
+            value = $($($(this).children()[7]).children()[0]).val()
         }
         totalSelected += parseInt(value)
 
-        $($(this).children()[6]).text(dot_separators($($($(this).children()[5]).children()[0]).val()))
+        $($(this).children()[8]).text(dot_separators($($($(this).children()[7]).children()[0]).val()))
     })
     
     $("#paymentToPay").val(dot_separators(totalSelected))
@@ -4014,13 +4067,13 @@ function calculatePaymentBalance() {
         $("#tableBodyDebtInvoices > tr").each(function() {
             let value = 0
             if($($($(this).children()[0]).children()[0]).prop('checked')){
-                value = parseInt($($($(this).children()[5]).children()[0]).val())
+                value = parseInt($($($(this).children()[7]).children()[0]).val())
 
                 if(value<=amount){
-                    $($(this).children()[6]).text(0)
+                    $($(this).children()[8]).text(0)
                     amount -= value
                 }else if(amount!=0){
-                    $($(this).children()[6]).text(dot_separators(value-amount))
+                    $($(this).children()[8]).text(dot_separators(value-amount))
                 }
             }
             
@@ -4046,92 +4099,5 @@ function calculatePaymentBalance() {
         numeralDecimalMark: ",",
         delimiter: "."
     })
-
-    return
-    let net = 0
-    //Consumos
-    let lectureActual = $("#invoiceLectureActual").val()
-    let lectureLast = $("#invoiceLectureLast").val()
-    let lectureValue = lectureActual - lectureLast
-
-    $("#invoiceLectureResult").val(lectureValue)
-    let meterValue = $("#invoiceMeterValue").val()
-    let consumptionValue = lectureValue * meterValue
-    $("#invoiceConsumption1").val(consumptionValue)
-
-    let subsidy = $("#invoiceSubsidyPercentage").val()
-
-    let subsidyValue = 0
-    if (subsidy > 0) {
-        if (lectureValue <= parameters.subsidyLimit) {
-            subsidyValue = Math.round(consumptionValue * (subsidy / 100))
-        } else {
-            subsidyValue = Math.round((parameters.subsidyLimit * meterValue) * (subsidy / 100))
-        }
-    }
-    $("#invoiceSubsidyValue").val(subsidyValue)
-    let consumptionLimit = $("#invoiceConsumptionLimit").val()
-    let consumptionLimitValue = $("#invoiceConsumptionLimitValue").val()
-    let consumptionLimitTotal = 0 //Valor a pagar por sobreconsumo
-    if(lectureValue>consumptionLimit){
-        consumptionLimitTotal = (lectureValue - consumptionLimit) * consumptionLimitValue
-    }
-    $("#invoiceConsumptionLimitTotal").val(consumptionLimitTotal)
-
-    let lastConsumptionValue = consumptionValue - subsidyValue + consumptionLimitTotal
-    $("#invoiceConsumption2").val(lastConsumptionValue)
-    $("#invoiceConsumption2b").val(lastConsumptionValue)
-
-    //Servicios
-    let totalServices = 0
-    if($("#tableBodyServices > tr").length>0){
-        $("#tableBodyServices > tr").each(function() {
-            let value = 0
-            if(!$.isNumeric($($($(this).children()[2]).children()[0]).val())){
-                value = 0
-            }else{
-                value = $($($(this).children()[2]).children()[0]).val()
-            }
-            totalServices += parseInt(value)
-        })    
-    }
-    $("#invoiceTotalServices").val(totalServices)
-    $("#invoiceTotalServicesb").val(totalServices)
-
-    //Montos
-    let debt = 0
-    $("#invoiceDebt").val(debt) //A asignar
-    $("#invoiceTotal").val(parseInt(parameters.charge) + parseInt(lastConsumptionValue) + parseInt(debt) + parseInt(totalServices))
-
-
-    $(".consumption").each(function() {
-        //$(this).val(dot_separators($(this).val()))
-
-        new Cleave($(this), {
-            prefix: '',
-            numeral: true,
-            numeralThousandsGroupStyle: 'thousand',
-            numeralDecimalScale: 0,
-            numeralPositiveOnly: true,
-            numeralDecimalMark: ",",
-            delimiter: "."
-        })
-    })
-
-    $(".money").each(function() {
-        //$(this).val(dot_separators($(this).val()))
-
-        new Cleave($(this), {
-            prefix: '$ ',
-            numeral: true,
-            numeralThousandsGroupStyle: 'thousand',
-            numeralDecimalScale: 0,
-            numeralPositiveOnly: true,
-            numeralDecimalMark: ",",
-            delimiter: "."
-        })
-    })    
-
-    
 
 }

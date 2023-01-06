@@ -517,6 +517,8 @@ export default [
                         }
                     }*/
 
+                    //console.log(invoices)
+
                     if(payload.paymentID){
 
                         let payments = await Payments.findById(payload.paymentID).lean()

@@ -2113,6 +2113,7 @@ async function sendData(type,memberID,invoiceID) {
     
 
     if(invoice.type==41){
+        dteType = 41
 
         if(type=='personal'){
             name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2

@@ -247,8 +247,11 @@ async function getMembers() {
                 el.NUMDEUD = ''
                 el.MONDEUD = ''
             }
-            el.OBSERVACION = '10'
-
+            if(subsidy.percentage==50){
+                el.OBSERVACION = '10'
+            }else{
+                el.OBSERVACION = '20'
+            }
 
             return el
         })
@@ -261,6 +264,7 @@ async function getMembers() {
         if(formatData.length==0){
             loadingHandler('stop')
         }
+        $("#tableMembersBody").html('')
 
         for(let i=0; i<formatData.length; i++){
             $("#tableMembersBody").append(`
