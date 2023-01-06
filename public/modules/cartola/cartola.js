@@ -91,6 +91,34 @@ function chargeCartolaTable() {
             { data: 'name' },
             { data: 'transaction' },*/
           ],
+          footerCallback: function (row, data, start, end, display) {
+            var api = this.api();
+ 
+            // Remove the formatting to get integer data for summation
+            var intVal = function (i) {
+                return typeof i === 'string' ? i.replace(/[\$,]/g, '') * 1 : typeof i === 'number' ? i : 0;
+            };
+ 
+            // Total over all pages
+            total = api
+                .column(5)
+                .data()
+                .reduce(function (a, b) {
+                    return intVal(a) + intVal(b);
+                }, 0);
+ 
+            // Total over this page
+            pageTotal = api
+                .column(5, { page: 'current' })
+                .data()
+                .reduce(function (a, b) {
+                    return intVal(a) + intVal(b);
+                }, 0);
+ 
+            // Update footer
+            $(api.column(4).footer()).html('$ ' + dot_separators(total) + '');
+            //$(api.column(4).footer()).html('$' + pageTotal + ' ( $' + total + ' total)');
+        },
           initComplete: function (settings, json) {
             getCartola()
           }
@@ -181,7 +209,7 @@ async function getCartola() {
             el.detail = ''
 
             for(let i=0; i < el.invoices.length; i++){
-                if(el.detail.length>0){
+                if(i>0){
                     el.detail = ', '
                 }
                 if(el.invoices[i].invoices.type==33){
@@ -190,7 +218,11 @@ async function getCartola() {
                     el.detail += 'BOLETA '
                 }
 
-                el.detail += ' ' + el.invoices[i].invoices.number
+                if(el.invoices[i].invoices.number){
+                    el.detail += ' ' + el.invoices[i].invoices.number
+                }else{
+                    el.detail += ' OTROS O SALDO ANTIGUO'
+                }
             }
 
             //el.paymentMethod

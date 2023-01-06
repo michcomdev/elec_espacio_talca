@@ -421,13 +421,13 @@ export default [
             validate: {
                 payload: Joi.object().keys({
                     id: Joi.string(),
-                    type: Joi.number(),
-                    number: Joi.number(),
-                    seal: Joi.string(),
-                    token: Joi.string(),
+                    type: Joi.number().allow(0),
+                    number: Joi.number().allow(0),
+                    seal: Joi.string().allow(''),
+                    token: Joi.string().allow(''),
                     resolution: Joi.object().keys({
-                        fecha: Joi.string(),
-                        numero: Joi.number()
+                        fecha: Joi.string().allow(''),
+                        numero: Joi.number().allow(0)
                     })
                 })
             }

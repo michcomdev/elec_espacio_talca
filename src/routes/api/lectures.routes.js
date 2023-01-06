@@ -53,6 +53,16 @@ export default [
                         }
                     }
 
+                    if(payload.invoice){
+                        let invoices = await Invoices.find({number: payload.invoice})
+                        //query._id = 0
+                        if(invoices){
+                            //if(invoices[0]){
+                                query._id = invoices[0].members
+                            //}
+                        }
+                    }
+
                     let members = await Member.find(query).populate(['address.sector'])
                     return members
                                         
@@ -66,7 +76,8 @@ export default [
             },
             validate: {
                 payload: Joi.object().keys({
-                    sector: Joi.string()
+                    sector: Joi.string(),
+                    invoice: Joi.number().optional()
                 })
             }
         }

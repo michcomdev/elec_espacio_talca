@@ -39,8 +39,6 @@ async function getParameters() {
     let parametersData = await axios.get('/api/parameters')
     parameters = parametersData.data
 
-    console.log('parameters',parameters)
-
     let sectorsData = await axios.get('api/sectors')
     sectors = sectorsData.data
 
@@ -53,7 +51,19 @@ async function getParameters() {
 
 }
 
-function chargeMembersTable() {
+function chargeMembersTable(invoice) {
+    if(invoice){
+        if($.isNumeric(invoice)){
+            if(invoice<=0){
+                toastr.warning('Debe ingresar un número mayor a 0')                
+                return false
+            }
+        }else{
+            toastr.warning('Debe ingresar un número válido')
+            return false
+        }
+    }
+
     try {
         if ($.fn.DataTable.isDataTable('#tableMembers')) {
             internals.members.table.clear().destroy()
@@ -81,12 +91,12 @@ function chargeMembersTable() {
                     url: spanishDataTableLang
                 },
                 responsive: true,
-                columnDefs: [{ targets: [0, 1, 4, 5, 6], className: 'dt-center' }],
+                columnDefs: [{ targets: [0, 1, 4], className: 'dt-center' }],
                 order: [[0, 'asc']],
                 ordering: true,
                 rowCallback: function (row, data) {
                     //$(row).find('td:eq(1)').html(moment.utc(data.date).format('DD/MM/YYYY'))
-                    $(row).find('td:eq(5)').html(dot_separators(data.lastLecture))
+                    //$(row).find('td:eq(5)').html(dot_separators(data.lastLecture))
                     // $('td', row).css('background-color', 'White');
                 },
                 columns: [
@@ -94,12 +104,12 @@ function chargeMembersTable() {
                     { data: 'typeString' },
                     { data: 'name' },
                     { data: 'sector' },
-                    { data: 'subsidyActive' },
+                    { data: 'subsidyActive' }/*,
                     { data: 'lastLecture' },
-                    { data: 'paymentStatus' }
+                    { data: 'paymentStatus' }*/
                 ],
                 initComplete: function (settings, json) {
-                    getMembers()
+                    getMembers(invoice)
                 }
             })
 
@@ -125,8 +135,14 @@ function chargeMembersTable() {
 
 }
 
-async function getMembers() {
-    let lecturesData = await axios.post('api/membersLectures', {sector: $("#searchSector").val()})
+async function getMembers(invoice) {
+    let query = {
+        sector: $("#searchSector").val()
+    }
+    if(invoice){
+        query.invoice = invoice
+    }
+    let lecturesData = await axios.post('api/membersLectures', query)
 
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
@@ -140,13 +156,14 @@ async function getMembers() {
                 el.name = el.enterprise.name
             }
             el.sector = el.address.sector.name
-            if(el.subsidies.length>0){
-                //Verificar que subsidio esté activo
-                el.subsidyActive = 'SI'
-            }else{
-                el.subsidyActive = 'NO'
 
+            el.subsidyActive = 'NO'
+            if(el.subsidies.length>0){
+                if(el.subsidies.find(x => x.status=='active')){
+                    el.subsidyActive = 'SI'
+                }
             }
+            
             
             el.lastLecture = 0
             el.paymentStatus = 'AL DÍA'
@@ -164,6 +181,10 @@ async function getMembers() {
 
 $('#searchMembers').on('click', async function () {
     chargeMembersTable()
+})
+
+$('#searchInvoice').on('click', async function () {
+    chargeMembersTable($("#searchNumber").val())
 })
 
 $('#updateLectures').on('click', async function () {
@@ -222,9 +243,9 @@ async function loadLectures(member) {
             //btn = `<button class="btn btn-sm btn-info btnLecture" onclick="printAnnulment('preview','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
             invoiceID = lectures[i].invoice._id
             
-            if(lectures[i].invoice.number){
+            if(lectures[i].invoice.number || lectures[i].invoice.number==0){
                 //btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>`
-                btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>`
+                btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>${lectures[i].invoice.number}</button>`
                 //btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
                 btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
                 btnAnnulment = `<button class="btn btn-sm btn-info btnLecture" onclick="annulmentInvoice('${member.type}','${member._id}','${lectures[i].invoice._id}')">Anular Boleta</button>`
@@ -742,20 +763,21 @@ async function cleanInvoice() {
 
 async function showAnnulment(type,memberID,lecture){
     let invoices = await axios.post('/api/invoicesByLecture', { lecture: lecture })
-
     $("#tableAnnulmentsBody").html('')
 
     for(let i=0; i<invoices.data.length; i++){
-        $("#tableAnnulmentsBody").append(`
-            <tr>
-                <td>${invoices.data[i].number}</td>
-                <td>${moment(invoices.data[i].date).utc().format('DD/MM/YYYY')}</td>
-                <td><button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${type}','${memberID}','${invoices.data[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
-                <td>${invoices.data[i].annulment.number}</td>
-                <td>${moment(invoices.data[i].annulment.date).utc().format('DD/MM/YYYY')}</td>
-                <td><button class="btn btn-sm btn-danger btnLecture" onclick="showSIIPDF('${invoices.data[i].annulment.token}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
-            </tr>
-        `)
+        if(invoices.data[i].annulment){
+            $("#tableAnnulmentsBody").append(`
+                <tr>
+                    <td>${invoices.data[i].number}</td>
+                    <td>${moment(invoices.data[i].date).utc().format('DD/MM/YYYY')}</td>
+                    <td><button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${type}','${memberID}','${invoices.data[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
+                    <td>${invoices.data[i].annulment.number}</td>
+                    <td>${moment(invoices.data[i].annulment.date).utc().format('DD/MM/YYYY')}</td>
+                    <td><button class="btn btn-sm btn-danger btnLecture" onclick="showSIIPDF('${invoices.data[i].annulment.token}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
+                </tr>
+            `)
+        }
         
     }
 
@@ -783,8 +805,6 @@ function calculateTotal(type) {
     //if(type=='edit'){
         //parametersCharge = $("#invoiceCharge").val()
     //}
-    console.log('charge',parametersCharge)
-
     let net = 0
     //Consumos
     let lectureActual = $("#invoiceLectureActual").val()
@@ -905,7 +925,6 @@ function calculateDebt() {
     //let debtFine = debt * 0.03
     //$("#invoiceDebtFine").val('$ ' + dot_separators(parseInt(debtFine)))
 
-    console.log(parseInt(subTotal) + ' + ' + parseInt(debt) + ' + ' + parseInt(debtFine) + ' + ' + parseInt(agreements))
     let total = parseInt(subTotal) + parseInt(debt) + parseInt(debtFine) + parseInt(agreements)
     
     $("#invoiceSubTotal").val('$ ' + dot_separators(parseInt(subTotal) + parseInt(debtFine)))
@@ -927,8 +946,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         let lectureData = await axios.post('/api/lectureSingle', { id: lectureID })
         let lecture = lectureData.data
-        console.log('lecture',lecture)
-
+        
         $("#invoiceTitle").text("Nueva Boleta/Factura")
         $("#invoiceSave").removeAttr('disabled')
         $("#invoiceSave").removeAttr('title')
@@ -1039,8 +1057,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             month: parseInt(monthDue),
             member: memberID
         })
-
-        console.log('agreements',yearDue,monthDue, memberID )
 
         let agreements = agreementData.data
 
@@ -2047,13 +2063,21 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     let parameters = parametersData.data
 
 
-    let docName1 = '', docName2 = 'EXENTA ELECTRÓNICA', memberName = ''
+    let docName1 = '', docName2 = 'EXENTA ELECTRÓNICA', memberName = '', siiValue = 'S.I.I. - CURICO'
     if (type == 'personal') {
-        docName1 = 'BOLETA NO AFECTA O'
         memberName = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
     } else {
-        docName1 = 'FACTURA NO AFECTA O'
         memberName = member.enterprise.name
+    }
+
+    if(invoice.type==41){
+        docName1 = 'BOLETA NO AFECTA O'
+    }else if(invoice.type==34){
+        docName1 = 'FACTURA NO AFECTA O'
+    }else if(invoice.type==0){
+        docName1 = ''
+        docName2 = 'COMPROBANTE DE AVISO'
+        siiValue = ''
     }
 
     let doc = new jsPDF('p', 'pt', 'letter')
@@ -2092,13 +2116,15 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.text(docName2, pdfX + 310, pdfY + 35, 'center')
 
     doc.setFontType('bold')
-    if(invoice.number){
-        doc.text('N° ' + invoice.number, pdfX + 310, pdfY + 50, 'center')
+    if(invoice.number ||  invoice.number==0){
+        if(invoice.number!=0){
+            doc.text('N° ' + invoice.number, pdfX + 310, pdfY + 50, 'center')
+        }
     }else{
         doc.text('N° -', pdfX + 310, pdfY + 50, 'center')
     }
     doc.setFontSize(11)
-    doc.text('S.I.I. - CURICO', pdfX + 310, pdfY + 75, 'center')
+    doc.text(siiValue, pdfX + 310, pdfY + 75, 'center')
 
     doc.setDrawColor(0, 0, 0)
     doc.setTextColor(0, 0, 0)
@@ -2378,9 +2404,12 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
         doc.rect(pdfX, pdfY + 220, 260, 106, 'F')
         if(invoice.seal){
             doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 220, 260, 106)
-
+        }
+        if(docName2!='COMPROBANTE DE AVISO'){
             doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 335, 'center')
             doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 345, 'center')
+        }else{
+            doc.text('Documento informativo, no válido como boleta', pdfX + 130, pdfY + 335, 'center')
         }
     }
 
@@ -2819,19 +2848,6 @@ async function printVoucher(memberID,paymentID) {
     let paymentData = await axios.post('/api/paymentSingle', { id: paymentID })
     let payment = paymentData.data
     
-    /*for(let i=0; i<invoicesPayment.invoices.length; i++){
-        $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
-            <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
-            <td style="text-align: center">${invoicesPayment.invoices[i].invoices.number}</td>
-            <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
-            <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
-            <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal)}</td>
-            <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
-                <input value="${invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
-            </td>
-            <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}</td>
-        </tr>`)
-    }*/
 
     let parametersData = await axios.get('/api/parameters')
     let parameters = parametersData.data
@@ -2842,13 +2858,12 @@ async function printVoucher(memberID,paymentID) {
         memberName = member.enterprise.name
     }
 
-    //let doc = new jsPDF('p', 'pt', 'letter')
-    let doc = new jsPDF('l', 'pt', 'A5')
+    let doc = new jsPDF('p', 'pt', 'letter')
     //let doc = new jsPDF('p', 'pt', [302, 451])
 
     let pdfX = 150
     let pdfY = 20
-    doc.addImage(logoWallImg, 'PNG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight()) //Fondo
+    doc.addImage(logoWallImg, 'PNG', doc.internal.pageSize.getWidth() / 4, 0, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() / 2) //Fondo
 
     pdfX = 30
     doc.setFontSize(16)
@@ -2859,7 +2874,7 @@ async function printVoucher(memberID,paymentID) {
     doc.setTextColor(143, 143, 143)
     doc.text(`Código Interno N° ${payment._id}`, pdfX, pdfY + 38)
 
-    pdfX = 480
+    pdfX = 280
     doc.addImage(logoImg, 'PNG', pdfX, pdfY, 77, 60)
     doc.setTextColor(0, 0, 0)
     doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX + 80, pdfY + 23)
@@ -2890,12 +2905,12 @@ async function printVoucher(memberID,paymentID) {
 
     doc.setFontSize(12)
     doc.setFontType('bold')
-    doc.text('Pago', 400, pdfY)
+    doc.text('Pago',  + 300, pdfY)
     doc.setFontSize(10)
     doc.setFontType('normal')
-    doc.text('Medio de Pago: ' + payment.paymentMethod, 400, pdfY + 15)
-    doc.text('N° Transacción: ' + payment.transaction, 400, pdfY + 28)
-    doc.text('Fecha Pago: ' + moment(payment.date).utc().format('DD / MM / YYYY'), 400, pdfY + 41)
+    doc.text('Medio de Pago: ' + payment.paymentMethod,  + 300, pdfY + 15)
+    doc.text('N° Transacción: ' + payment.transaction,  + 300, pdfY + 28)
+    doc.text('Fecha Pago: ' + moment(payment.date).utc().format('DD / MM / YYYY'),  + 300, pdfY + 41)
 
     pdfY += 60
 
@@ -2905,7 +2920,7 @@ async function printVoucher(memberID,paymentID) {
     doc.setFontType('bold')
     doc.setTextColor(255, 255, 255)
     doc.text('DETALLE', pdfX, pdfY + 10)
-    doc.text('SUBTOTAL', pdfX + 500, pdfY + 10)
+    doc.text('SUBTOTAL', pdfX + 300, pdfY + 10)
     doc.text('VALOR PAGADO', doc.internal.pageSize.getWidth() - 40, pdfY + 10, 'right')
 
     pdfY += 18
@@ -2913,12 +2928,10 @@ async function printVoucher(memberID,paymentID) {
     doc.setTextColor(0, 0, 0)
     for(let i=0; i<payment.invoices.length; i++){
         pdfY += 13
-
-        let number = (payment.invoices[i].invoices.number) ? 'N° ' + payment.invoices[i].invoices.number : ''
         if(payment.invoices[i].invoices.type==41){
-            doc.text(`Boleta ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
+            doc.text(`Boleta N° ${payment.invoices[i].invoices.number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
         }else{
-            doc.text(`Factura ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
+            doc.text(`Factura N° ${payment.invoices[i].invoices.number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
         }
 
         let agreements = 0
@@ -2928,20 +2941,19 @@ async function printVoucher(memberID,paymentID) {
             }
         }
 
-
-        doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal + agreements), pdfX + 500, pdfY)
+        doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal + agreements), pdfX + 300, pdfY)
         doc.text('$ ' + dot_separators(payment.invoices[i].amount), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
     }
 
     pdfY = 300
     
     doc.setFillColor(0, 0, 0)
-    doc.rect(pdfX + 490, pdfY, 290, 15, 'F')
+    doc.rect(pdfX + 345, pdfY, 200, 15, 'F')
 
     doc.setFontType('bold')
     doc.setFontSize(10)
     doc.setTextColor(255, 255, 255)
-    doc.text(`Total Pagado`, pdfX + 500, pdfY + 11)
+    doc.text(`Total Pagado`, pdfX + 350, pdfY + 11)
     doc.text('$ ' + dot_separators(payment.amount), doc.internal.pageSize.getWidth() - 40, pdfY + 11, 'right')
 
 
@@ -3061,6 +3073,55 @@ async function showSIIPDF(token) {
 
 async function sendData(type,memberID,invoiceID) {
 
+    
+    let memberData = await axios.post('/api/memberSingle', {id: memberID})
+    let member = memberData.data
+
+    let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
+    let invoice = invoiceData.data
+
+    if(invoice.invoiceSubTotal==0){
+        let generateDoc = await Swal.fire({
+            title: 'Generar documento',
+            customClass: 'swal-wide',
+            html: `El valor de consumo es 0, por lo que sólo se emitirá un comprobante<br/>¿Desea continuar?`,
+            showCloseButton: true,
+            showCancelButton: true,
+            showConfirmButton: true,
+            focusConfirm: false,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar'
+        })
+
+        if (generateDoc.value) {
+
+            let dteData = {
+                id: invoiceID,
+                type: 0,
+                number: 0,
+                seal: '',
+                token: '',
+                resolution: {
+                    fecha: '',
+                    numero: 0
+                }
+            }
+            
+            let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
+            loadingHandler('stop')
+
+            toastr.success('Documento almacenado correctamente')
+
+            printInvoicePortrait('pdf',member.type,member._id,invoiceID)
+
+            loadLectures(member)
+
+        }
+
+        return
+    }
+
+
     let generateDTE = await Swal.fire({
         title: '¿Está seguro de generar documento?',
         customClass: 'swal-wide',
@@ -3077,17 +3138,8 @@ async function sendData(type,memberID,invoiceID) {
         
         loadingHandler('start')
         
-        let memberData = await axios.post('/api/memberSingle', {id: memberID})
-        let member = memberData.data
-
-        let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
-        let invoice = invoiceData.data
-
         let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
         let lectures = lecturesData.data
-
-        console.log('invoice', invoice)
-        console.log('lectures', lectures)
 
         let parametersData = await axios.get('/api/parameters')
         let parameters = parametersData.data
@@ -3123,7 +3175,6 @@ async function sendData(type,memberID,invoiceID) {
             })
         }
         
-
         if(invoice.type==41){
 
             if(type=='personal'){
@@ -3826,7 +3877,6 @@ async function createPayment(memberID,paymentID) {
         //Carga de boletas adeudadas
         let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID, paymentID: paymentID})
         let invoicesDebt = invoicesDebtData.data
-        console.log(invoicesDebt)
         
         if(invoicesDebt.length>0){
             for(let i=0; i<invoicesDebt.length; i++){
@@ -3858,7 +3908,7 @@ async function createPayment(memberID,paymentID) {
         //Carga de boletas adeudadas
         let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
         let invoicesDebt = invoicesDebtData.data
-        console.log(invoicesDebt)
+        
         if(invoicesDebt.length>0){
             for(let i=0; i<invoicesDebt.length; i++){
                 let agreements = 0

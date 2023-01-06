@@ -32,7 +32,7 @@
         </button>
     </div>
 
-    <div class="col-md-2">
+    <div class="col-md-1">
         <button id="updatePayment" style="border-radius: 5px;" class="btn btn-primary btn-block" disabled>
             <i class="fas fa-dollar-sign"></i> PAGOS
         </button>
@@ -50,10 +50,19 @@
         </select>
     </div>
     
-    <div class="col-md-3">
+    <div class="col-md-2">
         <button style="border-radius: 5px;" class="btn btn-primary btn-block"
             id="searchMembers">
             <i class="fas fa-search"></i> FILTRAR
+        </button>
+    </div>
+    <div class="col-md-1">
+        <input id="searchNumber" class="form-control" placeholder="N°"/>
+    </div>
+    <div class="col-md-2">
+        <button style="border-radius: 5px;" class="btn btn-primary btn-block"
+            id="searchInvoice">
+            <i class="fas fa-search"></i> Buscar por Boleta
         </button>
     </div>
     <div class="col-md-12 table-responsive">
@@ -67,10 +76,10 @@
                         <th style="background-color: #3B6FC9">TIPO</th>
                         <th style="background-color: #3B6FC9">NOMBRE</th>
                         <th style="background-color: #3B6FC9">SECTOR</th>
-                        <th style="background-color: #3B6FC9">SUBSIDIO</th>
-                        <th style="background-color: #3B6FC9">ÚLTIMA LECTURA</th>
+                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">SUBSIDIO</th>
+                        <!--<th style="background-color: #3B6FC9">ÚLTIMA LECTURA</th>
                         <th style="background-color: #3B6FC9;
-                            border-top-right-radius: 5px;">ESTADO DEUDA</th>
+                            border-top-right-radius: 5px;">ESTADO DEUDA</th>-->
                     </tr>
                 </thead>
             </table>
