@@ -848,7 +848,7 @@ const sendEmail = async ({ // sendEmail
             `,*/
 
         let mailData = {
-            from: 'zeosonic@gmail.com', //process.env.EMAIL_SENDER,
+            from: process.env.EMAIL_SENDER, //process.env.EMAIL_SENDER,
             to: [memberMail],//[clientMail],
             subject: memberSubject,
             //text: "Hello world?",

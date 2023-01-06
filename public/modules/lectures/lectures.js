@@ -2928,8 +2928,14 @@ async function printVoucher(memberID,paymentID) {
     doc.setTextColor(0, 0, 0)
     for(let i=0; i<payment.invoices.length; i++){
         pdfY += 13
+
+        number = ''
+        if(payment.invoices[i].invoices.number){
+            number = `N° ${payment.invoices[i].invoices.number}`
+        }
+
         if(payment.invoices[i].invoices.type==41){
-            doc.text(`Boleta N° ${payment.invoices[i].invoices.number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
+            doc.text(`Boleta ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
         }else{
             doc.text(`Factura N° ${payment.invoices[i].invoices.number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
         }
