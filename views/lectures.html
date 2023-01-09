@@ -37,9 +37,12 @@
             <i class="fas fa-dollar-sign"></i> PAGOS
         </button>
     </div>
-    <!--<div class="col-md-2">
+    <div class="col-md-2">
         <button class="btn btn-sm btn-danger" onclick="printInvoice('pdf','personal','62631b789666da52dcc90718','63b5c5af92af4e044d4cb385')"><i class="far fa-eye" style="font-size: 14px;" aria-hidden="true"></i></button>
-    </div>-->
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-sm btn-warning" onclick="printInvoicePortrait('pdf','personal','62631b789666da52dcc90718','63b5c5af92af4e044d4cb385')"><i class="far fa-eye" style="font-size: 14px;" aria-hidden="true"></i></button>
+    </div>
     <div class="col-md-2" style="text-align: right;">
         <label style="font-size: 14px;">Selecciona el sector</label>
     </div>
@@ -172,11 +175,13 @@
         </div>
     </div>
 
-
     {{#extend "js"}}
     <script src="/public/modules/default/logoWallImg.js"></script>
     <script src="/public/modules/default/logoImg.js"></script>
+    <script src="/public/modules/default/logoWallImg90.js"></script>
+    <script src="/public/modules/default/logoImg90.js"></script>
     <script src="/public/modules/default/test2D.js"></script>
     <script src="/public/js/jspdf.plugin.autotable.js"></script>
     <script src="/public/modules/lectures/lectures.js"></script>
+    <script src="/public/js/printDocuments.js"></script>
     {{/extend}}
