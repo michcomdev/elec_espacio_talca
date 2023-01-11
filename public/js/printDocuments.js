@@ -35,8 +35,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     //let doc = new jsPDF('l', 'pt', [140, 251.9])
     //let doc = new jsPDF('l', 'pt', [396, 612])
     
-    console.log('width', doc.internal.pageSize.getWidth())
-    console.log('height', doc.internal.pageSize.getHeight())
+    let text = '', textMaxWidth = 0
     
     let pdfX = 20
     let pdfY = 582
@@ -45,9 +44,13 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     doc.addImage(logoWallImg90, 'PNG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight()) //Fondo
     doc.addImage(logoImg90, 'PNG', 20, pdfY - 159, 60, 77)
     pdfX += 60
-    doc.text(`COMITÉ DE AGUA POTABLE RURAL`, pdfX + 23, pdfY, 'left', 90)
-    doc.text(`Y SERVICIOS SANITARIOS LOS CRISTALES`, pdfX + 36, pdfY, 'left', 90)
-    doc.text(`Los Cristales S/N - Curicó`, pdfX + 49, pdfY, 'left', 90)
+    textMaxWidth = 252 //Zona título
+    text = `COMITÉ DE AGUA POTABLE RURAL`
+    doc.text(text, pdfX + 23, offsetY('center', pdfY + 6, textMaxWidth, text, doc), 'left', 90)
+    text = `Y SERVICIOS SANITARIOS LOS CRISTALES`
+    doc.text(text, pdfX + 36, offsetY('center', pdfY + 6, textMaxWidth, text, doc), 'left', 90)
+    text = `Los Cristales S/N - Curicó`
+    doc.text(text, pdfX + 49, offsetY('center', pdfY + 6, textMaxWidth, text, doc), 'left', 90)
 
     
     pdfX = 35
@@ -55,28 +58,33 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     
     doc.setDrawColor(249, 51, 6)
     doc.setLineWidth(3)
-    doc.line(pdfX - 10, pdfY - 232, pdfX - 10, pdfY - 30)//Línea Superior
-    doc.line(pdfX + 60, pdfY - 232, pdfX + 60, pdfY - 30)//Línea Inferior
-    doc.line(pdfX - 10, pdfY - 31, pdfX + 60, pdfY - 31)//Línea Izquierda
-    doc.line(pdfX - 10, pdfY - 231, pdfX + 60, pdfY - 231)//Línea Derecha
+    doc.line(pdfX - 10, pdfY - 231, pdfX - 10, pdfY - 29)//Línea Superior
+    doc.line(pdfX + 60, pdfY - 231, pdfX + 60, pdfY - 29)//Línea Inferior
+    doc.line(pdfX - 10, pdfY - 30, pdfX + 60, pdfY - 30)//Línea Izquierda
+    doc.line(pdfX - 10, pdfY - 230, pdfX + 60, pdfY - 230)//Línea Derecha
     
     pdfY -= 30
     doc.setFontSize(13)
     doc.setTextColor(249, 51, 6)
-    doc.text('R.U.T: 71.569.700-9', pdfX + 5, pdfY, 'left', 90)
-    doc.text(docName1, pdfX + 20, pdfY, 'left', 90)
-    doc.text(docName2, pdfX + 35, pdfY, 'left', 90)
+
+    textMaxWidth = 200 //Zona número boleta
+    text = 'R.U.T: 71.569.700-9'
+    doc.text(text, pdfX + 5, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+    doc.text(docName1, pdfX + 20, offsetY('center', pdfY, textMaxWidth, docName1, doc), 'left', 90)
+    doc.text(docName2, pdfX + 35, offsetY('center', pdfY, textMaxWidth, docName2, doc), 'left', 90)
 
     doc.setFontType('bold')
     if(invoice.number ||  invoice.number==0){
         if(invoice.number!=0){
-            doc.text('N° ' + invoice.number, pdfX + 50, pdfY, 'left', 90)
+            text = 'N° ' + invoice.number
+            doc.text(text, pdfX + 50, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
         }
     }else{
-        doc.text('N° -', pdfX + 50, pdfY, 'left', 90)
+        text = 'N° -'
+        doc.text(text, pdfX + 50, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
     }
     doc.setFontSize(11)
-    doc.text(siiValue, pdfX + 75, pdfY, 'left', 90)
+    doc.text(siiValue, pdfX + 75, offsetY('center', pdfY, textMaxWidth, siiValue, doc), 'left', 90)
 
     doc.setDrawColor(0, 0, 0)
     doc.setTextColor(0, 0, 0)
@@ -159,25 +167,34 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     doc.setFontSize(10)
     doc.setFontType('normal')
 
-    doc.text(dot_separators(invoice.lectureActual), pdfX + 20, pdfY - 250, 'left', 90)
-    doc.text(dot_separators(invoice.lectureLast), pdfX + 33, pdfY - 250, 'left', 90)
+    text = dot_separators(invoice.lectureActual)
+    doc.text(text, pdfX + 20, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    text = dot_separators(invoice.lectureLast)
+    doc.text(text, pdfX + 33, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
 
     if(invoice.lectureNewStart!==undefined){
-        doc.text(dot_separators(invoice.lectureNewStart), pdfX + 46, pdfY - 250, 'left', 90)
-        doc.text(dot_separators(invoice.lectureNewEnd), pdfX + 59, pdfY - 250, 'left', 90)
+        text = dot_separators(invoice.lectureNewStart)
+        doc.text(text, pdfX + 46, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        text = dot_separators(invoice.lectureNewEnd)
+        doc.text(text, pdfX + 59, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     }
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.lectureResult), pdfX + 46 + pdfXLectureNew, pdfY - 250, 'left', 90)
+    text = dot_separators(invoice.lectureResult)
+    doc.text(text, pdfX + 46 + pdfXLectureNew, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     doc.setFontType('normal')
     
-    doc.text(dot_separators(parameters.consumptionLimit), pdfX + 98, pdfY - 250, 'left', 90)
+    text = dot_separators(parameters.consumptionLimit)
+    doc.text(text, pdfX + 98, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     if(invoice.lectureResult>parameters.consumptionLimit){
-        doc.text(dot_separators(invoice.lectureResult-parameters.consumptionLimit), pdfX + 111, pdfY - 250, 'left', 90)
+        text = dot_separators(invoice.lectureResult-parameters.consumptionLimit)
+        doc.text(text, pdfX + 111, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     }else{
-        doc.text("0", pdfX + 111, pdfY - 250, 'left', 90)
+        text = "0"
+        doc.text(text, pdfX + 111, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     }
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.lectureResult), pdfX + 124, pdfY - 250, 'left', 90) //Consultar diferencia facturado vs calculado
+    text = dot_separators(invoice.lectureResult)
+    doc.text(text, pdfX + 124, offsetY('right', pdfY - 250, null, text, doc), 'left', 90) //Consultar diferencia facturado vs calculado
 
 
 
@@ -254,36 +271,44 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     doc.setFontSize(10)
     doc.setFontType('normal')
 
-    doc.text(dot_separators(invoice.charge), pdfX + 20, pdfY - 250, 'left', 90)
-    doc.text(dot_separators(invoice.lectureResult * invoice.meterValue), pdfX + 33, pdfY - 250, 'left', 90)
+    text = dot_separators(invoice.charge)
+    doc.text(text, pdfX + 20, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    text = dot_separators(invoice.lectureResult * invoice.meterValue)
+    doc.text(text, pdfX + 33, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
 
     pdfYTemp = 0
     if (invoice.subsidyPercentage > 0) {
         pdfYTemp = 13
         doc.setTextColor(249, 51, 6)
-        doc.text('-' + dot_separators(invoice.subsidyValue), pdfX + 33 + pdfYTemp, pdfY - 250, 'left', 90)
+        text = '-' + dot_separators(invoice.subsidyValue)
+        doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     }
     doc.setTextColor(0, 0, 0)
 
     if (invoice.consumptionLimitTotal > 0) {
         pdfYTemp += 13
-        doc.text(dot_separators(invoice.consumptionLimitTotal), pdfX + 33 + pdfYTemp, pdfY - 250, 'left', 90)
+        text = dot_separators(invoice.consumptionLimitTotal)
+        doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     }
     if(invoice.sewerage){
         pdfYTemp += 13
-        doc.text(dot_separators(invoice.sewerage), pdfX + 33 + pdfYTemp, pdfY - 250, 'left', 90)
+        text = dot_separators(invoice.sewerage)
+        doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     }
     if(invoice.debtFine){
         pdfYTemp += 13
-        doc.text(dot_separators(invoice.debtFine), pdfX + 33 + pdfYTemp, pdfY - 250, 'left', 90)
+        text = dot_separators(invoice.debtFine)
+        doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     }
     if(invoice.fine){
         pdfYTemp += 13
-        doc.text(dot_separators(invoice.fine), pdfX + 33 + pdfYTemp, pdfY - 250, 'left', 90)
+        text = dot_separators(invoice.fine)
+        doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     }
 
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.invoiceSubTotal), pdfX + 111, pdfY - 250, 'left', 90)
+    text = dot_separators(invoice.invoiceSubTotal)
+    doc.text(text, pdfX + 111, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     value1 = invoice.invoiceSubTotal
 
     index = 85 + 39
@@ -297,7 +322,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
             if(i+1==invoice.agreements.length && totalAgreement > 0){
                 index += 13
                 doc.setFontType('bold')
-                doc.text(dot_separators(totalAgreement), pdfX + index, pdfY - 250, 'left', 90)
+                text = dot_separators(totalAgreement)
+                doc.text(text, pdfX + index, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
                 index += 13
                 value2 = totalAgreement
             }
@@ -305,7 +331,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     }
 
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.invoiceDebt), pdfX + index + 13, pdfY - 250, 'left', 90)
+    text = dot_separators(invoice.invoiceDebt)
+    doc.text(text, pdfX + index + 13, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     value3 = invoice.invoiceDebt
 
     //////TOTALES Y CÓDIGO SII//////
@@ -317,21 +344,26 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     doc.text('Valor Tributable', pdfX + 130, pdfY, 'left', 90)
     doc.text('Valor No Tributable', pdfX + 143, pdfY, 'left', 90)
     doc.text('Saldo Anterior', pdfX + 156, pdfY, 'left', 90)
-    
-    doc.text('+ $ ', pdfX + 130, pdfY - 180, 'left', 90)
-    doc.text('+ $ ', pdfX + 143, pdfY - 180, 'left', 90)
-    doc.text('+ $ ', pdfX + 156, pdfY - 180, 'left', 90)
-    doc.text(dot_separators(value1), pdfX + 130, pdfY - 250, 'left', 90)
-    doc.text(dot_separators(value2), pdfX + 143, pdfY - 250, 'left', 90)
-    doc.text(dot_separators(value3), pdfX + 156, pdfY - 250, 'left', 90)
+    textMaxWidth = 30
+    doc.text('+ $ ', pdfX + 130, offsetY('center', pdfY - 160, textMaxWidth, text, doc), 'left', 90)
+    doc.text('+ $ ', pdfX + 143, offsetY('center', pdfY - 160, textMaxWidth, text, doc), 'left', 90)
+    doc.text('+ $ ', pdfX + 156, offsetY('center', pdfY - 160, textMaxWidth, text, doc), 'left', 90)
+    text = dot_separators(value1)
+    doc.text(text, pdfX + 130, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    text = dot_separators(value2)
+    doc.text(text, pdfX + 143, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    text = dot_separators(value3)
+    doc.text(text, pdfX + 156, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     
     doc.setFontSize(12)
     doc.setTextColor(255, 255, 255)
     doc.text('TOTAL A PAGAR', pdfX + 173, pdfY, 'left', 90)
     doc.text('FECHA VENCIMIENTO', pdfX + 188, pdfY, 'left', 90)
-    doc.text('= $ ', pdfX + 173, pdfY - 180, 'left', 90)
-    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 173, pdfY - 250, 'left', 90)
-    doc.text(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 188, pdfY - 250, 'left', 90)
+    doc.text('= $ ', pdfX + 173, offsetY('center', pdfY - 160, textMaxWidth, text, doc), 'left', 90)
+    text = dot_separators(invoice.invoiceTotal)
+    doc.text(text, pdfX + 173, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    text = moment(invoice.dateExpire).utc().format('DD/MM/YYYY')
+    doc.text(text, pdfX + 188, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
 
     doc.setFontSize(8)
     doc.setFontType('normal')
@@ -341,36 +373,40 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         doc.addImage(test2DImg, 'PNG', pdfX + 220, pdfY, 260, 106, null, null, 90)
     }else if(docType=='pdf'){
         doc.setFillColor(255, 255, 255)
-        doc.rect(pdfX + 220, pdfY - 257, 106, 206, 'F')
+        doc.rect(pdfX + 220, pdfY - 260, 106, 260, 'F')
         if(invoice.seal){
-            doc.addImage(invoice.seal, 'PNG', pdfX + 220, pdfY, 260, 106, null, null, 90)
+            doc.addImage(invoice.seal, 'PNG', pdfX + 326, pdfY - 106, 260, 106, null, null, 90)
         }
+        textMaxWidth = 260
         if(docName2!='COMPROBANTE DE AVISO'){
-            doc.text('Timbre Electrónico S.I.I. ', pdfX + 335, pdfY - 130, 'left', 90)
-            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 345, pdfY - 130, 'left', 90)
+            text = 'Timbre Electrónico S.I.I.'
+            doc.text(text, pdfX + 335, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+            text = `Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`
+            doc.text(text, pdfX + 345, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
         }else{
-            doc.text('Documento informativo, no válido como boleta', pdfX + 335, pdfY - 130, 'left', 90)
+            text = 'Documento informativo, no válido como boleta'
+            doc.text(text, pdfX + 335, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
         }
     }
 
 
-/*
+
 
     ///////GRÁFICO CONSUMOS///////
 
-    pdfX = 30
-    pdfY += 150
+    pdfX += 150
+    pdfY = 582
     doc.setFontSize(9)
     doc.setFontType('bold')
     doc.setTextColor(0, 0, 0)
-    doc.text('Su consumo en m3 durante los últimos 13 meses fue:', pdfX, pdfY)
+    doc.text('Su consumo en m3 durante los últimos 13 meses fue:', pdfX, pdfY, 'left', 90)
 
 
     doc.setDrawColor(0, 0, 0)
     doc.setLineWidth(1)
-    pdfX += 10
-    doc.line(pdfX, pdfY + 10, pdfX, pdfY + 120)//Línea Izquierda
-    doc.line(pdfX, pdfY + 120, pdfX + 250, pdfY + 120)//Línea Inferior
+    pdfY -= 10
+    doc.line(pdfX + 10, pdfY, pdfX + 120, pdfY)//Línea Izquierda
+    doc.line(pdfX + 120, pdfY , pdfX + 120, pdfY - 250)//Línea Inferior
 
     //DEFINICIÓN DE LECTURAS A MOSTRAR (MÁXIMO 13)
     let lastInvoices = [], flag = 0, maxValue = 0
@@ -396,85 +432,100 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     }
     let meterPoints = 100 / maxValue //Puntos en PDF por mt3
     
-    pdfY += 25
+    pdfX += 25
     doc.setFontSize(7)
     doc.setFontType('normal')
 
     doc.setDrawColor(199, 199, 199)
 
     if (maxValue < 5) {
-        pdfY -= 5
+        pdfX -= 5
+
         //Línea límite según lectura máxima
-        doc.text(maxValue.toString(), pdfX - 2, pdfY, 'right')
-        doc.line(pdfX, pdfY, pdfX + 250, pdfY)
+        text = maxValue.toString()
+        doc.text(text, pdfX + 2, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+        doc.line(pdfX, pdfY, pdfX, pdfY - 250)
 
         if (maxValue == 4) {
-            doc.text('3', pdfX - 2, (pdfY + 2) + 25, 'right')
-            doc.text('2', pdfX - 2, (pdfY + 2) + 50, 'right')
-            doc.text('1', pdfX - 2, (pdfY + 2) + 77, 'right')
-            doc.line(pdfX, pdfY + 25, pdfX + 250, pdfY + 25)
-            doc.line(pdfX, pdfY + 50, pdfX + 250, pdfY + 50)
-            doc.line(pdfX, pdfY + 75, pdfX + 250, pdfY + 75)
+            text = '3'
+            doc.text(text, (pdfX + 2) + 25, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            text = '2'
+            doc.text(text, (pdfX + 2) + 50, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            text = '1'
+            doc.text(text, (pdfX + 2) + 77, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            doc.line(pdfX + 25, pdfY, pdfX + 25, pdfY - 250)
+            doc.line(pdfX + 50, pdfY, pdfX + 50, pdfY - 250)
+            doc.line(pdfX + 75, pdfY, pdfX + 75, pdfY - 250)
 
         } else if (maxValue == 3) {
-            doc.text('2', pdfX - 2, pdfY + 34, 'right')
-            doc.text('1', pdfX - 2, pdfY + 69, 'right')
-            doc.line(pdfX, pdfY + 34, pdfX + 250, pdfY + 34)
-            doc.line(pdfX, pdfY + 69, pdfX + 250, pdfY + 69)
+            text = '2'
+            doc.text(text, (pdfX + 2) + 34, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            text = '1'
+            doc.text(text, (pdfX + 2) + 69, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            doc.line(pdfX + 34, pdfY, pdfX + 34, pdfY - 250)
+            doc.line(pdfX + 69, pdfY, pdfX + 69, pdfY - 250)
         } else if (maxValue == 2) {
-            doc.text('1', pdfX - 2, pdfY + 51, 'right')
-            doc.line(pdfX, pdfY + 51, pdfX + 250, pdfY + 51)
+            text = '1'
+            doc.text(text, (pdfX + 2) + 51, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            doc.line(pdfX + 51, pdfY, pdfX + 51, pdfY - 250)
         }
 
-        pdfY += 102
+        pdfX += 102
 
     } else if (maxValue % 4 == 0) {
-        pdfY -= 5
+        pdfX -= 5
         //Línea límite según lectura máxima
-        doc.text(maxValue.toString(), pdfX - 2, pdfY, 'right')
-        doc.line(pdfX, pdfY, pdfX + 250, pdfY)
+        text = maxValue.toString()
+        doc.text(text, pdfX, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+        doc.line(pdfX, pdfY, pdfX, pdfY - 250)
 
         let min = parseInt(maxValue / 4)
-        doc.text((min * 3).toString(), pdfX - 2, pdfY + (min * meterPoints), 'right')
-        doc.text((min * 2).toString(), pdfX - 2, pdfY + (min * 2 * meterPoints), 'right')
-        doc.text((min).toString(), pdfX - 2, pdfY + (min * 3 * meterPoints), 'right')
+        text = (min * 3).toString()
+        doc.text(text, pdfX + (min * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+        text = (min * 2).toString()
+        doc.text(text, pdfX + (min * 2 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+        text = (min).toString()
+        doc.text(text, pdfX + (min * 3 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
 
-        doc.line(pdfX, pdfY + (min * meterPoints), pdfX + 250, pdfY + (min * meterPoints))
-        doc.line(pdfX, pdfY + (min * 2 * meterPoints), pdfX + 250, pdfY + (min * 2 * meterPoints))
-        doc.line(pdfX, pdfY + (min * 3 * meterPoints), pdfX + 250, pdfY + (min * 3 * meterPoints))
+        doc.line(pdfX + (min * meterPoints), pdfY, pdfX + (min * meterPoints), pdfY - 250)
+        doc.line(pdfX + (min * 2 * meterPoints), pdfY, pdfX + (min * 2 * meterPoints), pdfY - 250)
+        doc.line(pdfX + (min * 3 * meterPoints), pdfY, pdfX + (min * 3 * meterPoints), pdfY - 250)
 
-        pdfY += 102
+        pdfX += 102
 
     } else {
-        pdfY -= 5
+        pdfX -= 5
         //Línea límite según lectura máxima
-        doc.text(maxValue.toString(), pdfX - 2, pdfY + (102 - (maxValue * meterPoints)), 'right')
-        doc.line(pdfX, pdfY + (100 - (maxValue * meterPoints)), pdfX + 250, pdfY + (100 - (maxValue * meterPoints)))
+        text = maxValue.toString()
+        doc.text(text, pdfX + (102 - (maxValue * meterPoints)), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+        doc.line(pdfX + (100 - (maxValue * meterPoints)), pdfY, pdfX  + (100 - (maxValue * meterPoints)), pdfY - 250)
 
         let min = parseInt(maxValue / 4)
 
-        pdfY += 102
+        pdfX += 102
 
-        doc.text((min * 4).toString(), pdfX - 2, (pdfY + 2) - (min * 4 * meterPoints), 'right')
-        doc.text((min * 3).toString(), pdfX - 2, (pdfY + 2) - (min * 3 * meterPoints), 'right')
-        doc.text((min * 2).toString(), pdfX - 2, (pdfY + 2) - (min * 2 * meterPoints), 'right')
-        doc.text((min).toString(), pdfX - 2, (pdfY + 2) - (min * meterPoints), 'right')
+        text = (min * 4).toString()
+        doc.text(text, (pdfX + 2) - (min * 4 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+        text = (min * 3).toString()
+        doc.text(text, (pdfX + 2) - (min * 3 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+        text = (min * 2).toString()
+        doc.text(text, (pdfX + 2) - (min * 2 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+        text = (min).toString()
+        doc.text(text, (pdfX + 2) - (min * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
 
-        doc.line(pdfX, pdfY - (min * meterPoints), pdfX + 250, pdfY - (min * meterPoints))//Línea Inferior
-        doc.line(pdfX, pdfY - (min * 2 * meterPoints), pdfX + 250, pdfY - (min * 2 * meterPoints))//Línea Inferior
-        doc.line(pdfX, pdfY - (min * 3 * meterPoints), pdfX + 250, pdfY - (min * 3 * meterPoints))//Línea Inferior
-        doc.line(pdfX, pdfY - (min * 4 * meterPoints), pdfX + 250, pdfY - (min * 4 * meterPoints))//Línea Inferior
+        doc.line(pdfX - (min * meterPoints), pdfY, pdfX - (min * meterPoints), pdfY - 250)//Línea Inferior
+        doc.line(pdfX - (min * 2 * meterPoints), pdfY, pdfX - (min * 2 * meterPoints), pdfY - 250)//Línea Inferior
+        doc.line(pdfX - (min * 3 * meterPoints), pdfY, pdfX - (min * 3 * meterPoints), pdfY - 250)//Línea Inferior
+        doc.line(pdfX - (min * 4 * meterPoints), pdfY, pdfX - (min * 4 * meterPoints), pdfY - 250)//Línea Inferior
     }
 
-    doc.text('0', pdfX - 2, pdfY, 'right')
+    text = '0'
+    doc.text(text, pdfX, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
 
     //GRÁFICO DE CONSUMOS
-    pdfY = 435
-    pdfX = 263
-    //for(let i=lastInvoices.length; i>0; i--){
-    //for(let i=13; i>0; i--){ Max month test
+    pdfX = 435
+    pdfY = 338
     doc.setFontSize(8)
-
 
     for (let i = 0; i < lastInvoices.length; i++) {
 
@@ -485,36 +536,41 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         }
 
         let offset = 100 - (lastInvoices[i].lectureResult * meterPoints) //Determina posición inicial respecto al máximo del gráfico
-        doc.rect(pdfX, pdfY + offset, 11, 99 - offset, 'F')
+        doc.rect(pdfX + offset, pdfY, 99 - offset, 11, 'F')
+        
         //Posición X (descendente)
         //Posición Y suma offset según lectura
         //11 = Ancho ~ 99 - offset = Largo
-        doc.text(lastInvoices[i].lectureResult.toString(), pdfX + 5, pdfY + offset - 5, 'center')
-        doc.text(getMonthShortString(lastInvoices[i].lectures.month), pdfX + 7, pdfY + 108, 'center')
-        pdfX -= 18
+        textMaxWidth = 17 //Máximo de texto entre barras
+        text = lastInvoices[i].lectureResult.toString()
+        doc.text(text, pdfX + offset - 5, offsetY('center', (pdfY + 14), textMaxWidth, text, doc), 'left', 90)
+        text = getMonthShortString(lastInvoices[i].lectures.month)
+        doc.text(text, pdfX + 108, offsetY('center', (pdfY + 14), textMaxWidth, text, doc), 'left', 90)
+        pdfY += 18
     }
 
-    pdfX = 30
-    pdfY += 200
+
+    pdfX = 635
+    pdfY = 582
     doc.setFontSize(9)
     doc.setFontType('bold')
-    //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
+    
     if(invoice.text1){
         doc.setTextColor(249, 51, 6)
-        doc.text(invoice.text1, pdfX, pdfY, {maxWidth: doc.internal.pageSize.getWidth() - 10})
+        doc.text(invoice.text1, pdfX, pdfY, {maxWidth: doc.internal.pageSize.getHeight() - 30, angle: 90})
     }
     if(invoice.text2){
         doc.setTextColor(0, 0, 0)
-        doc.text(invoice.text2, pdfX, pdfY + 12, {maxWidth: doc.internal.pageSize.getWidth() - 10})
-        doc.text(invoice.text3, pdfX, pdfY + 24, {maxWidth: doc.internal.pageSize.getWidth() - 10})
+        doc.text(invoice.text2, pdfX + 12, pdfY, {maxWidth: doc.internal.pageSize.getHeight() - 30, angle: 90})
+        doc.text(invoice.text3, pdfX + 24, pdfY, {maxWidth: doc.internal.pageSize.getHeight() - 30, angle: 90})
     }
 
     doc.setFillColor(26, 117, 187)
-    doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
+    doc.rect(pdfX + 97, pdfY - 550, 17, doc.internal.pageSize.getHeight() - 57, 'F')
 
     doc.setTextColor(255, 255, 255)
-    doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
-    */
+    doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, doc.internal.pageSize.getWidth() - 48, pdfY, 'left', 90)
+    
     if (sendEmail) {
         loadingHandler('stop')
 
@@ -565,8 +621,6 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
             try {
                 loadingHandler('start')
                 
-                console.log($("#sendEmail").val(),$("#sendSubject").val(),$("#sendText").val())
-
                 let sendPdfRes = await axios.post('api/sendPdf', {
                     memberID: member._id,
                     memberName: memberName,
@@ -637,10 +691,7 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     //let doc = new jsPDF('l', 'pt', [140, 251.9])
     //let doc = new jsPDF('l', 'pt', [396, 612])
     
-    console.log('width', doc.internal.pageSize.getWidth())
-    console.log('height', doc.internal.pageSize.getHeight())
     
-
     let pdfX = 150
     let pdfY = 20
 
@@ -1176,8 +1227,6 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
             try {
                 loadingHandler('start')
                 
-                console.log($("#sendEmail").val(),$("#sendSubject").val(),$("#sendText").val())
-
                 let sendPdfRes = await axios.post('api/sendPdf', {
                     memberID: member._id,
                     memberName: memberName,
@@ -1595,4 +1644,13 @@ async function printVoucher(memberID,paymentID) {
     //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
 
     loadingHandler('stop')
+}
+
+
+function offsetY(align, originalPosition, textMaxWidth, text, doc){
+    if(align=='center'){
+        return originalPosition - ((textMaxWidth - (doc.getStringUnitWidth(text) * doc.internal.getFontSize())) / 2)
+    }else if(align=='right'){
+        return originalPosition + (doc.getStringUnitWidth(text) * doc.internal.getFontSize())
+    }
 }

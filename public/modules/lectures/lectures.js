@@ -31,7 +31,7 @@ $(document).ready(async function () {
     getParameters()
 
     chargeMembersTable()
-    printInvoice('pdf','personal','62631b789666da52dcc90718','63b5c5af92af4e044d4cb385')
+    //printInvoice('pdf','personal','62631b789666da52dcc90718','63b5c5af92af4e044d4cb385')
 })
 
 async function getParameters() {
@@ -244,7 +244,7 @@ async function loadLectures(member) {
             invoiceID = lectures[i].invoice._id
             
             if(lectures[i].invoice.number || lectures[i].invoice.number==0){
-                //btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>`
+                btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>`
                 btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>${lectures[i].invoice.number}</button>`
                 //btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
                 btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
@@ -303,19 +303,28 @@ async function loadLectures(member) {
                     ${btnGenerate}
                 </td>
                 <td style="text-align: center;">
-                    ${btnSII}
+                    ${btnPrint}
                 </td>
                 <td style="text-align: center;">
                     ${btnEmail}
-                </td>
-                <td style="text-align: center;">
-                    ${btnAnnulment}
                 </td>
                 <td style="text-align: center;">
                     ${btnAnnulmentHistory}
                 </td>
             </tr>
         `)
+
+        /*
+        <td style="text-align: center;">
+            ${btnSII}
+        </td>
+        <td style="text-align: center;">
+            ${btnEmail}
+        </td>
+        <td style="text-align: center;">
+            ${btnAnnulment}
+        </td> 
+        */
     }
 
     /*$('#tableLectures tbody').off("click")
@@ -456,9 +465,10 @@ function createModalBody(member) {
                     <th style="text-align: center; background-color: #3B6FC9;">Crear/Editar</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
                     <th style="text-align: center; background-color: #3B6FC9;">PDF Boleta/Fact</th>
-                    <th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">Imprimir</th>
+                    <!--<th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>-->
                     <th style="text-align: center; background-color: #3B6FC9;">Enviar</th>
-                    <th style="text-align: center; background-color: #3B6FC9;">Anular</th>
+                    <!--<th style="text-align: center; background-color: #3B6FC9;">Anular</th>-->
                     <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Anulados</th>
                 </tr>
             </thead>
