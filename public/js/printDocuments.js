@@ -1171,12 +1171,12 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
     if(invoice.text1){
         doc.setTextColor(249, 51, 6)
-        doc.text(invoice.text1, pdfX, pdfY, {maxWidth: doc.internal.pageSize.getWidth() - 10})
+        doc.text(invoice.text1, pdfX, pdfY, {maxWidth: doc.internal.pageSize.getWidth() - 30})
     }
     if(invoice.text2){
         doc.setTextColor(0, 0, 0)
-        doc.text(invoice.text2, pdfX, pdfY + 12, {maxWidth: doc.internal.pageSize.getWidth() - 10})
-        doc.text(invoice.text3, pdfX, pdfY + 24, {maxWidth: doc.internal.pageSize.getWidth() - 10})
+        doc.text(invoice.text2, pdfX, pdfY + 12, {maxWidth: doc.internal.pageSize.getWidth() - 30})
+        doc.text(invoice.text3, pdfX, pdfY + 24, {maxWidth: doc.internal.pageSize.getWidth() - 30})
     }
 
     doc.setFillColor(26, 117, 187)
