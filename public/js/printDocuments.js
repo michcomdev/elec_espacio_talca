@@ -1,4 +1,4 @@
-async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
+async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     loadingHandler('start')
     
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
@@ -31,7 +31,14 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
         siiValue = ''
     }
 
-    let doc = new jsPDF('l', 'pt', 'letter')
+    let pageFormat = 'letter', orientation = 'l', valueWall = 1
+    if(letter){
+        pageFormat = [1224, 792]
+        orientation = 'p'
+        valueWall = 2
+    }
+    console.log(pageFormat)
+    let doc = new jsPDF(orientation, 'pt', pageFormat)
     //let doc = new jsPDF('l', 'pt', [140, 251.9])
     //let doc = new jsPDF('l', 'pt', [396, 612])
     
@@ -41,7 +48,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     let pdfY = 582
 
     doc.setFontSize(12)
-    doc.addImage(logoWallImg90, 'PNG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight()) //Fondo
+    doc.addImage(logoWallImg90, 'PNG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight() / valueWall) //Fondo
     doc.addImage(logoImg90, 'PNG', 20, pdfY - 159, 60, 77)
     pdfX += 60
     textMaxWidth = 252 //Zona título
@@ -557,16 +564,17 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail) {
     
     if(invoice.text1){
         doc.setTextColor(249, 51, 6)
-        doc.text(invoice.text1, pdfX, pdfY, {maxWidth: doc.internal.pageSize.getHeight() - 30, angle: 90})
+        doc.text(invoice.text1, pdfX, pdfY, {maxWidth: (doc.internal.pageSize.getHeight() / valueWall) - 30, angle: 90})
     }
     if(invoice.text2){
         doc.setTextColor(0, 0, 0)
-        doc.text(invoice.text2, pdfX + 12, pdfY, {maxWidth: doc.internal.pageSize.getHeight() - 30, angle: 90})
-        doc.text(invoice.text3, pdfX + 24, pdfY, {maxWidth: doc.internal.pageSize.getHeight() - 30, angle: 90})
+        doc.text(invoice.text2, pdfX + 12, pdfY, {maxWidth: (doc.internal.pageSize.getHeight() / valueWall) - 30, angle: 90})
+        doc.text(invoice.text3, pdfX + 24, pdfY, {maxWidth: (doc.internal.pageSize.getHeight() / valueWall) - 30, angle: 90})
     }
 
     doc.setFillColor(26, 117, 187)
-    doc.rect(pdfX + 97, pdfY - 550, 17, doc.internal.pageSize.getHeight() - 57, 'F')
+    //doc.rect(pdfX + 97, pdfY - 550, 17, doc.internal.pageSize.getHeight() - 57, 'F')
+    doc.rect(pdfX + 97, pdfY - 550, 17, pdfY - 28, 'F')
 
     doc.setTextColor(255, 255, 255)
     doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, doc.internal.pageSize.getWidth() - 48, pdfY, 'left', 90)

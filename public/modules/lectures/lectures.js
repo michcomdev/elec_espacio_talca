@@ -234,7 +234,7 @@ async function loadLectures(member) {
     for (i = 0; i < lectures.length; i++) {
 
         let subtotal = 0, total = 0
-        let btn = '', btnPrint = '', btnGenerate = '', btnSII = '', btnEmail = '', btnAnnulment = '', btnAnnulmentHistory = ''
+        let btn = '', btnPrint = '', btnPrint2 = '', btnGenerate = '', btnSII = '', btnEmail = '', btnAnnulment = '', btnAnnulmentHistory = ''
         let invoiceID = 0
         if (lectures[i].invoice) {
             subtotal = dot_separators(lectures[i].invoice.invoiceSubTotal)
@@ -244,7 +244,8 @@ async function loadLectures(member) {
             invoiceID = lectures[i].invoice._id
             
             if(lectures[i].invoice.number || lectures[i].invoice.number==0){
-                btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>`
+                btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i> A5</button>`
+                btnPrint2 = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',false,'letter')"><i class="fas fa-print" style="font-size: 14px;"></i> CARTA</button>`
                 btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>${lectures[i].invoice.number}</button>`
                 //btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
                 btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
@@ -304,6 +305,7 @@ async function loadLectures(member) {
                 </td>
                 <td style="text-align: center;">
                     ${btnPrint}
+                    ${btnPrint2}
                 </td>
                 <td style="text-align: center;">
                     ${btnEmail}
