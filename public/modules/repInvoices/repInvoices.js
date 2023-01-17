@@ -103,8 +103,8 @@ function chargeMembersTable() {
                 },
                 responsive: true,
                 columnDefs: [
-                            { targets: [0, 1, 2, 12, 13], className: 'dt-center' },
-                            { targets: [3, 4, 5, 6, 7, 8, 9, 10, 11], className: 'dt-right' }
+                            { targets: [14, 15], className: 'dt-center' },
+                            { targets: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], className: 'dt-right' }
                         ],
                 order: [[1, 'asc']],
                 ordering: true,
@@ -116,10 +116,16 @@ function chargeMembersTable() {
                 columns: [
                     { data: 'number' },
                     { data: 'name' },
+                    { data: 'lectureLast' },
+                    { data: 'lectureActual' },
                     { data: 'consumption' },
+                    { data: 'meterValue' },
+                    { data: 'consumptionOnly' },
                     { data: 'charge' },
-                    { data: 'subsidy' },
                     { data: 'sewerage' },
+                    { data: 'consumptionSum' }, //Consumo + cargo fijo + alcantarillado
+                    { data: 'subsidy' },
+                    { data: 'overConsumption' },
                     { data: 'fine' },
                     { data: 'consumptionValue' },
                     { data: 'others' },
@@ -150,7 +156,7 @@ async function getLectures() {
         month: $("#searchMonth").val()
     }
     let lecturesData = await axios.post('api/lecturesSectorMembers', query)
-console.log(lecturesData.data)
+//console.log(lecturesData.data)
     internals.members.data = lecturesData.data
 
     internals.invoices = []
@@ -158,6 +164,10 @@ console.log(lecturesData.data)
     if (lecturesData.data.length > 0) {
         //let index = 0
         let formatData = lecturesData.data.map(el => {
+
+            if(el.members.number==292){
+                console.log(el.invoice)
+            }
 
             el.select = `<input type="checkbox" class="chkClass" id="chk${el.members._id}" />`
             el.selectPrint = ''
@@ -231,16 +241,155 @@ console.log(lecturesData.data)
                         services: invoiceServices
                     })
                 }
+                //data-content="<table><tr><td>Lectura Actual</td><td>${el.invoice.lectureResult}</td></tr></table>"
 
+                let values = []
+
+                /*el.lectureLast = el.invoice.lectureLast
+                el.lectureActual = el.invoice.lectureActual
                 el.consumption = el.invoice.lectureResult
+                el.consumptionOnly = el.invoice.meterValue * el.invoice.lectureResult
                 el.charge = el.invoice.charge
                 el.consumptionValue = el.invoice.consumption
-                el.subsidy = el.invoice.subsidyValue
                 el.sewerage = sewerage
+                el.subsidy = el.invoice.subsidyValue
                 el.fine = el.invoice.fine
                 el.others = others
                 el.debt = el.invoice.invoiceDebt
                 el.debtFine = el.invoice.debtFine
+                el.total = el.invoice.invoiceTotal*/
+
+                /*el.consumption = `<a href="#" data-toggle="popover" title="Metros Consumidos" 
+                                    data-content='<div class="container-fluid">
+                                            <div class="row">
+                                                <div class="col-md-6">Lectura Actual</div>
+                                                <div class="col-md-1 right"></div>
+                                                <div class="col-md-4 right">${el.invoice.lectureActual}</div>
+                                                <div class="col-md-6">Lectura Anterior</div>
+                                                <div class="col-md-1 right">-</div>
+                                                <div class="col-md-4 right">${el.invoice.lectureLast}</div>
+                                                <div class="col-md-6"></div>
+                                                <div class="col-md-1 right"></div>
+                                                <div class="col-md-4 right">__________</div>
+                                                <div class="col-md-6">Lectura Anterior</div>
+                                                <div class="col-md-1 right">=</div>
+                                                <div class="col-md-4 right">${el.invoice.lectureResult}</div>
+                                            </div>
+                                        </div>'
+                                    >${el.invoice.lectureResult}<a>`*/
+
+                el.lectureLast = el.invoice.lectureLast
+                el.lectureActual = el.invoice.lectureActual
+
+                values = [{title: 'Lectura Actual', symbol: '', value: el.invoice.lectureActual},
+                        {title: 'Lectura Anterior', symbol: '-', value: el.invoice.lectureLast},
+                        {title: '', symbol: '', value: '__________'},
+                        {title: 'Consumo M<sup>3</sup>', symbol: '=', value: el.invoice.lectureResult}]
+                el.consumption = setPopover('Metros Consumidos', values, el.invoice.lectureResult)
+                
+                el.meterValue = el.invoice.meterValue
+
+                let consumptionOnly = el.invoice.meterValue * el.invoice.lectureResult
+                values = [{title: 'Valor M<sup>3</sup>', symbol: '', value: el.invoice.meterValue},
+                        {title: 'Consumo en M<sup>3</sup>', symbol: 'x', value: el.invoice.lectureResult},
+                        {title: '', symbol: '', value: '__________'},
+                        {title: 'Consumo en $', symbol: '=', value: consumptionOnly}]
+                el.consumptionOnly = setPopover('Valor Consumo', values, consumptionOnly)
+
+                el.charge = el.invoice.charge
+                el.sewerage = sewerage
+
+                let consumptionSum = el.invoice.charge + sewerage + consumptionOnly
+                values = [{title: 'Consumo $', symbol: '', value: consumptionOnly},
+                {title: 'Cargo Fijo', symbol: '+', value: el.invoice.charge},
+                {title: 'Alcantarillado', symbol: '+', value: sewerage},
+                {title: '', symbol: '', value: '__________'},
+                {title: 'Consumo Mes $', symbol: '=', value: consumptionSum}]
+
+                el.consumptionSum = setPopover('Consumo Mes', values, consumptionSum)
+
+
+                let subsidyConsumption = el.invoice.meterValue * ((el.invoice.lectureResult>el.invoice.consumptionLimit) ? el.invoice.consumptionLimit : el.invoice.lectureResult)
+                let subsidyConsumptionTotal = el.invoice.charge + sewerage + subsidyConsumption
+                values = [
+                    {title: 'Valor M<sup>3</sup>', symbol: '', value: el.invoice.meterValue},
+                    {title: 'Cons. M<sup>3</sup>(Máx.'+el.invoice.consumptionLimit+')', symbol: 'x', value: (el.invoice.lectureResult>el.invoice.consumptionLimit) ? el.invoice.consumptionLimit : el.invoice.lectureResult},
+                    {title: '', symbol: '', value: '__________'},
+                    {title: 'Consumo $', symbol: '=', value: subsidyConsumption},
+                    {title: '<br/>', symbol: '', value: ''},
+                    {title: 'Consumo $', symbol: '', value: subsidyConsumption},
+                    {title: 'Cargo Fijo', symbol: '+', value: el.invoice.charge},
+                    {title: 'Alcantarillado', symbol: '+', value: sewerage},
+                    {title: '', symbol: '', value: '__________'},
+                    {title: 'Consumo Mes $', symbol: '=', value: subsidyConsumptionTotal},
+                    {title: '<br/>', symbol: '', value: ''},
+                    {title: 'Consumo Base $', symbol: '', value: subsidyConsumptionTotal},
+                    {title: 'Porcentaje', symbol: 'x', value: el.invoice.subsidyPercentage + '%'},
+                    {title: '', symbol: '', value: '__________'},
+                    {title: 'Valor Subsidio $', symbol: '=', value: el.invoice.subsidyValue}]
+
+                el.subsidy = setPopover('Subsidio', values, el.invoice.subsidyValue)
+
+                let overConsumption = ((el.invoice.lectureResult>el.invoice.consumptionLimit) ? el.invoice.lectureResult-el.invoice.consumptionLimit : 0)
+                values = [{title: 'M<sup>3</sup> Sobreconsumo', symbol: '', value: overConsumption},
+                        {title: '$ Sobreconsumo x M<sup>3</sup>', symbol: 'x', value: el.invoice.consumptionLimitValue},
+                        {title: '', symbol: '', value: '__________'},
+                        {title: 'Sobreconsumo Mes $', symbol: '=', value: el.invoice.consumptionLimitTotal}]                
+                el.overConsumption = setPopover('Subsidio', values, el.invoice.consumptionLimitTotal)
+
+                let consumptionCleanValue = consumptionSum - el.invoice.subsidyValue + el.invoice.consumptionLimitTotal
+                values = [{title: 'Valor a Pagar $', symbol: '', value: consumptionCleanValue},
+                {title: '% Multa', symbol: 'x', value: '20%'}, //Verificar si dejar valor cerrado
+                {title: '', symbol: '', value: '__________'},
+                {title: 'Multa $', symbol: '=', value: el.invoice.fine}]
+                el.fine = setPopover('Multa por regularización Socio', values, el.invoice.fine)
+
+                values = [{title: 'Consumo $', symbol: '', value: consumptionSum},
+                {title: 'Subsidio', symbol: '-', value: el.invoice.subsidyValue},
+                {title: 'Sobreconsumo', symbol: '+', value: el.invoice.consumptionLimitTotal},
+                {title: '', symbol: '', value: '__________'},
+                {title: 'Consumo Mes $', symbol: '=', value: consumptionCleanValue},
+                {title: '<br/>', symbol: '', value: ''},
+                {title: 'Consumo Mes $', symbol: '', value: consumptionCleanValue},
+                {title: 'Multa 20% $', symbol: '+', value: el.invoice.fine},
+                {title: '', symbol: '', value: '__________'},
+                {title: 'Valor a Pagar $', symbol: '=', value: el.invoice.consumption}]
+                el.consumptionValue = setPopover('Valor a Pagar Mes', values, el.invoice.consumption)
+
+                values = [{title: 'Sin Convenio', symbol: '', value: 0}]
+                if(el.invoice.agreements){
+                    if(el.invoice.agreements.length>0){
+                        values = []
+                        for(let j=0; j < el.invoice.agreements.length; j++){
+                            values.push({title: el.invoice.agreements[j].text, symbol: (j>0) ? '+' : '', value: parseInt(el.invoice.agreements[j].amount)})
+                        }
+                    }
+                }
+                values.push({title: '', symbol: '', value: '__________'},
+                            {title: 'Total Otros $', symbol: '=', value: others})
+                el.others = setPopover('Convenios / Multas', values, others)
+
+                el.debt = el.invoice.invoiceDebt
+
+                values = [{title: 'Saldo anterior $', symbol: '', value: el.invoice.invoiceDebt},
+                        {title: '% Interés', symbol: 'x', value: '3%'}, //Verificar si dejar valor cerrado
+                        {title: '', symbol: '', value: '__________'},
+                        {title: 'Interés $', symbol: '=', value: el.invoice.debtFine}]
+                el.debtFine = setPopover('Interés por saldo impago', values, el.invoice.debtFine)
+
+                /*values = [{title: 'Valor a Pagar', symbol: '', value: el.invoice.consumption},
+                        {title: 'Interés Saldo', symbol: '+', value: el.invoice.debtFine}, //Verificar si dejar valor cerrado
+                        {title: '', symbol: '', value: '__________'},
+                        {title: 'Valor Tributable', symbol: '=', value: el.invoice.consumption + el.invoice.debtFine},
+                        {title: '<br/>', symbol: '', value: ''},
+                        {title: 'Valor a Pagar', symbol: '', value: el.invoice.consumption},
+                        {title: 'Interés Saldo', symbol: '+', value: el.invoice.debtFine}, //Verificar si dejar valor cerrado
+                        {title: '', symbol: '', value: '__________'},,
+                        {title: 'Valor Tributable', symbol: '=', value: el.invoice.consumption + el.invoice.debtFine},
+                }]
+                el.debtFine = setPopover('Interés por saldo impago', values, el.invoice.debtFine)
+*/
+
                 el.total = el.invoice.invoiceTotal
                 el.detail = `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
                 
@@ -254,13 +403,19 @@ console.log(lecturesData.data)
                 }
 
             }else{
+                el.lectureLast = 0
+                el.lectureActual = 0
                 el.consumption = 0
+                el.meterValue = 0
+                el.consumptionOnly = 0
                 el.charge = 0
-                el.consumptionValue = 0
-                el.subsidy = 0
                 el.sewerage = 0
+                el.subsidy = 0
+                el.overConsumption = 0
+                el.consumptionCleanValue = 0
                 el.fine = 0
                 el.others = 0
+                el.consumptionValue = 0
                 el.debt = 0
                 el.debtFine = 0
                 el.total = 0
@@ -272,6 +427,12 @@ console.log(lecturesData.data)
         })
 
         internals.members.table.rows.add(formatData).draw()
+        
+        $('[data-toggle="popover"]').popover({
+            //placement: 'top',
+            html: true,
+            trigger: 'focus'
+        })
 
         loadingHandler('stop')
         $('#loadingMembers').empty()
@@ -977,4 +1138,24 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         calculateTotal()
 
     }
+}
+
+
+function setPopover(title, values, text){
+
+    let popover = `<a href="#" data-toggle="popover" title="${title}" data-content='
+                    <div class="container-fluid">
+                        <div class="row">`
+    for(let i=0; i<values.length; i++){
+        popover += `<div class="col-md-6">${values[i]['title']}</div>
+                    <div class="col-md-1 right">${values[i]['symbol']}</div>
+                    <div class="col-md-4 right">${dot_separators(values[i]['value'])}</div>`
+    }
+    
+    popover += `        </div>
+                    </div>'
+                >${text}</a>`
+
+    return popover
+
 }

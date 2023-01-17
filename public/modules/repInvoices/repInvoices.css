@@ -28,7 +28,9 @@
         max-width: 80%;
     }
 }*/
-
+.right {
+    text-align: right;
+}
 
 .row {
     font-size: 12px;
@@ -39,7 +41,7 @@
 }
 
 #tableMembers {
-    font-size: 11px;
+    font-size: 10px;
 }
 
 .form-control {
