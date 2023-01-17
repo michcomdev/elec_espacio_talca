@@ -1559,9 +1559,25 @@ async function printVoucher(memberID,paymentID) {
 
         doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal + agreements), pdfX + 300, pdfY)
         doc.text('$ ' + dot_separators(payment.invoices[i].amount), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
+
+        //Detalle de boleta
+        console.log(payment.invoices[i].invoices.agreements)
+        if(payment.invoices[i].invoices.agreements){
+            if(payment.invoices[i].invoices.agreements.length>0){
+                pdfY += 11
+                doc.setFontSize(7)
+                doc.text('   • CONSUMO   $ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal), pdfX, pdfY)
+
+                pdfY += 11
+                for(let j=0; j<payment.invoices[i].invoices.agreements.length; j++){
+                    doc.text('   • ' + payment.invoices[i].invoices.agreements[j].text + '   $ ' + dot_separators(payment.invoices[i].invoices.agreements[j].amount), pdfX, pdfY)
+                }
+                doc.setFontSize(9)
+            }
+        }
     }
 
-    pdfY = 300
+    pdfY = 320
     
     doc.setFillColor(0, 0, 0)
     doc.rect(pdfX + 345, pdfY, 200, 15, 'F')
