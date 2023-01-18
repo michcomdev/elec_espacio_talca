@@ -93,7 +93,14 @@ export default [
                 try {
                     let payload = request.payload
 
-                    let members = await Member.find({'address.sector': payload.sector}).populate(['address.sector'])
+                    let querySector = {}
+                    if(payload.sector!='0'){
+                        querySector = {
+                            'address.sector': payload.sector
+                        }
+                    }
+
+                    let members = await Member.find(querySector).populate(['address.sector'])
                     let array = []
                     for(let i=0; i<members.length ; i++){
                         array.push(members[i]._id)
@@ -126,6 +133,31 @@ export default [
                                 lectures[i].lastLecture = lecturesLast.find(x => x.members._id.toString() == lectures[i].members._id.toString())
                             }
                         }
+                        if (lectures[i].members.type == 'personal') {
+                            lectures[i].name = lectures[i].members.personal.name + ' ' + lectures[i].members.personal.lastname1 + ' ' + lectures[i].members.personal.lastname2
+                        } else {
+                            lectures[i].name = lectures[i].members.enterprise.name
+                        }
+                    }
+
+
+                    /*let order = {orderIndex: 'asc'}
+                    if(payload.order){
+                        if(payload.order=="2"){
+                            order = {number: 'asc'}
+                        }else if(payload.order=="3"){
+                            order = {'personal.lastname1': 'asc'}
+                        }else if(payload.order=="4"){
+                            order = {'personal.name': 'asc'}
+                        }else if(payload.order=="5"){
+                            order = {'address.address': 'asc'}
+                        }
+                    }
+                    console.log(order)*/
+                    if(payload.order){
+                        if(payload.order=="1"){
+                            lectures.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+                        }
                     }
 
                     return lectures
@@ -142,7 +174,8 @@ export default [
                 payload: Joi.object().keys({
                     sector: Joi.string().optional().allow(''),
                     month: Joi.number().allow(0),
-                    year: Joi.number().allow(0)
+                    year: Joi.number().allow(0),
+                    order: Joi.string().optional().allow('')
                 })
             }
         }

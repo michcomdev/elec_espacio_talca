@@ -67,7 +67,7 @@ async function getParameters() {
 
     $("#searchSector").append(
         sectors.reduce((acc,el)=>{
-            acc += `<option value="${el._id}" ${(el._id=='62bdd303b2e945b5ee150bf0') ? 'selected' : ''}>${el.name}</option>`
+            acc += `<option value="${el._id}">${el.name}</option>`
             return acc
         },'')
     )
@@ -81,18 +81,7 @@ function chargeMembersTable() {
         }
         internals.members.table = $('#tableMembers')
             .DataTable({
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'excel',
-                        className: 'btn-excel'
-                    },
-                    {
-                        extend: 'pdf',
-                        className: 'btn-pdf'
-                    },
-
-                ],
+                dom: 'frtip',
                 iDisplayLength: -1,
                 oLanguage: {
                     sSearch: 'buscar:'
@@ -106,7 +95,7 @@ function chargeMembersTable() {
                             { targets: [14, 15], className: 'dt-center' },
                             { targets: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], className: 'dt-right' }
                         ],
-                order: [[1, 'asc']],
+                order: [[$("#searchOrder").val(), 'asc']],
                 ordering: true,
                 rowCallback: function (row, data) {
                     //$(row).find('td:eq(1)').html(moment.utc(data.date).format('DD/MM/YYYY'))
@@ -153,13 +142,15 @@ async function getLectures() {
     let query = {
         sector: $("#searchSector").val(), 
         year: $("#searchYear").val(), 
-        month: $("#searchMonth").val()
+        month: $("#searchMonth").val(),
+        order: $("#searchOrder").val()
     }
     let lecturesData = await axios.post('api/lecturesSectorMembers', query)
 //console.log(lecturesData.data)
     internals.members.data = lecturesData.data
 
     internals.invoices = []
+    $("#tableMembersExcelBody").html('')
 
     if (lecturesData.data.length > 0) {
         //let index = 0
@@ -377,20 +368,18 @@ async function getLectures() {
                         {title: 'Interés $', symbol: '=', value: el.invoice.debtFine}]
                 el.debtFine = setPopover('Interés por saldo impago', values, el.invoice.debtFine)
 
-                /*values = [{title: 'Valor a Pagar', symbol: '', value: el.invoice.consumption},
+                values = [{title: 'Valor a Pagar', symbol: '', value: el.invoice.consumption},
                         {title: 'Interés Saldo', symbol: '+', value: el.invoice.debtFine}, //Verificar si dejar valor cerrado
                         {title: '', symbol: '', value: '__________'},
                         {title: 'Valor Tributable', symbol: '=', value: el.invoice.consumption + el.invoice.debtFine},
                         {title: '<br/>', symbol: '', value: ''},
-                        {title: 'Valor a Pagar', symbol: '', value: el.invoice.consumption},
-                        {title: 'Interés Saldo', symbol: '+', value: el.invoice.debtFine}, //Verificar si dejar valor cerrado
-                        {title: '', symbol: '', value: '__________'},,
-                        {title: 'Valor Tributable', symbol: '=', value: el.invoice.consumption + el.invoice.debtFine},
-                }]
-                el.debtFine = setPopover('Interés por saldo impago', values, el.invoice.debtFine)
-*/
+                        {title: 'Otros (No tributable)', symbol: '', value: others},
+                        {title: 'Saldo Anterior', symbol: '+', value: el.invoice.invoiceDebt},
+                        {title: '', symbol: '', value: '__________'},
+                        {title: 'Valor Total a Pagar', symbol: '=', value: el.invoice.invoiceTotal}]
 
-                el.total = el.invoice.invoiceTotal
+                el.total = setPopover('Total', values, el.invoice.invoiceTotal)
+
                 el.detail = `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
                 
                 if(el.invoice.token){
@@ -401,6 +390,29 @@ async function getLectures() {
                 }else{
                     el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
                 }
+
+                $("#tableMembersExcelBody").append(`
+                    <tr>
+                        <td>${el.number}</td>
+                        <td>${el.name}</td>
+                        <td>${el.invoice.lectureLast}</td>
+                        <td>${el.invoice.lectureActual}</td>
+                        <td>${el.invoice.lectureResult}</td>
+                        <td>${el.invoice.meterValue}</td>
+                        <td>${consumptionOnly}</td>
+                        <td>${el.invoice.charge}</td>
+                        <td>${sewerage}</td>
+                        <td>${consumptionSum}</td>
+                        <td>${el.invoice.subsidyValue}</td>
+                        <td>${el.invoice.consumptionLimitTotal}</td>
+                        <td>${el.invoice.fine}</td>
+                        <td>${el.invoice.consumption}</td>
+                        <td>${others}</td>
+                        <td>${el.invoice.invoiceDebt}</td>
+                        <td>${el.invoice.debtFine}</td>
+                        <td>${el.invoice.invoiceTotal}</td>
+                    </tr>`)
+
 
             }else{
                 el.lectureLast = 0
@@ -444,11 +456,11 @@ async function getLectures() {
 }
 
 $('#searchMembers').on('click', async function () {
-    if($("#searchSector").val()!=0){
+    //if($("#searchSector").val()!=0){
         chargeMembersTable()
-    }else{
+    /*}else{
         toastr.warning('Debe seleccionar un sector')
-    }
+    }*/
 })
 
 function createModalBody(member) {
@@ -1157,5 +1169,37 @@ function setPopover(title, values, text){
                 >${text}</a>`
 
     return popover
+}
 
+function ExportToExcel(type, fn, dl) {
+    var elt = document.getElementById('tableMembersExcel')
+    var wb = XLSX.utils.table_to_book(elt, { sheet: "Hoja1" })
+    return dl ?
+      XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }):
+      XLSX.writeFile(wb, fn || ('Macro Subsidios.' + (type || 'xlsx')))
+}
+
+function exportToPDF(){
+    var doc = new jsPDF('l','pt','letter')
+    doc.autoTable({ 
+        html: "#tableMembersExcel",
+        styles: {
+            fontSize: 6,
+            valign: 'middle',
+            halign: 'right'
+        },
+        columnStyles: {
+            0: {cellWidth: 20},
+            1: {cellWidth: 120, halign: 'left'},
+            
+        },
+        didParseCell: (hookData) => {
+            if (hookData.section === 'head') {
+                if (hookData.column.dataKey === '1') {
+                    hookData.cell.styles.halign = 'left';
+                }
+            }
+        }
+    })
+    doc.save("table.pdf")
 }

@@ -11,13 +11,12 @@
 
 <div class="row animate__animated animate__fadeIn">
     
-    <div class="col-md-1">
-        <label style="font-size: 14px;">Año</label>
-        <select id="searchYear" class="form-control form-select-sm form-select filterClass"></select>
-    </div>
     <div class="col-md-2">
-        <label style="font-size: 14px;">Mes</label>
-        <select id="searchMonth" class="form-control form-select-sm form-select filterClass">
+        <label style="font-size: 13px; display: inline-block; width: 25%">Año</label>
+        <select id="searchYear" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%"></select>
+        <br/>
+        <label style="font-size: 13px; display: inline-block; width: 25%">Mes</label>
+        <select id="searchMonth" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
             <option value="01">ENERO</option>
             <option value="02">FEBRERO</option>
             <option value="03">MARZO</option>
@@ -33,15 +32,34 @@
         </select>
     </div>
     <div class="col-md-2">
-        <label style="font-size: 14px;">Selecciona el sector</label>
-        <select id="searchSector" class="form-control form-select-sm form-select filterClass">
-            <option value="0">Seleccione</option>
+        <label style="font-size: 13px; display: inline-block; width: 25%">Sector</label>
+        <select id="searchSector" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
+            <option value="0">TODOS</option>
+        </select>
+        <br/>
+        <label style="font-size: 13px; display: inline-block; width: 25%">Ordenar</label>
+        <select id="searchOrder" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
+            <!--<option value="1">Orden planilla</option>-->
+            <option value="0">N° Socio</option>
+            <!--<option value="3">Apellido</option>-->
+            <option value="1">Nombre</option>
+            <!--<option value="5">Dirección</option>-->
         </select>
     </div>
     <div class="col-md-1">
         <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block filterClass"
             id="searchMembers">
             <i class="fas fa-search"></i> Filtrar
+        </button>
+    </div>
+    <div class="col-md-3">
+        <button style="border-radius: 5px;" class="btn btn-success btn-block" onclick="ExportToExcel('xlsx')">
+            <i class="fas fa-file-excel"></i> Exportar a Excel
+        </button>
+    </div>
+    <div class="col-md-3">
+        <button style="border-radius: 5px;" class="btn btn-danger btn-block" onclick="exportToPDF()">
+            <i class="fas fa-file-pdf"></i> Exportar a PDF
         </button>
     </div>
    
@@ -51,29 +69,56 @@
                 table-condensed" cellspacing="0" width="100%">
                 <thead>
                     <tr class="table-info" style="cursor: auto">
-                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N° SOCIO</th>
-                        <!--<th style="background-color: #3B6FC9">TIPO</th>-->
+                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N°</th>
                         <th style="background-color: #3B6FC9">NOMBRE</th>
                         <th style="background-color: #3B6FC9">L. ANT</th>
                         <th style="background-color: #3B6FC9">L. ACT</th>
                         <th style="background-color: #3B6FC9">CONS. M3</th>
                         <th style="background-color: #3B6FC9">M3 $</th>
-                        <th style="background-color: #3B6FC9">CONSUMO $</th>
-                        <th style="background-color: #3B6FC9">CARGO FIJO</th>
-                        <th style="background-color: #3B6FC9">ALCANTARILLADO (+)</th>
-                        <th style="background-color: #3B6FC9">CONSUMO MES</th>
+                        <th style="background-color: #3B6FC9">CONS. $</th>
+                        <th style="background-color: #3B6FC9">CARGO F</th>
+                        <th style="background-color: #3B6FC9">ALCANT</th>
+                        <th style="background-color: #3B6FC9">CONS. MES</th>
                         <th style="background-color: #3B6FC9">SUBSIDIO</th>
                         <th style="background-color: #3B6FC9">SOBRECON.</th>
                         <th style="background-color: #3B6FC9">MULTA 20%</th>
-                        <th style="background-color: #3B6FC9">VAL. A PAG.</th>
-                        <th style="background-color: #3B6FC9">OTROS (+)</th>
-                        <th style="background-color: #3B6FC9">SALDO (+)</th>
-                        <th style="background-color: #3B6FC9">INT 3% (+)</th>
-                        <th style="background-color: #3B6FC9">TOTAL (=)</th>
+                        <th style="background-color: #3B6FC9">VAL. PAG.</th>
+                        <th style="background-color: #3B6FC9">OTROS</th>
+                        <th style="background-color: #3B6FC9">SALDO</th>
+                        <th style="background-color: #3B6FC9">INT 3%</th>
+                        <th style="background-color: #3B6FC9">TOTAL</th>
                         <th style="background-color: #3B6FC9">DETALLE</th>
                         <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PDF</th>
                     </tr>
                 </thead>
+            </table>
+
+            <table id="tableMembersExcel" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>NOMBRE</th>
+                        <th>L. ANT</th>
+                        <th>L. ACT</th>
+                        <th>CONS. M3</th>
+                        <th>M3 $</th>
+                        <th>CONS. $</th>
+                        <th>CARGO F</th>
+                        <th>ALCANT</th>
+                        <th>CONS. MES</th>
+                        <th>SUBSIDIO</th>
+                        <th>SOBRECON.</th>
+                        <th>MULTA 20%</th>
+                        <th>VAL. PAG.</th>
+                        <th>OTROS</th>
+                        <th>SALDO</th>
+                        <th>INT 3%</th>
+                        <th>TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody id="tableMembersExcelBody">
+
+                </tbody>
             </table>
             <!--<div id="loadingMembers">
                 <center>
@@ -139,7 +184,7 @@
     <script src="/public/modules/default/logoWallImg90.js"></script>
     <script src="/public/modules/default/logoImg90.js"></script>
     <script src="/public/modules/default/test2D.js"></script>
-    <script src="/public/js/jspdf.plugin.autotable.js"></script>
     <script src="/public/modules/repInvoices/repInvoices.js"></script>
     <script src="/public/js/printDocuments.js"></script>
+    <script src="/public/js/xlsx.full.min.js"></script>
     {{/extend}}

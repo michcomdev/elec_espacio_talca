@@ -1013,4 +1013,4 @@ function ExportToExcel(type, fn, dl) {
     return dl ?
       XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }):
       XLSX.writeFile(wb, fn || ('Macro Subsidios.' + (type || 'xlsx')));
- }
+}
