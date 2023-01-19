@@ -86,9 +86,9 @@
                         <th style="background-color: #3B6FC9">OTROS</th>
                         <th style="background-color: #3B6FC9">SALDO</th>
                         <th style="background-color: #3B6FC9">INT 3%</th>
-                        <th style="background-color: #3B6FC9">TOTAL</th>
-                        <th style="background-color: #3B6FC9">DETALLE</th>
-                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PDF</th>
+                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">TOTAL</th>
+                        <!--<th style="background-color: #3B6FC9">DETALLE</th>
+                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PDF</th>-->
                     </tr>
                 </thead>
             </table>
@@ -157,6 +157,37 @@
                 </div>
                 <div class="modal-body" id="modalPayment_body"></div>
                 <div class="modal-footer" id="modalPayment_footer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalInvoices" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Lista de Boletas y Notas de Crédito</h6>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                        aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalInvoices_body">
+                    <table id="tableInvoices" class="table cell-border table-condensed" cellspacing="0" width="100%" style="font-size: 13px">
+                        <thead>
+                            <tr class="table-info">
+                                <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N° BOLETA</th>
+                                <th style="background-color: #3B6FC9">FECHA</th>
+                                <th style="background-color: #3B6FC9">PDF</th>
+                                <th style="background-color: #3B6FC9">N° NOTA CRÉDITO</th>
+                                <th style="background-color: #3B6FC9">FECHA</th>
+                                <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableInvoicesBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer" id="modalInvoices_footer"></div>
             </div>
         </div>
     </div>

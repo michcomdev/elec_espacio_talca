@@ -120,9 +120,7 @@ function chargeMembersTable() {
                     { data: 'others' },
                     { data: 'debt' },
                     { data: 'debtFine' },
-                    { data: 'total' },
-                    { data: 'detail' },
-                    { data: 'pdf' }
+                    { data: 'total' }
                 ],
                 initComplete: function (settings, json) {
                     getLectures()
@@ -171,6 +169,8 @@ async function getLectures() {
                 el.typeString = 'EMPRESA'
                 el.name = el.members.enterprise.name
             }
+
+            el.name = `<a href="#" onclick="showInvoices('${el.members.type}','${el.members._id}','${el._id}')">${el.name}</a>`
             
             if(el.invoice){
 
@@ -380,7 +380,7 @@ async function getLectures() {
 
                 el.total = setPopover('Total', values, el.invoice.invoiceTotal)
 
-                el.detail = `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
+                /*el.detail = `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
                 
                 if(el.invoice.token){
                     el.select = ''
@@ -389,7 +389,7 @@ async function getLectures() {
                     el.pdf = `<button class="btn btn-sm btn-danger" onclick="printInvoicePortrait('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
                 }else{
                     el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
-                }
+                }*/
 
                 $("#tableMembersExcelBody").append(`
                     <tr>
@@ -431,8 +431,8 @@ async function getLectures() {
                 el.debt = 0
                 el.debtFine = 0
                 el.total = 0
-                el.detail = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>'
-                el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
+                //el.detail = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>'
+                //el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
             }
 
             return el
@@ -1202,4 +1202,34 @@ function exportToPDF(){
         }
     })
     doc.save("table.pdf")
+}
+
+async function showInvoices(type,memberID,lecture){
+    let invoices = await axios.post('/api/invoicesByLecture', { lecture: lecture })
+    $("#tableInvoicesBody").html('')
+
+    for(let i=0; i<invoices.data.length; i++){
+        let row = `
+                <tr>
+                    <td>${invoices.data[i].number}</td>
+                    <td>${moment(invoices.data[i].date).utc().format('DD/MM/YYYY')}</td>
+                    <td><button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${type}','${memberID}','${invoices.data[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>`
+
+        if(invoices.data[i].annulment){
+            row += `<td>${invoices.data[i].annulment.number}</td>
+                    <td>${moment(invoices.data[i].annulment.date).utc().format('DD/MM/YYYY')}</td>
+                    <td><button class="btn btn-sm btn-danger btnLecture" onclick="showSIIPDF('${invoices.data[i].annulment.token}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
+                </tr>`
+        }else{
+            row += `<td></td>
+                    <td></td>
+                    <td></td>
+                </tr>`
+        }
+
+        $("#tableInvoicesBody").append(row)
+    }
+
+    $('#modalInvoices').modal('show')
+
 }
