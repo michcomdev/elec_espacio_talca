@@ -1539,41 +1539,47 @@ async function printVoucher(memberID,paymentID) {
     for(let i=0; i<payment.invoices.length; i++){
         pdfY += 13
 
-        number = ''
-        if(payment.invoices[i].invoices.number){
-            number = `N° ${payment.invoices[i].invoices.number}`
-        }
+        if(!payment.invoices[i].positive){
 
-        if(payment.invoices[i].invoices.type==41){
-            doc.text(`Boleta ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
-        }else{
-            doc.text(`Factura N° ${payment.invoices[i].invoices.number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
-        }
-
-        let agreements = 0
-        if(payment.invoices[i].invoices.agreements){
-            for(let j=0; j<payment.invoices[i].invoices.agreements.length; j++){
-                agreements += payment.invoices[i].invoices.agreements[j].amount
+            number = ''
+            if(payment.invoices[i].invoices.number){
+                number = `N° ${payment.invoices[i].invoices.number}`
             }
-        }
 
-        doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal + agreements), pdfX + 300, pdfY)
-        doc.text('$ ' + dot_separators(payment.invoices[i].amount), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
+            if(payment.invoices[i].invoices.type==41){
+                doc.text(`Boleta ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
+            }else{
+                doc.text(`Factura N° ${payment.invoices[i].invoices.number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
+            }
 
-        //Detalle de boleta
-        console.log(payment.invoices[i].invoices.agreements)
-        if(payment.invoices[i].invoices.agreements){
-            if(payment.invoices[i].invoices.agreements.length>0){
-                pdfY += 11
-                doc.setFontSize(7)
-                doc.text('   • CONSUMO   $ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal), pdfX, pdfY)
-
-                pdfY += 11
+            let agreements = 0
+            if(payment.invoices[i].invoices.agreements){
                 for(let j=0; j<payment.invoices[i].invoices.agreements.length; j++){
-                    doc.text('   • ' + payment.invoices[i].invoices.agreements[j].text + '   $ ' + dot_separators(payment.invoices[i].invoices.agreements[j].amount), pdfX, pdfY)
+                    agreements += payment.invoices[i].invoices.agreements[j].amount
                 }
-                doc.setFontSize(9)
             }
+
+            doc.text('$ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal + agreements), pdfX + 330, pdfY, 'right')
+            doc.text('$ ' + dot_separators(payment.invoices[i].amount), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
+
+            //Detalle de boleta
+            if(payment.invoices[i].invoices.agreements){
+                if(payment.invoices[i].invoices.agreements.length>0){
+                    pdfY += 11
+                    doc.setFontSize(7)
+                    doc.text('   • CONSUMO   $ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal), pdfX, pdfY)
+
+                    pdfY += 11
+                    for(let j=0; j<payment.invoices[i].invoices.agreements.length; j++){
+                        doc.text('   • ' + payment.invoices[i].invoices.agreements[j].text + '   $ ' + dot_separators(payment.invoices[i].invoices.agreements[j].amount), pdfX, pdfY)
+                    }
+                    doc.setFontSize(9)
+                }
+            }
+        }else{
+            doc.text(`Saldo a Favor`, pdfX, pdfY)
+            doc.text('$ ' + dot_separators(payment.invoices[i].amount), pdfX + 330, pdfY, 'right')
+            doc.text('$ ' + dot_separators(payment.invoices[i].amount), doc.internal.pageSize.getWidth() - 40, pdfY, 'right')
         }
     }
 

@@ -276,7 +276,7 @@ async function getLectures() {
                         {title: 'Lectura Anterior', symbol: '-', value: el.invoice.lectureLast},
                         {title: '', symbol: '', value: '__________'},
                         {title: 'Consumo M<sup>3</sup>', symbol: '=', value: el.invoice.lectureResult}]
-                el.consumption = setPopover('Metros Consumidos', values, el.invoice.lectureResult)
+                el.consumption = setPopover('Metros Consumidos', values, el.invoice.lectureResult,el.members._id)
                 
                 el.meterValue = el.invoice.meterValue
 
@@ -439,12 +439,16 @@ async function getLectures() {
         })
 
         internals.members.table.rows.add(formatData).draw()
+
+        $('.aPopover').click(function($e) { //Previene que el <a> se mueva al inicio del scroll
+            $e.preventDefault()
+        })
         
         $('[data-toggle="popover"]').popover({
-            //placement: 'top',
             html: true,
             trigger: 'focus'
         })
+
 
         loadingHandler('stop')
         $('#loadingMembers').empty()
@@ -456,11 +460,7 @@ async function getLectures() {
 }
 
 $('#searchMembers').on('click', async function () {
-    //if($("#searchSector").val()!=0){
-        chargeMembersTable()
-    /*}else{
-        toastr.warning('Debe seleccionar un sector')
-    }*/
+    chargeMembersTable()
 })
 
 function createModalBody(member) {
@@ -1154,8 +1154,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
 
 function setPopover(title, values, text){
-
-    let popover = `<a href="#" data-toggle="popover" title="${title}" data-content='
+   
+    let popover = `<a href="#" class="aPopover" data-toggle="popover" title="${title}" data-content='
                     <div class="container-fluid">
                         <div class="row">`
     for(let i=0; i<values.length; i++){

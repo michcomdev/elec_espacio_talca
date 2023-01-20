@@ -245,7 +245,7 @@ async function loadLectures(member) {
             invoiceID = lectures[i].invoice._id
             
             if(lectures[i].invoice.number || lectures[i].invoice.number==0){
-                btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i> A5</button>`
+                //btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i> A5</button>`
                 btnPrint2 = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',false,'letter')"><i class="fas fa-print" style="font-size: 14px;"></i> CARTA</button>`
                 btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>${lectures[i].invoice.number}</button>`
                 //btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
