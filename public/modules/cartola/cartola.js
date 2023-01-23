@@ -206,18 +206,12 @@ async function getCartola() {
             }
 
             el.detail = ''
-            //console.log(el.members)
-            //console.log(el.invoices)
 
             for(let i=0; i < el.invoices.length; i++){
                 if(i>0){
-                    el.detail = ', '
+                    el.detail += ', '
                 }
                 if(el.invoices[i].invoices){
-                    if(el.members.number==157){
-                        console.log(i,el.invoices[i].invoices)
-                    }
-
                     if(el.invoices[i].invoices.type==33){
                         el.detail += 'FACTURA '
                     }else{
@@ -231,7 +225,6 @@ async function getCartola() {
                 }else{
                     el.detail += 'SALDO A FAVOR '
                 }
-
                 
             }
 
