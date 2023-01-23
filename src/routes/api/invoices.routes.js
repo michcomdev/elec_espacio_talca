@@ -400,6 +400,14 @@ export default [
 
                     let invoices = await Invoices.findById(payload.id)
 
+                    let parameters = await Parameters.findById('6263033665a0afa3096a6a62')
+
+                    if(payload.number==0){
+                        payload.number = parameters.receiptValue
+                        parameters.receiptValue++
+                        await parameters.save()
+                    }
+
                     invoices.type = payload.type
                     invoices.number = payload.number
                     invoices.seal = payload.seal
@@ -407,6 +415,8 @@ export default [
                     invoices.resolution = payload.resolution
 
                     const response = await invoices.save()
+
+
 
                     return response
 

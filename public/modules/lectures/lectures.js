@@ -1553,11 +1553,14 @@ async function sendData(type,memberID,invoiceID) {
     let invoiceData = await axios.post('/api/invoiceSingle', {id: invoiceID})
     let invoice = invoiceData.data
 
-    if(invoice.invoiceSubTotal==0){
+    let parametersData = await axios.get('/api/parameters')
+    let parameters = parametersData.data
+
+    if(parameters.receiptState){
         let generateDoc = await Swal.fire({
             title: 'Generar documento',
             customClass: 'swal-wide',
-            html: `El valor de consumo es 0, por lo que sólo se emitirá un comprobante<br/>¿Desea continuar?`,
+            html: `Se emitirá comprobantede consumo<br/>¿Desea continuar?`,
             showCloseButton: true,
             showCancelButton: true,
             showConfirmButton: true,
@@ -1592,256 +1595,294 @@ async function sendData(type,memberID,invoiceID) {
         }
 
         return
-    }
-
-
-    let generateDTE = await Swal.fire({
-        title: '¿Está seguro de generar documento?',
-        customClass: 'swal-wide',
-        html: ``,
-        showCloseButton: true,
-        showCancelButton: true,
-        showConfirmButton: true,
-        focusConfirm: false,
-        confirmButtonText: 'Aceptar',
-        cancelButtonText: 'Cancelar'
-    })
-
-    if (generateDTE.value) {
-        
-        loadingHandler('start')
-        
-        let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
-        let lectures = lecturesData.data
-
-        let parametersData = await axios.get('/api/parameters')
-        let parameters = parametersData.data
-
-        let name = '', category = ''
-        let document = ''
-
-        /*DETALLE*/
-
-        let detail = [{
-            NroLinDet: 1,
-            NmbItem: "Servicio de Agua",
-            QtyItem: 1,
-            PrcItem: invoice.invoiceSubTotal,
-            MontoItem: invoice.invoiceSubTotal,
-            IndExe: 1 //1=exento o afecto / 2=no facturable
-        }]
-
-        let totalAgreement = 0
-        if(invoice.agreements){
-            for(let i=0; i<invoice.agreements.length; i++){
-                totalAgreement += parseInt(invoice.agreements[i].amount)
-            }
-        }
-        if(totalAgreement>0){
-            detail.push({
-                NroLinDet: 2,
-                NmbItem: "Otros",
-                QtyItem: 1,
-                PrcItem: totalAgreement,
-                MontoItem: totalAgreement,
-                IndExe: 2 //1=exento o afecto / 2=no facturable
+    }else{
+        if(invoice.invoiceSubTotal==0){
+            let generateDoc = await Swal.fire({
+                title: 'Generar documento',
+                customClass: 'swal-wide',
+                html: `El valor de consumo es 0, por lo que sólo se emitirá un comprobante<br/>¿Desea continuar?`,
+                showCloseButton: true,
+                showCancelButton: true,
+                showConfirmButton: true,
+                focusConfirm: false,
+                confirmButtonText: 'Aceptar',
+                cancelButtonText: 'Cancelar'
             })
-        }
-        
-        if(invoice.type==41){
 
-            if(type=='personal'){
-                name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+            if (generateDoc.value) {
+
+                let dteData = {
+                    id: invoiceID,
+                    type: 0,
+                    number: 0,
+                    seal: '',
+                    token: '',
+                    resolution: {
+                        fecha: '',
+                        numero: 0
+                    }
+                }
+                
+                let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
+                loadingHandler('stop')
+
+                toastr.success('Documento almacenado correctamente')
+
+                printInvoicePortrait('pdf',member.type,member._id,invoiceID)
+
+                loadLectures(member)
+
+            }
+
+            return
+        }
+
+
+        let generateDTE = await Swal.fire({
+            title: '¿Está seguro de generar documento?',
+            customClass: 'swal-wide',
+            html: ``,
+            showCloseButton: true,
+            showCancelButton: true,
+            showConfirmButton: true,
+            focusConfirm: false,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar'
+        })
+
+        if (generateDTE.value) {
+            
+            loadingHandler('start')
+            
+            let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  memberID})
+            let lectures = lecturesData.data
+
+            let name = '', category = ''
+            let document = ''
+
+            /*DETALLE*/
+
+            let detail = [{
+                NroLinDet: 1,
+                NmbItem: "Servicio de Agua",
+                QtyItem: 1,
+                PrcItem: invoice.invoiceSubTotal,
+                MontoItem: invoice.invoiceSubTotal,
+                IndExe: 1 //1=exento o afecto / 2=no facturable
+            }]
+
+            let totalAgreement = 0
+            if(invoice.agreements){
+                for(let i=0; i<invoice.agreements.length; i++){
+                    totalAgreement += parseInt(invoice.agreements[i].amount)
+                }
+            }
+            if(totalAgreement>0){
+                detail.push({
+                    NroLinDet: 2,
+                    NmbItem: "Otros",
+                    QtyItem: 1,
+                    PrcItem: totalAgreement,
+                    MontoItem: totalAgreement,
+                    IndExe: 2 //1=exento o afecto / 2=no facturable
+                })
+            }
+            
+            if(invoice.type==41){
+
+                if(type=='personal'){
+                    name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+                }else{
+                    name = member.enterprise.fullName
+                }
+
+                let Emisor = { //emission=real / test
+                    RUTEmisor: parameters.emisor.RUTEmisor,
+                    RznSocEmisor: parameters.emisor.RznSocEmisor,
+                    GiroEmisor: parameters.emisor.GiroEmisor,
+                    DirOrigen: parameters.emisor.DirOrigen,
+                    CmnaOrigen: parameters.emisor.CmnaOrigen,
+                    CdgSIISucur: parameters.emisor.CdgSIISucur
+                }
+
+                /////////////////////////
+                let debt = 0
+                if(invoice.invoiceDebt){
+                    debt = invoice.invoiceDebt
+                }
+
+                let totals = {
+                    MntExe: invoice.invoiceSubTotal, //Facturable, suma de detalle con indicador exento "1"
+                    MntTotal: invoice.invoiceSubTotal,
+                    MontoNF: totalAgreement, //No facturable, suma de detalle con indicador exento "2"
+                    TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
+                    SaldoAnterior: debt, //Saldo anterior, sólo informativo
+                    VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt //Valor Total + Saldo anterior
+                }
+                /////////////////////////////
+
+                document = {
+                    response: ["TIMBRE","FOLIO","RESOLUCION",'XML'],
+                    dte: {
+                        Encabezado: {
+                            IdDoc:{
+                                TipoDTE: invoice.type,
+                                Folio: 0,
+                                FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
+                                FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
+                                //IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios, 3=boleta de venta o servicio
+                                IndServicio: "2", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
+                                PeriodoDesde: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').startOf('month').format('YYYY-MM-DD'), //Revisar fechas, si corresponde a la toma de estado (desde el 1 al 30 del mes)
+                                PeriodoHasta: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').endOf('month').format('YYYY-MM-DD')
+                            },
+                            Emisor: Emisor,
+                            Receptor:{
+                                RUTRecep: member.rut.split('.').join(''),
+                                RznSocRecep: name,
+                                DirRecep: member.address.address,
+                                CmnaRecep: parameters.committee.commune,
+                                CiudadRecep: parameters.committee.city
+                            },
+                            Totales: totals
+                        },
+                        Detalle: detail
+                    }
+                }
+
+
             }else{
                 name = member.enterprise.fullName
-            }
+                category = member.enterprise.category
 
-            let Emisor = { //emission=real / test
-                RUTEmisor: parameters.emisor.RUTEmisor,
-                RznSocEmisor: parameters.emisor.RznSocEmisor,
-                GiroEmisor: parameters.emisor.GiroEmisor,
-                DirOrigen: parameters.emisor.DirOrigen,
-                CmnaOrigen: parameters.emisor.CmnaOrigen,
-                CdgSIISucur: parameters.emisor.CdgSIISucur
-            }
+                if(name==''){ //Sólo para efectos de TEST
+                    name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
+                    category = 'TEST'
+                }
 
-            /////////////////////////
-            let debt = 0
-            if(invoice.invoiceDebt){
-                debt = invoice.invoiceDebt
-            }
+                let address = member.address.address
+                if(member.enterprise.address){
+                    address = member.enterprise.address
+                }
+                //let net = parseInt(invoice.invoiceTotal / 1.19)
+                //let iva = invoice.invoiceTotal - net
 
-            let totals = {
-                MntExe: invoice.invoiceSubTotal, //Facturable, suma de detalle con indicador exento "1"
-                MntTotal: invoice.invoiceSubTotal,
-                MontoNF: totalAgreement, //No facturable, suma de detalle con indicador exento "2"
-                TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
-                SaldoAnterior: debt, //Saldo anterior, sólo informativo
-                VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt //Valor Total + Saldo anterior
-            }
-            /////////////////////////////
+                /*let Emisor = {
+                    RUTEmisor: parameters.committee.rut.split('.').join(''),
+                    RznSoc: parameters.committee.name,
+                    GiroEmis: parameters.committee.category,
+                    Acteco: parameters.committee.acteco,
+                    DirOrigen: parameters.committee.address,
+                    CmnaOrigen: parameters.committee.commune,
+                    Telefono: parameters.committee.phone,
+                    CdgSIISucur: parameters.committee.siiCode
+                }*/
 
-            document = {
-                response: ["TIMBRE","FOLIO","RESOLUCION",'XML'],
-                dte: {
-                    Encabezado: {
-                        IdDoc:{
-                            TipoDTE: invoice.type,
-                            Folio: 0,
-                            FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
-                            FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
-                            //IndServicio: "3", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios, 3=boleta de venta o servicio
-                            IndServicio: "2", //1=Servicios periódicos, 2=Serv. periódicos domiciliarios
-                            PeriodoDesde: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').startOf('month').format('YYYY-MM-DD'), //Revisar fechas, si corresponde a la toma de estado (desde el 1 al 30 del mes)
-                            PeriodoHasta: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').endOf('month').format('YYYY-MM-DD')
+                let Emisor = { //EMISOR DE PRUEBA
+                    RUTEmisor: parameters.emisor.RUTEmisor,
+                    RznSoc: parameters.emisor.RznSoc,
+                    GiroEmis: parameters.emisor.GiroEmisor,
+                    Acteco: parameters.emisor.Acteco,
+                    DirOrigen: parameters.emisor.DirOrigen,
+                    CmnaOrigen: parameters.emisor.CmnaOrigen,
+                    Telefono: parameters.emisor.Telefono,
+                    CdgSIISucur: parameters.emisor.CdgSIISucur
+                }
+
+                /////////////////////////
+                let debt = 0
+                if(invoice.invoiceDebt){
+                    debt = invoice.invoiceDebt
+                }
+
+                let totals = {
+                    MntExe: invoice.invoiceSubTotal, //Facturable, suma de detalle con indicador exento "1"
+                    MntTotal: invoice.invoiceSubTotal,
+                    MontoNF: totalAgreement, //No facturable, suma de detalle con indicador exento "2"
+                    //TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
+                    MontoPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
+                    SaldoAnterior: debt, //Saldo anterior, sólo informativo
+                    VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt //Valor Total + Saldo anterior
+                }
+                /////////////////////////////
+
+                document = {
+                    response: ["TIMBRE","FOLIO","RESOLUCION","XML"],
+                    dte: {
+                        Encabezado: {
+                            IdDoc:{
+                                TipoDTE: invoice.type,
+                                Folio: 0,
+                                FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
+                                FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
+                                TpoTranCompra:"1",
+                                TpoTranVenta:"1",
+                                //FmaPago:"2",
+                                FmaPago:"1", //1=Contado 2=Crédito 3=Sin costo (entrega gratuita)
+                                IndServicio: "1", //1=Serv. periódicos domiciliarios
+                                PeriodoDesde: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').startOf('month').format('YYYY-MM-DD'), //Revisar fechas, si corresponde a la toma de estado (desde el 1 al 30 del mes)
+                                PeriodoHasta: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').endOf('month').format('YYYY-MM-DD')
+                            },
+                            Emisor: Emisor,
+                            Receptor:{
+                                RUTRecep: member.rut.split('.').join(''),
+                                RznSocRecep: name,
+                                GiroRecep: category,
+                                CdgIntRecep: member.number,
+                                DirRecep: address,
+                                CmnaRecep: parameters.committee.commune,
+                            },
+                            Totales: totals
                         },
-                        Emisor: Emisor,
-                        Receptor:{
-                            RUTRecep: member.rut.split('.').join(''),
-                            RznSocRecep: name,
-                            DirRecep: member.address.address,
-                            CmnaRecep: parameters.committee.commune,
-                            CiudadRecep: parameters.committee.city
-                        },
-                        Totales: totals
-                    },
-                    Detalle: detail
+                        Detalle: detail
+                    }
                 }
             }
 
-
-        }else{
-            name = member.enterprise.fullName
-            category = member.enterprise.category
-
-            if(name==''){ //Sólo para efectos de TEST
-                name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
-                category = 'TEST'
+            
+            var settings = {
+                "url": "https://"+parameters.emisor.link+"/v2/dte/document",
+                "method": "POST",
+                "timeout": 0,
+                "headers": {
+                "apikey": parameters.apikey
+                },
+                "data": JSON.stringify(document)
             }
+            
+            $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
+            
+                console.log('ERROR', jqXHR.responseJSON.error.message)
+                console.log('ERROR', jqXHR.responseJSON.error.details)
+                loadingHandler('stop')
 
-            let address = member.address.address
-            if(member.enterprise.address){
-                address = member.enterprise.address
-            }
-            //let net = parseInt(invoice.invoiceTotal / 1.19)
-            //let iva = invoice.invoiceTotal - net
-
-            /*let Emisor = {
-                RUTEmisor: parameters.committee.rut.split('.').join(''),
-                RznSoc: parameters.committee.name,
-                GiroEmis: parameters.committee.category,
-                Acteco: parameters.committee.acteco,
-                DirOrigen: parameters.committee.address,
-                CmnaOrigen: parameters.committee.commune,
-                Telefono: parameters.committee.phone,
-                CdgSIISucur: parameters.committee.siiCode
-            }*/
-
-            let Emisor = { //EMISOR DE PRUEBA
-                RUTEmisor: parameters.emisor.RUTEmisor,
-                RznSoc: parameters.emisor.RznSoc,
-                GiroEmis: parameters.emisor.GiroEmisor,
-                Acteco: parameters.emisor.Acteco,
-                DirOrigen: parameters.emisor.DirOrigen,
-                CmnaOrigen: parameters.emisor.CmnaOrigen,
-                Telefono: parameters.emisor.Telefono,
-                CdgSIISucur: parameters.emisor.CdgSIISucur
-            }
-
-            /////////////////////////
-            let debt = 0
-            if(invoice.invoiceDebt){
-                debt = invoice.invoiceDebt
-            }
-
-            let totals = {
-                MntExe: invoice.invoiceSubTotal, //Facturable, suma de detalle con indicador exento "1"
-                MntTotal: invoice.invoiceSubTotal,
-                MontoNF: totalAgreement, //No facturable, suma de detalle con indicador exento "2"
-                //TotalPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
-                MontoPeriodo: invoice.invoiceSubTotal + totalAgreement, //Monto Total + Monto no Facturable
-                SaldoAnterior: debt, //Saldo anterior, sólo informativo
-                VlrPagar: invoice.invoiceSubTotal + totalAgreement + debt //Valor Total + Saldo anterior
-            }
-            /////////////////////////////
-
-            document = {
-                response: ["TIMBRE","FOLIO","RESOLUCION","XML"],
-                dte: {
-                    Encabezado: {
-                        IdDoc:{
-                            TipoDTE: invoice.type,
-                            Folio: 0,
-                            FchEmis: moment.utc(invoice.date).format('YYYY-MM-DD'),
-                            FchVenc: moment.utc(invoice.dateExpire).format('YYYY-MM-DD'),
-                            TpoTranCompra:"1",
-                            TpoTranVenta:"1",
-                            //FmaPago:"2",
-                            FmaPago:"1", //1=Contado 2=Crédito 3=Sin costo (entrega gratuita)
-                            IndServicio: "1", //1=Serv. periódicos domiciliarios
-                            PeriodoDesde: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').startOf('month').format('YYYY-MM-DD'), //Revisar fechas, si corresponde a la toma de estado (desde el 1 al 30 del mes)
-                            PeriodoHasta: moment.utc(invoice.lectures.year + '-' + invoice.lectures.month + '-01').endOf('month').format('YYYY-MM-DD')
-                        },
-                        Emisor: Emisor,
-                        Receptor:{
-                            RUTRecep: member.rut.split('.').join(''),
-                            RznSocRecep: name,
-                            GiroRecep: category,
-                            CdgIntRecep: member.number,
-                            DirRecep: address,
-                            CmnaRecep: parameters.committee.commune,
-                        },
-                        Totales: totals
-                    },
-                    Detalle: detail
+            }).done(async function (response) {
+                
+                console.log('response',response)
+                
+                let dteData = {
+                    id: invoiceID,
+                    type: invoice.type,
+                    number: response.FOLIO,
+                    seal: response.TIMBRE,
+                    token: response.TOKEN,
+                    resolution: response.RESOLUCION
                 }
-            }
+                
+
+                let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
+                loadingHandler('stop')
+
+                /*$('#modal_title').html(`Almacenado`)
+                $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
+                $('#modal').modal('show')*/
+                toastr.success('Documento generado correctamente')
+
+                printInvoicePortrait('pdf',member.type,member._id,invoiceID)
+
+                loadLectures(member)
+                
+            })
         }
-
-        
-        var settings = {
-            "url": "https://"+parameters.emisor.link+"/v2/dte/document",
-            "method": "POST",
-            "timeout": 0,
-            "headers": {
-            "apikey": parameters.apikey
-            },
-            "data": JSON.stringify(document)
-        }
-        
-        $.ajax(settings).fail( function( jqXHR, textStatus, errorThrown ) {
-        
-            console.log('ERROR', jqXHR.responseJSON.error.message)
-            console.log('ERROR', jqXHR.responseJSON.error.details)
-            loadingHandler('stop')
-
-        }).done(async function (response) {
-            
-            console.log('response',response)
-            
-            let dteData = {
-                id: invoiceID,
-                type: invoice.type,
-                number: response.FOLIO,
-                seal: response.TIMBRE,
-                token: response.TOKEN,
-                resolution: response.RESOLUCION
-            }
-            
-
-            let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
-            loadingHandler('stop')
-
-            /*$('#modal_title').html(`Almacenado`)
-            $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
-            $('#modal').modal('show')*/
-            toastr.success('Documento generado correctamente')
-
-            printInvoicePortrait('pdf',member.type,member._id,invoiceID)
-
-            loadLectures(member)
-            
-        })
     }
 }
 

@@ -40,7 +40,7 @@ function chargeCartolaTable() {
 
         internals.cartola.table = $('#tableCartola')
         .DataTable( {
-            dom: 'Bfrtip',
+            dom: 'Blfrtip',
             buttons: [
                 {
                     extend: 'excel',
@@ -57,7 +57,8 @@ function chargeCartolaTable() {
                     }
                 },
             ],
-            iDisplayLength: 10,
+            iDisplayLength: 50,
+            lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "Todo"] ],
             language: {
                 url: spanishDataTableLang
             },
@@ -200,29 +201,38 @@ async function getCartola() {
             el.sector = el.members.address.sector.name
             el.number = el.members.number
             el.name = el.members.personal.name + ' ' + el.members.personal.lastname1 + ' ' + el.members.personal.lastname2
-            if(el.members.type=='personal'){
-                el.name = el.members.personal.name + ' ' + el.members.personal.lastname1 + ' ' + el.members.personal.lastname2
-            }else{
+            if(el.members.type!='personal'){
                 el.name = el.members.enterprise.name
             }
 
             el.detail = ''
+            //console.log(el.members)
+            //console.log(el.invoices)
 
             for(let i=0; i < el.invoices.length; i++){
                 if(i>0){
                     el.detail = ', '
                 }
-                if(el.invoices[i].invoices.type==33){
-                    el.detail += 'FACTURA'
+                if(el.invoices[i].invoices){
+                    if(el.members.number==157){
+                        console.log(i,el.invoices[i].invoices)
+                    }
+
+                    if(el.invoices[i].invoices.type==33){
+                        el.detail += 'FACTURA '
+                    }else{
+                        el.detail += 'BOLETA '
+                    }
+                    if(el.invoices[i].invoices.number){
+                        el.detail += ' ' + el.invoices[i].invoices.number
+                    }else{
+                        el.detail += ' OTROS O SALDO ANTIGUO'
+                    }
                 }else{
-                    el.detail += 'BOLETA '
+                    el.detail += 'SALDO A FAVOR '
                 }
 
-                if(el.invoices[i].invoices.number){
-                    el.detail += ' ' + el.invoices[i].invoices.number
-                }else{
-                    el.detail += ' OTROS O SALDO ANTIGUO'
-                }
+                
             }
 
             //el.paymentMethod

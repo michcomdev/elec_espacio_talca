@@ -49,7 +49,7 @@ export default [
                     let query = {
                         date: {
                             $gte: `${payload.dateStart}`, //`${payload.startDate}T00:00:00.000Z`,
-                            $lt: `${payload.dateEnd}T23:59:59.999` //`${payload.endDate}T23:59:59.999Z`
+                            $lt: `${payload.dateEnd}T12:00:00.000` //`${payload.endDate}T23:59:59.999Z`
                         }
                     }
 
