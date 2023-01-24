@@ -1560,7 +1560,7 @@ async function sendData(type,memberID,invoiceID) {
         let generateDoc = await Swal.fire({
             title: 'Generar documento',
             customClass: 'swal-wide',
-            html: `Se emitirá comprobantede consumo<br/>¿Desea continuar?`,
+            html: `Se emitirá comprobante de consumo<br/>¿Desea continuar?`,
             showCloseButton: true,
             showCancelButton: true,
             showConfirmButton: true,
@@ -1596,6 +1596,7 @@ async function sendData(type,memberID,invoiceID) {
 
         return
     }else{
+
         if(invoice.invoiceSubTotal==0){
             let generateDoc = await Swal.fire({
                 title: 'Generar documento',

@@ -48,7 +48,9 @@ const parametersSchema = new Schema({
     text1b: { type: String },
     text2: { type: String },
     text3: { type: String },
-    invoiceCorrelative: { type: Number }
+    invoiceCorrelative: { type: Number },
+    receiptState: { type: Boolean },
+    receiptValue: { type: Number }
 }, {
     versionKey: false
 })

@@ -3,6 +3,7 @@ import Lectures from '../../models/Lectures'
 import Invoices from '../../models/Invoices'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
+import { jsonSchema } from 'uuidv4'
 
 const fs = require("fs")
 const { promisify } = require("util");
@@ -233,7 +234,11 @@ export default [
                         
                         members[j].lectures = lectures.find(x => x.members.toString() === members[j]._id.toString())
                         members[j].lectureLast = lecturesLast.find(x => x.members.toString() === members[j]._id.toString())
-                        
+
+                        if(!members[j].lectures && members[j].status=='inactive'){
+                            members.splice(j,1)
+                            j--
+                        }
                     }
 
 

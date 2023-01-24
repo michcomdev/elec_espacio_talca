@@ -379,9 +379,10 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     if(docType=='preview'){
         doc.addImage(test2DImg, 'PNG', pdfX + 220, pdfY, 260, 106, null, null, 90)
     }else if(docType=='pdf'){
-        doc.setFillColor(255, 255, 255)
-        doc.rect(pdfX + 220, pdfY - 260, 106, 260, 'F')
+        
         if(invoice.seal){
+            doc.setFillColor(255, 255, 255)
+            doc.rect(pdfX + 220, pdfY - 260, 106, 260, 'F')
             doc.addImage(invoice.seal, 'PNG', pdfX + 326, pdfY - 106, 260, 106, null, null, 90)
         }
         textMaxWidth = 260
