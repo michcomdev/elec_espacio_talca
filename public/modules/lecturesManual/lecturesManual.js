@@ -61,7 +61,7 @@ async function getParameters() {
     let setYear = moment().format('YYYY')
     let setMonth = moment().format('MM')
 
-    if(moment().day()<20){
+    if(parseInt(moment().format('DD'))<20){
         if(setMonth=='01'){
             setYear = moment().add(-1,'y').format('YYYY')
             setMonth = '12'
@@ -626,14 +626,17 @@ async function printList() {
         tableRows.push([members[i].number, memberName, members[i].address, lastLecture, '', ''])
     }
     
+    console.log(tableColumns,tableRows)
 
-    doc.autoTable(tableColumns, tableRows, {
+    doc.autoTable({
         /*createdCell: function (cell, data) {
             cell.styles.fillColor = 'rgb(107,165,57)'
             cell.styles.textColor = '#FFFFFF'
             cell.styles.fontStyle = 'bold'
             tableFinal = data.table
         },*/
+        head: [tableColumns],
+        body: tableRows,
         theme: 'grid',
         headerStyles: {lineWidth: 0.1, lineColor: [0, 0, 0]},
         bodyStyles: {lineColor: [0, 0, 0]},
