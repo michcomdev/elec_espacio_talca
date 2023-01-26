@@ -77,8 +77,6 @@ function chargeSummaryTable() {
                     ],
             order: [[ 0, 'asc' ]],
             ordering: true,
-            rowCallback: function( row, data ) {
-            },
             columns: [
                 { data: 'date' },
                 { data: 'first' },

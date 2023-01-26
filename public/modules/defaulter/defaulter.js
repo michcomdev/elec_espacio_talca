@@ -55,7 +55,8 @@ function loadDefaulter() {
                     className: 'btn-pdf'
                 },
             ],
-            iDisplayLength: 10,
+            //iDisplayLength: 10,
+            paging: false,
             language: {
                 url: spanishDataTableLang
             },
@@ -73,21 +74,31 @@ function loadDefaulter() {
                         }],
             order: [[ 0, 'asc' ]],
             ordering: true,
-            rowCallback: function( row, data ) {
-          },
-          columns: [
-            { data: 'number' },
-            { data: 'name' },
-            { data: 'address' },
-            { data: 'rut' },
-            { data: 'toPay' },
-            { data: 'paid' },
-            { data: 'balance' },
-            { data: 'months' }
-          ],
-          initComplete: function (settings, json) {
-            getDefaulter()
-          }
+
+            columns: [
+                { data: 'number' },
+                { data: 'name' },
+                { data: 'address' },
+                { data: 'rut' },
+                { data: 'toPay' },
+                { data: 'paid' },
+                { data: 'balance' },
+                { data: 'months' }
+            ],
+            initComplete: function (settings, json) {
+                getDefaulter()
+            },
+            rowCallback: function (row, data) {
+
+                console.log(row)
+                if($(row).find('td:eq(0)').text()=='10000'){
+                    $(row).find('td:eq(0)').html(``)
+                    $(row).find('td:eq(3)').html(`<label style="font-weight: bold">$ ${dot_separators(data.rut)}</label>`)
+                    $(row).find('td:eq(4)').html(`<label style="font-weight: bold">$ ${dot_separators(data.toPay)}</label>`)
+                    $(row).find('td:eq(5)').html(`<label style="font-weight: bold">$ ${dot_separators(data.paid)}</label>`)
+                    $(row).find('td:eq(6)').html(`<label style="font-weight: bold">$ ${dot_separators(data.balance)}</label>`)
+                }
+            }
         })
 
         $('#tableDefaulter tbody').off("click")
@@ -146,12 +157,10 @@ async function getDefaulter() {
         dateEnd: $("#searchDate").data('daterangepicker').endDate.format('YYYY-MM-DD')*/
     }
 
-    console.log(query)
-
     let invoicesData = await axios.post('api/defaulters', query)
     let invoices = invoicesData.data
 
-    console.log(invoices)
+    let toPay = 0, paid = 0, balance = 0
     
     if (invoices.length > 0) {
         let formatData = invoices.filter(el => {
@@ -189,11 +198,28 @@ async function getDefaulter() {
             //el.transaction
             el.amountSeparator = el.amount
             //el.amount*/
+            toPay += el.toPay
+            paid += el.paid
+            balance += el.balance
             
             return el
         })
 
+        console.log(toPay, paid, balance)
+
         if(formatData.length>0){
+            formatData.push({
+                number: '10000',
+                name: '',
+                address: '',
+                rut: 'TOTAL',
+                toPay: toPay,
+                paid: paid,
+                balance: balance,
+                months: '',
+            })
+
+
             internals.defaulter.table.rows.add(formatData).draw()
         }else{
             toastr.warning('No se han encontrado datos de pagos')

@@ -743,7 +743,6 @@ export default [
 
                     for(let i=0; i<invoices.length; i++){
                         let member = array.find(x => x.member_id.toString() === invoices[i].members._id.toString())
-
                         if(member){
                             member.toPay += invoices[i].invoiceSubTotal
                             member.paid += invoices[i].invoicePaid

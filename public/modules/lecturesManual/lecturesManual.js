@@ -243,7 +243,7 @@ async function getMembers() {
             el.address = el.address.address
             
             el.lastLecture = 0
-            el.lecture = `<input id="lecture-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="0"></input>`
+            el.lecture = `<input id="lecture-${el._id}" onkeyup="calculateValue('${el._id}')" tabindex="${order}" onkeydown="setFocus(event,this,'${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="0"></input>`
             el.value = 0
             el.date = ''
             el.lectureNew = `<i class="fas fa-plus" onclick="addLectureNew(this,'${el._id}')"></i>`
@@ -255,7 +255,7 @@ async function getMembers() {
                 }
             }
             if(el.lectures){
-                el.lecture = `<input id="lecture-${el._id}" onkeyup="calculateValue('${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lecture)}"></input>`
+                el.lecture = `<input id="lecture-${el._id}" onkeyup="calculateValue('${el._id}')" tabindex="${order}" onkeydown="setFocus(event,this,'${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="${dot_separators(el.lectures.logs[el.lectures.logs.length-1].lecture)}"></input>`
                 el.date = moment(el.lectures.logs[el.lectures.logs.length-1].date).utc().format('DD/MM/YYYY HH:mm')
                 el.value = dot_separators(el.lectures.logs[el.lectures.logs.length-1].lecture - el.lastLecture)
 
@@ -360,27 +360,29 @@ $('#saveLectures').on('click', async function () {
             lectures: [],
             members: []
         }
+
+        console.log(members)
         
         for(let i=0; i < members.length; i++){
 
             //Gris por defecto: rgba(0, 0, 0, 0.1)
-            //Rojo: rgb(0, 0, 0, 0.1)
+            //Rojo: rgb(231, 76, 60)
             //Azul: rgb(69, 130, 236)
             let lectureInputNew = false
             if($("#lectureNewStart-"+members[i]._id).length>0){
                 lectureInputNew = true
             }
 
-            if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(231, 76, 60)'){
+            if($("#lecture-"+members[i]._id).css('border').includes('solid rgb(231, 76, 60)')){
                 i = members.length
                 toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
 
             }else if(lectureInputNew){ //En caso que haya medidor nuevo
-                if($("#lectureNewStart-"+members[i]._id).css('border') == '1px solid rgb(231, 76, 60)'){
+                if($("#lectureNewStart-"+members[i]._id).css('border').includes('solid rgb(231, 76, 60)')){
                     i = members.length
                     toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
                 }else{
-                    if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(69, 130, 236)' || $("#lectureNewStart-"+members[i]._id).css('border') == '1px solid rgb(69, 130, 236)'){
+                    if($("#lecture-"+members[i]._id).css('border').includes('solid rgb(69, 130, 236)') || $("#lectureNewStart-"+members[i]._id).css('border').includes('solid rgb(69, 130, 236)')){
                         array.lectures.push({
                             member: members[i]._id,
                             lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
@@ -392,7 +394,7 @@ $('#saveLectures').on('click', async function () {
                     }
                 }
 
-            }else if($("#lecture-"+members[i]._id).css('border') == '1px solid rgb(69, 130, 236)'){
+            }else if($("#lecture-"+members[i]._id).css('border').includes('solid rgb(69, 130, 236)')){
                 array.lectures.push({
                     member: members[i]._id,
                     lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
@@ -418,8 +420,12 @@ $('#saveLectures').on('click', async function () {
                 }
             }
 
+
+
             if(i+1==members.length){
                 console.log(array)
+                console.log('here')
+                return
                 
                 if(array.lectures.length>0){
                     loadingHandler('start')
@@ -454,8 +460,6 @@ function calculateValue(member){
     let lectureInputNew = false
     let lectureInputNewValue = 0
 
-    console.log($("#lectureNewStart-"+member).length)
-    
     if($("#lectureNewStart-"+member).length>0){
         let lectureNewStart = replaceAll($("#lectureNewStart-"+member).val(), '.', '').replace(' ', '')
         let lectureNewEnd = replaceAll($("#lectureNewEnd-"+member).val(), '.', '').replace(' ', '')
@@ -523,6 +527,116 @@ function calculateValue(member){
     $("#lectureValue-"+member).text(dot_separators(value))
 }
 
+async function saveOne(member_id){
+
+    let array = {
+        users: userCredentials._id,
+        date: moment().format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]'),
+        year: yearSelected, //MODIFICAR
+        month: monthSelected, //MODIFICAR
+        lectures: [],
+        members: []
+    }
+
+    member = members.find(x => x._id===member_id)
+
+    //Gris por defecto: rgba(0, 0, 0, 0.1)
+    //Rojo: rgb(231, 76, 60)
+    //Azul: rgb(69, 130, 236)
+    let lectureInputNew = false
+    if($("#lectureNewStart-"+member._id).length>0){
+        lectureInputNew = true
+    }
+
+    if($("#lecture-"+member._id).css('border').includes('solid rgb(231, 76, 60)')){
+        toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
+        return
+
+    }else if(lectureInputNew){ //En caso que haya medidor nuevo
+        if($("#lectureNewStart-"+member._id).css('border').includes('solid rgb(231, 76, 60)')){
+            toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
+            return
+        }else{
+            if($("#lecture-"+member._id).css('border').includes('solid rgb(69, 130, 236)') || $("#lectureNewStart-"+member._id).css('border').includes('solid rgb(69, 130, 236)')){
+                array.lectures.push({
+                    member: member._id,
+                    lecture: parseInt(replaceAll($("#lecture-"+member._id).val(), '.', '').replace(' ', '')),
+                    lectureNewStart: parseInt(replaceAll($("#lectureNewStart-"+member._id).val(), '.', '').replace(' ', '')),
+                    lectureNewEnd: parseInt(replaceAll($("#lectureNewEnd-"+member._id).val(), '.', '').replace(' ', '')),
+                    fine: $(`#lectureFine-${member._id}`).prop('checked')
+                })
+                array.members.push(member._id)
+            }
+        }
+
+    }else if($("#lecture-"+member._id).css('border').includes('solid rgb(69, 130, 236)')){
+        array.lectures.push({
+            member: member._id,
+            lecture: parseInt(replaceAll($("#lecture-"+member._id).val(), '.', '').replace(' ', '')),
+            fine: $(`#lectureFine-${member._id}`).prop('checked')
+        })
+        array.members.push(member._id)
+    }else if(member.lectures){
+
+        if(member.lectures.logs[member.lectures.logs.length-1].lectureNewStart !== undefined && !lectureInputNew){//Caso en que borren la lectura del medidor nuevo
+            array.lectures.push({
+                member: member._id,
+                lecture: parseInt(replaceAll($("#lecture-"+member._id).val(), '.', '').replace(' ', '')),
+                fine: $(`#lectureFine-${member._id}`).prop('checked')
+            })
+            array.members.push(member._id)
+        }else if(member.fine!=$(`#lectureFine-${member._id}`).prop('checked')){
+            array.lectures.push({
+                member: member._id,
+                lecture: parseInt(replaceAll($("#lecture-"+member._id).val(), '.', '').replace(' ', '')),
+                fine: $(`#lectureFine-${member._id}`).prop('checked')
+            })
+            array.members.push(member._id)
+        }
+    }
+
+    if(array.members.length>0){
+        console.log(array)
+        console.log('here')
+        
+        if(array.lectures.length>0){
+            //loadingHandler('start')
+            //ALMACENADO...
+            let saveLecture = await axios.post('/api/lectureSaveManual', array)
+            //loadingHandler('stop')
+
+            console.log(saveLecture)
+
+            if(saveLecture.data=='OK'){
+                if($("#lectureNewStart-"+member_id)){
+                    $("#lectureNewStart-"+member_id).css('border', '')
+                    $("#lectureNewEnd-"+member_id).css('border', '')
+                }
+                $("#lecture-"+member_id).css('border', '')
+
+                let index = $($("#lecture-"+member_id).parent().parent().children()[10]).html().indexOf('<i')
+                let text = $($("#lecture-"+member_id).parent().parent().children()[10]).html().slice(index)
+                $($("#lecture-"+member_id).parent().parent().children()[10]).html('AHORA '+text)
+
+                toastr.success('Almacenado correctamente')
+            }else{
+                toastr.warning('Ha ocurrido un error al almacenar, favor reintente o contacte al administrador')
+            }
+        }else{
+            toastr.warning('No ha realizado cambios, se mantienen los datos actuales')
+        }
+    }
+
+}
+
+function setFocus(e, input, member_id){
+    if(e.keyCode==13){
+        saveOne(member_id)
+        let nextIndex = parseInt($(input).attr('tabindex')) + 1
+        $(`[tabindex=${nextIndex}]`).focus()
+    }
+}
+
 $('#updateLectures').on('click', async function () {
 
     let memberData = await axios.post('/api/memberSingle', { id: internals.dataRowSelected._id })
@@ -569,6 +683,7 @@ function addLectureNew(btn,id){
 function removeLectureNew(btn,id){
     $(btn).parent().html(`<i class="fas fa-plus" onclick="addLectureNew(this,'${id}')"></i>`)
     calculateValue(id)
+    //saveOne(id)
 }
 
 
@@ -747,7 +862,7 @@ async function updateOrder(type, row, actual, max){
 }
 
 async function removeLecture(btn,id,year,month){
-console.log($(btn).parent().html())
+
     if(!$.isNumeric($(btn).parent().html()[0])){
         $($(btn).parent().parent().children()[7]).html(`<i class="fas fa-plus" onclick="addLectureNew(this,'${id}')"></i>`)
         $($($(btn).parent().parent().children()[6]).children()[0]).val(0)
