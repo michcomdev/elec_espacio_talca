@@ -47,7 +47,7 @@ async function getParameters() {
     let setYear = moment().format('YYYY')
     let setMonth = moment().format('MM')
 
-    if(moment().day()<20){
+    if(parseInt(moment().format('DD'))<20){
         if(setMonth=='01'){
             setYear = moment().add(-1,'y').format('YYYY')
             setMonth = '12'
@@ -170,7 +170,7 @@ async function getLectures() {
         month: $("#searchMonth").val()
     }
     let lecturesData = await axios.post('api/lecturesSectorMembers', query)
-console.log(lecturesData.data)
+
     internals.members.data = lecturesData.data
 
     internals.invoices = []
@@ -345,8 +345,6 @@ async function calculate(){
 
             let el = array[i]
             
-            console.log(el)
-
             let invoiceServices = [], sewerage = 0, fine = 0, others = 0, debtFine = 0
 
             if(el.invoice.sewerage){
@@ -591,10 +589,7 @@ async function calculate(){
                 expireDate = moment(expireDate).utc().format('YYYY-MM-DD')
             }
 
-            console.log(i,array[i])
-            console.log('expireDate',expireDate)
-
-
+            
             internals.invoices.push({
                 lectures: array[i]._id,
                 member: array[i].members._id,
@@ -1536,6 +1531,8 @@ async function sendData(type,memberID,invoiceID) {
     let parametersData = await axios.get('/api/parameters')
     let parameters = parametersData.data
 
+    console.log('receiptstate',parameters.receiptState)
+
     if(parameters.receiptState){
 
         let dteData = {
@@ -1555,7 +1552,7 @@ async function sendData(type,memberID,invoiceID) {
 
 
     }else{
-        
+        return
         let dteType = 34 //Factura exenta electrónica
         let name = '', category = ''
         let document = ''
@@ -1950,12 +1947,12 @@ async function printFinal(array){
         doc.setFillColor(26, 117, 187)
         doc.rect(pdfX - 3, pdfY - 10, 265, 13, 'F')
 
-        doc.setFontSize(9)
+        doc.setFontSize(12)
         doc.setFontType('bold')
         doc.setTextColor(255, 255, 255)
-        doc.text('Su consumo en m3 de este mes (1m3 = 1.000 lts de agua)', pdfX, pdfY)
+        doc.text('Consumo en m3 (1m3 = 1.000 lts de agua)', pdfX, pdfY)
 
-        doc.setFontSize(10)
+        doc.setFontSize(14)
         doc.setFontType('normal')
         doc.setTextColor(0, 0, 0)
         
@@ -1993,7 +1990,7 @@ async function printFinal(array){
         doc.text('Consumo Facturado', pdfX, pdfY + 124)
 
 
-        doc.setFontSize(10)
+        doc.setFontSize(14)
         doc.setFontType('normal')
 
         doc.text(dot_separators(array[k].invoice.lectureActual), pdfX + 250, pdfY + 20, 'right')
@@ -2028,12 +2025,12 @@ async function printFinal(array){
         doc.setFillColor(26, 117, 187)
         doc.rect(pdfX - 3, pdfY - 10, 265, 13, 'F')
 
-        doc.setFontSize(9)
+        doc.setFontSize(12)
         doc.setFontType('bold')
         doc.setTextColor(255, 255, 255)
-        doc.text('Detalle de consumos y servicios en pesos de este mes', pdfX, pdfY)
+        doc.text('Detalle de consumos y servicios de este mes', pdfX, pdfY)
 
-        doc.setFontSize(10)
+        doc.setFontSize(14)
         doc.setFontType('normal')
         doc.setTextColor(0, 0, 0)
         doc.text('Cargo Fijo', pdfX, pdfY + 20)
@@ -2062,7 +2059,7 @@ async function printFinal(array){
             doc.text('Recargo 20%', pdfX, pdfY + 33 + pdfYTemp)
         }
         doc.setFontType('bold')
-        doc.text('SubTotal Consumo Mes Tributable', pdfX, pdfY + 111)
+        doc.text('SubTotal Consumo Tributable', pdfX, pdfY + 111)
 
         index = 85 + 39
 
@@ -2084,7 +2081,7 @@ async function printFinal(array){
         doc.setFontType('bold')
         doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
 
-        doc.setFontSize(10)
+        doc.setFontSize(14)
         doc.setFontType('normal')
 
         doc.text(dot_separators(array[k].invoice.charge), pdfX + 250, pdfY + 20, 'right')
@@ -2144,7 +2141,7 @@ async function printFinal(array){
         //////TOTALES Y CÓDIGO SII//////
         pdfY += 50
         doc.setFillColor(23, 162, 184)
-        doc.rect(pdfX - 3, pdfY + 118, 260, 78, 'F')
+        doc.rect(pdfX - 3, pdfY + 118, 260, 43, 'F')
     
         doc.text('Valor Tributable', pdfX, pdfY + 130)
         doc.text('Valor No Tributable', pdfX, pdfY + 143)
@@ -2156,27 +2153,34 @@ async function printFinal(array){
         doc.text(dot_separators(value2), pdfX + 250, pdfY + 143, 'right')
         doc.text(dot_separators(value3), pdfX + 250, pdfY + 156, 'right')
         
-        doc.setFontSize(12)
+        doc.setFillColor(0, 0, 0)
+        doc.rect(pdfX - 4, pdfY + 169, 262, 38, 'F')
+        doc.setFillColor(21, 88, 141)
+        doc.rect(pdfX - 2, pdfY + 171, 258, 34, 'F')
+        doc.setFontSize(17)
         doc.setTextColor(255, 255, 255)
-        doc.text('TOTAL A PAGAR', pdfX, pdfY + 173)
-        doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 188)
-        doc.text('= $ ', pdfX + 180, pdfY + 173, 'center')
-        doc.text(dot_separators(array[k].invoice.invoiceTotal), pdfX + 250, pdfY + 173, 'right')
-        doc.text(moment(array[k].invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 188, 'right')
+        doc.text('TOTAL A PAGAR', pdfX, pdfY + 185)
+        doc.text('$ ', pdfX + 155, pdfY + 185, 'center')
+        doc.setFontSize(20)
+        doc.text(dot_separators(array[k].invoice.invoiceTotal), pdfX + 250, pdfY + 185, 'right')
+
+        doc.setFontSize(13)
+        doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 203)
+        doc.text(moment(array[k].invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 203, 'right')
 
 
-        doc.setFontSize(8)
+        doc.setFontSize(10)
         doc.setFontType('normal')
         doc.setTextColor(0, 0, 0)
 
         if(docType=='preview'){
             doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 220, 260, 106)
         }else if(docType=='pdf'){
-            
+            console.log(array[k].invoice.seal)
             if(array[k].invoice.seal){
                 doc.setFillColor(255, 255, 255)
-                doc.rect(pdfX, pdfY + 220, 260, 106, 'F')
-                doc.addImage(array[k].invoice.seal, 'PNG', pdfX, pdfY + 220, 260, 106)
+                doc.rect(pdfX, pdfY + 225, 260, 106, 'F')
+                doc.addImage(array[k].invoice.seal, 'PNG', pdfX, pdfY + 225, 260, 106)
 
                 //doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 335, 'center')
                 //doc.text(`Res. ${array[k].invoice.resolution.numero} del ${moment(array[k].invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 345, 'center')
@@ -2184,23 +2188,20 @@ async function printFinal(array){
 
             if(docName2!='COMPROBANTE DE AVISO'){
                 text = 'Timbre Electrónico S.I.I.'
-                doc.text(text, pdfX + 130, pdfY + 335, 'center')
+                doc.text(text, pdfX + 130, pdfY + 340, 'center')
                 text = `Res. ${array[k].invoice.resolution.numero} del ${moment(array[k].invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`
-                doc.text(text, pdfX + 130, pdfY + 345, 'center')
+                doc.text(text, pdfX + 130, pdfY + 350, 'center')
             }else{
                 text = 'Documento informativo, no válido como boleta'
-                doc.text(text, pdfX + 130, pdfY + 335, 'center')
+                doc.text(text, pdfX + 130, pdfY + 340, 'center')
             }
-
-
         }
-
 
         ///////GRÁFICO CONSUMOS///////
 
         pdfX = 30
         pdfY += 150
-        doc.setFontSize(9)
+        doc.setFontSize(10)
         doc.setFontType('bold')
         doc.setTextColor(0, 0, 0)
         doc.text('Su consumo en m3 durante los últimos 13 meses fue:', pdfX, pdfY)
@@ -2338,7 +2339,7 @@ async function printFinal(array){
 
         pdfX = 30
         pdfY += 210
-        doc.setFontSize(9)
+        doc.setFontSize(10)
         doc.setFontType('bold')
         //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
         /*if(array[k].invoice.text1){

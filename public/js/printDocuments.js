@@ -131,12 +131,12 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     doc.rect(pdfX, pdfY - 262, 13, 265, 'F')
 
     pdfX += 10
-    doc.setFontSize(9)
+    doc.setFontSize(10)
     doc.setFontType('bold')
     doc.setTextColor(255, 255, 255)
-    doc.text('Su consumo en m3 de este mes (1m3 = 1.000 lts de agua)', pdfX, pdfY, 'left', 90)
+    doc.text('Consumo en m3 (1m3 = 1.000 lts de agua)', pdfX, pdfY, 'left', 90)
 
-    doc.setFontSize(10)
+    doc.setFontSize(14)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
     
@@ -171,7 +171,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     doc.setFontType('bold')
     doc.text('Consumo Facturado', pdfX + 124, pdfY, 'left', 90)
 
-    doc.setFontSize(10)
+    doc.setFontSize(14)
     doc.setFontType('normal')
 
     text = dot_separators(invoice.lectureActual)
@@ -216,12 +216,12 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     doc.rect(pdfX, pdfY - 262, 13, 265, 'F')
     
     pdfX += 10
-    doc.setFontSize(9)
+    doc.setFontSize(12)
     doc.setFontType('bold')
     doc.setTextColor(255, 255, 255)
-    doc.text('Detalle de consumos y servicios en pesos de este mes', pdfX, pdfY, 'left', 90)
+    doc.text('Detalle de consumos y servicio de este mes', pdfX, pdfY, 'left', 90)
 
-    doc.setFontSize(10)
+    doc.setFontSize(14)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
     doc.text('Cargo Fijo', pdfX + 20, pdfY, 'left', 90)
@@ -253,7 +253,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
 
 
     doc.setFontType('bold')
-    doc.text('SubTotal Consumo Mes Tributable', pdfX + 111, pdfY, 'left', 90)
+    doc.text('SubTotal Consumo Tributable', pdfX + 111, pdfY, 'left', 90)
 
     let index = 85 + 39
 
@@ -275,7 +275,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     doc.text('Saldo Anterior', pdfX + index + 13, pdfY, 'left', 90)
 
 
-    doc.setFontSize(10)
+    doc.setFontSize(14)
     doc.setFontType('normal')
 
     text = dot_separators(invoice.charge)
@@ -346,7 +346,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     pdfX += 50
 
     doc.setFillColor(23, 162, 184)
-    doc.rect(pdfX + 118, pdfY - 257, 78, 260, 'F')
+    //doc.rect(pdfX + 118, pdfY - 257, 78, 260, 'F')
+    doc.rect(pdfX + 118, pdfY - 257, 43, 260, 'F')
 
     doc.text('Valor Tributable', pdfX + 130, pdfY, 'left', 90)
     doc.text('Valor No Tributable', pdfX + 143, pdfY, 'left', 90)
@@ -362,38 +363,46 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     text = dot_separators(value3)
     doc.text(text, pdfX + 156, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     
-    doc.setFontSize(12)
-    doc.setTextColor(255, 255, 255)
-    doc.text('TOTAL A PAGAR', pdfX + 173, pdfY, 'left', 90)
-    doc.text('FECHA VENCIMIENTO', pdfX + 188, pdfY, 'left', 90)
-    doc.text('= $ ', pdfX + 173, offsetY('center', pdfY - 160, textMaxWidth, text, doc), 'left', 90)
-    text = dot_separators(invoice.invoiceTotal)
-    doc.text(text, pdfX + 173, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
-    text = moment(invoice.dateExpire).utc().format('DD/MM/YYYY')
-    doc.text(text, pdfX + 188, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    doc.setFillColor(0, 0, 0)
+    doc.rect(pdfX + 164, pdfY - 257, 38, 262, 'F')
+    doc.setFillColor(21, 88, 141)
+    doc.rect(pdfX + 166, pdfY - 255, 34, 258, 'F')
 
-    doc.setFontSize(8)
+    doc.setFontSize(17)
+    doc.setTextColor(255, 255, 255)
+    doc.text('TOTAL A PAGAR', pdfX + 181, pdfY, 'left', 90)
+    doc.text('= $ ', pdfX + 181, offsetY('center', pdfY - 160, textMaxWidth, text, doc), 'left', 90)
+    doc.setFontSize(20)
+    text = dot_separators(invoice.invoiceTotal)
+    doc.text(text, pdfX + 181, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+
+    doc.setFontSize(13)
+    doc.text('FECHA VENCIMIENTO', pdfX + 198, pdfY, 'left', 90)
+    text = moment(invoice.dateExpire).utc().format('DD/MM/YYYY')
+    doc.text(text, pdfX + 198, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+
+    doc.setFontSize(10)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
 
     if(docType=='preview'){
-        doc.addImage(test2DImg, 'PNG', pdfX + 220, pdfY, 260, 106, null, null, 90)
+        doc.addImage(test2DImg, 'PNG', pdfX + 225, pdfY, 260, 106, null, null, 90)
     }else if(docType=='pdf'){
         
         if(invoice.seal){
             doc.setFillColor(255, 255, 255)
-            doc.rect(pdfX + 220, pdfY - 260, 106, 260, 'F')
+            doc.rect(pdfX + 225, pdfY - 260, 106, 260, 'F')
             doc.addImage(invoice.seal, 'PNG', pdfX + 326, pdfY - 106, 260, 106, null, null, 90)
         }
         textMaxWidth = 260
         if(docName2!='COMPROBANTE DE AVISO'){
             text = 'Timbre Electrónico S.I.I.'
-            doc.text(text, pdfX + 335, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+            doc.text(text, pdfX + 340, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
             text = `Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`
-            doc.text(text, pdfX + 345, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+            doc.text(text, pdfX + 350, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
         }else{
             text = 'Documento informativo, no válido como boleta'
-            doc.text(text, pdfX + 335, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+            doc.text(text, pdfX + 340, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
         }
     }
 
@@ -404,7 +413,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
 
     pdfX += 150
     pdfY = 582
-    doc.setFontSize(9)
+    doc.setFontSize(10)
     doc.setFontType('bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Su consumo en m3 durante los últimos 13 meses fue:', pdfX, pdfY, 'left', 90)
@@ -560,7 +569,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
 
     pdfX = 635
     pdfY = 582
-    doc.setFontSize(9)
+    doc.setFontSize(10)
     doc.setFontType('bold')
     
     if(invoice.text1){
@@ -779,12 +788,12 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.setFillColor(26, 117, 187)
     doc.rect(pdfX - 3, pdfY - 10, 265, 13, 'F')
 
-    doc.setFontSize(9)
+    doc.setFontSize(12)
     doc.setFontType('bold')
     doc.setTextColor(255, 255, 255)
-    doc.text('Su consumo en m3 de este mes (1m3 = 1.000 lts de agua)', pdfX, pdfY)
+    doc.text('Consumo en m3 (1m3 = 1.000 lts de agua)', pdfX, pdfY)
 
-    doc.setFontSize(10)
+    doc.setFontSize(14)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
     
@@ -822,7 +831,7 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.text('Consumo Facturado', pdfX, pdfY + 124)
 
 
-    doc.setFontSize(10)
+    doc.setFontSize(14)
     doc.setFontType('normal')
 
     doc.text(dot_separators(invoice.lectureActual), pdfX + 250, pdfY + 20, 'right')
@@ -856,12 +865,12 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.setFillColor(26, 117, 187)
     doc.rect(pdfX - 3, pdfY - 10, 265, 13, 'F')
 
-    doc.setFontSize(9)
+    doc.setFontSize(12)
     doc.setFontType('bold')
     doc.setTextColor(255, 255, 255)
-    doc.text('Detalle de consumos y servicios en pesos de este mes', pdfX, pdfY)
+    doc.text('Detalle de consumos y servicios de este mes', pdfX, pdfY)
 
-    doc.setFontSize(10)
+    doc.setFontSize(14)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
     doc.text('Cargo Fijo', pdfX, pdfY + 20)
@@ -893,7 +902,7 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
 
 
     doc.setFontType('bold')
-    doc.text('SubTotal Consumo Mes Tributable', pdfX, pdfY + 111)
+    doc.text('SubTotal Consumo Tributable', pdfX, pdfY + 111)
 
     let index = 85 + 39
 
@@ -918,7 +927,7 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
     //doc.text('Monto Total', pdfX, pdfY + index + 26)
 
-    doc.setFontSize(10)
+    doc.setFontSize(14)
     doc.setFontType('normal')
 
     doc.text(dot_separators(invoice.charge), pdfX + 250, pdfY + 20, 'right')
@@ -986,7 +995,8 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     pdfY += 50
 
     doc.setFillColor(23, 162, 184)
-    doc.rect(pdfX - 3, pdfY + 118, 260, 78, 'F')
+    //doc.rect(pdfX - 3, pdfY + 118, 260, 78, 'F')
+    doc.rect(pdfX - 3, pdfY + 118, 260, 43, 'F')
 
     doc.text('Valor Tributable', pdfX, pdfY + 130)
     doc.text('Valor No Tributable', pdfX, pdfY + 143)
@@ -998,31 +1008,40 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.text(dot_separators(value2), pdfX + 250, pdfY + 143, 'right')
     doc.text(dot_separators(value3), pdfX + 250, pdfY + 156, 'right')
     
-    doc.setFontSize(12)
-    doc.setTextColor(255, 255, 255)
-    doc.text('TOTAL A PAGAR', pdfX, pdfY + 173)
-    doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 188)
-    doc.text('= $ ', pdfX + 180, pdfY + 173, 'center')
-    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 173, 'right')
-    doc.text(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 188, 'right')
 
-    doc.setFontSize(8)
+    doc.setFillColor(0, 0, 0)
+    doc.rect(pdfX - 4, pdfY + 169, 262, 38, 'F')
+    doc.setFillColor(21, 88, 141)
+    doc.rect(pdfX - 2, pdfY + 171, 258, 34, 'F')
+    doc.setFontSize(17)
+    doc.setTextColor(255, 255, 255)
+    doc.text('TOTAL A PAGAR', pdfX, pdfY + 185)
+    doc.text('$ ', pdfX + 155, pdfY + 185, 'center')
+    doc.setFontSize(20)
+    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 185, 'right')
+    
+    doc.setFontSize(13)
+    doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 203)
+    doc.text(moment(invoice.dateExpire).utc().format('DD/MM/YYYY'), pdfX + 250, pdfY + 203, 'right')
+
+    doc.setFontSize(10)
     doc.setFontType('normal')
     doc.setTextColor(0, 0, 0)
 
     if(docType=='preview'){
-        doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 220, 260, 106)
+        doc.addImage(test2DImg, 'PNG', pdfX, pdfY + 225, 260, 106)
     }else if(docType=='pdf'){
-        doc.setFillColor(255, 255, 255)
-        doc.rect(pdfX, pdfY + 220, 260, 106, 'F')
+        
         if(invoice.seal){
-            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 220, 260, 106)
+            doc.setFillColor(255, 255, 255)
+            doc.rect(pdfX, pdfY + 225, 260, 106, 'F')
+            doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 225, 260, 106)
         }
         if(docName2!='COMPROBANTE DE AVISO'){
-            doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 335, 'center')
-            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 345, 'center')
+            doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 340, 'center')
+            doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 350, 'center')
         }else{
-            doc.text('Documento informativo, no válido como boleta', pdfX + 130, pdfY + 335, 'center')
+            doc.text('Documento informativo, no válido como boleta', pdfX + 130, pdfY + 340, 'center')
         }
     }
 
@@ -1031,7 +1050,7 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
 
     pdfX = 30
     pdfY += 150
-    doc.setFontSize(9)
+    doc.setFontSize(10)
     doc.setFontType('bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Su consumo en m3 durante los últimos 13 meses fue:', pdfX, pdfY)
@@ -1167,7 +1186,7 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
 
     pdfX = 30
     pdfY += 200
-    doc.setFontSize(9)
+    doc.setFontSize(10)
     doc.setFontType('bold')
     //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
     if(invoice.text1){
@@ -1176,13 +1195,14 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     }
     if(invoice.text2){
         doc.setTextColor(0, 0, 0)
-        doc.text(invoice.text2, pdfX, pdfY + 12, {maxWidth: doc.internal.pageSize.getWidth() - 30})
-        doc.text(invoice.text3, pdfX, pdfY + 24, {maxWidth: doc.internal.pageSize.getWidth() - 30})
+        doc.text(invoice.text2, pdfX, pdfY + 13, {maxWidth: doc.internal.pageSize.getWidth() - 30})
+        doc.text(invoice.text3, pdfX, pdfY + 26, {maxWidth: doc.internal.pageSize.getWidth() - 30})
     }
 
     doc.setFillColor(26, 117, 187)
     doc.rect(pdfX - 3, doc.internal.pageSize.getHeight() - 60, doc.internal.pageSize.getWidth() - 57, 17, 'F')
 
+    doc.setFontSize(10)
     doc.setTextColor(255, 255, 255)
     doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, pdfX, doc.internal.pageSize.getHeight() - 48)
     

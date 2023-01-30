@@ -31,7 +31,9 @@ $(document).ready(async function () {
     getParameters()
 
     chargeMembersTable()
-    //printInvoice('pdf','personal','62631b789666da52dcc90718','63b5c5af92af4e044d4cb385')
+    //printInvoice('pdf','personal','6321dfae8adffa8c6c36142f','63d7c0a92e1f62467010998b',false,'letter')
+    //printInvoice('pdf','personal','6321dfae8adffa8c6c36142f','63d7c0a92e1f62467010998b')
+    //printInvoicePortrait('pdf','personal','6321dfae8adffa8c6c36142f','63d7c0a92e1f62467010998b')
     //printVoucher('631b595b386018341861418d','63b876e6a478533d6bfb17fd')
 })
 
