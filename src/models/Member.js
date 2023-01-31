@@ -61,7 +61,8 @@ const memberSchema = new Schema({
     }],
     fine: { type: Boolean },
     dte: { type: String },
-    orderIndex: { type: Number } //Para orden en lista de lectura masiva/manual por sector
+    orderIndex: { type: Number }, //Para orden en lista de lectura masiva/manual por sector
+    positiveBalance: { type: Number }
 }, {
     versionKey: false
 })

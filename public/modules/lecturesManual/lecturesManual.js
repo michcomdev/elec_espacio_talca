@@ -243,7 +243,8 @@ async function getMembers() {
             el.address = el.address.address
             
             el.lastLecture = 0
-            el.lecture = `<input id="lecture-${el._id}" onkeyup="calculateValue('${el._id}')" tabindex="${order}" onkeydown="setFocus(event,this,'${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="0"></input>`
+            //el.lecture = `<input id="lecture-${el._id}" onkeyup="calculateValue('${el._id}')" tabindex="${order}" onkeydown="setFocus(event,this,'${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center" value="0"></input>`
+            el.lecture = `<input id="lecture-${el._id}" onkeyup="calculateValue('${el._id}')" tabindex="${order}" onkeydown="setFocus(event,this,'${el._id}')" class="form-control form-control-sm lectureValue" style="text-align: center"></input>`
             el.value = 0
             el.date = ''
             el.lectureNew = `<i class="fas fa-plus" onclick="addLectureNew(this,'${el._id}')"></i>`
@@ -899,7 +900,7 @@ async function removeLecture(btn,id,year,month){
                 $($($(btn).parent().parent().children()[6]).children()[0]).css('border', '')
                 $($(btn).parent().parent().children()[8]).html(0)
                 $($(btn).parent().parent().children()[10]).html(`<i class="fas fa-times" title="Eliminar registro" style="width: 20%; display: inline-block" onclick="removeLecture(this,'${id}','${year}','${month}')"></i>`)
-                toastr.success('No puede eliminar lecturas asociadas a boleta/factura')
+                toastr.success('Lectura eliminado correctamente')
             }else if (lectureDelete == 'invoice') {
                 toastr.warning('No puede eliminar lecturas asociadas a boleta/factura')
             }else{

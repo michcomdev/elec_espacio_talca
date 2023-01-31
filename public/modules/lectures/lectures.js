@@ -2490,7 +2490,7 @@ async function createPayment(memberID,paymentID) {
     })
 
     $("#paymentAmount").keyup(function () {
-        calculatePaymentBalance()
+        calculatePaymentBalance(true)
     })
 
 
@@ -2502,6 +2502,7 @@ async function createPayment(memberID,paymentID) {
 
         let goSave = false
         let invoices = []
+        let amountInvoi0
 
         if($("#tableBodyDebtInvoices > tr").length>0){
             $("#tableBodyDebtInvoices > tr").each(function() {
@@ -2509,7 +2510,7 @@ async function createPayment(memberID,paymentID) {
                     goSave = true
 
                     let invoiceAmount = parseInt($($($(this).children()[7]).children()[0]).val()) - parseInt(replaceAll($($(this).children()[8]).text(), '.',''))
-
+                    amountInvoices += invoiceAmount
                     invoices.push({
                         invoices: $($($(this).children()[0]).children()[1]).val(),
                         amount: invoiceAmount
@@ -2535,46 +2536,69 @@ async function createPayment(memberID,paymentID) {
             toastr.warning('Monto no válido')
             return
         }
-        
-        if(amount>toPay){
-            toastr.warning('El monto a pagar no puede ser mayor al saldo')
-            return
-        }
+
         if($("#paymentType").val()=='SELECCIONE'){
             toastr.warning('Debe seleccionar medio de pago')
             return
         }
+
+        let goToSave = false
+
+        if(amount>toPay){
+            //toastr.warning('El monto a pagar no puede ser mayor al saldo')
+            //return
+            let savePaymentMessage = await Swal.fire({
+                title: 'Monto mayor',
+                customClass: 'swal-wide',
+                html: `El monto a pagar es mayor al adeudado, <br/>¿Desea que se guarde el valor restante como saldo a favor?`,
+                showCloseButton: true,
+                showCancelButton: true,
+                showConfirmButton: true,
+                focusConfirm: false,
+                confirmButtonText: 'Aceptar',
+                cancelButtonText: 'Cancelar'
+            })
         
-        let paymentData = {
-            member: member._id,
-            //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
-            date: $("#paymentDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
-            paymentMethod: $("#paymentType").val(),
-            transaction: $("#paymentNumber").val(),
-            amount: amount,
-            invoices: invoices
+            if (savePaymentMessage.value) {
+                goToSave = true
+                invoices.push({
+                    amount: amountInvoices,
+                    positiveBalance: true
+                })
+            }
         }
+        
+        if(goToSave==true){
+            let paymentData = {
+                member: member._id,
+                //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
+                date: $("#paymentDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+                paymentMethod: $("#paymentType").val(),
+                transaction: $("#paymentNumber").val(),
+                amount: amount,
+                invoices: invoices
+            }
 
-        let urlSave = 'paymentSave'
-        if(paymentID){
-            urlSave = 'paymentUpdate'
-            paymentData.id = paymentID
-        }
-        console.log('paymentData',paymentData)
-        let savePayment = await axios.post('/api/'+urlSave, paymentData)
-        if (savePayment.data) {
-            if (savePayment.data._id) {
+            let urlSave = 'paymentSave'
+            if(paymentID){
+                urlSave = 'paymentUpdate'
+                paymentData.id = paymentID
+            }
+            console.log('paymentData',paymentData)
+            let savePayment = await axios.post('/api/'+urlSave, paymentData)
+            if (savePayment.data) {
+                if (savePayment.data._id) {
 
-                toastr.success('Pago almacenado correctamente')
-                loadPayments(member)
-                cleanPayment()
+                    toastr.success('Pago almacenado correctamente')
+                    loadPayments(member)
+                    cleanPayment()
+                } else {
+                    toastr.error('Error al almacenar, favor reintente')
+                }
             } else {
                 toastr.error('Error al almacenar, favor reintente')
             }
-        } else {
-            toastr.error('Error al almacenar, favor reintente')
         }
-
     })
 
     $("#paymentDelete").on('click', async function () {
@@ -2613,7 +2637,7 @@ async function createPayment(memberID,paymentID) {
     })
 }
 
-function calculatePaymentBalance() {
+function calculatePaymentBalance(paymentAmount) {
 
     let totalSelected = 0
     $("#tableBodyDebtInvoices > tr").each(function() {
@@ -2627,7 +2651,9 @@ function calculatePaymentBalance() {
     })
     
     $("#paymentToPay").val(dot_separators(totalSelected))
-
+    if(!paymentAmount){
+        $("#paymentAmount").val(dot_separators(totalSelected))
+    }
     let amount = parseInt(replaceAll($("#paymentAmount").val(), '.', '').replace(' ', '').replace('$', ''))
 
     if($.isNumeric(amount)){
