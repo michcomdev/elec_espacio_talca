@@ -2370,24 +2370,35 @@ async function createPayment(memberID,paymentID) {
 
         for(let i=0; i<invoicesPayment.invoices.length; i++){
             let agreements = 0
-            if(invoicesPayment.invoices[i].invoices.agreements){
-                for(let j=0; j<invoicesPayment.invoices[i].invoices.agreements.length; j++){
-                    agreements += invoicesPayment.invoices[i].invoices.agreements[j].amount
+            if(invoicesPayment.invoices[i].invoices){
+                if(invoicesPayment.invoices[i].invoices.agreements){
+                    for(let j=0; j<invoicesPayment.invoices[i].invoices.agreements.length; j++){
+                        agreements += invoicesPayment.invoices[i].invoices.agreements[j].amount
+                    }
                 }
-            }
-            $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
-                <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
-                <td style="text-align: center">${(invoicesPayment.invoices[i].invoices.number) ? invoicesPayment.invoices[i].invoices.number : ''}</td>
-                <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
-                <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
-                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements)}</td>
-                <td style="text-align: right">${dot_separators(agreements)}</td>
-                <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements)}</td>
-                <td style="text-align: right">${dot_separators((invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
-                    <input value="${(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
-                </td>
-                <td style="text-align: right">${dot_separators((invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}</td>
-            </tr>`)
+                $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
+                    <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
+                    <td style="text-align: center">${(invoicesPayment.invoices[i].invoices.number) ? invoicesPayment.invoices[i].invoices.number : ''}</td>
+                    <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
+                    <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
+                    <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements)}</td>
+                    <td style="text-align: right">${dot_separators(agreements)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements)}</td>
+                    <td style="text-align: right">${dot_separators((invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
+                        <input value="${(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
+                    </td>
+                    <td style="text-align: right">${dot_separators((invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}</td>
+                </tr>`)
+            }/*else{
+                $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
+                    <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/></td>
+                    <td style="text-align: center" colspan="3">Saldo a Favor</td>
+                    <td style="text-align: right"></td>
+                    <td style="text-align: right"></td>
+                    <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].amount)}</td>
+                    <td style="text-align: right" colspan="2"></td>
+                </tr>`)
+            }*/
         }
 
 
@@ -2422,6 +2433,8 @@ async function createPayment(memberID,paymentID) {
     }else{
         
         $("#paymentDelete").css("display","none")
+        //$("#paymentPositive").val((member.positiveBalance) ? member.positiveBalance : 0)
+
         //Carga de boletas adeudadas
         let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
         let invoicesDebt = invoicesDebtData.data
@@ -2502,7 +2515,7 @@ async function createPayment(memberID,paymentID) {
 
         let goSave = false
         let invoices = []
-        let amountInvoi0
+        let amountInvoices = 0
 
         if($("#tableBodyDebtInvoices > tr").length>0){
             $("#tableBodyDebtInvoices > tr").each(function() {
@@ -2550,7 +2563,7 @@ async function createPayment(memberID,paymentID) {
             let savePaymentMessage = await Swal.fire({
                 title: 'Monto mayor',
                 customClass: 'swal-wide',
-                html: `El monto a pagar es mayor al adeudado, <br/>¿Desea que se guarde el valor restante como saldo a favor?`,
+                html: `El monto a pagar es mayor al adeudado, <br/>¿Desea que se guarde el valor restante como saldo a favor?<br/>Monto a favor: ${amount - amountInvoices}`,
                 showCloseButton: true,
                 showCancelButton: true,
                 showConfirmButton: true,
@@ -2562,10 +2575,12 @@ async function createPayment(memberID,paymentID) {
             if (savePaymentMessage.value) {
                 goToSave = true
                 invoices.push({
-                    amount: amountInvoices,
-                    positiveBalance: true
+                    amount: amount - amountInvoices,
+                    positive: true
                 })
             }
+        }else{
+            goToSave = true
         }
         
         if(goToSave==true){
@@ -2672,6 +2687,16 @@ function calculatePaymentBalance(paymentAmount) {
             
         })
     }
+
+    /*new Cleave($("#paymentPositive"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })*/
 
     new Cleave($("#paymentAmount"), {
         prefix: '$',

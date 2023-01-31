@@ -188,9 +188,21 @@ export default [
                     const response = await payment.save()
 
                     for(let i=0; i<invoices.length; i++){
-                        let invoice = await Invoices.findById(invoices[i].invoices)
-                        invoice.invoicePaid += invoices[i].amount
-                        await invoice.save()
+                        if(invoices[i].invoices){
+                            let invoice = await Invoices.findById(invoices[i].invoices)
+                            invoice.invoicePaid += invoices[i].amount
+                            await invoice.save()
+                        }else{
+                            if(invoices[i].positive){
+                                let member = await Member.findById(payload.member)
+                                if(member.positiveBalance){
+                                    member.positiveBalance += invoices[i].amount
+                                }else{
+                                    member.positiveBalance = invoices[i].amount
+                                }
+                                await member.save()
+                            }
+                        }
                     }
 
                     return response
@@ -212,7 +224,8 @@ export default [
                     amount: Joi.number().allow(0),
                     invoices: Joi.array().items(Joi.object().keys({
                         invoices: Joi.string().optional().allow(''),
-                        amount: Joi.number().optional().allow(0)
+                        amount: Joi.number().optional().allow(0),
+                        positive: Joi.boolean().optional()
                     })).optional()
                 })
             }
@@ -345,9 +358,13 @@ export default [
 
                         let payment = await Payments.findById(payload.id)
                         for(let i=0; i<payment.invoices.length; i++){
-                            let invoice = await Invoices.findById(payment.invoices[i].invoices)
-                            invoice.invoicePaid -= payment.invoices[i].amount
-                            await invoice.save()
+                            if(payment.invoices[i].invoices){
+                                let invoice = await Invoices.findById(payment.invoices[i].invoices)
+                                invoice.invoicePaid -= payment.invoices[i].amount
+                                await invoice.save()
+                            }else{
+                                //CÓDIGO PARA QUITAR SALDO A FAVOR EN CASO QUE CORRESPONDA
+                            }
                         }
 
                         await Payments.deleteOne({_id: payload.id})

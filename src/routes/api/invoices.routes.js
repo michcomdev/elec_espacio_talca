@@ -507,7 +507,8 @@ export default [
                             $exists: true,
                             $ne: 0
                         },*/
-                        $where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
+                        //$where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
+                        $where: "this.invoiceSubTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
                         
                     }
                     /*if(payload.paymentID){
@@ -533,8 +534,10 @@ export default [
 
                         let payments = await Payments.findById(payload.paymentID).lean()
                         for(let i=0; i<payments.invoices.length; i++){
-                            let index = invoices.map(x => x._id.toString()).indexOf(payments.invoices[i].invoices.toString())
-                            invoices.splice(index,1)
+                            if(payments.invoices[i].invoices){
+                                let index = invoices.map(x => x._id.toString()).indexOf(payments.invoices[i].invoices.toString())
+                                invoices.splice(index,1)
+                            }
                         }
                     }
 

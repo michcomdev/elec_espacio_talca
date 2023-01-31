@@ -298,10 +298,7 @@ function validateAgreementData(agreementData) {
             $('.modal:visible').length && $(document.body).addClass('modal-open')
         })
 
-        $('#modal').modal('show')
-        $('#modal_title').html(`Error al almacenar convenio`)
-        $('#modal_body').html(`<h7 class="alert-heading">Falta ingresar los siguientes datos:</h7>
-                                    <p class="mb-0">${errorMessage}</p>`)
+        toastr.error('Falta ingresar datos')
 
         return { err: agreementData }
     }
@@ -778,17 +775,14 @@ async function createAgreement(agreementID, memberID) {
             if (saveAgreement.data) {
                 if (saveAgreement.data._id) {
 
-                    $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Ingreso almacenada correctamente</h7>`)
+                    toastr.success('Convenio almacenado correctamente')
                     cleanAgreement()
                     loadAgreements(member)
                 } else {
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                    toastr.error('Error al almacenar, favor reintente')
                 }
             } else {
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                toastr.error('Error al almacenar, favor reintente')
             }
             $('#modal').modal('show')
 
@@ -916,17 +910,14 @@ async function createAgreement(agreementID, memberID) {
             if (saveAgreement.data) {
                 if (saveAgreement.data._id) {
 
-                    $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Ingreso almacenada correctamente</h7>`)
+                    toastr.success('Convenio almacenado correctamente')
                     cleanAgreement()
                     loadAgreements(member)
                 } else {
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                    toastr.error('Error al almacenar, favor reintente')
                 }
             } else {
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h7 class="alert-heading">Error al almacenar, favor reintente</h7>`)
+                toastr.error('Error al almacenar, favor reintente')
             }
             $('#modal').modal('show')
 
@@ -953,15 +944,11 @@ async function createAgreement(agreementID, memberID) {
 
                 let deleteAgreement = await axios.post('/api/agreementDelete', agreementData)
                 if (deleteAgreement.data) {
-                    //$('#modal_title').html(`Eliminado`)
-                    //$('#modal_body').html(`<h7 class="alert-heading">Registro eliminado</h7>`)
                     toastr.success('Registro eliminado')
                     cleanAgreement()
                     loadAgreements(member)
                 } else {
-                    //$('#modal_title').html(`Error`)
-                    //$('#modal_body').html(`<h7 class="alert-heading">Error al eliminar, favor reintente</h7>`)
-                    toastr.success('Error al eliminar, favor reintente')
+                    toastr.error('Error al eliminar, favor reintente')
                 }
 
                 //$('#modal').modal('show')
@@ -1713,9 +1700,8 @@ async function sendData(type,memberID,agreementID) {
             let setDTEAgreement = await axios.post('/api/agreementUpdateDTE', dteData)
             loadingHandler('stop')
 
-            $('#modal_title').html(`Almacenado`)
-            $('#modal_body').html(`<h7 class="alert-heading">Documento generado correctamente</h7>`)
-            $('#modal').modal('show')
+            toastr.success('Documento generado correctamente')
+
 
             loadAgreements(member)
             

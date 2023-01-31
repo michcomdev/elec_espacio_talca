@@ -10,7 +10,8 @@ const paymentsSchema = new Schema({
     amount: { type: Number },
     invoices: [{
         invoices: { type: Schema.Types.ObjectId, ref: 'invoices' },
-        amount: { type: Number }
+        amount: { type: Number },
+        positive: { type: Boolean }
     }]
 }, {
     versionKey: false
