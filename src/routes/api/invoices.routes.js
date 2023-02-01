@@ -133,6 +133,7 @@ export default [
                         invoiceSubTotal: payload.invoiceSubTotal,
                         invoiceDebt: payload.invoiceDebt,
                         debtFine: payload.debtFine,
+                        invoicePositive: payload.positive,
                         invoicePaid: 0,
                         invoiceTotal: payload.invoiceTotal,
                         type: payload.type,
@@ -211,6 +212,7 @@ export default [
                     invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     debtFine: Joi.number().allow(0),
+                    positive: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
@@ -267,6 +269,7 @@ export default [
                     invoices.invoiceSubTotal = payload.invoiceSubTotal
                     invoices.invoiceDebt = payload.invoiceDebt
                     invoices.debtFine = payload.debtFine
+                    invoices.invoicePositive = payload.positive
                     //invoices.invoicePaid = payload.invoicePaid
                     invoices.invoiceTotal = payload.invoiceTotal
                     invoices.services = payload.services
@@ -336,6 +339,7 @@ export default [
                     invoiceSubTotal: Joi.number().allow(0),
                     invoiceDebt: Joi.number().allow(0),
                     debtFine: Joi.number().allow(0),
+                    positive: Joi.number().allow(0),
                     invoiceTotal: Joi.number().allow(0),
                     services: Joi.array().items(Joi.object().keys({
                         services: Joi.string().optional().allow(''),
@@ -508,7 +512,7 @@ export default [
                             $ne: 0
                         },*/
                         //$where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
-                        $where: "this.invoiceSubTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
+                        $where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
                         
                     }
                     /*if(payload.paymentID){

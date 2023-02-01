@@ -260,13 +260,17 @@ export default [
                         let invoice = await Invoices.findById(invoicesOld[i].invoices) //Obtención de registro de boleta
                         
                         for(let j=0; j<invoicePayments.length; j++){
-                            if(invoicePayments[j].invoices.find(x => x.invoices == invoicesOld[i].invoices)){
-                                invoice.invoicePaid = 0
+                            if(invoicePayments[j].invoices.invoices){
+                                if(invoicePayments[j].invoices.find(x => x.invoices == invoicesOld[i].invoices)){
+                                    invoice.invoicePaid = 0
+                                }
                             }
                         }
                         for(let k=0; k<invoicePayments.length; k++){
-                            if(invoicePayments[k].invoices.find(x => x.invoices == invoicesOld[i].invoices)){
-                                invoice.invoicePaid += invoicePayments[k].invoices.find(x => x.invoices == invoicesOld[i].invoices).amount
+                            if(invoicePayments[k].invoices.invoices){
+                                if(invoicePayments[k].invoices.find(x => x.invoices == invoicesOld[i].invoices)){
+                                    invoice.invoicePaid += invoicePayments[k].invoices.find(x => x.invoices == invoicesOld[i].invoices).amount
+                                }
                             }
                         }
                         
@@ -304,13 +308,17 @@ export default [
                         let invoice = await Invoices.findById(invoices[i].invoices) //Obtención de registro de boleta
                         //console.log(invoice)
                         for(let j=0; j<invoicePayments.length; j++){
-                            if(invoicePayments[j].invoices.find(x => x.invoices == invoices[i].invoices)){
-                                invoice.invoicePaid = 0
+                            if(invoicePayments[j].invoices.invoices){
+                                if(invoicePayments[j].invoices.find(x => x.invoices == invoices[i].invoices)){
+                                    invoice.invoicePaid = 0
+                                }
                             }
                         }
                         for(let k=0; k<invoicePayments.length; k++){
-                            if(invoicePayments[k].invoices.find(x => x.invoices == invoices[i].invoices)){
-                                invoice.invoicePaid += invoicePayments[k].invoices.find(x => x.invoices == invoices[i].invoices).amount
+                            if(invoicePayments[k].invoices.invoices){
+                                if(invoicePayments[k].invoices.find(x => x.invoices == invoices[i].invoices)){
+                                    invoice.invoicePaid += invoicePayments[k].invoices.find(x => x.invoices == invoices[i].invoices).amount
+                                }
                             }
                         }
                         

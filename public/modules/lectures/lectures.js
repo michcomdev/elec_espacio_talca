@@ -714,6 +714,14 @@ function createModalBody(member) {
                             <div class="col-md-3">
                                 <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money" onkeyup="calculateDebt()">
                             </div>
+
+                            <div class="col-md-8">
+                                Saldo a favor
+                            </div>
+                            <div class="col-md-1" style="text-align: center">(-)</div>
+                            <div class="col-md-3">
+                                <input id="invoicePositive" type="text" class="form-control form-control-sm border-input numericValues money">
+                            </div>
                             
                             <div class="col-md-8">
                                 Total
@@ -898,14 +906,15 @@ function calculateTotal(type) {
     let debtFine = 0
     if(debt>0){
         debtFine = debt * 0.03
-
         $("#invoiceText1").val(parameters.text1)
         
     }
     $("#invoiceDebtFine").val(parseInt(debtFine))
     let subTotal = parseInt(lastConsumptionValue) + parseInt(debtFine)
     $("#invoiceSubTotal").val(subTotal)
-    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements))
+
+    let positive = $("#invoicePositive").val()
+    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements) - parseInt(positive))
 
     $(".consumption").each(function() {
         new Cleave($(this), {
@@ -1095,19 +1104,28 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         //Carga de boletas adeudadas
         let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
         let invoicesDebt = invoicesDebtData.data
-
         let debt = 0
         if(invoicesDebt.length>0){
             for(let i=0; i<invoicesDebt.length; i++){
+                let agreementValue = 0
+                for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                    agreementValue += invoicesDebt[i].agreements[j].amount
+                }
+
                 if(invoicesDebt[i].invoicePaid){
-                    debt += invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid
+                    debt += (invoicesDebt[i].invoiceSubTotal + agreementValue) - invoicesDebt[i].invoicePaid
                 }else{
-                    debt += invoicesDebt[i].invoiceSubTotal
+                    debt += invoicesDebt[i].invoiceSubTotal + agreementValue
                 }
             }
         }
 
         $("#invoiceDebt").val(debt)
+        if(member.positiveBalance){
+            $("#invoicePositive").val(member.positiveBalance)
+        }else{
+            $("#invoicePositive").val(0)
+        }
         //$("#invoiceDebtFine").val(0)
 
         calculateTotal()
@@ -1181,6 +1199,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
                 debtFine: replaceAll($("#invoiceDebtFine").val(), '.', '').replace(' ', '').replace('$', ''),
+                positive: replaceAll($("#invoicePositive").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 services: services,
                 agreements: agreements,
@@ -1346,6 +1365,12 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             }
         }
 
+        if(invoice.invoicePositive){
+            $("#invoicePositive").val(invoice.invoicePositive)
+        }else{
+            $("#invoicePositive").val(0)
+        }
+
         calculateTotal('edit')
 
         $('#invoiceSave').off("click")
@@ -1419,6 +1444,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
                 invoiceSubTotal: replaceAll($("#invoiceSubTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceDebt: replaceAll($("#invoiceDebt").val(), '.', '').replace(' ', '').replace('$', ''),
                 debtFine: replaceAll($("#invoiceDebtFine").val(), '.', '').replace(' ', '').replace('$', ''),
+                positive: replaceAll($("#invoicePositive").val(), '.', '').replace(' ', '').replace('$', ''),
                 invoiceTotal: replaceAll($("#invoiceTotal").val(), '.', '').replace(' ', '').replace('$', ''),
                 services: services,
                 agreements: agreements,
@@ -1598,6 +1624,7 @@ async function sendData(type,memberID,invoiceID) {
 
         return
     }else{
+        return //Deshabilitar si se reutilizan boletas
 
         if(invoice.invoiceSubTotal==0){
             let generateDoc = await Swal.fire({
@@ -2405,7 +2432,7 @@ async function createPayment(memberID,paymentID) {
         //Carga de boletas adeudadas
         let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID, paymentID: paymentID})
         let invoicesDebt = invoicesDebtData.data
-        
+
         if(invoicesDebt.length>0){
             for(let i=0; i<invoicesDebt.length; i++){
                 let agreements = 0
@@ -2438,7 +2465,7 @@ async function createPayment(memberID,paymentID) {
         //Carga de boletas adeudadas
         let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
         let invoicesDebt = invoicesDebtData.data
-        
+        console.log(invoicesDebt)
         if(invoicesDebt.length>0){
             for(let i=0; i<invoicesDebt.length; i++){
                 let agreements = 0
@@ -2447,39 +2474,40 @@ async function createPayment(memberID,paymentID) {
                         agreements += invoicesDebt[i].agreements[j].amount
                     }
                 }
+                if(invoicesDebt[i].invoiceSubTotal + agreements != invoicesDebt[i].invoicePaid){
 
+                    if(!invoicesDebt[i].typeInvoice){
+                        $("#tableBodyDebtInvoices").append(`<tr>
+                            <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
+                            <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}</td>
+                            <td style="text-align: right">${dot_separators(agreements)}</td>
+                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
+                            <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid)}
+                                <input value="${(invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}</td>
+                        </tr>`)
+                    }else{
 
-                if(!invoicesDebt[i].typeInvoice){
-                    $("#tableBodyDebtInvoices").append(`<tr>
-                        <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
-                        <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
-                        <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
-                        <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
-                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}</td>
-                        <td style="text-align: right">${dot_separators(agreements)}</td>
-                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
-                        <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid)}
-                            <input value="${(invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid}" style="display: none;"/>
-                        </td>
-                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}</td>
-                    </tr>`)
-                }else{
+                        let paid = (invoicesDebt[i].invoicePaid) ? invoicesDebt[i].invoicePaid : 0
 
-                    let paid = (invoicesDebt[i].invoicePaid) ? invoicesDebt[i].invoicePaid : 0
-
-                    $("#tableBodyDebtInvoices").append(`<tr>
-                        <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
-                        <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : '' }</td>
-                        <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
-                        <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
-                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal)}</td>
-                        <td style="text-align: right">${dot_separators(agreements)}</td>
-                        <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal + agreements)}</td>
-                        <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceTotal + agreements) - paid)}
-                            <input value="${(invoicesDebt[i].invoiceTotal + agreements) - paid}" style="display: none;"/>
-                        </td>
-                        <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceTotal + agreements) - paid)}</td>
-                    </tr>`)
+                        $("#tableBodyDebtInvoices").append(`<tr>
+                            <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
+                            <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : '' }</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal)}</td>
+                            <td style="text-align: right">${dot_separators(agreements)}</td>
+                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal + agreements)}</td>
+                            <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceTotal + agreements) - paid)}
+                                <input value="${(invoicesDebt[i].invoiceTotal + agreements) - paid}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceTotal + agreements) - paid)}</td>
+                        </tr>`)
+                    }
                 }
             }
         }else{
@@ -2506,8 +2534,11 @@ async function createPayment(memberID,paymentID) {
         calculatePaymentBalance(true)
     })
 
-
-    calculatePaymentBalance()
+    if(paymentID){
+        calculatePaymentBalance(true)
+    }else{
+        calculatePaymentBalance()
+    }
 
     $('#paymentSave').off("click")
 
@@ -2664,10 +2695,13 @@ function calculatePaymentBalance(paymentAmount) {
 
         $($(this).children()[8]).text(dot_separators($($($(this).children()[7]).children()[0]).val()))
     })
-    
+
     $("#paymentToPay").val(dot_separators(totalSelected))
+
     if(!paymentAmount){
         $("#paymentAmount").val(dot_separators(totalSelected))
+    }else{
+        $("#paymentAmount").val(dot_separators($("#paymentAmount").val()))
     }
     let amount = parseInt(replaceAll($("#paymentAmount").val(), '.', '').replace(' ', '').replace('$', ''))
 

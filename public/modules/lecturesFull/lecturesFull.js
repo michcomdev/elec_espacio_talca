@@ -103,8 +103,8 @@ function chargeMembersTable() {
                 },
                 responsive: true,
                 columnDefs: [
-                            { targets: [0, 1, 2, 3, 4, 14, 15], className: 'dt-center' },
-                            { targets: [5, 6, 7, 8, 9, 10, 11, 12, 13], className: 'dt-right' },
+                            { targets: [0, 1, 2, 3, 4, 15, 16], className: 'dt-center' },
+                            { targets: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14], className: 'dt-right' },
                             { targets: [1], visible: false }
                         ],
                 order: [[1, 'asc']],
@@ -129,6 +129,7 @@ function chargeMembersTable() {
                     { data: 'others' },
                     { data: 'debt' },
                     { data: 'debtFine' },
+                    { data: 'positive' },
                     { data: 'total' },
                     { data: 'detail' },
                     { data: 'pdf' }
@@ -247,6 +248,7 @@ async function getLectures() {
                         invoiceSubTotal: el.invoice.invoiceSubTotal,
                         invoiceDebt: el.invoice.invoiceDebt,
                         debtFine: el.invoice.debtFine,
+                        positive: el.invoice.invoicePositive,
                         invoiceTotal: el.invoice.invoiceTotal,
                         services: invoiceServices
                     })
@@ -261,6 +263,7 @@ async function getLectures() {
                 el.others = others
                 el.debt = el.invoice.invoiceDebt
                 el.debtFine = el.invoice.debtFine
+                el.positive = el.invoice.invoicePositive
                 el.total = el.invoice.invoiceTotal
                 el.detail = `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
                 
@@ -284,6 +287,7 @@ async function getLectures() {
                 el.others = 0
                 el.debt = 0
                 el.debtFine = 0
+                el.positive = 0
                 el.total = 0
                 el.detail = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>'
                 el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
@@ -392,6 +396,7 @@ async function calculate(){
                     subTotal: el.invoice.invoiceSubTotal,
                     debt: el.invoice.invoiceDebt,
                     debtFine: el.invoice.debtFine,
+                    positive: el.invoice.invoicePositive,
                     total: el.invoice.invoiceTotal,
                     detail: `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`,
                     pdf: `<button class="btn btn-sm btn-danger" onclick="printInvoicePortrait('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
@@ -511,10 +516,14 @@ async function calculate(){
             let debt = 0
             if(invoicesDebt.length>0){
                 for(let i=0; i<invoicesDebt.length; i++){
+                    let agreementValue = 0
+                    for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                        agreementValue += invoicesDebt[i].agreements[j].amount
+                    }
                     if(invoicesDebt[i].invoicePaid){
-                        debt += invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid
+                        debt += (invoicesDebt[i].invoiceSubTotal + agreementValue) - invoicesDebt[i].invoicePaid
                     }else{
-                        debt += invoicesDebt[i].invoiceSubTotal
+                        debt += invoicesDebt[i].invoiceSubTotal + agreementValue
                     }
                 }
             }
@@ -525,7 +534,12 @@ async function calculate(){
 
             //Montos
             let subTotal = parseInt(lastConsumptionValue) + parseInt(debtFine) //+ parseInt(sewerage)
-            let total = parseInt(subTotal) + parseInt(debt) + parseInt(others)
+
+            let positive = 0
+            if(array[i].members.positiveBalance){
+                positive = array[i].members.positiveBalance
+            }
+            let total = parseInt(subTotal) + parseInt(debt) + parseInt(others) - parseInt(positive)
 
             newArray.push(
                 {
@@ -545,6 +559,7 @@ async function calculate(){
                     subTotal: subTotal,
                     debt: debt,
                     debtFine: debtFine,
+                    positive: positive,
                     total: total,
                     detail: `<button class="btn btn-sm btn-info" onclick="createInvoice('${array[i]._id}','0','${array[i].members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`,
                     pdf: '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
@@ -615,6 +630,7 @@ async function calculate(){
                 invoiceSubTotal: subTotal,
                 invoiceDebt: debt,
                 debtFine: debtFine,
+                positive: positive,
                 invoiceTotal: total,
                 services: services,
                 agreements: agreements,
@@ -1054,7 +1070,14 @@ function createModalBody(member) {
                                     <div class="col-md-3">
                                         <input id="invoiceDebt" type="text" class="form-control form-control-sm border-input numericValues money">
                                     </div>
-                                    
+
+                                    <div class="col-md-8">
+                                        Saldo a favor
+                                    </div>
+                                    <div class="col-md-1" style="text-align: center">(-)</div>
+                                    <div class="col-md-3">
+                                        <input id="invoicePositive" type="text" class="form-control form-control-sm border-input numericValues money">
+                                    </div>
 
                                     <div class="col-md-8">
                                         Total
@@ -1182,7 +1205,9 @@ function calculateTotal() {
     $("#invoiceDebtFine").val(parseInt(debtFine))
     let subTotal = parseInt(lastConsumptionValue) + parseInt(debtFine)
     $("#invoiceSubTotal").val(subTotal)
-    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements))
+    
+    let positive = $("#invoicePositive").val()
+    $("#invoiceTotal").val(subTotal + parseInt(debt) + parseInt(totalAgreements) - positive)
 
 
     $(".consumption").each(function() {
@@ -1384,15 +1409,25 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         let debt = 0
         if(invoicesDebt.length>0){
             for(let i=0; i<invoicesDebt.length; i++){
+                let agreementValue = 0
+                for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                    agreementValue += invoicesDebt[i].agreements[j].amount
+                }
                 if(invoicesDebt[i].invoicePaid){
-                    debt += invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid
+                    debt += (invoicesDebt[i].invoiceSubTotal + agreementValue) - invoicesDebt[i].invoicePaid
                 }else{
-                    debt += invoicesDebt[i].invoiceSubTotal
+                    debt += invoicesDebt[i].invoiceSubTotal + agreementValue
                 }
             }
         }
 
         $("#invoiceDebt").val(debt)
+
+        if(member.positiveBalance){
+            $("#invoicePositive").val(member.positiveBalance)
+        }else{
+            $("#invoicePositive").val(0)
+        }
 
         calculateTotal()
 
@@ -1445,6 +1480,12 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         }
 
         $("#invoiceDebt").val(invoice.invoiceDebt)
+        
+        if(invoice.invoicePositive){
+            $("#invoicePositive").val(invoice.invoicePositive)
+        }else{
+            $("#invoicePositive").val(0)
+        }
 
         $('.invoiceDateClass').daterangepicker({
             opens: 'right',
@@ -2070,16 +2111,21 @@ async function printFinal(array){
                 totalAgreement += parseInt(array[k].invoice.agreements[i].amount)
                 if(i+1==array[k].invoice.agreements.length && totalAgreement > 0){
                     //doc.text('Otros', pdfX, pdfY + index)
-                    index += 13
+                    index += 14
                     doc.setFontType('bold')
                     doc.text('Otros no Tributables', pdfX, pdfY + index)
-                    index += 13
+                    index += 14
                 }
             }
         }
 
         doc.setFontType('bold')
-        doc.text('Saldo Anterior', pdfX, pdfY + index + 13)
+        doc.text('Saldo Anterior', pdfX, pdfY + index + 14)
+        if(invoice.invoicePositive){
+            doc.setTextColor(249, 51, 6)
+            doc.text('Saldo a favor', pdfX, pdfY + index + 28)
+            doc.setTextColor(0, 0, 0)
+        }
 
         doc.setFontSize(14)
         doc.setFontType('normal')
@@ -2124,23 +2170,28 @@ async function printFinal(array){
                 totalAgreement += parseInt(array[k].invoice.agreements[i].amount)
                 if(i+1==array[k].invoice.agreements.length && totalAgreement > 0){
                     //doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
-                    index += 13
+                    index += 14
                     doc.setFontType('bold')
                     doc.text(dot_separators(totalAgreement), pdfX + 250, pdfY + index, 'right')
-                    index += 13
+                    index += 14
                     value2 = totalAgreement
                 }
             }
         }
 
         doc.setFontType('bold')
-        doc.text(dot_separators(array[k].invoice.invoiceDebt), pdfX + 250, pdfY + index + 13, 'right')
+        doc.text(dot_separators(array[k].invoice.invoiceDebt), pdfX + 250, pdfY + index + 14, 'right')
         value3 = array[k].invoice.invoiceDebt
 
+        if(array[k].invoice.invoicePositive){
+            doc.setTextColor(249, 51, 6)
+            doc.text('-' + dot_separators(array[k].invoice.invoicePositive), pdfX, pdfY + index + 28)
+            doc.setTextColor(0, 0, 0)
+        }
 
         //////TOTALES Y CÓDIGO SII//////
         pdfY += 50
-        doc.setFillColor(23, 162, 184)
+        /*doc.setFillColor(23, 162, 184)
         doc.rect(pdfX - 3, pdfY + 118, 260, 43, 'F')
     
         doc.text('Valor Tributable', pdfX, pdfY + 130)
@@ -2151,7 +2202,7 @@ async function printFinal(array){
         doc.text('+ $ ', pdfX + 180, pdfY + 156, 'center')
         doc.text(dot_separators(value1), pdfX + 250, pdfY + 130, 'right')
         doc.text(dot_separators(value2), pdfX + 250, pdfY + 143, 'right')
-        doc.text(dot_separators(value3), pdfX + 250, pdfY + 156, 'right')
+        doc.text(dot_separators(value3), pdfX + 250, pdfY + 156, 'right')*/
         
         doc.setFillColor(0, 0, 0)
         doc.rect(pdfX - 4, pdfY + 169, 262, 38, 'F')

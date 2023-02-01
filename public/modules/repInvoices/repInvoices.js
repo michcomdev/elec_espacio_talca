@@ -47,7 +47,7 @@ async function getParameters() {
     let setYear = moment().format('YYYY')
     let setMonth = moment().format('MM')
 
-    if(moment().day()<20){
+    if(parseInt(moment().format('DD'))<20){
         if(setMonth=='01'){
             setYear = moment().add(-1,'y').format('YYYY')
             setMonth = '12'
@@ -92,8 +92,8 @@ function chargeMembersTable() {
                 },
                 responsive: true,
                 columnDefs: [
-                            { targets: [14, 15], className: 'dt-center' },
-                            { targets: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], className: 'dt-right' }
+                            //{ targets: [15, 16], className: 'dt-center' },
+                            { targets: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], className: 'dt-right' }
                         ],
                 order: [[$("#searchOrder").val(), 'asc']],
                 ordering: true,
@@ -120,6 +120,7 @@ function chargeMembersTable() {
                     { data: 'others' },
                     { data: 'debt' },
                     { data: 'debtFine' },
+                    { data: 'positive' },
                     { data: 'total' }
                 ],
                 initComplete: function (settings, json) {
@@ -153,10 +154,6 @@ async function getLectures() {
     if (lecturesData.data.length > 0) {
         //let index = 0
         let formatData = lecturesData.data.map(el => {
-
-            if(el.members.number==292){
-                console.log(el.invoice)
-            }
 
             el.select = `<input type="checkbox" class="chkClass" id="chk${el.members._id}" />`
             el.selectPrint = ''
@@ -228,6 +225,7 @@ async function getLectures() {
                         invoiceSubTotal: el.invoice.invoiceSubTotal,
                         invoiceDebt: el.invoice.invoiceDebt,
                         debtFine: el.invoice.debtFine,
+                        positive: el.invoice.invoicePositive,
                         invoiceTotal: el.invoice.invoiceTotal,
                         services: invoiceServices
                     })
@@ -361,6 +359,7 @@ async function getLectures() {
                 el.others = setPopover('Convenios / Multas', values, others)
 
                 el.debt = el.invoice.invoiceDebt
+                el.positive = (el.invoice.invoicePositive) ? el.invoice.invoicePositive : 0
 
                 values = [{title: 'Saldo anterior $', symbol: '', value: el.invoice.invoiceDebt},
                         {title: '% Interés', symbol: 'x', value: '3%'}, //Verificar si dejar valor cerrado
@@ -375,6 +374,7 @@ async function getLectures() {
                         {title: '<br/>', symbol: '', value: ''},
                         {title: 'Otros (No tributable)', symbol: '', value: others},
                         {title: 'Saldo Anterior', symbol: '+', value: el.invoice.invoiceDebt},
+                        {title: 'Saldo a Favor', symbol: '-', value: el.positive},
                         {title: '', symbol: '', value: '__________'},
                         {title: 'Valor Total a Pagar', symbol: '=', value: el.invoice.invoiceTotal}]
 
@@ -410,6 +410,7 @@ async function getLectures() {
                         <td>${others}</td>
                         <td>${el.invoice.invoiceDebt}</td>
                         <td>${el.invoice.debtFine}</td>
+                        <td>${el.positive}</td>
                         <td>${el.invoice.invoiceTotal}</td>
                     </tr>`)
 
@@ -422,6 +423,7 @@ async function getLectures() {
                 el.consumptionOnly = 0
                 el.charge = 0
                 el.sewerage = 0
+                el.consumptionSum = 0
                 el.subsidy = 0
                 el.overConsumption = 0
                 el.consumptionCleanValue = 0
@@ -430,6 +432,7 @@ async function getLectures() {
                 el.consumptionValue = 0
                 el.debt = 0
                 el.debtFine = 0
+                el.positive = 0
                 el.total = 0
                 //el.detail = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>'
                 //el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
