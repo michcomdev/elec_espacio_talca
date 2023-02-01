@@ -503,6 +503,7 @@ function createModalBody(member) {
                         <select id="invoiceType" class="form-control form-select form-control-sm">
                             <option value="41">BOLETA</option>
                             <option value="34">FACTURA</option>
+                            <option value="0">COMPROBANTE</option>
                         </select>
                     </div>
                     <div class="col-md-1">
@@ -1252,9 +1253,11 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         console.log('invoice',invoice)
 
         if(invoice.number){
-            $("#invoiceTitle").text("Boleta/Factura N° " + invoice.number)
-            $("#invoiceSave").attr('disabled',true)
-            $("#invoiceSave").attr('title','Debe anular la boleta para poder guardar')
+            if(invoice.type!=0){
+                $("#invoiceTitle").text("Boleta/Factura N° " + invoice.number)
+                $("#invoiceSave").attr('disabled',true)
+                $("#invoiceSave").attr('title','Debe anular la boleta para poder guardar')
+            }
         }else{
             $("#invoiceTitle").text("Boleta/Factura por generar")
             $("#invoiceSave").removeAttr('disabled')
@@ -1495,9 +1498,12 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         })
 
         if(invoice.number){
-            $("#invoiceDelete").css('display','none')
+            if(invoice.type!=0){
+                $("#invoiceDelete").css('display','none')
+            }else{
+                $("#invoiceDelete").css('display','block') 
+            }
         }else{
-            console.log('here')
             $("#invoiceDelete").css('display','block') 
         }
 

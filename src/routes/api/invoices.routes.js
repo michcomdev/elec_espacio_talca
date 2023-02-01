@@ -159,6 +159,16 @@ export default [
                         query.agreements = payload.agreements
                     }
 
+                    if(payload.positive){
+                        if(payload.positive>0){
+                            let member = await Member.findById(payload.member)
+                            if(member.positiveBalance){
+                                member.positiveBalance -= payload.positive
+                            }
+                            member.save()
+                        }
+                    }
+
                     let invoice = new Invoices(query)
                     const response = await invoice.save()
 
@@ -371,6 +381,19 @@ export default [
                     let payload = request.payload
 
                     if (payload.id) {
+                        let invoices = await Invoices.findById(payload.id)
+                        if(invoices.invoicePositive){
+                            if(invoices.invoicePositive>0){
+                                let member = await Member.findById(invoices.members)
+                                if(member.positiveBalance){
+                                    member.positiveBalance += invoices.invoicePositive
+                                }else{
+                                    member.positiveBalance = invoices.invoicePositive
+                                }
+                                member.save()
+                            }
+                        }
+
                         await Invoices.deleteOne({_id: payload.id})
                         return true
 
