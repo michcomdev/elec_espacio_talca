@@ -62,7 +62,9 @@ const memberSchema = new Schema({
     fine: { type: Boolean },
     dte: { type: String },
     orderIndex: { type: Number }, //Para orden en lista de lectura masiva/manual por sector
-    positiveBalance: { type: Number }
+    positiveBalance: { type: Number },
+    sendEmail: { type: Boolean },
+    sendWhatsapp: { type: Boolean }
 }, {
     versionKey: false
 })

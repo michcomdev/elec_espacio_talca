@@ -147,7 +147,9 @@ export default [
                         status: 'active',
                         inactiveObservation: '',
                         fine: (payload.fine) ? payload.fine : false,
-                        dte: payload.dte
+                        dte: payload.dte,
+                        sendEmail: payload.sendEmail,
+                        sendWhatsapp: payload.sendWhatsapp
                     }
 
                     if(payload.services){
@@ -210,7 +212,9 @@ export default [
                         value: Joi.number().optional().allow(0)
                     })).optional(),
                     fine: Joi.boolean().optional(),
-                    dte: Joi.string().optional()
+                    dte: Joi.string().optional(),
+                    sendEmail: Joi.string().optional(),
+                    sendWhatsapp: Joi.string().optional()
                 })
             }
         }
@@ -272,6 +276,8 @@ export default [
                     member.services = payload.services
                     member.fine = (payload.fine) ? payload.fine : false
                     member.dte = payload.dte
+                    member.sendEmail = payload.sendEmail
+                    member.sendWhatsapp = payload.sendWhatsapp
 
                     const response = await member.save()
 
@@ -324,7 +330,9 @@ export default [
                         value: Joi.number().optional().allow(0)
                     })).optional(),
                     fine: Joi.boolean().optional(),
-                    dte: Joi.string().optional()
+                    dte: Joi.string().optional(),
+                    sendEmail: Joi.boolean().optional(),
+                    sendWhatsapp: Joi.boolean().optional()
                 })
             }
         }

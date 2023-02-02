@@ -46,6 +46,9 @@ function chargeMembersTable() {
                 url: spanishDataTableLang
             },
             responsive: false,
+            columnDefs: [
+                { targets: [10], className: 'dt-center' },
+            ],
             order: [[ 0, 'asc' ]],
             ordering: true,
             rowCallback: function( row, data ) {
@@ -61,8 +64,8 @@ function chargeMembersTable() {
                 { data: 'status' },
                 { data: 'subsidyNumber' },
                 { data: 'subsidyActive' },
-                { data: 'fine20' }
-            ],
+                { data: 'fine20' },
+                { data: 'send' }            ],
             initComplete: function (settings, json) {
                 getMembersEnabled()
             }
@@ -153,6 +156,13 @@ async function getMembersEnabled() {
             el.fine20 = 'NO'
             if(el.fine){
                 el.fine20 = 'SI'
+            }
+            el.send = ''
+            if(el.sendEmail){
+                el.send = '<i class="fas fa-envelope" title="E-mail"></i>'
+            }
+            if(el.sendWhatsapp){
+                el.send += '<i class="fab fa-whatsapp" title="Whatsapp"></i>'
             }
 
             return el
@@ -280,7 +290,9 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD'),
             subsidyNumber: $('#memberSubsidyNumber').val(),
             fine: $('#memberFine').prop('checked'),
-            dte: $('#memberDTE').val()
+            dte: $('#memberDTE').val(),
+            sendEmail: $('#memberSendEmail').prop('checked'),
+            sendWhatsapp: $('#memberSendWhatsapp').prop('checked')
         }
 
         const res = validateMemberData(memberData)
@@ -389,7 +401,8 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
 
     if (member.fine) $('#memberFine').prop('checked',true)
     if (member.dte) $('#memberDTE').val(member.dte)
-
+    if (member.sendEmail) $('#memberSendEmail').prop('checked',true)
+    if (member.sendWhatsapp) $('#memberSendWhatsapp').prop('checked',true)
     
 
     $('#memberStatus').change(function () {
@@ -522,7 +535,9 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             subsidyNumber: $('#memberSubsidyNumber').val(),
             services: services,
             fine: $('#memberFine').prop('checked'),
-            dte: $('#memberDTE').val()
+            dte: $('#memberDTE').val(),
+            sendEmail: $('#memberSendEmail').prop('checked'),
+            sendWhatsapp: $('#memberSendWhatsapp').prop('checked')
         }
 
         const res = validateMemberData(memberData)
@@ -690,13 +705,23 @@ function setModal(type){
                                     Multa 20%&nbsp;
                                     <input type="checkbox" id="memberFine" />
                                 </div>
-
+                                
                                 <div class="col-md-3">
                                     Tipo de documento
                                     <select id="memberDTE" class="form-select form-select-sm custom-select">
                                         <option value="BOLETA">BOLETA</option>
                                         <option value="FACTURA">FACTURA</option>
                                     </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <br/>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="checkbox" id="memberSendEmail" />
+                                    <i class="fas fa-2x fa-envelope"></i>&nbsp;Envío por Correo
+                                    <br/>
+                                    <input type="checkbox" id="memberSendWhatsapp" />
+                                    <i class="fab fa-2x fa-whatsapp"></i>&nbsp;Envío por Whatsapp
                                 </div>
                             </div>
                         </div>

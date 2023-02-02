@@ -248,7 +248,7 @@ async function getLectures() {
                         invoiceSubTotal: el.invoice.invoiceSubTotal,
                         invoiceDebt: el.invoice.invoiceDebt,
                         debtFine: el.invoice.debtFine,
-                        positive: el.invoice.invoicePositive,
+                        positive: (el.invoice.invoicePositive) ? el.invoice.invoicePositive : 0,
                         invoiceTotal: el.invoice.invoiceTotal,
                         services: invoiceServices
                     })
@@ -263,14 +263,19 @@ async function getLectures() {
                 el.others = others
                 el.debt = el.invoice.invoiceDebt
                 el.debtFine = el.invoice.debtFine
-                el.positive = el.invoice.invoicePositive
+                el.positive = (el.invoice.invoicePositive) ? el.invoice.invoicePositive : 0
                 el.total = el.invoice.invoiceTotal
                 el.detail = `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
                 
                 //if(el.invoice.token){
                 if(el.invoice.number){
                     el.select = ''
-                    el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>`
+                    //el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>`
+                    if(el.members.sendEmail || el.members.sendWhatsapp){
+                        el.selectPrint = ''
+                    }else{
+                        el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>`
+                    }
 
                     el.pdf = `<button class="btn btn-sm btn-danger" onclick="printInvoicePortrait('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
                 }else{
@@ -1848,11 +1853,11 @@ async function printMultiple() {
     })
     
     if(count>0){
+        loadingHandler('start')
         let countIndex = 0
         $(".chkPrintClass").each(async function() {
             if($(this).prop('checked')){
                 let object = {}
-                console.log($(this).attr('data-member-id'))
                 let memberData = await axios.post('/api/memberSingle', {id: $(this).attr('data-member-id') })
                 object.member = memberData.data
 
@@ -1865,6 +1870,7 @@ async function printMultiple() {
                 array.push(object)
                 countIndex++
                 if(countIndex==count){
+                    loadingHandler('stop')
                     array.sort((a,b) => (a.member.orderIndex > b.member.orderIndex) ? 1 : ((b.member.orderIndex > a.member.orderIndex) ? -1 : 0))
                     printFinal(array)
                 }
@@ -1872,9 +1878,6 @@ async function printMultiple() {
         })
         
     }else{
-        /*$('#modal_title').html(`Error`)
-        $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
-        $('#modal').modal('show')*/
         toastr.warning('Debe seleccionar al menos un socio')
     }
 
@@ -2121,7 +2124,7 @@ async function printFinal(array){
 
         doc.setFontType('bold')
         doc.text('Saldo Anterior', pdfX, pdfY + index + 14)
-        if(invoice.invoicePositive){
+        if(array[k].invoice.invoicePositive){
             doc.setTextColor(249, 51, 6)
             doc.text('Saldo a favor', pdfX, pdfY + index + 28)
             doc.setTextColor(0, 0, 0)
