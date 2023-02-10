@@ -1,6 +1,7 @@
 import Member from '../../models/Member'
 import Lectures from '../../models/Lectures'
 import Invoices from '../../models/Invoices'
+import Payments from '../../models/Payments'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 import { jsonSchema } from 'uuidv4'
@@ -243,6 +244,232 @@ export default [
 
 
                     return members
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    sector: Joi.string().optional().allow(''),
+                    month: Joi.number().allow(0),
+                    year: Joi.number().allow(0),
+                    order: Joi.string().optional().allow('')
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/lecturesSectorMembersPayment',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let querySector = {}
+                    if(payload.sector!='0'){
+                        querySector = {
+                            'address.sector': payload.sector
+                        }
+                    }
+
+                    let members = await Member.find(querySector).populate(['address.sector'])
+                    let array = []
+                    for(let i=0; i<members.length ; i++){
+                        array.push(members[i]._id)
+                    }
+
+                    let query = {
+                        members: { $in: array },
+                        month: payload.month,
+                        year: payload.year
+                    }
+                    let queryLast = {
+                        members: { $in: array },
+                        month: (payload.month==1) ? 12 : payload.month - 1,
+                        year: (payload.month==1) ? payload.year - 1 : payload.year, 
+                    }
+                    let queryInvoice = {
+                        members: { $in: array },
+                        typeInvoice: { $exists : false },
+                        lectures: { $ne: null }
+                    }
+                    let queryPayment = {
+                        members: { $in: array }
+                    }
+
+                    let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
+                    let lecturesLast = await Lectures.find(queryLast).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
+                    let invoices = await Invoices.find(queryInvoice).sort({'date' : 'descending'}).lean().populate(['lectures','services.services'])
+                    let payments = await Payments.find(queryPayment).lean()
+                    
+                    for(let i=0;i<lectures.length;i++){
+                        
+                        if(invoices){
+                            lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                            
+                            let lectureLast = lecturesLast.find(x => x.members._id.toString() == lectures[i].members._id.toString())
+                            if(lectureLast){
+                                lectures[i].lastLecture = lectureLast
+                            }
+
+                            let paymentsMember = payments.find(x => x.members.toString() == lectures[i].members._id.toString())
+                            if(paymentsMember){
+                                let payment = paymentsMember.invoices.find(x => x.invoices.toString() == lectures[i].invoice._id.toString())
+                                if(payment){
+                                    lectures[i].payment = paymentsMember
+                                }
+                            }
+                        }
+                        if (lectures[i].members.type == 'personal') {
+                            lectures[i].name = lectures[i].members.personal.name + ' ' + lectures[i].members.personal.lastname1 + ' ' + lectures[i].members.personal.lastname2
+                        } else {
+                            lectures[i].name = lectures[i].members.enterprise.name
+                        }
+                    }
+
+                    if(payload.order){
+                        if(payload.order=="1"){
+                            lectures.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+                        }
+                    }
+
+                    return lectures
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    sector: Joi.string().optional().allow(''),
+                    month: Joi.number().allow(0),
+                    year: Joi.number().allow(0),
+                    order: Joi.string().optional().allow('')
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/lecturesAllInvoices',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let querySector = {}
+                    if(payload.sector!='0'){
+                        querySector = {
+                            'address.sector': payload.sector
+                        }
+                    }
+
+                    let members = await Member.find(querySector).populate(['address.sector'])
+                    let array = []
+                    for(let i=0; i<members.length ; i++){
+                        array.push(members[i]._id)
+                    }
+
+                    let query = {
+                        members: { $in: array }/*,
+                        month: payload.month,
+                        year: payload.year*/
+                    }
+                    let queryInvoice = {
+                        members: { $in: array },
+                        typeInvoice: { $exists : false },
+                        lectures: { $ne: null }
+                    }
+                    let queryPayment = {
+                        members: { $in: array }
+                    }
+
+
+                    let invoices = await Invoices.find(queryInvoice).sort({'number' : 'ascending'}).lean().populate(['lectures','members','services.services'])
+                    let payments = await Payments.find(queryPayment).lean()
+                    
+                    for(let i=0;i<invoices.length;i++){
+                        if (invoices[i].members.type == 'personal') {
+                            invoices[i].name = invoices[i].members.personal.name + ' ' + invoices[i].members.personal.lastname1 + ' ' + invoices[i].members.personal.lastname2
+                        } else {
+                            invoices[i].name = invoices[i].members.enterprise.name
+                        }
+
+                        let paymentsMember = payments.find(x => x.members.toString() == invoices[i].members._id.toString())
+                        if(paymentsMember){
+
+                            for(let j=0;j<paymentsMember.invoices.length;j++){
+                                if(paymentsMember.invoices[j].invoices){
+                                    if(paymentsMember.invoices[j].invoices.toString()==invoices[i]._id.toString()){
+                                        invoices[i].paymentVoucher = paymentsMember
+                                        invoices[i].payment = paymentsMember.invoices[j]
+                                    }
+                                }
+                            }
+                            
+
+                            /*let payment = paymentsMember.invoices.find(x => (x.invoices.toString()) ? x.invoices.toString() : '' == invoices[i]._id.toString())
+                            if(invoices[i].number==60437){
+                                console.log(paymentsMember)
+                                console.log(payment)
+                            }
+                            
+                            if(payment){
+                                invoices[i].paymentVoucher = paymentsMember
+                                invoices[i].payment = payment
+                            }*/
+                        }
+
+                    }
+                    return invoices
+                    for(let i=0;i<lectures.length;i++){
+                        
+                        if(invoices){
+                            lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                            
+                            let lectureLast = lecturesLast.find(x => x.members._id.toString() == lectures[i].members._id.toString())
+                            if(lectureLast){
+                                lectures[i].lastLecture = lectureLast
+                            }
+
+                            let paymentsMember = payments.find(x => x.members.toString() == lectures[i].members._id.toString())
+                            if(paymentsMember){
+                                let payment = paymentsMember.invoices.find(x => x.invoices.toString() == lectures[i].invoice._id.toString())
+                                if(payment){
+                                    lectures[i].payment = paymentsMember
+                                }
+                            }
+                        }
+                        if (lectures[i].members.type == 'personal') {
+                            lectures[i].name = lectures[i].members.personal.name + ' ' + lectures[i].members.personal.lastname1 + ' ' + lectures[i].members.personal.lastname2
+                        } else {
+                            lectures[i].name = lectures[i].members.enterprise.name
+                        }
+                    }
+
+                    if(payload.order){
+                        if(payload.order=="1"){
+                            lectures.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+                        }
+                    }
+
+                    return lectures
 
                 } catch (error) {
                     console.log(error)

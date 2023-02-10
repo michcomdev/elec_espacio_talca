@@ -409,7 +409,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
             doc.addImage(invoice.seal, 'PNG', pdfX + 326, pdfY - 106, 260, 106, null, null, 90)
         }
         textMaxWidth = 260
-        if(docName2!='COMPROBANTE DE AVISO'){
+        if(docName2!='COMPROBANTE DE AVISO' && invoice.number!=0){
             text = 'Timbre Electrónico S.I.I.'
             doc.text(text, pdfX + 340, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
             text = `Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`
@@ -1063,7 +1063,7 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
             doc.rect(pdfX, pdfY + 225, 260, 106, 'F')
             doc.addImage(invoice.seal, 'PNG', pdfX, pdfY + 225, 260, 106)
         }
-        if(docName2!='COMPROBANTE DE AVISO'){
+        if(docName2!='COMPROBANTE DE AVISO' && invoice.number!=0){
             doc.text('Timbre Electrónico S.I.I. ', pdfX + 130, pdfY + 340, 'center')
             doc.text(`Res. ${invoice.resolution.numero} del ${moment(invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`, pdfX + 130, pdfY + 350, 'center')
         }else{
@@ -1595,8 +1595,10 @@ async function printVoucher(memberID,paymentID) {
 
             if(payment.invoices[i].invoices.type==41){
                 doc.text(`Boleta ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
+            }else if(payment.invoices[i].invoices.type==34){
+                doc.text(`Factura ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
             }else{
-                doc.text(`Factura N° ${payment.invoices[i].invoices.number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
+                doc.text(`Comprobante Aviso ${number} - Mes ${getMonthString(payment.invoices[i].invoices.lectureData.month)}`, pdfX, pdfY)
             }
 
             let agreements = 0

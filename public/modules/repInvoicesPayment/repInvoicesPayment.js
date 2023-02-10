@@ -35,6 +35,7 @@ $(document).ready(async function () {
     getParameters()
 
     //chargeMembersTable()
+    //getAllInvoices()
 })
 
 async function getParameters() {
@@ -56,6 +57,8 @@ async function getParameters() {
         }
     }
 
+    setYear = 2022
+    setMonth = '12'
     $("#searchYear").val(setYear)
     $("#searchMonth").val(setMonth)
 
@@ -92,8 +95,8 @@ function chargeMembersTable() {
                 },
                 responsive: true,
                 columnDefs: [
-                            //{ targets: [15, 16], className: 'dt-center' },
-                            { targets: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], className: 'dt-right' }
+                            { targets: [0, 1, 2, 3, 4, 5, 12, 13, 14, 15, 16], className: 'dt-center' },
+                            { targets: [7, 8, 9, 10, 11], className: 'dt-right' }
                         ],
                 order: [[$("#searchOrder").val(), 'asc']],
                 ordering: true,
@@ -103,33 +106,143 @@ function chargeMembersTable() {
                     // $('td', row).css('background-color', 'White');
                 },
                 columns: [
-                    { data: 'number' },
+                    { data: 'year' },
+                    { data: 'month' },
+                    { data: 'type' },
+                    { data: 'numberInvoice' },
+                    { data: 'date' },
+                    { data: 'numberMember' },
                     { data: 'name' },
-                    { data: 'lectureLast' },
-                    { data: 'lectureActual' },
-                    { data: 'consumption' },
-                    { data: 'meterValue' },
-                    { data: 'consumptionOnly' },
-                    { data: 'charge' },
-                    { data: 'sewerage' },
-                    { data: 'consumptionSum' }, //Consumo + cargo fijo + alcantarillado
-                    { data: 'subsidy' },
-                    { data: 'overConsumption' },
-                    { data: 'fine' },
-                    { data: 'consumptionValue' },
+                    { data: 'consumptionValueFull' },
                     { data: 'others' },
-                    { data: 'debt' },
-                    { data: 'debtFine' },
-                    { data: 'positive' },
-                    { data: 'total' }
+                    { data: 'total' },
+                    { data: 'paymentAmount' },
+                    { data: 'balance' },
+                    { data: 'status' },
+                    { data: 'invoicePDF' },
+                    { data: 'paymentPDF' },
+                    { data: 'numberAnnulment' },
+                    { data: 'annulmentPDF' }
                 ],
                 initComplete: function (settings, json) {
-                    getLectures()
+                    //getLectures()
+                    getAllInvoices()
                 }
             })
 
     } catch (error) {
         console.log(error)
+    }
+
+}
+
+async function getAllInvoices(){
+    loadingHandler('start')
+    let query = {
+        sector: $("#searchSector").val(), 
+        year: $("#searchYear").val(), 
+        month: $("#searchMonth").val(),
+        order: $("#searchOrder").val()
+    }
+    let allInvoices = await axios.post('api/lecturesAllInvoices', query)
+    console.log(allInvoices.data)
+
+    if (allInvoices.data.length > 0) {
+
+        let formatData = allInvoices.data.map(el => {
+
+            let agreementsTotal = 0
+            if(el.agreements){
+                for(let i=0; i < el.agreements.length; i++){
+                    agreementsTotal += parseInt(el.agreements[i].amount)
+                }
+            }
+            
+            let creditNote = '', status = 'VÁLIDA'
+            if(el.annulment){
+                creditNote = el.annulment.number
+                status = 'ANULADA'
+            }
+
+            let paymentAmount = 0, balance = el.invoiceSubTotal + agreementsTotal
+            if(el.payment){
+                if(el.members.number==398){
+                    console.log(el)
+                }
+                paymentAmount = el.payment.amount
+                balance -= el.payment.amount 
+            }
+            
+
+
+            el.year = el.lectures.year
+            el.month = el.lectures.month
+            el.type = (el.type) ? 'BOLETA' : 'COMPROBANTE'
+            el.numberInvoice = (el.number) ? el.number : 0
+            el.date = moment.utc(el.date).format('YYYY-MM-DD')
+            el.numberMember = el.members.number
+            el.name = el.name
+            el.consumptionValueFull = dot_separators(el.invoiceSubTotal)
+            el.others = dot_separators(agreementsTotal)
+            el.total = dot_separators(el.invoiceSubTotal + agreementsTotal)
+            el.paymentAmount = dot_separators(paymentAmount)
+            el.balance = dot_separators(balance)
+            el.status = status
+            el.invoicePDF = `<button class="btn btn-sm btn-danger" onclick="printInvoicePortrait('pdf','${el.members.type}','${el.members._id}','${el._id}')"><i class="far fa-file-pdf" style="font-size: 10px;"></i></button>`
+            el.paymentPDF = ''
+            el.numberAnnulment = creditNote
+            el.annulmentPDF = ''
+
+            if(el.payment){
+                el.paymentPDF = `<button class="btn btn-sm btn-primary" onclick="printVoucher('${el.members._id}','${el.paymentVoucher._id}')"><i class="far fa-file-pdf" style="font-size: 10px;"></i></button>`
+            }
+            if(el.annulment){
+                if(el.annulment.token){
+                    el.annulmentPDF = `<button class="btn btn-sm btn-info" onclick="showSIIPDF('${el.annulment.token}')"><i class="far fa-file-pdf" style="font-size: 10px;"></i></button>`
+                }else{
+                    el.annulmentPDF = `<button class="btn btn-sm btn-disabled"><i class="far fa-file-pdf" style="font-size: 10px;"></i></button>`
+                }
+            }
+
+            $("#tableMembersExcelBody").append(`
+                <tr>
+                    <td>${el.lectures.year}</td>
+                    <td>${el.lectures.month}</td>
+                    <td>${(el.type) ? 'BOLETA' : 'COMPROBANTE'}</td>
+                    <td>${(el.number) ? el.number : 0}</td>
+                    <td>${moment.utc(el.date).format('YYYY-MM-DD')}</td>
+                    <td>${el.members.number}</td>
+                    <td>${el.name}</td>
+                    <td>${el.invoiceSubTotal}</td>
+                    <td>${agreementsTotal}</td>
+                    <td>${paymentAmount}</td>
+                    <td>${balance}</td>
+                    <td>${status}</td>
+                    <td>${creditNote}</td>
+                </tr>`)
+
+
+            return el
+        })
+
+        internals.members.table.rows.add(formatData).draw()
+
+        $('.aPopover').click(function($e) { //Previene que el <a> se mueva al inicio del scroll
+            $e.preventDefault()
+        })
+        
+        $('[data-toggle="popover"]').popover({
+            html: true,
+            trigger: 'focus'
+        })
+
+
+        loadingHandler('stop')
+        $('#loadingMembers').empty()
+    } else {
+        loadingHandler('stop')
+        //toastr.warning('No se han encontrado ventas en el rango seleccionado')
+        $('#loadingMembers').empty()
     }
 
 }
@@ -144,8 +257,12 @@ async function getLectures() {
         month: $("#searchMonth").val(),
         order: $("#searchOrder").val()
     }
-    let lecturesData = await axios.post('api/lecturesSectorMembers', query)
-//console.log(lecturesData.data)
+    let lecturesData = await axios.post('api/lecturesSectorMembersPayment', query)
+
+
+    let allInvoices = await axios.post('api/lecturesAllInvoices', query)
+    console.log(allInvoices.data)
+
     internals.members.data = lecturesData.data
 
     internals.invoices = []
@@ -370,6 +487,13 @@ async function getLectures() {
                 values = [{title: 'Valor a Pagar', symbol: '', value: el.invoice.consumption},
                         {title: 'Interés Saldo', symbol: '+', value: el.invoice.debtFine}, //Verificar si dejar valor cerrado
                         {title: '', symbol: '', value: '__________'},
+                        {title: 'Valor Tributable', symbol: '=', value: el.invoice.consumption + el.invoice.debtFine}]
+
+                el.consumptionValueFull = setPopover('Valor Mes', values, el.invoice.consumption + el.invoice.debtFine)
+
+                values = [{title: 'Valor a Pagar', symbol: '', value: el.invoice.consumption},
+                        {title: 'Interés Saldo', symbol: '+', value: el.invoice.debtFine}, //Verificar si dejar valor cerrado
+                        {title: '', symbol: '', value: '__________'},
                         {title: 'Valor Tributable', symbol: '=', value: el.invoice.consumption + el.invoice.debtFine},
                         {title: '<br/>', symbol: '', value: ''},
                         {title: 'Otros (No tributable)', symbol: '', value: others},
@@ -380,16 +504,20 @@ async function getLectures() {
 
                 el.total = setPopover('Total', values, el.invoice.invoiceTotal)
 
-                /*el.detail = `<button class="btn btn-sm btn-info" onclick="createInvoice('${el._id}','${el.invoice._id}','${el.members._id}')"><i class="far fa-eye" style="font-size: 14px;"></i></button>`
-                
-                if(el.invoice.token){
-                    el.select = ''
-                    el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>`
-
-                    el.pdf = `<button class="btn btn-sm btn-danger" onclick="printInvoicePortrait('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
-                }else{
-                    el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
-                }*/
+                el.invoicePDF = ''
+                el.paymentPDF = ''
+                el.balance = 0
+                if(el.number==168){
+                    console.log(el)
+                }
+                if(el.invoice.number){
+                    el.invoicePDF = `<button class="btn btn-sm btn-danger" onclick="printInvoicePortrait('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 10px;"></i></button>`
+                    //el.invoicePDF = `<button class="btn btn-sm btn-danger" onclick="printInvoicePortrait('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 10px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
+                }
+                if(el.payment){
+                    el.paymentPDF = `<button class="btn btn-sm btn-primary" onclick="printVoucher('${el.members._id}','${el.payment._id}')"><i class="far fa-file-pdf" style="font-size: 10px;"></i></button>`
+                    
+                }
 
                 $("#tableMembersExcelBody").append(`
                     <tr>
@@ -428,12 +556,16 @@ async function getLectures() {
                 el.overConsumption = 0
                 el.consumptionCleanValue = 0
                 el.fine = 0
+                el.consumptionValueFull = 0
                 el.others = 0
                 el.consumptionValue = 0
                 el.debt = 0
                 el.debtFine = 0
                 el.positive = 0
                 el.total = 0
+                el.invoicePDF = ''
+                el.paymentPDF = ''
+                el.balance = 0
                 //el.detail = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-eye" style="font-size: 14px;"></i></button>'
                 //el.pdf = '<button class="btn btn-sm btn-secondary" disabled><i class="far fa-file-pdf" style="font-size: 14px;"></i></button>'
             }

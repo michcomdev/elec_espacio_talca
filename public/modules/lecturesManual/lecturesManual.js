@@ -756,14 +756,14 @@ async function printList() {
         head: [tableColumns],
         body: tableRows,
         theme: 'grid',
-        headerStyles: {lineWidth: 0.1, lineColor: [0, 0, 0]},
-        bodyStyles: {lineColor: [0, 0, 0]},
+        headStyles: {lineWidth: 0.1, lineColor: [0, 0, 0]},
+        bodyStyles: {lineColor: [0, 0, 0], textColor: '#000000'},
         columnStyles:{
             0: {halign:'center'},
             3: {halign:'right'}
         },
         styles: {
-            fontSize: 8,
+            fontSize: 9
             /*fillColor: 'rgb(107,165,57)',
             textColor: '#000000',
             halign: 'center'*/

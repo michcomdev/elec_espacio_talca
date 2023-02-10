@@ -1,0 +1,207 @@
+{{!<layout/default}}
+    {{#extend "css" }}
+<link rel="stylesheet" type="text/css"
+    href="/public/modules/repInvoicesPayment/repInvoicesPayment.css">
+
+{{/extend}}
+<br />
+<h3 class="text-center animate__animated animate__fadeIn">Reporte Pagos</h3>
+
+<br>
+
+<div class="row animate__animated animate__fadeIn">
+    
+    <div class="col-md-2">
+        <label style="font-size: 13px; display: inline-block; width: 25%">Año</label>
+        <select id="searchYear" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%"></select>
+        <br/>
+        <label style="font-size: 13px; display: inline-block; width: 25%">Mes</label>
+        <select id="searchMonth" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
+            <option value="01">ENERO</option>
+            <option value="02">FEBRERO</option>
+            <option value="03">MARZO</option>
+            <option value="04">ABRIL</option>
+            <option value="05">MAYO</option>
+            <option value="06">JUNIO</option>
+            <option value="07">JULIO</option>
+            <option value="08">AGOSTO</option>
+            <option value="09">SEPTIEMBRE</option>
+            <option value="10">OCTUBRE</option>
+            <option value="11">NOVIEMBRE</option>
+            <option value="12">DICIEMBRE</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label style="font-size: 13px; display: inline-block; width: 25%">Sector</label>
+        <select id="searchSector" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
+            <option value="0">TODOS</option>
+        </select>
+        <br/>
+        <label style="font-size: 13px; display: inline-block; width: 25%">Ordenar</label>
+        <select id="searchOrder" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
+            <!--<option value="1">Orden planilla</option>-->
+            <option value="0">N° Socio</option>
+            <!--<option value="3">Apellido</option>-->
+            <option value="1">Nombre</option>
+            <!--<option value="5">Dirección</option>-->
+        </select>
+    </div>
+    <div class="col-md-1">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block filterClass"
+            id="searchMembers">
+            <i class="fas fa-search"></i> Filtrar
+        </button>
+    </div>
+    <div class="col-md-3">
+        <button style="border-radius: 5px;" class="btn btn-success btn-block" onclick="ExportToExcel('xlsx')">
+            <i class="fas fa-file-excel"></i> Exportar a Excel
+        </button>
+    </div>
+    <div class="col-md-3">
+        <button style="border-radius: 5px;" class="btn btn-danger btn-block" onclick="exportToPDF()">
+            <i class="fas fa-file-pdf"></i> Exportar a PDF
+        </button>
+    </div>
+   
+    <div class="col-md-12 table-responsive">
+        <br/>
+            <table id="tableMembers" class="display nowrap cell-border
+                table-condensed" cellspacing="0" width="100%">
+                <thead>
+                    <tr class="table-info" style="cursor: auto">
+                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N°</th>
+                        <th style="background-color: #3B6FC9">NOMBRE</th>
+                        <th style="background-color: #3B6FC9">CONSUMO</th>
+                        <th style="background-color: #3B6FC9">OTROS</th>
+                        <th style="background-color: #3B6FC9">TOTAL</th>
+                        <th style="background-color: #3B6FC9">PAGADO</th>
+                        <th style="background-color: #3B6FC9">SALDO</th>
+                        <th style="background-color: #3B6FC9">BOLETA</th>
+                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">COMP. PAGO</th>
+                        <!--<th style="background-color: #3B6FC9">DETALLE</th>
+                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PDF</th>-->
+                    </tr>
+                </thead>
+            </table>
+
+            <table id="tableMembersExcel" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
+                <thead>
+                    <tr>
+                        <th>AÑO</th>
+                        <th>MES</th>
+                        <th>TIPO</th>
+                        <th>N° BOLETA</th>
+                        <th>FECHA</th>
+                        <th>N° SOCIO</th>
+                        <th>SOCIO</th>
+                        <th>MONTO MES</th>
+                        <th>CONVENIOS/MULTAS</th>
+                        <th>MONTO PAGADO</th>
+                        <th>SALDO</th>
+                        <th>ESTADO</th>
+                        <th>N° NC</th>
+                    </tr>
+                </thead>
+                <tbody id="tableMembersExcelBody">
+
+                </tbody>
+            </table>
+            <!--<div id="loadingMembers">
+                <center>
+                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+                    <span class="sr-only">Cargando...</span>
+                </center>
+            </div>-->
+        </div>
+    </div>
+
+    <div class="modal fade" id="lectureModal" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="modalLecture_title"></h6>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                        aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalLecture_body"></div>
+                <div class="modal-footer" id="modalLecture_footer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="paymentModal" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="modalPayment_title"></h6>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                        aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalPayment_body"></div>
+                <div class="modal-footer" id="modalPayment_footer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalInvoices" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Lista de Boletas y Notas de Crédito</h6>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                        aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalInvoices_body">
+                    <table id="tableInvoices" class="table cell-border table-condensed" cellspacing="0" width="100%" style="font-size: 13px">
+                        <thead>
+                            <tr class="table-info">
+                                <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N° BOLETA</th>
+                                <th style="background-color: #3B6FC9">FECHA</th>
+                                <th style="background-color: #3B6FC9">PDF</th>
+                                <th style="background-color: #3B6FC9">N° NOTA CRÉDITO</th>
+                                <th style="background-color: #3B6FC9">FECHA</th>
+                                <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableInvoicesBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer" id="modalInvoices_footer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal" role="dialog" aria-labelledby="modal"
+        data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="modal_title"></h6>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                        aria-label="Close"> 
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal_body"></div>
+                <div class="modal-footer" id="modal_footer"></div>
+            </div>
+        </div>
+    </div>
+
+    {{#extend "js"}}
+    <script src="/public/modules/default/logoWallImg.js"></script>
+    <script src="/public/modules/default/logoImg.js"></script>
+    <script src="/public/modules/default/logoWallImg90.js"></script>
+    <script src="/public/modules/default/logoImg90.js"></script>
+    <script src="/public/modules/default/test2D.js"></script>
+    <script src="/public/modules/repInvoicesPayment/repInvoicesPayment.js"></script>
+    <script src="/public/js/printDocuments.js"></script>
+    <script src="/public/js/xlsx.full.min.js"></script>
+    {{/extend}}
