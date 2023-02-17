@@ -127,7 +127,75 @@ export default [
                             month: 12
                         }
                     }else{
+                        const d = new Date()
+                        let actualMonth = d.getMonth() + 1
+                        let actualYear = d.getFullYear()
 
+                        let queryCheck = {
+                            members: { $in: array },
+                            month: actualMonth,
+                            year: actualYear
+                        }
+
+                        let lecturesCheck = await Lectures.find(queryCheck).lean()
+                        if(lecturesCheck){
+                            if(lecturesCheck.length==0){
+                                actualMonth -= 1
+                                if(actualMonth==0){
+                                    actualMonth = 12
+                                    actualYear -= 1
+                                }
+                            }
+                        }
+
+                        let arrayMonth1 = [], arrayMonth2 = [], yearOnUse = 'actual'
+
+                        for(let m=0; m<payload.month; m++){
+                            if(yearOnUse=='actual'){
+                                arrayMonth1.push(actualMonth)
+                            }else{
+                                arrayMonth2.push(actualMonth)
+                            }
+                            actualMonth--
+                            if(actualMonth==0){
+                                actualMonth = 12
+                                yearOnUse = 'last'
+                            }
+                        }
+                        
+                        let arrayMonthFinal = [{
+                            year: actualYear,
+                            month: {
+                                $in: arrayMonth1
+                            }
+                        }]
+                        if(arrayMonth2.length>0){
+
+                            actualYear--
+                            arrayMonthFinal.push({
+                                year: actualYear,
+                                month: {
+                                    $in: arrayMonth2
+                                }
+                            })
+                        }
+
+                        query = {
+                            members: { $in: array },
+                            $or: arrayMonthFinal
+                        }
+
+                        let lastYear = actualYear
+
+                        if(actualMonth==1){
+                            lastYear -= 1
+                            actualMonth = 12
+                        }
+                        queryBefore = {
+                            members: { $in: array },
+                            year: lastYear,
+                            month: actualMonth
+                        }
                     }
                    
                     let lectures = await Lectures.find(query).lean()
@@ -159,15 +227,35 @@ export default [
                             }
                             members[j].lectures[array[k].month] = array[k].logs[array[k].logs.length-1].lecture
                         }
-                        //REVISAR CASOS CON CAMBIO DE MEDIDOR!!
 
                         if(payload.type=='consumption'){
                             let prom = 0, subtotal = 0
                             for(let l=1;l<members[j].lectures.length;l++){
-                                if(!isNaN(members[j].lectures[l]) && !isNaN(members[j].lectures[l-1])){
-                                    members[j].consumption[l] = (members[j].lectures[l] - ((members[j].lecturesNew[l-1]) ? members[j].lecturesNew[l-1] : members[j].lectures[l-1])) + ((members[j].lecturesNew[l]) ? members[j].lecturesNew[l] : 0)
-                                    subtotal += members[j].consumption[l]
-                                    prom++
+
+                                if(payload.by=='year'){
+                                    if(!isNaN(members[j].lectures[l]) && !isNaN(members[j].lectures[l-1])){
+                                        members[j].consumption[l] = (members[j].lectures[l] - ((members[j].lecturesNew[l-1]) ? members[j].lecturesNew[l-1] : members[j].lectures[l-1])) + ((members[j].lecturesNew[l]) ? members[j].lecturesNew[l] : 0)
+                                        subtotal += members[j].consumption[l]
+                                        prom++
+                                    }
+                                }else{
+                                    if(l==1){
+                                        if(!isNaN(members[j].lectures[l]) && !isNaN(members[j].lectures[12])){
+                                            members[j].consumption[l] = (members[j].lectures[l] - ((members[j].lecturesNew[12]) ? members[j].lecturesNew[12] : members[j].lectures[12])) + ((members[j].lecturesNew[l]) ? members[j].lecturesNew[l] : 0)
+                                            subtotal += members[j].consumption[l]
+                                            prom++
+                                        }
+                                    }else if(members[j].lectures[l-1]==null){
+                                        if(!isNaN(members[j].lectures[l]) && !isNaN(members[j].lectures[0])){
+                                            members[j].consumption[l] = (members[j].lectures[l] - ((members[j].lecturesNew[0]) ? members[j].lecturesNew[0] : members[j].lectures[0])) + ((members[j].lecturesNew[l]) ? members[j].lecturesNew[l] : 0)
+                                        }
+                                    }else{
+                                        if(!isNaN(members[j].lectures[l]) && !isNaN(members[j].lectures[l-1])){
+                                            members[j].consumption[l] = (members[j].lectures[l] - ((members[j].lecturesNew[l-1]) ? members[j].lecturesNew[l-1] : members[j].lectures[l-1])) + ((members[j].lecturesNew[l]) ? members[j].lecturesNew[l] : 0)
+                                            subtotal += members[j].consumption[l]
+                                            prom++
+                                        }
+                                    }
                                 }
 
                                 if(l==members[j].lectures.length-1){
@@ -198,6 +286,55 @@ export default [
                     month: Joi.number().optional().allow(0),
                     year: Joi.number().allow(0),
                     order: Joi.string().optional().allow('')
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/lecturesReportCheckLast',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    
+                    const d = new Date()
+                    let actualMonth = d.getMonth() + 1
+                    let actualYear = d.getFullYear()
+
+                    let queryCheck = {
+                        month: actualMonth,
+                        year: actualYear
+                    }
+
+                    let lecturesCheck = await Lectures.find(queryCheck).lean()
+                    if(lecturesCheck){
+                        if(lecturesCheck.length==0){
+                            actualMonth -= 1
+                            if(actualMonth==0){
+                                actualMonth = 12
+                                actualYear -= 1
+                            }
+                        }
+                    }
+
+                    return actualMonth
+
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    month: Joi.number().optional().allow(0),
+                    year: Joi.number().optional().allow(0)
                 })
             }
         }

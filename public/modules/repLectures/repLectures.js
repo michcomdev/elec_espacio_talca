@@ -102,9 +102,9 @@ async function getParameters() {
 
 }
 
-function chargeMembersTable() {
+async function chargeMembersTable() {
 
-    let columns = []
+    let columns = [], targets = []
 
     if($("#rbYear").prop('checked')){
         columns.push(
@@ -142,7 +142,13 @@ function chargeMembersTable() {
             <th style="background-color: #3B6FC9">DICIEMBRE</th>
             <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
         `)
+
+        targets = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
     }else{
+
+        let getMonth = await axios.post('api/lecturesReportCheckLast',{})
+        console.log(getMonth.data)
+
         if($("#searchMonth").val()==3){
             columns.push(
                 { data: 'number' },
@@ -152,6 +158,21 @@ function chargeMembersTable() {
                 { data: 'month03' },
                 { data: 'prom' }                    
             )
+
+            //EN DESARROLLO...
+            for(let i=0; i<3; i++){
+                
+            }
+
+            $("#trHead").html(`
+                <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N°</th>
+                <th style="background-color: #3B6FC9">NOMBRE</th>
+                <th style="background-color: #3B6FC9">ENERO</th>
+                <th style="background-color: #3B6FC9">FEBRERO</th>
+                <th style="background-color: #3B6FC9">MARZO</th>
+                <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+            `)
+            targets = [0, 2, 3, 4, 5]
         }else if($("#searchMonth").val()==6){
             columns.push(
                 { data: 'number' },
@@ -224,7 +245,7 @@ function chargeMembersTable() {
                 responsive: true,
                 columnDefs: [
                     { 
-                        targets: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 
+                        targets: targets, 
                         className: 'dt-center' 
                     }
                 ],
@@ -267,12 +288,16 @@ function chargeMembersTable() {
 
 async function getMembers() {
 
+    
+    let type = ($("#rbConsumption").prop('checked')) ? 'consumption' : 'lecture'
+
     let query = {
+        by: 'month',
+        type: type,
         sector: sectorSelected, 
         month: monthSelected,
         order: $("#searchOrder").val()
     }
-    let type = ($("#rbConsumption").prop('checked')) ? 'consumption' : 'lecture'
 
     if($("#rbYear").prop('checked')){
         query = {
