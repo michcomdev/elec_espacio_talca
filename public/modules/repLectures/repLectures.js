@@ -104,7 +104,7 @@ async function getParameters() {
 
 async function chargeMembersTable() {
 
-    let columns = [], targets = []
+    let columns = [], targets = [], header = ''
 
     if($("#rbYear").prop('checked')){
         columns.push(
@@ -125,7 +125,7 @@ async function chargeMembersTable() {
             { data: 'prom' }                    
         )
 
-        $("#trHead").html(`
+        header = `
             <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N°</th>
             <th style="background-color: #3B6FC9">NOMBRE</th>
             <th style="background-color: #3B6FC9">ENERO</th>
@@ -141,73 +141,158 @@ async function chargeMembersTable() {
             <th style="background-color: #3B6FC9">NOVIEMBRE</th>
             <th style="background-color: #3B6FC9">DICIEMBRE</th>
             <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
-        `)
+        `
 
         targets = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
     }else{
 
-        let getMonth = await axios.post('api/lecturesReportCheckLast',{})
-        console.log(getMonth.data)
+        let getLastMonth = await axios.post('api/lecturesReportCheckLast',{})
+        let lastMonth = getLastMonth.data
+
+        let month01 = getMonth('number',lastMonth,2)
+        let month02 = getMonth('number',lastMonth,1)
+        let month03 = getMonth('number',lastMonth,0)
+
+        let month01String = getMonth('string',lastMonth,2)
+        let month02String = getMonth('string',lastMonth,1)
+        let month03String = getMonth('string',lastMonth,0)
 
         if($("#searchMonth").val()==3){
             columns.push(
                 { data: 'number' },
                 { data: 'name' },
-                { data: 'month01' },
-                { data: 'month02' },
-                { data: 'month03' },
-                { data: 'prom' }                    
+                { data: month01 },
+                { data: month02 },
+                { data: month03 },
+                { data: 'prom' }
             )
 
-            //EN DESARROLLO...
-            for(let i=0; i<3; i++){
-                
-            }
-
-            $("#trHead").html(`
+            header = `
                 <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N°</th>
                 <th style="background-color: #3B6FC9">NOMBRE</th>
-                <th style="background-color: #3B6FC9">ENERO</th>
-                <th style="background-color: #3B6FC9">FEBRERO</th>
-                <th style="background-color: #3B6FC9">MARZO</th>
+                <th style="background-color: #3B6FC9">${month01String}</th>
+                <th style="background-color: #3B6FC9">${month02String}</th>
+                <th style="background-color: #3B6FC9">${month03String}</th>
                 <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
-            `)
+            `
             targets = [0, 2, 3, 4, 5]
         }else if($("#searchMonth").val()==6){
+
+            let getLastMonth = await axios.post('api/lecturesReportCheckLast',{})
+            let lastMonth = getLastMonth.data
+
+            let month01 = getMonth('number',lastMonth,5)
+            let month02 = getMonth('number',lastMonth,4)
+            let month03 = getMonth('number',lastMonth,3)
+            let month04 = getMonth('number',lastMonth,2)
+            let month05 = getMonth('number',lastMonth,1)
+            let month06 = getMonth('number',lastMonth,0)
+
+            let month01String = getMonth('string',lastMonth,5)
+            let month02String = getMonth('string',lastMonth,4)
+            let month03String = getMonth('string',lastMonth,3)
+            let month04String = getMonth('string',lastMonth,2)
+            let month05String = getMonth('string',lastMonth,1)
+            let month06String = getMonth('string',lastMonth,0)
+
+
             columns.push(
                 { data: 'number' },
                 { data: 'name' },
-                { data: 'month01' },
-                { data: 'month02' },
-                { data: 'month03' },
-                { data: 'month04' },
-                { data: 'month05' },
-                { data: 'month06' },
+                { data: month01 },
+                { data: month02 },
+                { data: month03 },
+                { data: month04 },
+                { data: month05 },
+                { data: month06 },
                 { data: 'prom' }                    
             )
+
+            header = `
+                <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N°</th>
+                <th style="background-color: #3B6FC9">NOMBRE</th>
+                <th style="background-color: #3B6FC9">${month01String}</th>
+                <th style="background-color: #3B6FC9">${month02String}</th>
+                <th style="background-color: #3B6FC9">${month03String}</th>
+                <th style="background-color: #3B6FC9">${month04String}</th>
+                <th style="background-color: #3B6FC9">${month05String}</th>
+                <th style="background-color: #3B6FC9">${month06String}</th>
+                <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+            `
+            targets = [0, 2, 3, 4, 5, 6, 7, 8]
+
         }else if($("#searchMonth").val()==12){
+
+            let getLastMonth = await axios.post('api/lecturesReportCheckLast',{})
+            let lastMonth = getLastMonth.data
+
+            let month01 = getMonth('number',lastMonth,11)
+            let month02 = getMonth('number',lastMonth,10)
+            let month03 = getMonth('number',lastMonth,9)
+            let month04 = getMonth('number',lastMonth,8)
+            let month05 = getMonth('number',lastMonth,7)
+            let month06 = getMonth('number',lastMonth,6)
+            let month07 = getMonth('number',lastMonth,5)
+            let month08 = getMonth('number',lastMonth,4)
+            let month09 = getMonth('number',lastMonth,3)
+            let month10 = getMonth('number',lastMonth,2)
+            let month11 = getMonth('number',lastMonth,1)
+            let month12 = getMonth('number',lastMonth,0)
+
+            let month01String = getMonth('string',lastMonth,11)
+            let month02String = getMonth('string',lastMonth,10)
+            let month03String = getMonth('string',lastMonth,9)
+            let month04String = getMonth('string',lastMonth,8)
+            let month05String = getMonth('string',lastMonth,7)
+            let month06String = getMonth('string',lastMonth,6)
+            let month07String = getMonth('string',lastMonth,5)
+            let month08String = getMonth('string',lastMonth,4)
+            let month09String = getMonth('string',lastMonth,3)
+            let month10String = getMonth('string',lastMonth,2)
+            let month11String = getMonth('string',lastMonth,1)
+            let month12String = getMonth('string',lastMonth,0)
+
             columns.push(
                 { data: 'number' },
                 { data: 'name' },
-                { data: 'month01' },
-                { data: 'month02' },
-                { data: 'month03' },
-                { data: 'month04' },
-                { data: 'month05' },
-                { data: 'month06' },
-                { data: 'month07' },
-                { data: 'month08' },
-                { data: 'month09' },
-                { data: 'month10' },
-                { data: 'month11' },
-                { data: 'month12' },
+                { data: month01 },
+                { data: month02 },
+                { data: month03 },
+                { data: month04 },
+                { data: month05 },
+                { data: month06 },
+                { data: month07 },
+                { data: month08 },
+                { data: month09 },
+                { data: month10 },
+                { data: month11 },
+                { data: month12 },
                 { data: 'prom' }                    
             )
+
+            header = `
+                <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N°</th>
+                <th style="background-color: #3B6FC9">NOMBRE</th>
+                <th style="background-color: #3B6FC9">${month01String}</th>
+                <th style="background-color: #3B6FC9">${month02String}</th>
+                <th style="background-color: #3B6FC9">${month03String}</th>
+                <th style="background-color: #3B6FC9">${month04String}</th>
+                <th style="background-color: #3B6FC9">${month05String}</th>
+                <th style="background-color: #3B6FC9">${month06String}</th>
+                <th style="background-color: #3B6FC9">${month07String}</th>
+                <th style="background-color: #3B6FC9">${month08String}</th>
+                <th style="background-color: #3B6FC9">${month09String}</th>
+                <th style="background-color: #3B6FC9">${month10String}</th>
+                <th style="background-color: #3B6FC9">${month11String}</th>
+                <th style="background-color: #3B6FC9">${month12String}</th>
+                <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+            `
+            targets = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
         }
     }
 
 
-    console.log('here')
     try {
         if ($.fn.DataTable.isDataTable('#tableMembers')) {
             internals.members.table.clear().destroy()
@@ -218,6 +303,8 @@ async function chargeMembersTable() {
         }else{
             $("#changeOrder").attr('disabled','disabled')
         }
+
+        $("#trHead").html(header)
 
         internals.members.table = $('#tableMembers')
             .DataTable({
@@ -309,11 +396,7 @@ async function getMembers() {
         }
     }
 
-    console.log(query)
-
     let lecturesData = await axios.post('api/lecturesReport', query)
-    let order = 1, rowIndex = 0
-    console.log(lecturesData.data)
 
     if (lecturesData.data.length > 0) {
         let formatData = lecturesData.data.map(el => {
@@ -390,581 +473,67 @@ $('#searchMembers').on('click', async function () {
     }
 })
 
+function getMonth(type,lastMonth,index){
 
-$('#saveLectures').on('click', async function () {
+    let monthIndex = lastMonth-index
 
-    if (members.length==0) {
-        toastr.warning('No ha filtrado planilla')
-        return
-    }
-    
-    let saveLectures = await Swal.fire({
-        title: '¿Está seguro de almacenar lecturas?',
-        customClass: 'swal-wide',
-        html: `Sector: ${sectorNameSelected}<br/>Año: ${yearSelected}<br/>Mes: ${monthNameSelected}`,
-        showCloseButton: true,
-        showCancelButton: true,
-        showConfirmButton: true,
-        focusConfirm: false,
-        confirmButtonText: 'Aceptar',
-        cancelButtonText: 'Cancelar'
-    })
-
-    if (saveLectures.value) {
-
-        let array = {
-            users: userCredentials._id,
-            date: moment().format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]'),
-            year: yearSelected, //MODIFICAR
-            month: monthSelected, //MODIFICAR
-            lectures: [],
-            members: []
-        }
-
-        console.log(members)
-        
-        for(let i=0; i < members.length; i++){
-
-            //Gris por defecto: rgba(0, 0, 0, 0.1)
-            //Rojo: rgb(231, 76, 60)
-            //Azul: rgb(69, 130, 236)
-            let lectureInputNew = false
-            if($("#lectureNewStart-"+members[i]._id).length>0){
-                lectureInputNew = true
-            }
-
-            if($("#lecture-"+members[i]._id).css('border').includes('solid rgb(231, 76, 60)')){
-                i = members.length
-                toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
-
-            }else if(lectureInputNew){ //En caso que haya medidor nuevo
-                if($("#lectureNewStart-"+members[i]._id).css('border').includes('solid rgb(231, 76, 60)')){
-                    i = members.length
-                    toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
-                }else{
-                    if($("#lecture-"+members[i]._id).css('border').includes('solid rgb(69, 130, 236)') || $("#lectureNewStart-"+members[i]._id).css('border').includes('solid rgb(69, 130, 236)')){
-                        array.lectures.push({
-                            member: members[i]._id,
-                            lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
-                            lectureNewStart: parseInt(replaceAll($("#lectureNewStart-"+members[i]._id).val(), '.', '').replace(' ', '')),
-                            lectureNewEnd: parseInt(replaceAll($("#lectureNewEnd-"+members[i]._id).val(), '.', '').replace(' ', '')),
-                            fine: $(`#lectureFine-${members[i]._id}`).prop('checked')
-                        })
-                        array.members.push(members[i]._id)
-                    }
-                }
-
-            }else if($("#lecture-"+members[i]._id).css('border').includes('solid rgb(69, 130, 236)')){
-                array.lectures.push({
-                    member: members[i]._id,
-                    lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
-                    fine: $(`#lectureFine-${members[i]._id}`).prop('checked')
-                })
-                array.members.push(members[i]._id)
-            }else if(members[i].lectures){
-
-                if(members[i].lectures.logs[members[i].lectures.logs.length-1].lectureNewStart !== undefined && !lectureInputNew){//Caso en que borren la lectura del medidor nuevo
-                    array.lectures.push({
-                        member: members[i]._id,
-                        lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
-                        fine: $(`#lectureFine-${members[i]._id}`).prop('checked')
-                    })
-                    array.members.push(members[i]._id)
-                }else if(members[i].fine!=$(`#lectureFine-${members[i]._id}`).prop('checked')){
-                    array.lectures.push({
-                        member: members[i]._id,
-                        lecture: parseInt(replaceAll($("#lecture-"+members[i]._id).val(), '.', '').replace(' ', '')),
-                        fine: $(`#lectureFine-${members[i]._id}`).prop('checked')
-                    })
-                    array.members.push(members[i]._id)
-                }
-            }
-
-
-
-            if(i+1==members.length){
-                console.log(array)
-                console.log('here')
-                return
-                
-                if(array.lectures.length>0){
-                    loadingHandler('start')
-                    //ALMACENADO...
-                    let saveLecture = await axios.post('/api/lectureSaveManual', array)
-                    loadingHandler('stop')
-
-                    console.log(saveLecture)
-                    if(saveLecture.data=='OK'){
-                        chargeMembersTable()
-                        toastr.success('Almacenado correctamente')
-                    }else{
-                        toastr.warning('Ha ocurrido un error al almacenar, favor reintente o contacte al administrador')
-                    }
-                }else{
-                    toastr.warning('No ha realizado cambios, se mantienen los datos actuales')
-                }
-            }
-        }
+    if(monthIndex<=0){
+        monthIndex += 12
     }
 
-})
-
-function calculateValue(member){
-    
-    let lectureLast = replaceAll($("#lectureLast-"+member).text(), '.', '')
-    let lecture = 0
-    let value = 0
-
-    let lectureInput = replaceAll($("#lecture-"+member).val(), '.', '').replace(' ', '')
-
-    let lectureInputNew = false
-    let lectureInputNewValue = 0
-
-    if($("#lectureNewStart-"+member).length>0){
-        let lectureNewStart = replaceAll($("#lectureNewStart-"+member).val(), '.', '').replace(' ', '')
-        let lectureNewEnd = replaceAll($("#lectureNewEnd-"+member).val(), '.', '').replace(' ', '')
-        if($.isNumeric(lectureNewStart) && $.isNumeric(lectureNewEnd)){
-            if(parseInt(lectureNewEnd)>=parseInt(lectureNewStart)){
-                lectureInputNewValue = lectureNewEnd - lectureNewStart
-                
-                let memberData = members.find(x => x._id.toString() == member)
-                if(memberData.lectures){
-                    if(memberData.lectures.logs[memberData.lectures.logs.length-1].lectureNewStart==lectureNewStart){
-                        $("#lectureNewStart-"+member).css('border', '')
-                    }else{
-                        $("#lectureNewStart-"+member).css('border', '1px solid #4582EC')
-                    }
-
-                    if(memberData.lectures.logs[memberData.lectures.logs.length-1].lectureNewEnd==lectureNewEnd){
-                        $("#lectureNewEnd-"+member).css('border', '')
-                    }else{
-                        $("#lectureNewEnd-"+member).css('border', '1px solid #4582EC')
-                    }
-
-                }else{
-                    $("#lectureNewStart-"+member).css('border', '1px solid #4582EC')
-                    $("#lectureNewEnd-"+member).css('border', '1px solid #4582EC')
-                }
-            }else{
-                $("#lectureNewStart-"+member).css('border', '1px solid #E74C3C')
-                $("#lectureNewEnd-"+member).css('border', '1px solid #E74C3C')
-            }
-        }else{
-            $("#lectureNewStart-"+member).css('border', '1px solid #E74C3C')
-            $("#lectureNewEnd-"+member).css('border', '1px solid #E74C3C')
+    if(type=='number'){
+        switch(monthIndex) {
+            case 1:
+                return 'month01'
+            case 2:
+                return 'month02'
+            case 3:
+                return 'month03'
+            case 4:
+                return 'month04'
+            case 5:
+                return 'month05'
+            case 6:
+                return 'month06'
+            case 7:
+                return 'month07'
+            case 8:
+                return 'month08'
+            case 9:
+                return 'month09'
+            case 10:
+                return 'month10'
+            case 11:
+                return 'month11'
+            case 12:
+                return 'month12'
         }
-        lectureInputNew = true
-    }
-
-    if($.isNumeric(lectureInput)){
-        lecture = lectureInput
-
-        if(parseInt(lecture)>=parseInt(lectureLast)){
-            value = lecture - lectureLast
-            if(lectureInputNew){
-                value += lectureInputNewValue
-            }
-
-            let memberData = members.find(x => x._id.toString() == member)
-            if(memberData.lectures){
-                if(memberData.lectures.logs[memberData.lectures.logs.length-1].lecture==lectureInput){
-                    $("#lecture-"+member).css('border', '')
-                }else{
-                    $("#lecture-"+member).css('border', '1px solid #4582EC')
-                }
-            }else{
-                $("#lecture-"+member).css('border', '1px solid #4582EC')
-            }
-
-        }else{
-            $("#lecture-"+member).css('border', '1px solid #E74C3C')
-        }
-
     }else{
-        $("#lecture-"+member).css('border', '1px solid #E74C3C')
-    }
-
-    $("#lectureValue-"+member).text(dot_separators(value))
-}
-
-async function saveOne(member_id){
-
-    let array = {
-        users: userCredentials._id,
-        date: moment().format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]'),
-        year: yearSelected, //MODIFICAR
-        month: monthSelected, //MODIFICAR
-        lectures: [],
-        members: []
-    }
-
-    member = members.find(x => x._id===member_id)
-
-    //Gris por defecto: rgba(0, 0, 0, 0.1)
-    //Rojo: rgb(231, 76, 60)
-    //Azul: rgb(69, 130, 236)
-    let lectureInputNew = false
-    if($("#lectureNewStart-"+member._id).length>0){
-        lectureInputNew = true
-    }
-
-    if($("#lecture-"+member._id).css('border').includes('solid rgb(231, 76, 60)')){
-        toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
-        return
-
-    }else if(lectureInputNew){ //En caso que haya medidor nuevo
-        if($("#lectureNewStart-"+member._id).css('border').includes('solid rgb(231, 76, 60)')){
-            toastr.error('Debe corregir los registros marcados en rojo antes de almacenar')
-            return
-        }else{
-            if($("#lecture-"+member._id).css('border').includes('solid rgb(69, 130, 236)') || $("#lectureNewStart-"+member._id).css('border').includes('solid rgb(69, 130, 236)')){
-                array.lectures.push({
-                    member: member._id,
-                    lecture: parseInt(replaceAll($("#lecture-"+member._id).val(), '.', '').replace(' ', '')),
-                    lectureNewStart: parseInt(replaceAll($("#lectureNewStart-"+member._id).val(), '.', '').replace(' ', '')),
-                    lectureNewEnd: parseInt(replaceAll($("#lectureNewEnd-"+member._id).val(), '.', '').replace(' ', '')),
-                    fine: $(`#lectureFine-${member._id}`).prop('checked')
-                })
-                array.members.push(member._id)
-            }
-        }
-
-    }else if($("#lecture-"+member._id).css('border').includes('solid rgb(69, 130, 236)')){
-        array.lectures.push({
-            member: member._id,
-            lecture: parseInt(replaceAll($("#lecture-"+member._id).val(), '.', '').replace(' ', '')),
-            fine: $(`#lectureFine-${member._id}`).prop('checked')
-        })
-        array.members.push(member._id)
-    }else if(member.lectures){
-
-        if(member.lectures.logs[member.lectures.logs.length-1].lectureNewStart !== undefined && !lectureInputNew){//Caso en que borren la lectura del medidor nuevo
-            array.lectures.push({
-                member: member._id,
-                lecture: parseInt(replaceAll($("#lecture-"+member._id).val(), '.', '').replace(' ', '')),
-                fine: $(`#lectureFine-${member._id}`).prop('checked')
-            })
-            array.members.push(member._id)
-        }else if(member.fine!=$(`#lectureFine-${member._id}`).prop('checked')){
-            array.lectures.push({
-                member: member._id,
-                lecture: parseInt(replaceAll($("#lecture-"+member._id).val(), '.', '').replace(' ', '')),
-                fine: $(`#lectureFine-${member._id}`).prop('checked')
-            })
-            array.members.push(member._id)
-        }
-    }
-
-    if(array.members.length>0){
-        console.log(array)
-        console.log('here')
-        
-        if(array.lectures.length>0){
-            //loadingHandler('start')
-            //ALMACENADO...
-            let saveLecture = await axios.post('/api/lectureSaveManual', array)
-            //loadingHandler('stop')
-
-            console.log(saveLecture)
-
-            if(saveLecture.data=='OK'){
-                if($("#lectureNewStart-"+member_id)){
-                    $("#lectureNewStart-"+member_id).css('border', '')
-                    $("#lectureNewEnd-"+member_id).css('border', '')
-                }
-                $("#lecture-"+member_id).css('border', '')
-
-                let index = $($("#lecture-"+member_id).parent().parent().children()[10]).html().indexOf('<i')
-                let text = $($("#lecture-"+member_id).parent().parent().children()[10]).html().slice(index)
-                $($("#lecture-"+member_id).parent().parent().children()[10]).html('AHORA '+text)
-
-                toastr.success('Almacenado correctamente')
-            }else{
-                toastr.warning('Ha ocurrido un error al almacenar, favor reintente o contacte al administrador')
-            }
-        }else{
-            toastr.warning('No ha realizado cambios, se mantienen los datos actuales')
-        }
-    }
-
-}
-
-function setFocus(e, input, member_id){
-    if(e.keyCode==13){
-        saveOne(member_id)
-        let nextIndex = parseInt($(input).attr('tabindex')) + 1
-        $(`[tabindex=${nextIndex}]`).focus()
-    }
-}
-
-$('#updateLectures').on('click', async function () {
-
-    let memberData = await axios.post('/api/memberSingle', { id: internals.dataRowSelected._id })
-    let member = memberData.data
-    $('#lectureModal').modal('show')
-
-    let name = ''
-    let type = ''
-    if (member.type == 'personal') {
-        type = 'PERSONAL'
-        name = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
-    } else {
-        type = 'EMPRESA'
-        name = member.enterprise.name
-    }
-
-    $('#modalLecture_title').html(`Lecturas Socio N° ${member.number} - ${member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2}`)
-    createModalBody(member)
-
-    $('#modalLecture_footer').html(`
-        <button style="border-radius: 5px;" class="btn btn-dark" data-dismiss="modal">
-            <i ="color:#E74C3C;" class="fas fa-times"></i> CERRAR
-        </button>
-    `)
-
-    $('#memberNumber').val(member.number)
-    $('#memberType').val(type)
-    $('#memberRUT').val(member.rut)
-    $('#memberName').val(name)
-    $('#memberWaterMeter').val(member.waterMeters.find(x => x.state === 'Activo').number)
-    $('#memberAddress').val(member.address.address)
-
-    loadInvoices(member)
-
-})
-
-function addLectureNew(btn,id){
-    $(btn).parent().html(`<input id="lectureNewStart-${id}" onkeyup="calculateValue('${id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block"></input>
-                        <input id="lectureNewEnd-${id}" onkeyup="calculateValue('${id}')" class="form-control form-control-sm lectureValue" style="text-align: center; width: 40%; display: inline-block"></input>
-                        <i class="fas fa-times" style="width: 20%; display: inline-block" onclick="removeLectureNew(this,'${id}')"></i>`)
-
-}
-
-function removeLectureNew(btn,id){
-    $(btn).parent().html(`<i class="fas fa-plus" onclick="addLectureNew(this,'${id}')"></i>`)
-    calculateValue(id)
-    //saveOne(id)
-}
-
-
-
-async function printList() {
-
-    let doc = new jsPDF('p', 'pt', 'letter')
-    //let doc = new jsPDF('p', 'pt', [302, 451])
-
-    let pdfX = 30
-    let pdfY = 20
-    let page = '1'
-
-    doc.setFontSize(24)
-    doc.addImage(logoWallImg, 'PNG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight()) //Fondo
-
-    doc.addImage(logoImg, 'PNG', 30, pdfY, 77, 60)
-    pdfY += 20
-    doc.text(`PLANILLA DE TOMA DE ESTADO`, doc.internal.pageSize.getWidth() / 2, pdfY, 'center')
-
-    doc.setFontSize(10)
-    doc.text(`Mes:`, pdfX + 90 , pdfY + 20)
-    doc.text(`Año:`, pdfX + 90, pdfY + 33)
-    doc.text(`Sector: `, pdfX + 90, pdfY + 46)
-    doc.text($("#searchMonth option:selected").text(), pdfX + 140 , pdfY + 20)
-    doc.text($("#searchYear option:selected").text(), pdfX + 140, pdfY + 33)
-    doc.text($("#searchSector option:selected").text(), pdfX + 140, pdfY + 46)
-    doc.text(moment().utc().format('DD-MM-YYYY'), doc.internal.pageSize.getWidth() - 40, pdfY + 20, 'right')
-    doc.text(page, doc.internal.pageSize.getWidth() - 40, pdfY + 33, 'right')
-
-    pdfY += 50
-
-    let tableColumns = ['Registro', 'Socio', 'Dirección', 'L. Anterior','L. Actual', 'Observación']
-    let tableRows = []
-
-    console.log(members)
-    
-    for(let i=0; i < members.length; i++){
-
-        let memberName = ''
-
-        if (members[i].type == 'personal') {
-            if($("#searchOrder").val()==3){
-                memberName = members[i].personal.lastname1 + ' ' + members[i].personal.lastname2 + ' ' + members[i].personal.name
-            }else{
-                memberName = members[i].personal.name + ' ' + members[i].personal.lastname1 + ' ' + members[i].personal.lastname2
-            }
-            
-        } else {
-            memberName = members[i].enterprise.name
-        }
-
-        let lastLecture = 0
-        if(members[i].lectureLast){
-            lastLecture = dot_separators(members[i].lectureLast.logs[members[i].lectureLast.logs.length-1].lecture)
-        }
-        tableRows.push([members[i].number, memberName, members[i].address, lastLecture, '', ''])
-    }
-    
-    console.log(tableColumns,tableRows)
-
-    doc.autoTable({
-        /*createdCell: function (cell, data) {
-            cell.styles.fillColor = 'rgb(107,165,57)'
-            cell.styles.textColor = '#FFFFFF'
-            cell.styles.fontStyle = 'bold'
-            tableFinal = data.table
-        },*/
-        head: [tableColumns],
-        body: tableRows,
-        theme: 'grid',
-        headStyles: {lineWidth: 0.1, lineColor: [0, 0, 0]},
-        bodyStyles: {lineColor: [0, 0, 0], textColor: '#000000'},
-        columnStyles:{
-            0: {halign:'center'},
-            3: {halign:'right'}
-        },
-        styles: {
-            fontSize: 9
-            /*fillColor: 'rgb(107,165,57)',
-            textColor: '#000000',
-            halign: 'center'*/
-        },
-        margin: {
-            top: pdfY + 5
-        }
-    })
-
-
-    //doc.autoPrint()
-    window.open(doc.output('bloburl'), '_blank')
-    //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
-}
-
-async function updateOrder(type, row, actual, max){
-
-    if(type=='up' && actual==1){
-        toastr.warning('No puede subir más a este socio')
-        return
-    }else if(type=='down' && actual==max){
-        toastr.warning('No puede bajar más a este socio')
-        return
-    }
-
-    if(type=='up'){
-
-        let selectedRow = internals.members.table.row(row).data()
-        let affectedRow = internals.members.table.row(row-1).data()
-
-        selectedRow.order--
-        if(selectedRow.order==1){
-            selectedRow.up = ''
-        }else{
-            selectedRow.up = `<i class="fas fa-2x fa-arrow-alt-circle-up hoverUp" onclick="updateOrder('up',${row-1},${selectedRow.order},${max})"></i>`
-        }
-        if(selectedRow.order==max){
-            selectedRow.down = ''
-        }else{
-            selectedRow.down = `<i class="fas fa-2x fa-arrow-alt-circle-down hoverDown" onclick="updateOrder('down',${row-1},${selectedRow.order},${max})"></i>`
-        }
-        internals.members.table.row(row-1).data(selectedRow).draw()
-       
-        await axios.post('/api/memberOrderUpdate', { id: selectedRow._id, orderIndex: selectedRow.order})
-
-        affectedRow.order++
-        if(affectedRow.order==1){
-            affectedRow.up = ''
-        }else{
-            affectedRow.up = `<i class="fas fa-2x fa-arrow-alt-circle-up hoverUp" onclick="updateOrder('up',${row},${affectedRow.order},${max})"></i>`
-        }
-        if(affectedRow.order==max){
-            affectedRow.down = ''
-        }else{
-            affectedRow.down = `<i class="fas fa-2x fa-arrow-alt-circle-down hoverDown" onclick="updateOrder('down',${row},${affectedRow.order},${max})"></i>`
-        }
-        internals.members.table.row(row).data(affectedRow).draw()
-
-        await axios.post('/api/memberOrderUpdate', { id: affectedRow._id, orderIndex: affectedRow.order})
-        
-    }else{
-
-        let selectedRow = internals.members.table.row(row).data()
-        let affectedRow = internals.members.table.row(row+1).data()
-
-        selectedRow.order++
-        if(selectedRow.order==1){
-            selectedRow.up = ''
-        }else{    
-            selectedRow.up = `<i class="fas fa-2x fa-arrow-alt-circle-up hoverUp" onclick="updateOrder('up',${row+1},${selectedRow.order},${max})"></i>`
-        }
-        if(selectedRow.order==max){
-            selectedRow.down = ''
-        }else{    
-            selectedRow.down = `<i class="fas fa-2x fa-arrow-alt-circle-down hoverDown" onclick="updateOrder('down',${row+1},${selectedRow.order},${max})"></i>`
-        }
-        internals.members.table.row(row+1).data(selectedRow).draw()
-       
-        await axios.post('/api/memberOrderUpdate', { id: selectedRow._id, orderIndex: selectedRow.order})
-
-        affectedRow.order--
-        if(affectedRow.order==1){
-            affectedRow.up = ''
-        }else{    
-            affectedRow.up = `<i class="fas fa-2x fa-arrow-alt-circle-up hoverUp" onclick="updateOrder('up',${row},${affectedRow.order},${max})"></i>`
-        }
-        if(affectedRow.order==max){
-            affectedRow.down = ''
-        }else{    
-            affectedRow.down = `<i class="fas fa-2x fa-arrow-alt-circle-down hoverDown" onclick="updateOrder('down',${row},${affectedRow.order},${max})"></i>`
-        }
-        internals.members.table.row(row).data(affectedRow).draw()
-
-        await axios.post('/api/memberOrderUpdate', { id: affectedRow._id, orderIndex: affectedRow.order})
-
-    }
-}
-
-async function removeLecture(btn,id,year,month){
-
-    if(!$.isNumeric($(btn).parent().html()[0])){
-        $($(btn).parent().parent().children()[7]).html(`<i class="fas fa-plus" onclick="addLectureNew(this,'${id}')"></i>`)
-        $($($(btn).parent().parent().children()[6]).children()[0]).val(0)
-        $($($(btn).parent().parent().children()[6]).children()[0]).css('border', '')
-        $($(btn).parent().parent().children()[8]).val(0)
-
-    }else{
-
-        let deleteLecture = await Swal.fire({
-            title: '¿Está seguro de eliminar esta lectura?',
-            customClass: 'swal-wide',
-            html: ``,
-            showCloseButton: true,
-            showCancelButton: true,
-            showConfirmButton: true,
-            focusConfirm: false,
-            confirmButtonText: 'Aceptar',
-            cancelButtonText: 'Cancelar'
-        })
-
-        if (deleteLecture.value) {
-            let lectureData = {
-                member: id,
-                year: year,
-                month: month
-            }
-
-            console.log(lectureData)
-            let lectureDelete = await axios.post('/api/lectureDelete', lectureData)
-            console.log(lectureDelete)
-            if (lectureDelete.data == 'OK') {
-                $($(btn).parent().parent().children()[7]).html(`<i class="fas fa-plus" onclick="addLectureNew(this,'${id}')"></i>`)
-                $($($(btn).parent().parent().children()[6]).children()[0]).val(0)
-                $($($(btn).parent().parent().children()[6]).children()[0]).css('border', '')
-                $($(btn).parent().parent().children()[8]).html(0)
-                $($(btn).parent().parent().children()[10]).html(`<i class="fas fa-times" title="Eliminar registro" style="width: 20%; display: inline-block" onclick="removeLecture(this,'${id}','${year}','${month}')"></i>`)
-                toastr.success('Lectura eliminado correctamente')
-            }else if (lectureDelete == 'invoice') {
-                toastr.warning('No puede eliminar lecturas asociadas a boleta/factura')
-            }else{
-                toastr.error('Ha ocurrido un error, favor reintente o llame al administrador')
-            }
+        switch(monthIndex) {
+            case 1:
+                return 'ENERO'
+            case 2:
+                return 'FEBRERO'
+            case 3:
+                return 'MARZO'
+            case 4:
+                return 'ABRIL'
+            case 5:
+                return 'MAYO'
+            case 6:
+                return 'JUNIO'
+            case 7:
+                return 'JULIO'
+            case 8:
+                return 'AGOSTO'
+            case 9:
+                return 'SEPTIEMBRE'
+            case 10:
+                return 'OCTUBRE'
+            case 11:
+                return 'NOVIEMBRE'
+            case 12:
+                return 'DICIEMBRE'
         }
     }
 }
