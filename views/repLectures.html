@@ -58,9 +58,9 @@
         </button>
     </div>
 
-    <div class="col-md-2">
-        <button style="border-radius: 5px;" class="searchClass btn btn-info btn-danger" id="downloadList" onclick="printList()">
-            <i class="fas fa-file-download"></i> PLANILLA PDF
+    <div class="col-md-3">
+        <button style="border-radius: 5px;" class="btn btn-danger btn-block" onclick="exportToPDF()">
+            <i class="fas fa-file-pdf"></i> Exportar a PDF
         </button>
     </div>
 
@@ -77,7 +77,21 @@
                     </tr>
                 </thead>
             </table>
-        </div>
+
+
+            <table id="tableMembersExcel" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
+                <thead>
+                    <tr id="trHeadExcel">
+                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">ORDEN</th>
+                        <th style="background-color: #3B6FC9">N° SOCIO</th>
+                        <th style="background-color: #3B6FC9">NOMBRE</th>
+                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+                    </tr>
+                </thead>
+                <tbody id="tableMembersExcelBody">
+
+                </tbody>
+            </table>
     </div>
 
     <div class="modal fade" id="lectureModal" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">

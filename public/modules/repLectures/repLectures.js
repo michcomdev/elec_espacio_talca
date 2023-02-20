@@ -19,6 +19,7 @@ let monthSelected = 0
 let monthNameSelected = ''
 let sectorSelected = 0
 let sectorNameSelected = ''
+let lastMonth = 0
 
 let parameters
 
@@ -140,14 +141,14 @@ async function chargeMembersTable() {
             <th style="background-color: #3B6FC9">OCTUBRE</th>
             <th style="background-color: #3B6FC9">NOVIEMBRE</th>
             <th style="background-color: #3B6FC9">DICIEMBRE</th>
-            <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+            <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PROMEDIO</th>
         `
 
         targets = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
     }else{
 
         let getLastMonth = await axios.post('api/lecturesReportCheckLast',{})
-        let lastMonth = getLastMonth.data
+        lastMonth = getLastMonth.data
 
         let month01 = getMonth('number',lastMonth,2)
         let month02 = getMonth('number',lastMonth,1)
@@ -173,7 +174,7 @@ async function chargeMembersTable() {
                 <th style="background-color: #3B6FC9">${month01String}</th>
                 <th style="background-color: #3B6FC9">${month02String}</th>
                 <th style="background-color: #3B6FC9">${month03String}</th>
-                <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+                <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PROMEDIO</th>
             `
             targets = [0, 2, 3, 4, 5]
         }else if($("#searchMonth").val()==6){
@@ -217,7 +218,7 @@ async function chargeMembersTable() {
                 <th style="background-color: #3B6FC9">${month04String}</th>
                 <th style="background-color: #3B6FC9">${month05String}</th>
                 <th style="background-color: #3B6FC9">${month06String}</th>
-                <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+                <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PROMEDIO</th>
             `
             targets = [0, 2, 3, 4, 5, 6, 7, 8]
 
@@ -285,7 +286,7 @@ async function chargeMembersTable() {
                 <th style="background-color: #3B6FC9">${month10String}</th>
                 <th style="background-color: #3B6FC9">${month11String}</th>
                 <th style="background-color: #3B6FC9">${month12String}</th>
-                <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+                <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PROMEDIO</th>
             `
             targets = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
@@ -305,6 +306,8 @@ async function chargeMembersTable() {
         }
 
         $("#trHead").html(header)
+        $("#trHeadExcel").html(header)
+        $("#tableMembersExcelBody").html('')
 
         internals.members.table = $('#tableMembers')
             .DataTable({
@@ -375,8 +378,8 @@ async function chargeMembersTable() {
 
 async function getMembers() {
 
-    
     let type = ($("#rbConsumption").prop('checked')) ? 'consumption' : 'lecture'
+    let order = 1, rowIndex = 0
 
     let query = {
         by: 'month',
@@ -448,6 +451,57 @@ async function getMembers() {
                 order++
                 rowIndex++
             }
+
+            let row = `<tr>
+                        <td>${el.number}</td>
+                        <td>${el.name}</td>`
+            
+            if($("#rbYear").prop('checked')){
+                row += `<td>${el.month01}</td>
+                        <td>${el.month02}</td>
+                        <td>${el.month03}</td>
+                        <td>${el.month04}</td>
+                        <td>${el.month05}</td>
+                        <td>${el.month06}</td>
+                        <td>${el.month07}</td>
+                        <td>${el.month08}</td>
+                        <td>${el.month09}</td>
+                        <td>${el.month10}</td>
+                        <td>${el.month11}</td>
+                        <td>${el.month12}</td>`
+            }else{
+                if($("#searchMonth").val()==3){
+                    row += `<td>${eval('el.'+getMonth('number',lastMonth,2))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,1))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,0))}</td>`
+                }else if($("#searchMonth").val()==6){
+                    row += `<td>${eval('el.'+getMonth('number',lastMonth,5))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,4))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,3))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,2))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,1))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,0))}</td>`
+
+                }else if($("#searchMonth").val()==12){
+                    row += `<td>${eval('el.'+getMonth('number',lastMonth,11))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,10))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,9))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,8))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,7))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,6))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,5))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,4))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,3))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,2))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,1))}</td>
+                        <td>${eval('el.'+getMonth('number',lastMonth,0))}</td>`
+                }   
+            }
+
+            row += `<td>${el.prom}</td>
+                </tr>`
+
+            $("#tableMembersExcelBody").append(row)
 
             return el
         })
@@ -536,4 +590,29 @@ function getMonth(type,lastMonth,index){
                 return 'DICIEMBRE'
         }
     }
+}
+
+function exportToPDF(){
+    var doc = new jsPDF('l','pt','letter')
+    doc.autoTable({ 
+        html: "#tableMembersExcel",
+        styles: {
+            fontSize: 6,
+            valign: 'middle',
+            halign: 'center'
+        },
+        columnStyles: {
+            0: {cellWidth: 20},
+            1: {cellWidth: 120, halign: 'left'},
+            
+        },
+        didParseCell: (hookData) => {
+            if (hookData.section === 'head') {
+                if (hookData.column.dataKey === '1') {
+                    hookData.cell.styles.halign = 'left';
+                }
+            }
+        }
+    })
+    doc.save("table.pdf")
 }
