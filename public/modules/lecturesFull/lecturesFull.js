@@ -67,7 +67,8 @@ async function getParameters() {
 
     $("#searchSector").append(
         sectors.reduce((acc,el)=>{
-            acc += `<option value="${el._id}" ${(el._id=='62bdd303b2e945b5ee150bf0') ? 'selected' : ''}>${el.name}</option>`
+            //acc += `<option value="${el._id}" ${(el._id=='62bdd303b2e945b5ee150bf0') ? 'selected' : ''}>${el.name}</option>`
+            acc += `<option value="${el._id}" ${(el._id=='62cde501ddcc8b2d6c958339') ? 'selected' : ''}>${el.name}</option>`
             return acc
         },'')
     )
@@ -1843,20 +1844,30 @@ async function printCancel() {
 
 async function printMultiple() {
 
+    if(!$.fn.DataTable.isDataTable('#tableMembers')) {
+        toastr.warning('Debe filtrar un sector')
+        return
+    }
+    internals.members.table.column(0).visible(false)
+    internals.members.table.column(1).visible(true)
+
     let array = []
 
     let count = 0
     $(".chkPrintClass").each(function() {
-        if($(this).prop('checked')){
+        //if($(this).prop('checked')){
             count++
-        }
+        //}
     })
+
+    console.log(count)
+
     
     if(count>0){
         loadingHandler('start')
         let countIndex = 0
         $(".chkPrintClass").each(async function() {
-            if($(this).prop('checked')){
+            //if($(this).prop('checked')){
                 let object = {}
                 let memberData = await axios.post('/api/memberSingle', {id: $(this).attr('data-member-id') })
                 object.member = memberData.data
@@ -1874,17 +1885,647 @@ async function printMultiple() {
                     array.sort((a,b) => (a.member.orderIndex > b.member.orderIndex) ? 1 : ((b.member.orderIndex > a.member.orderIndex) ? -1 : 0))
                     printFinal(array)
                 }
-            }
+            //}
         })
         
     }else{
         toastr.warning('Debe seleccionar al menos un socio')
     }
 
+    internals.members.table.column(0).visible(true)
+    internals.members.table.column(1).visible(false)
+
     return
 }
 
-async function printFinal(array){
+
+
+function selectAll(btn){
+    if($(btn).text().trim()=='Sel. Todo'){
+        $(".chkClass").each(function() {
+            $(this).prop('checked',true)
+        })
+        $(".chkPrintClass").each(function() {
+            $(this).prop('checked',true)
+        })
+        $(btn).html('<i class="far fa-square"></i> Desel. Todo')
+    }else{
+        $(".chkClass").each(function() {
+            $(this).prop('checked',false)
+        })
+        $(".chkPrintClass").each(function() {
+            $(this).prop('checked',false)
+        })
+        $(btn).html('<i class="far fa-check-square"></i> Sel. Todo')
+    }
+}
+
+function progressBar(){
+    progressValue++
+
+    $("#progressTitle").text('Generando boleta ' + progressValue + ' de '+ progressTotal)
+    let percentage = parseInt(100 / progressTotal * progressValue)
+    $("#progressBar").css('width', percentage + '%')
+
+    if(progressTotal==progressValue){
+        toastr.success('Boletas generadas, favor recargar para mostrar')
+    }
+
+}
+
+
+
+
+async function printFinal(array,letter){
+
+    letter = true
+
+    let parametersData = await axios.get('/api/parameters')
+    let parameters = parametersData.data
+
+    let pageFormat = 'letter', orientation = 'l', valueWall = 1
+    if(letter){
+        pageFormat = [1224, 792]
+        orientation = 'p'
+        valueWall = 2
+    }
+
+    let doc = new jsPDF(orientation, 'pt', pageFormat)
+    let docType = 'pdf'
+
+    for(let k=0; k<array.length; k++){
+        
+        doc.setDrawColor(0, 0, 0)
+        doc.setTextColor(0, 0, 0)
+        doc.setFontType('normal')
+        
+        let docName1 = '', docName2 = 'EXENTA ELECTRÓNICA', memberName = '', siiValue = 'S.I.I. - CURICO'
+
+        if (array[k].member.type == 'personal') {
+            memberName = array[k].member.personal.name + ' ' + array[k].member.personal.lastname1 + ' ' + array[k].member.personal.lastname2
+        } else {
+            memberName = array[k].member.enterprise.name
+        }
+        console.log(array[k])
+    
+        if(array[k].invoice.type==41){
+            docName1 = 'BOLETA NO AFECTA O'
+        }else if(array[k].invoice.type==34){
+            docName1 = 'FACTURA NO AFECTA O'
+        }else if(array[k].invoice.type==0){
+            docName1 = ''
+            docName2 = 'COMPROBANTE DE AVISO'
+            siiValue = ''
+        }
+
+        //let doc = new jsPDF('p', 'pt', [302, 451])
+
+        let text = '', textMaxWidth = 0
+    
+        let pdfX = 20
+        let pdfY = 582
+
+        doc.setFontSize(12)
+        doc.addImage(logoWallImg90, 'PNG', 0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight() / valueWall) //Fondo
+        doc.addImage(logoImg90, 'PNG', 20, pdfY - 159, 60, 77)
+        pdfX += 60
+        textMaxWidth = 252 //Zona título
+        text = `COMITÉ DE AGUA POTABLE RURAL`
+        doc.text(text, pdfX + 23, offsetY('center', pdfY + 6, textMaxWidth, text, doc), 'left', 90)
+        text = `Y SERVICIOS SANITARIOS LOS CRISTALES`
+        doc.text(text, pdfX + 36, offsetY('center', pdfY + 6, textMaxWidth, text, doc), 'left', 90)
+        text = `Los Cristales S/N - Curicó`
+        doc.text(text, pdfX + 49, offsetY('center', pdfY + 6, textMaxWidth, text, doc), 'left', 90)
+
+
+        pdfX = 35
+        pdfY = 282
+        
+        doc.setDrawColor(249, 51, 6)
+        doc.setLineWidth(3)
+        doc.line(pdfX - 10, pdfY - 231, pdfX - 10, pdfY - 29)//Línea Superior
+        doc.line(pdfX + 60, pdfY - 231, pdfX + 60, pdfY - 29)//Línea Inferior
+        doc.line(pdfX - 10, pdfY - 30, pdfX + 60, pdfY - 30)//Línea Izquierda
+        doc.line(pdfX - 10, pdfY - 230, pdfX + 60, pdfY - 230)//Línea Derecha
+        
+        pdfY -= 30
+        doc.setFontSize(13)
+        doc.setTextColor(249, 51, 6)
+
+        textMaxWidth = 200 //Zona número boleta
+        text = 'R.U.T: 71.569.700-9'
+        doc.text(text, pdfX + 5, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+        doc.text(docName1, pdfX + 20, offsetY('center', pdfY, textMaxWidth, docName1, doc), 'left', 90)
+        doc.text(docName2, pdfX + 35, offsetY('center', pdfY, textMaxWidth, docName2, doc), 'left', 90)
+
+        doc.setFontType('bold')
+        if(array[k].invoice.number ||  array[k].invoice.number==0){
+            if(array[k].invoice.number!=0){
+                text = 'N° ' + array[k].invoice.number
+                doc.text(text, pdfX + 50, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+            }
+        }else{
+            text = 'N° -'
+            doc.text(text, pdfX + 50, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+        }
+        doc.setFontSize(11)
+        doc.text(siiValue, pdfX + 75, offsetY('center', pdfY, textMaxWidth, siiValue, doc), 'left', 90)
+    
+        doc.setDrawColor(0, 0, 0)
+        doc.setTextColor(0, 0, 0)
+    
+        doc.setFontSize(10)
+        doc.setFontType('normal')
+        doc.text('Fecha Emisión ', pdfX + 100, pdfY - 10, 'left', 90)
+        doc.text('Mes de Pago ', pdfX + 113, pdfY - 10, 'left', 90)
+
+        doc.setFontType('bold')
+        doc.text(moment(array[k].invoice.date).utc().format('DD / MM / YYYY'), pdfX + 100, pdfY - 90, 'left', 90)
+        doc.text(getMonthString(array[k].invoice.lectures.month) + ' / ' + array[k].invoice.lectures.year, pdfX + 113, pdfY - 90, 'left', 90)
+
+        pdfX = 155
+        pdfY = 582
+        doc.setFontSize(11)
+        doc.text('SOCIO N° ' + array[k].member.number, pdfX, pdfY, 'left', 90)
+        doc.text('R.U.T ' + array[k].member.rut, pdfX + 12, pdfY, 'left', 90)
+        doc.setFontSize(12)
+        doc.text(memberName.toUpperCase(), pdfX + 24, pdfY, 'left', 90)
+        let subsidyNumber = array[k].member.subsidyNumber.toString()
+        while (subsidyNumber.length<11) {
+            subsidyNumber = '0' + subsidyNumber
+        }
+        doc.setFontSize(11)
+        doc.setFontType('normal')
+        doc.text('MIDEPLAN ' + subsidyNumber, pdfX + 36, pdfY, 'left', 90)
+        doc.text('Sector: ' + array[k].member.address.sector.name, pdfX + 36, pdfY - 300, 'left', 90)
+        doc.setFontType('bold')
+
+        pdfX += 50
+
+        //////////////TABLA CONSUMOS//////////////
+        doc.setFillColor(26, 117, 187)
+        doc.rect(pdfX, pdfY - 262, 13, 265, 'F')
+
+        pdfX += 10
+        doc.setFontSize(10)
+        doc.setFontType('bold')
+        doc.setTextColor(255, 255, 255)
+        doc.text('Consumo en m3 (1m3 = 1.000 lts de agua)', pdfX, pdfY, 'left', 90)
+
+        doc.setFontSize(14)
+        doc.setFontType('normal')
+        doc.setTextColor(0, 0, 0)
+        
+        let lastInvoice, flagLastInvoice = 0
+        for (let j = 0; j < array[k].lectures.length; j++) {
+            if(flagLastInvoice==1){
+                if (array[k].lectures[j].invoice !== undefined) {
+                    lastInvoice = array[k].lectures[j].invoice
+                    j = array[k].lectures.length
+                }
+            }else{
+                if (array[k].lectures[j]._id == array[k].invoice.lectures._id) {
+                    flagLastInvoice++
+                }
+            }
+        }
+
+        doc.text('Lectura Mes Actual ', pdfX + 20, pdfY, 'left', 90)
+        doc.text('Lectura Mes Anterior ', pdfX + 33, pdfY, 'left', 90)
+        pdfXLectureNew = 0
+        if(array[k].invoice.lectureNewStart!==undefined){
+            doc.text('Lectura Medidor Nuevo Inicial ', pdfX + 46, pdfY, 'left', 90)
+            doc.text('Lectura Medidor Nuevo Final ', pdfX + 59, pdfY, 'left', 90)
+            pdfXLectureNew = 26
+        }
+        doc.setFontType('bold')
+        doc.text('Consumo Calculado', pdfX + 46 + pdfXLectureNew, pdfY, 'left', 90)
+        doc.setFontType('normal')
+
+        doc.text('Límite Sobreconsumo (m3)', pdfX + 98, pdfY, 'left', 90)
+        doc.text('Sobreconsumo (m3)', pdfX + 111, pdfY, 'left', 90)
+        doc.setFontType('bold')
+        doc.text('Consumo Facturado', pdfX + 124, pdfY, 'left', 90)
+
+        doc.setFontSize(14)
+        doc.setFontType('normal')
+
+        text = dot_separators(array[k].invoice.lectureActual)
+        doc.text(text, pdfX + 20, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        text = dot_separators(array[k].invoice.lectureLast)
+        doc.text(text, pdfX + 33, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+
+        if(array[k].invoice.lectureNewStart!==undefined){
+            text = dot_separators(array[k].invoice.lectureNewStart)
+            doc.text(text, pdfX + 46, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+            text = dot_separators(array[k].invoice.lectureNewEnd)
+            doc.text(text, pdfX + 59, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        }
+        doc.setFontType('bold')
+        text = dot_separators(array[k].invoice.lectureResult)
+        doc.text(text, pdfX + 46 + pdfXLectureNew, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        doc.setFontType('normal')
+        
+        text = dot_separators(parameters.consumptionLimit)
+        doc.text(text, pdfX + 98, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        if(array[k].invoice.lectureResult>parameters.consumptionLimit){
+            text = dot_separators(array[k].invoice.lectureResult-parameters.consumptionLimit)
+            doc.text(text, pdfX + 111, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        }else{
+            text = "0"
+            doc.text(text, pdfX + 111, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        }
+        doc.setFontType('bold')
+        text = dot_separators(array[k].invoice.lectureResult)
+        doc.text(text, pdfX + 124, offsetY('right', pdfY - 250, null, text, doc), 'left', 90) //Consultar diferencia facturado vs calculado
+
+
+
+        //////////////TABLA VALORES//////////////
+        let value1 = 0 //Valor tributable
+        let value2 = 0 //Valor no tributable
+        let value3 = 0 //Saldo Anterior
+        pdfY = 282
+        pdfX -= 10
+    
+        doc.setFillColor(26, 117, 187)
+        doc.rect(pdfX, pdfY - 262, 13, 265, 'F')
+        
+        pdfX += 10
+        doc.setFontSize(12)
+        doc.setFontType('bold')
+        doc.setTextColor(255, 255, 255)
+        doc.text('Detalle de consumos y servicio de este mes', pdfX, pdfY, 'left', 90)
+    
+        doc.setFontSize(14)
+        doc.setFontType('normal')
+        doc.setTextColor(0, 0, 0)
+        doc.text('Cargo Fijo', pdfX + 20, pdfY, 'left', 90)
+        doc.text('Consumo Agua Potable ', pdfX + 33, pdfY, 'left', 90)
+        let pdfXTemp = 0
+        if (array[k].invoice.subsidyPercentage > 0) {
+            pdfXTemp = 13
+            doc.setTextColor(249, 51, 6)
+            doc.text('Subsidio (' + array[k].invoice.subsidyPercentage.toString() + '%)', pdfX + 33 + pdfXTemp, pdfY, 'left', 90)
+        }
+        doc.setTextColor(0, 0, 0)
+        if (array[k].invoice.consumptionLimitTotal > 0) {
+            pdfXTemp += 13
+            doc.text('SobreConsumo', pdfX + 33 + pdfXTemp, pdfY, 'left', 90)
+        }
+        if(array[k].invoice.sewerage){
+            pdfXTemp += 13
+            doc.text('Alcantarillado', pdfX + 33 + pdfXTemp, pdfY, 'left', 90)
+        }
+        if(array[k].invoice.debtFine){
+            pdfXTemp += 13
+            doc.text('Interés por atraso', pdfX + 33 + pdfXTemp, pdfY, 'left', 90)
+        }
+        if(array[k].invoice.fine){ //Multa 20%
+            pdfXTemp += 13
+            doc.text('Recargo 20%', pdfX + 33 + pdfXTemp, pdfY, 'left', 90)
+        }
+    
+        doc.setFontType('bold')
+        doc.text('SubTotal Consumo Tributable', pdfX + 111, pdfY, 'left', 90)
+
+        index = 85 + 39
+
+        doc.setFontType('normal')
+        if(array[k].invoice.agreements){
+            let totalAgreement = 0
+            for(let i=0; i<array[k].invoice.agreements.length; i++){
+                totalAgreement += parseInt(array[k].invoice.agreements[i].amount)
+                if(i+1==array[k].invoice.agreements.length && totalAgreement > 0){
+                    index += 14
+                    doc.setFontType('bold')
+                    doc.text('Otros no Tributables', pdfX + index, pdfY, 'left', 90)
+                    index += 14
+                }
+            }
+        }
+    
+        doc.setFontType('bold')
+        doc.text('Saldo Anterior', pdfX + index + 14, pdfY, 'left', 90)
+    
+        if(array[k].invoice.invoicePositive){
+            doc.setTextColor(249, 51, 6)
+            doc.text('Saldo a favor', pdfX + index + 28, pdfY, 'left', 90)
+            doc.setTextColor(0, 0, 0)
+        }
+    
+        doc.setFontSize(14)
+        doc.setFontType('normal')
+    
+        text = dot_separators(array[k].invoice.charge)
+        doc.text(text, pdfX + 20, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        text = dot_separators(array[k].invoice.lectureResult * array[k].invoice.meterValue)
+        doc.text(text, pdfX + 33, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    
+        pdfYTemp = 0
+        if (array[k].invoice.subsidyPercentage > 0) {
+            pdfYTemp = 13
+            doc.setTextColor(249, 51, 6)
+            text = '-' + dot_separators(array[k].invoice.subsidyValue)
+            doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        }
+        doc.setTextColor(0, 0, 0)
+    
+        if (array[k].invoice.consumptionLimitTotal > 0) {
+            pdfYTemp += 13
+            text = dot_separators(array[k].invoice.consumptionLimitTotal)
+            doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        }
+        if(array[k].invoice.sewerage){
+            pdfYTemp += 13
+            text = dot_separators(array[k].invoice.sewerage)
+            doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        }
+        if(array[k].invoice.debtFine){
+            pdfYTemp += 13
+            text = dot_separators(array[k].invoice.debtFine)
+            doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        }
+        if(array[k].invoice.fine){
+            pdfYTemp += 13
+            text = dot_separators(array[k].invoice.fine)
+            doc.text(text, pdfX + 33 + pdfYTemp, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        }
+    
+        doc.setFontType('bold')
+        text = dot_separators(array[k].invoice.invoiceSubTotal)
+        doc.text(text, pdfX + 111, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        value1 = array[k].invoice.invoiceSubTotal
+    
+        index = 85 + 39
+
+
+        doc.setFontType('normal')
+        let totalAgreement = 0
+        if(array[k].invoice.agreements){
+            for(let i=0; i<array[k].invoice.agreements.length; i++){
+                totalAgreement += parseInt(array[k].invoice.agreements[i].amount)
+                if(i+1==array[k].invoice.agreements.length && totalAgreement > 0){
+                    index += 14
+                    doc.setFontType('bold')
+                    text = dot_separators(totalAgreement)
+                    doc.text(text, pdfX + index, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+                    index += 14
+                    value2 = totalAgreement
+                }
+            }
+        }
+    
+        doc.setFontType('bold')
+        text = dot_separators(array[k].invoice.invoiceDebt)
+        doc.text(text, pdfX + index + 14, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        value3 = array[k].invoice.invoiceDebt
+    
+        if(array[k].invoice.invoicePositive){
+            doc.setTextColor(249, 51, 6)
+            text = '-' + dot_separators(array[k].invoice.invoicePositive)
+            doc.text(text, pdfX + index + 28, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+            doc.setTextColor(0, 0, 0)
+        }
+
+        //////TOTALES Y CÓDIGO SII//////
+        pdfX += 50
+        
+        doc.setFillColor(0, 0, 0)
+        doc.rect(pdfX + 164, pdfY - 257, 38, 262, 'F')
+        doc.setFillColor(21, 88, 141)
+        doc.rect(pdfX + 166, pdfY - 255, 34, 258, 'F')
+    
+        doc.setFontSize(17)
+        doc.setTextColor(255, 255, 255)
+    
+        doc.text('TOTAL A PAGAR', pdfX + 181, pdfY, 'left', 90)
+        doc.text('$ ', pdfX + 181, offsetY('center', pdfY - 80, textMaxWidth, text, doc), 'left', 90)
+        doc.setFontSize(20)
+        text = dot_separators(array[k].invoice.invoiceTotal)
+        doc.text(text, pdfX + 181, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    
+        doc.setFontSize(13)
+        doc.text('FECHA VENCIMIENTO', pdfX + 198, pdfY, 'left', 90)
+        text = moment(array[k].invoice.dateExpire).utc().format('DD/MM/YYYY')
+        doc.text(text, pdfX + 198, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    
+        doc.setFontSize(10)
+        doc.setFontType('normal')
+        doc.setTextColor(0, 0, 0)
+    
+        if(docType=='preview'){
+            doc.addImage(test2DImg, 'PNG', pdfX + 225, pdfY, 260, 106, null, null, 90)
+        }else if(docType=='pdf'){
+            
+            if(array[k].invoice.seal){
+                doc.setFillColor(255, 255, 255)
+                doc.rect(pdfX + 225, pdfY - 260, 106, 260, 'F')
+                doc.addImage(array[k].invoice.seal, 'PNG', pdfX + 326, pdfY - 106, 260, 106, null, null, 90)
+            }
+            textMaxWidth = 260
+            if(docName2!='COMPROBANTE DE AVISO' && array[k].invoice.number!=0){
+                text = 'Timbre Electrónico S.I.I.'
+                doc.text(text, pdfX + 340, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+                text = `Res. ${array[k].invoice.resolution.numero} del ${moment(array[k].invoice.resolution.fecha).format('DD-MM-YYYY')} Verifique Documento: www.sii.cl`
+                doc.text(text, pdfX + 350, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+            }else{
+                text = 'Documento informativo, no válido como boleta'
+                doc.text(text, pdfX + 340, offsetY('center', pdfY, textMaxWidth, text, doc), 'left', 90)
+            }
+        }
+    
+
+        ///////GRÁFICO CONSUMOS///////
+
+        pdfX += 150
+        pdfY = 582
+        doc.setFontSize(10)
+        doc.setFontType('bold')
+        doc.setTextColor(0, 0, 0)
+        doc.text('Su consumo en m3 durante los últimos 13 meses fue:', pdfX, pdfY, 'left', 90)
+
+
+        doc.setDrawColor(0, 0, 0)
+        doc.setLineWidth(1)
+        pdfY -= 10
+        doc.line(pdfX + 10, pdfY, pdfX + 120, pdfY)//Línea Izquierda
+        doc.line(pdfX + 120, pdfY , pdfX + 120, pdfY - 250)//Línea Inferior
+
+        //DEFINICIÓN DE LECTURAS A MOSTRAR (MÁXIMO 13)
+        let lastInvoices = [], flag = 0, maxValue = 0
+        for (let j = 0; j < array[k].lectures.length; j++) {
+            if (array[k].lectures[j]._id == array[k].invoice.lectures._id) {
+                flag++
+            }
+
+            if (flag > 0 && flag <= 13) {
+                flag++
+
+                if (array[k].lectures[j].invoice !== undefined) {
+                    lastInvoices.push(array[k].lectures[j].invoice)
+                    if (array[k].lectures[j].invoice.lectureResult > maxValue) {
+                        maxValue = array[k].lectures[j].invoice.lectureResult
+                    }
+                }
+            }
+        }
+
+        if(maxValue==0){
+            maxValue = 1
+        }
+        let meterPoints = 100 / maxValue //Puntos en PDF por mt3
+        
+        pdfX += 25
+        doc.setFontSize(7)
+        doc.setFontType('normal')
+    
+        doc.setDrawColor(199, 199, 199)
+    
+        if (maxValue < 5) {
+            pdfX -= 5
+    
+            //Línea límite según lectura máxima
+            text = maxValue.toString()
+            doc.text(text, pdfX + 2, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            doc.line(pdfX, pdfY, pdfX, pdfY - 250)
+    
+            if (maxValue == 4) {
+                text = '3'
+                doc.text(text, (pdfX + 2) + 25, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+                text = '2'
+                doc.text(text, (pdfX + 2) + 50, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+                text = '1'
+                doc.text(text, (pdfX + 2) + 77, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+                doc.line(pdfX + 25, pdfY, pdfX + 25, pdfY - 250)
+                doc.line(pdfX + 50, pdfY, pdfX + 50, pdfY - 250)
+                doc.line(pdfX + 75, pdfY, pdfX + 75, pdfY - 250)
+    
+            } else if (maxValue == 3) {
+                text = '2'
+                doc.text(text, (pdfX + 2) + 34, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+                text = '1'
+                doc.text(text, (pdfX + 2) + 69, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+                doc.line(pdfX + 34, pdfY, pdfX + 34, pdfY - 250)
+                doc.line(pdfX + 69, pdfY, pdfX + 69, pdfY - 250)
+            } else if (maxValue == 2) {
+                text = '1'
+                doc.text(text, (pdfX + 2) + 51, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+                doc.line(pdfX + 51, pdfY, pdfX + 51, pdfY - 250)
+            }
+    
+            pdfX += 102
+    
+        } else if (maxValue % 4 == 0) {
+            pdfX -= 5
+            //Línea límite según lectura máxima
+            text = maxValue.toString()
+            doc.text(text, pdfX, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            doc.line(pdfX, pdfY, pdfX, pdfY - 250)
+    
+            let min = parseInt(maxValue / 4)
+            text = (min * 3).toString()
+            doc.text(text, pdfX + (min * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            text = (min * 2).toString()
+            doc.text(text, pdfX + (min * 2 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            text = (min).toString()
+            doc.text(text, pdfX + (min * 3 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+    
+            doc.line(pdfX + (min * meterPoints), pdfY, pdfX + (min * meterPoints), pdfY - 250)
+            doc.line(pdfX + (min * 2 * meterPoints), pdfY, pdfX + (min * 2 * meterPoints), pdfY - 250)
+            doc.line(pdfX + (min * 3 * meterPoints), pdfY, pdfX + (min * 3 * meterPoints), pdfY - 250)
+    
+            pdfX += 102
+    
+        } else {
+            pdfX -= 5
+            //Línea límite según lectura máxima
+            text = maxValue.toString()
+            doc.text(text, pdfX + (102 - (maxValue * meterPoints)), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            doc.line(pdfX + (100 - (maxValue * meterPoints)), pdfY, pdfX  + (100 - (maxValue * meterPoints)), pdfY - 250)
+    
+            let min = parseInt(maxValue / 4)
+    
+            pdfX += 102
+    
+            text = (min * 4).toString()
+            doc.text(text, (pdfX + 2) - (min * 4 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            text = (min * 3).toString()
+            doc.text(text, (pdfX + 2) - (min * 3 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            text = (min * 2).toString()
+            doc.text(text, (pdfX + 2) - (min * 2 * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+            text = (min).toString()
+            doc.text(text, (pdfX + 2) - (min * meterPoints), offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+    
+            doc.line(pdfX - (min * meterPoints), pdfY, pdfX - (min * meterPoints), pdfY - 250)//Línea Inferior
+            doc.line(pdfX - (min * 2 * meterPoints), pdfY, pdfX - (min * 2 * meterPoints), pdfY - 250)//Línea Inferior
+            doc.line(pdfX - (min * 3 * meterPoints), pdfY, pdfX - (min * 3 * meterPoints), pdfY - 250)//Línea Inferior
+            doc.line(pdfX - (min * 4 * meterPoints), pdfY, pdfX - (min * 4 * meterPoints), pdfY - 250)//Línea Inferior
+        }
+    
+        text = '0'
+        doc.text(text, pdfX, offsetY('right', pdfY + 2, null, text, doc), 'left', 90)
+    
+        //GRÁFICO DE CONSUMOS
+        pdfX = 435
+        pdfY = 338
+        doc.setFontSize(8)
+
+        for (let i = 0; i < lastInvoices.length; i++) {
+
+            if (i == 0) {
+                doc.setFillColor(23, 162, 184)
+            } else {
+                doc.setFillColor(82, 82, 82)
+            }
+
+            let offset = 100 - (lastInvoices[i].lectureResult * meterPoints) //Determina posición inicial respecto al máximo del gráfico
+            doc.rect(pdfX + offset, pdfY, 99 - offset, 11, 'F')
+            
+            //Posición X (descendente)
+            //Posición Y suma offset según lectura
+            //11 = Ancho ~ 99 - offset = Largo
+            textMaxWidth = 17 //Máximo de texto entre barras
+            text = lastInvoices[i].lectureResult.toString()
+            doc.text(text, pdfX + offset - 5, offsetY('center', (pdfY + 14), textMaxWidth, text, doc), 'left', 90)
+            text = getMonthShortString(lastInvoices[i].lectures.month)
+            doc.text(text, pdfX + 108, offsetY('center', (pdfY + 14), textMaxWidth, text, doc), 'left', 90)
+            pdfY += 18
+        }
+
+        pdfX = 635
+        pdfY = 582
+        doc.setFontSize(10)
+        doc.setFontType('bold')
+
+        if(array[k].invoice.text1){
+            doc.setTextColor(249, 51, 6)
+            doc.text(array[k].invoice.text1, pdfX, pdfY, {maxWidth: (doc.internal.pageSize.getHeight() / valueWall) - 30, angle: 90})
+        }
+        if(array[k].invoice.text2){
+            doc.setTextColor(0, 0, 0)
+            doc.text(array[k].invoice.text2, pdfX + 12, pdfY, {maxWidth: (doc.internal.pageSize.getHeight() / valueWall) - 30, angle: 90})
+            doc.text(array[k].invoice.text3, pdfX + 24, pdfY, {maxWidth: (doc.internal.pageSize.getHeight() / valueWall) - 30, angle: 90})
+        }
+    
+        doc.setFillColor(26, 117, 187)
+        //doc.rect(pdfX + 97, pdfY - 550, 17, doc.internal.pageSize.getHeight() - 57, 'F')
+        doc.rect(pdfX + 97, pdfY - 550, 17, pdfY - 28, 'F')
+    
+        doc.setTextColor(255, 255, 255)
+        doc.text('N° Teléfono oficina Comité: ' + parameters.phone + ' - Correo electrónico:  ' + parameters.email, doc.internal.pageSize.getWidth() - 48, pdfY, 'left', 90)
+        
+
+        if(k+1==array.length){
+            window.open(doc.output('bloburl'), '_blank')
+        }else{
+            doc.addPage()
+        }
+    }
+}
+
+
+async function printFinalPortrait(array){
 
     let parametersData = await axios.get('/api/parameters')
     let parameters = parametersData.data
@@ -2428,41 +3069,6 @@ async function printFinal(array){
         }else{
             doc.addPage()
         }
-    }
-
-    //doc.autoPrint()
-    //doc.save(`Nota de venta ${internals.newSale.number}.pdf`)
-}
-
-function selectAll(btn){
-    if($(btn).text().trim()=='Sel. Todo'){
-        $(".chkClass").each(function() {
-            $(this).prop('checked',true)
-        })
-        $(".chkPrintClass").each(function() {
-            $(this).prop('checked',true)
-        })
-        $(btn).html('<i class="far fa-square"></i> Desel. Todo')
-    }else{
-        $(".chkClass").each(function() {
-            $(this).prop('checked',false)
-        })
-        $(".chkPrintClass").each(function() {
-            $(this).prop('checked',false)
-        })
-        $(btn).html('<i class="far fa-check-square"></i> Sel. Todo')
-    }
-}
-
-function progressBar(){
-    progressValue++
-
-    $("#progressTitle").text('Generando boleta ' + progressValue + ' de '+ progressTotal)
-    let percentage = parseInt(100 / progressTotal * progressValue)
-    $("#progressBar").css('width', percentage + '%')
-
-    if(progressTotal==progressValue){
-        toastr.success('Boletas generadas, favor recargar para mostrar')
     }
 
 }

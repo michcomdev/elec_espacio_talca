@@ -37,7 +37,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
         orientation = 'p'
         valueWall = 2
     }
-    console.log(pageFormat)
+    
     let doc = new jsPDF(orientation, 'pt', pageFormat)
     //let doc = new jsPDF('l', 'pt', [140, 251.9])
     //let doc = new jsPDF('l', 'pt', [396, 612])
@@ -156,7 +156,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
 
     doc.text('Lectura Mes Actual ', pdfX + 20, pdfY, 'left', 90)
     doc.text('Lectura Mes Anterior ', pdfX + 33, pdfY, 'left', 90)
-    pdfXLectureNew = 0
+    let pdfXLectureNew = 0
     if(invoice.lectureNewStart!==undefined){
         doc.text('Lectura Medidor Nuevo Inicial ', pdfX + 46, pdfY, 'left', 90)
         doc.text('Lectura Medidor Nuevo Final ', pdfX + 59, pdfY, 'left', 90)
@@ -249,8 +249,6 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
         pdfXTemp += 13
         doc.text('Recargo 20%', pdfX + 33 + pdfXTemp, pdfY, 'left', 90)
     }
-
-
 
     doc.setFontType('bold')
     doc.text('SubTotal Consumo Tributable', pdfX + 111, pdfY, 'left', 90)
@@ -1733,3 +1731,4 @@ function offsetY(align, originalPosition, textMaxWidth, text, doc){
         return originalPosition + (doc.getStringUnitWidth(text) * doc.internal.getFontSize())
     }
 }
+
