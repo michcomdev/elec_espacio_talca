@@ -6,6 +6,7 @@ let internals = {
     dataRowSelected: {}
 }
 
+let arrayObjects = []
 let sectors, services
 let parametersGeneral
 
@@ -46,14 +47,14 @@ function chargeSummaryTable() {
                     extend: 'excel',
                     className: 'btn-excel',
                     exportOptions: {
-                        columns: [ 0, 1, 2, 3, 9, 10, 11, 12, 13 ]
+                        columns: [ 0, 1, 2, 3, 10, 11, 12, 13, 14 ]
                     }
                 },
                 {
                     extend: 'pdf',
                     className: 'btn-pdf',
                     exportOptions: {
-                        columns: [ 0, 1, 2, 3, 9, 10, 11, 12, 13 ]
+                        columns: [ 0, 1, 2, 3, 10, 11, 12, 13, 14 ]
                     }
                 },
             ],
@@ -64,14 +65,14 @@ function chargeSummaryTable() {
             },
             responsive: false,
             columnDefs: [{ 
-                            targets: [0,1,2], 
+                            targets: [ 0, 1, 2, 3 ], 
                             className: 'dt-center' 
                         },{
-                            targets: [ 4,5,6,7,8 ], 
+                            targets: [ 5, 6, 7, 8, 9 ], 
                             className: 'dt-right',
                             render: $.fn.dataTable.render.number('.', '.', 0, '$ ') 
                         },{
-                            targets: [ 9, 10, 11, 12, 13 ],
+                            targets: [ 10, 11, 12, 13, 14 ],
                             visible: false
                         },
                     ],
@@ -81,6 +82,7 @@ function chargeSummaryTable() {
                 { data: 'date' },
                 { data: 'first' },
                 { data: 'last' },
+                { data: 'quantity' },
                 { data: 'voucher' },
                 { data: 'EFECTIVO' },
                 { data: 'CHEQUE' },
@@ -100,14 +102,15 @@ function chargeSummaryTable() {
             },
             rowCallback: function (row, data) {
 
-                console.log(row)
+                $(row).find('td:eq(3)').html(`<a href="#" onclick="showInvoices('${data.date}')">${data.quantity}</a>`)
+                
                 if($(row).find('td:eq(0)').text()=='TOTAL'){
-                    $(row).find('td:eq(0)').html(`<label style="font-weight: bold">$ ${dot_separators(data.date)}</label>`)
-                    $(row).find('td:eq(4)').html(`<label style="font-weight: bold">$ ${dot_separators(data.EFECTIVO)}</label>`)
-                    $(row).find('td:eq(5)').html(`<label style="font-weight: bold">$ ${dot_separators(data.CHEQUE)}</label>`)
-                    $(row).find('td:eq(6)').html(`<label style="font-weight: bold">$ ${dot_separators(data.REDCOMPRA)}</label>`)
-                    $(row).find('td:eq(7)').html(`<label style="font-weight: bold">$ ${dot_separators(data.TRANSFERENCIA)}</label>`)
-                    $(row).find('td:eq(8)').html(`<label style="font-weight: bold; color: red">$ ${dot_separators(data.TOTAL)}</label>`)
+                    $(row).find('td:eq(0)').html(`<label style="font-weight: bold">$ ${data.date}</label>`)
+                    $(row).find('td:eq(5)').html(`<label style="font-weight: bold">$ ${dot_separators(data.EFECTIVO)}</label>`)
+                    $(row).find('td:eq(6)').html(`<label style="font-weight: bold">$ ${dot_separators(data.CHEQUE)}</label>`)
+                    $(row).find('td:eq(7)').html(`<label style="font-weight: bold">$ ${dot_separators(data.REDCOMPRA)}</label>`)
+                    $(row).find('td:eq(8)').html(`<label style="font-weight: bold">$ ${dot_separators(data.TRANSFERENCIA)}</label>`)
+                    $(row).find('td:eq(9)').html(`<label style="font-weight: bold; color: red">$ ${dot_separators(data.TOTAL)}</label>`)
                 }
     
                 /*let icon7 = '';
@@ -145,12 +148,6 @@ function chargeSummaryTable() {
     }
 
 }
-
-// function cleanData(data) {
-//     data.rut = ktoK(cleanRut(data.rut))
-
-//     return data
-// }
 
 async function getParameters() {
 
@@ -193,7 +190,7 @@ async function getSummary() {
     let paymentData = await axios.post('api/paymentsByFilter', query)
     let payments = paymentData.data
 
-    let arrayObjects = []
+    arrayObjects = []
     let lastDay = parseInt(moment($("#searchYear").val()+''+$("#searchMonth").val()+'01', "YYYYMMDD").endOf('month').format('DD'))
 
     for(let i = 1; i <= lastDay; i++){
@@ -206,8 +203,10 @@ async function getSummary() {
         arrayObjects.push({
             date: prefix+i+'-'+$("#searchMonth").val()+'-'+$("#searchYear").val()+'',
             payments: [],
+            invoices: [],
             first: 0,
             last: 0,
+            quantity: 0,
             voucher: '',
             EFECTIVO: 0,
             CHEQUE: 0,
@@ -219,8 +218,10 @@ async function getSummary() {
     arrayObjects.push({
         date: 'TOTAL',
         payments: [],
+        invoices: [],
         first: 0,
         last: 0,
+        quantity: 0,
         voucher: '',
         EFECTIVO: 0,
         CHEQUE: 0,
@@ -244,36 +245,113 @@ async function getSummary() {
             //let actual = arrayObjects[moment(el.date).utc().format('DD-MM-YYYY')]
             
             let actual = arrayObjects.find(x => x.date == moment(el.date).utc().format('DD-MM-YYYY'))
-                        
-            //actual.payments.push()
             actual.first = 1
             actual.last = 2
+            actual.quantity += el.invoices.length
             actual.voucher = ''
             actual[el.paymentMethod] += el.amount
             actual.TOTAL += el.amount
 
+            actual.payments.push(el)
+            actual.invoices.push(el.invoices)
+
 
             last.first = ''
             last.last = ''
+            last.quantity += el.invoices.length
             last.voucher = ''
             last[el.paymentMethod] += el.amount
             last.TOTAL += el.amount
-
             
             //return el
         })
 
-        console.log('formatData',arrayObjects)
         if(arrayObjects.length>0){
             let newArray = arrayObjects.filter(function( obj ) {
                 return obj.first !== 0;
             })
             internals.cartola.table.rows.add(newArray).draw()
-        }else{
+        }/*else{
             toastr.warning('No se han encontrado datos de pagos')
-        }
+        }*/
     } else {
         toastr.warning('No se han encontrado datos de pagos')
     }
     $('#loadingSummary').empty()
+}
+
+function showInvoices(date){
+    console.log(date)
+    //console.log(arrayObjects)
+
+    let payments = arrayObjects.find(x => x.date == date).payments
+    console.log(payments)
+
+    $("#tableInvoices1Body").html('')
+    $("#tableInvoices2Body").html('')
+    $("#tableInvoices3Body").html('')
+    $("#tableInvoices4Body").html('')
+    let total1 = 0, total2 = 0, total3 = 0, total4 = 0
+
+    for(let i=0; i<payments.length; i++){
+        for(let j=0; j<payments[i].invoices.length; j++){
+
+            let name = ''
+            if(payments[i].members.type=='personal'){
+                name = payments[i].members.personal.name+' '+payments[i].members.personal.lastname1+' '+payments[i].members.personal.lastname2
+            }else{
+                name = payments[i].members.enterprise.fullName
+            }
+
+            let number = payments[i].invoices[j].invoices.number
+            if(!$.isNumeric(payments[i].invoices[j].invoices.number)){
+                number = 'Saldo'
+            }
+
+            let idBody = ''
+
+            switch (payments[i].paymentMethod) {
+                case 'EFECTIVO':
+                    idBody = 'tableInvoices1Body'
+                    total1 += payments[i].invoices[j].amount
+                    break
+                case 'CHEQUE':
+                    idBody = 'tableInvoices2Body'
+                    total2 += payments[i].invoices[j].amount
+                    break
+                case 'REDCOMPRA':
+                    idBody = 'tableInvoices3Body'
+                    total3 += payments[i].invoices[j].amount
+                    break
+                case 'TRANSFERENCIA':
+                    idBody = 'tableInvoices4Body'
+                    total4 += payments[i].invoices[j].amount
+                    break
+                default:
+                    break
+            }
+
+            $("#"+idBody).append(`
+                <tr>
+                    <td style="text-align: center">${payments[i].members.number}</td>
+                    <td style="text-align: center">${number}</td>
+                    <td style="text-align: right">${dot_separators(payments[i].invoices[j].amount)}</td>
+                </tr>
+            `)
+
+            if(i+1==payments.length && j+1==payments[i].invoices.length){
+                $("#tableInvoices1Total").text('$ '+dot_separators(total1))
+                $("#tableInvoices2Total").text('$ '+dot_separators(total2))
+                $("#tableInvoices3Total").text('$ '+dot_separators(total3))
+                $("#tableInvoices4Total").text('$ '+dot_separators(total4))
+            }
+            
+        }
+
+    }
+    
+
+    $("#modalInvoices").modal('show')
+    
+
 }

@@ -113,12 +113,10 @@ function chargeMembersTable() {
         $('#tableMembers tbody').on('click', 'tr', function () {
             if ($(this).hasClass('selected')) {
                 $(this).removeClass('selected')
-                $('#updateLectures').prop('disabled', true)
                 $('#updateAgreement').prop('disabled', true)
             } else {
                 internals.members.table.$('tr.selected').removeClass('selected')
                 $(this).addClass('selected')
-                $('#updateLectures').prop('disabled', false)
                 $('#updateAgreement').prop('disabled', false)
                 //internals.members.data = internals.members.table.row($(this)).data()
                 internals.dataRowSelected = internals.members.table.row($(this)).data()
@@ -171,7 +169,7 @@ $('#searchMembers').on('click', async function () {
     chargeMembersTable()
 })
 
-$('#updateLectures').on('click', async function () {
+$('#updateAgreement').on('click', async function () {
 
     let memberData = await axios.post('/api/memberSingle', { id: internals.dataRowSelected._id })
     let member = memberData.data
@@ -204,6 +202,71 @@ $('#updateLectures').on('click', async function () {
     $('#memberAddress').val(member.address.address)
 
     loadAgreements(member)
+
+})
+
+$('#multipleAgreement').on('click', async function () {
+    createModalBodyMultiple()
+
+    $('#lectureModal').modal('show')
+
+    $('#modalLecture_title').html(`Ingreso Masivo de Convenio/Multa`)
+
+    $('#modalLecture_footer').html(`
+        <button style="border-radius: 5px;" class="btn btn-dark" data-dismiss="modal">
+            <i ="color:#E74C3C;" class="fas fa-times"></i> CERRAR
+        </button>
+    `)
+    
+
+
+    
+    let agreementData = await axios.get('/api/agreementsFull')
+    let agreements = agreementData.data
+
+    console.log(agreements)
+return
+    $('#tableAgreementsBody').html('')
+
+    for (i = 0; i < agreements.length; i++) {
+
+        let total = 0
+        let agreementID = 0
+        
+        total = dot_separators(agreements[i].totalAmount)
+        agreementID = agreements[i]._id
+        let agreement = ''
+        if(agreements[i].services){
+            agreement = agreements[i].services.name
+        }else{
+            agreement = agreements[i].other
+        }
+        
+        $('#tableAgreementsBody').append(`
+            <tr id="${agreements[i]._id}" data-agreement="${agreementID}">
+                <td style="text-align: center;">
+                    ${moment(agreements[i].date).utc().format('DD/MM/YYYY')}
+                </td>
+                <td style="text-align: center;">
+                    ${agreement}
+                </td>
+                <td style="text-align: center;">
+                    ${agreements[i].dues.length}
+                </td>
+                <td style="text-align: center;">
+                    ${total}
+                </td>
+                <td style="text-align: center;">
+                    <button class="btn btn-sm btn-warning btnLecture" onclick="createAgreement('${agreements[i]._id}','${member._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
+                </td>
+                <td style="text-align: center;">
+                    POR PAGAR
+                </td>
+            </tr>
+        `)
+    }
+
+
 
 })
 
@@ -365,6 +428,142 @@ function createModalBody(member) {
                             <th style="text-align: center; background-color: #3B6FC9;">Monto Total</th>
                             <th style="text-align: center; background-color: #3B6FC9;">Editar</th>
                             <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Estado Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableAgreementsBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-4">
+                
+            </div>
+
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-10">
+                <br />
+                <br />
+                <br />
+                <br />
+                <div id="divAgreement" class="card border-primary" style="display: none;">
+                    <div class="card-header text-white bg-primary" style="text-align: center">
+                        <b id="agreementTitle">Registro de Convenio</b>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                Fecha
+                                <input id="agreementDate" type="text" class="form-control form-control-sm border-input agreementDateClass" value="${moment.utc().format('DD/MM/YYYY')}" onchange="calculateDues()">
+                            </div>
+                            <div class="col-md-2">
+                                Convenio
+                                <select id="agreementList" class="form-control form-select form-select-sm" onchange="setAgreement(this)">
+                                    <option value="SELECCIONE">SELECCIONE</option>
+                                    ${serviceList}
+                                </select>
+                            </div>
+                            <div id="agreementDiv" class="col-md-2" style="display: none">
+                                Convenio
+                                <input id="agreementOther" type="text" class="form-control form-control-sm border-input">
+                            </div>
+                            <div class="col-md-2">
+                                Monto Total
+                                <input id="agreementAmount" type="text" class="form-control form-control-sm border-input" onkeyup="calculateDues()">
+                            </div>
+                            <div class="col-md-2" style="text-align: center">
+                                Cuotas
+                                <select id="agreementDues" class="form-control form-select form-select-sm" onchange="calculateDues()">
+                                    <option value="1" style="text-align: center">1</option>
+                                    <option value="2" style="text-align: center">2</option>
+                                    <option value="3" style="text-align: center">3</option>
+                                    <option value="4" style="text-align: center">4</option>
+                                    <option value="5" style="text-align: center">5</option>
+                                    <option value="6" style="text-align: center">6</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-12" style="text-align: center">
+                                <br/>
+                                <br/>
+                                <div class="card border-primary">
+                                    <table id="tableDues class="table" style="font-size: 12px; margin: 0 auto; width: 70%">
+                                        <thead>
+                                            <tr>
+                                                <th>N° Cuota</th>
+                                                <th>Mes</th>
+                                                <th>Monto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableBodyDues">
+                                        
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <br/>
+                            <br/>
+                            <div class="col-md-3" style="text-align: center;">
+                                <button style="border-radius:5px; " class="btn btn-warning" id="agreementCancel"><i class="fas fa-arrow-left"></i> Atrás</button></td>
+                            </div>
+                            <div class="col-md-1" style="text-align: center;">
+                            </div>
+                            <div class="col-md-3" style="text-align: center;">
+                                <button style="border-radius:5px; " class="btn btn-info" id="agreementSave"><i class="fas fa-check"></i> GUARDAR</button></td>
+                            </div>
+                            <div class="col-md-2" style="text-align: center;">
+                            </div>
+                            <div class="col-md-3" style="text-align: right;">
+                                <button style="border-radius:5px; " class="btn btn-danger" id="agreementDelete"><i class="fas fa-times"></i> ELIMINAR</button></td>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+    
+`
+
+    $('#modalLecture_body').html(body)
+
+    $("#agreementCancel").on('click', async function () {
+
+        cleanAgreement()
+
+    })
+}
+
+function createModalBodyMultiple() {
+
+    let body = /*html*/ `
+<div class="row">
+<h5>Convenios registrados</h5>
+    <div class="col-md-12">
+        <div class="row">
+
+            <div class="col-md-3">
+                <button style="border-radius: 5px;" class="btn btn-primary" onclick="createMultipleAgreement(0)"><i class="fas fa-plus-circle"></i> Agregar nuevo Convenio</button>
+                <br/>
+                <br/>
+            </div>
+            <div class="col-md-8 table-responsive">
+            </div>
+            <div class="col-md-8 table-responsive">
+                <table id="tableAgreements" class="display nowrap table table-condensed cell-border" cellspacing="0">
+                    <thead id="tableAgreementsHead">
+                        <tr class="table-info">
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Fecha</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Convenio</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">N° Cuotas</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Monto Total</th>
+                            <th style="text-align: center; background-color: #3B6FC9;">Cant. Socios</th>
+                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Editar</th>
                         </tr>
                     </thead>
                     <tbody id="tableAgreementsBody">

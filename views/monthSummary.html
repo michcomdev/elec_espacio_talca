@@ -63,6 +63,7 @@
                     <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">DÍA</th>
                     <th style="background-color: #3B6FC9;">DESDE</th>
                     <th style="background-color: #3B6FC9;">HASTA</th>
+                    <th style="background-color: #3B6FC9;">CANT. BOLETAS</th>
                     <th style="background-color: #3B6FC9;">VOUCHER N°</th>
                     <th style="background-color: #3B6FC9;">EFECTIVO</th>
                     <th style="background-color: #3B6FC9;">CHEQUE</th>
@@ -118,6 +119,120 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modalInvoices" role="dialog" aria-labelledby="modal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Boletas asociadas</h6>
+                <button type="button" class="btn-close" data-dismiss="modal"
+                    aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-3" style="text-align: center;">
+                            <label class="titleInvoice">Efectivo</label>
+                        </div>
+                        <div class="col-md-3" style="text-align: center;">
+                            <label class="titleInvoice">Cheque</label>
+                        </div>
+                        <div class="col-md-3" style="text-align: center;">
+                            <label class="titleInvoice">Redcompra</label>
+                        </div>
+                        <div class="col-md-3" style="text-align: center;">
+                            <label class="titleInvoice">Transferencia</label>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <table id="tableInvoices1" class="table tableInvoices">
+                                <thead>
+                                    <tr class="table-primary">
+                                        <th style="text-align: center">N° Socio</th>
+                                        <th style="text-align: center">Boleta</th>
+                                        <th style="text-align: right">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableInvoices1Body">
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-primary">
+                                        <th></th>
+                                        <th style="text-align: right;">Total</th>
+                                        <th style="text-align: right;" id="tableInvoices1Total"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="col-md-3">
+                            <table id="tableInvoices2" class="table tableInvoices">
+                                <thead>
+                                    <tr class="table-primary">
+                                        <th style="text-align: center;">N° Socio</th>
+                                        <th style="text-align: center">Boleta</th>
+                                        <th style="text-align: right">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableInvoices2Body">
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-primary">
+                                        <th></th>
+                                        <th style="text-align: right;">Total</th>
+                                        <th style="text-align: right;" id="tableInvoices2Total"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="col-md-3">
+                            <table id="tableInvoices3" class="table tableInvoices">
+                                <thead>
+                                    <tr class="table-primary">
+                                        <th style="text-align: center;">N° Socio</th>
+                                        <th style="text-align: center">Boleta</th>
+                                        <th style="text-align: right">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableInvoices3Body">
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-primary">
+                                        <th></th>
+                                        <th style="text-align: right;">Total</th>
+                                        <th style="text-align: right;" id="tableInvoices3Total"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="col-md-3">
+                            <table id="tableInvoices4" class="table tableInvoices">
+                                <thead>
+                                    <tr class="table-primary">
+                                        <th style="text-align: center;">N° Socio</th>
+                                        <th style="text-align: center">Boleta</th>
+                                        <th style="text-align: right">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableInvoices4Body">
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-primary">
+                                        <th></th>
+                                        <th style="text-align: right;">Total</th>
+                                        <th style="text-align: right;" id="tableInvoices4Total"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{#extend "js"}}
 <script src="/public/modules/monthSummary/monthSummary.js"></script>
 {{/extend}}

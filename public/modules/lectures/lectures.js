@@ -979,6 +979,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             $("#invoiceType").val(41)
         }else if(member.dte=='FACTURA'){
             $("#invoiceType").val(34)
+        }else if(member.dte=='COMPROBANTE'){
+            $("#invoiceType").val(0)
         }
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
 

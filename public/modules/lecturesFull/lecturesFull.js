@@ -339,8 +339,10 @@ async function calculate(){
 
         if (array[i].members.dte == 'FACTURA') {
             typeDTE = 34
-        }else{
+        }else if (array[i].members.dte == 'BOLETA') {
             typeDTE = 41
+        }else {
+            typeDTE = 0
         }
 
 
@@ -615,7 +617,7 @@ async function calculate(){
                 lectures: array[i]._id,
                 member: array[i].members._id,
                 memberType: array[i].members.type,
-                type: 41, //Tipo documento: boleta/factura
+                type: typeDTE, //Tipo documento: boleta/factura
                 //type: array[i].members.dte, //Tipo documento: boleta/factura
                 //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
                 date: moment.utc().format('YYYY-MM-DD'),
@@ -866,6 +868,7 @@ function createModalBody(member) {
                                 <select id="invoiceType" class="form-control form-select form-control-sm">
                                     <option value="41">BOLETA</option>
                                     <option value="34">FACTURA</option>
+                                    <option value="0">COMPROBANTE</option>
                                 </select>
                             </div>
                             <div class="col-md-1">
@@ -1290,6 +1293,8 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             $("#invoiceType").val(41)
         }else if(member.dte=='FACTURA'){
             $("#invoiceType").val(34)
+        }else if(member.dte=='COMPROBANTE'){
+            $("#invoiceType").val(0)
         }
         $("#invoiceDate").val(moment.utc().format('DD/MM/YYYY'))
 
@@ -1597,9 +1602,8 @@ async function sendData(type,memberID,invoiceID) {
         let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
         progressBar()
 
-
     }else{
-        return
+        
         let dteType = 34 //Factura exenta electrónica
         let name = '', category = ''
         let document = ''
@@ -1632,8 +1636,24 @@ async function sendData(type,memberID,invoiceID) {
             })
         }
         
+        if(invoice.type==0){
+            let dteData = {
+                id: invoiceID,
+                type: 0,
+                number: 0,
+                seal: '',
+                token: '',
+                resolution: {
+                    fecha: '',
+                    numero: 0
+                }
+            }
+                
+            let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
+            progressBar()
 
-        if(invoice.type==41){
+
+        }else if(invoice.type==41){
             dteType = 41
 
             if(type=='personal'){
@@ -1695,7 +1715,7 @@ async function sendData(type,memberID,invoiceID) {
                 }
             }
 
-
+        
         }else{
             name = member.enterprise.fullName
             category = member.enterprise.category

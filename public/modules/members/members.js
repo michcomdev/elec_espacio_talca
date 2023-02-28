@@ -711,6 +711,7 @@ function setModal(type){
                                     <select id="memberDTE" class="form-select form-select-sm custom-select">
                                         <option value="BOLETA">BOLETA</option>
                                         <option value="FACTURA">FACTURA</option>
+                                        <option value="COMPROBANTE">COMPROBANTE</option>
                                     </select>
                                 </div>
                                 <div class="col-md-5">

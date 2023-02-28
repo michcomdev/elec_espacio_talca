@@ -1,6 +1,7 @@
 import Member from '../../models/Member'
 import Invoices from '../../models/Invoices'
 import Agreements from '../../models/Agreements'
+import FullAgreements from '../../models/FullAgreements'
 import Joi from 'joi'
 import dotEnv from 'dotenv'
 
@@ -415,6 +416,31 @@ export default [
                 payload: Joi.object().keys({
                     id: Joi.string()
                 })
+            }
+        }
+    },
+    {
+        method: 'GET',
+        path: '/api/agreementsFull',
+        options: {
+            auth: false,
+            description: 'get all agreements data',
+            notes: 'return all data from agreements',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let agreementsFull = await FullAgreements.find().lean()
+
+                    console.log(agreementsFull)
+
+                    return agreementsFull
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
             }
         }
     }

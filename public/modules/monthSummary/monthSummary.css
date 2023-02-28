@@ -80,3 +80,23 @@
     border-radius: 5px !important;
     border: transparent;
 }
+
+.tableInvoices {
+    font-size: 11px;
+}
+
+.tableInvoices thead tbody tr{
+    display: table;
+    table-layout:fixed;
+    width:100%;
+}
+
+.tableInvoices tbody{
+    display:fixed;
+    height:200px;
+    overflow-y:scroll;
+}
+
+.titleInvoice {
+    font-size: 14px;
+}
