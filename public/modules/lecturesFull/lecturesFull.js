@@ -703,7 +703,7 @@ async function saveMultiple(){
                     if (saveInvoice.data) {
                         if (saveInvoice.data._id) {
                             //progressIndex++
-                            sendData(internals.invoices[i].memberType,internals.invoices[i].member,saveInvoice.data._id)
+                            await sendData(internals.invoices[i].memberType,internals.invoices[i].member,saveInvoice.data._id)
                         }
                     }
                 }else{
@@ -712,7 +712,7 @@ async function saveMultiple(){
                     if (updateInvoice.data) {
                         if (updateInvoice.data._id) {
                             //progressIndex++
-                            sendData(internals.invoices[i].memberType,internals.invoices[i].member,updateInvoice.data._id)
+                            await sendData(internals.invoices[i].memberType,internals.invoices[i].member,updateInvoice.data._id)
                         }
                     }
                 }
