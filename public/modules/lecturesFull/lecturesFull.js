@@ -224,12 +224,16 @@ async function getLectures() {
 
                 if(!el.invoice.token){
 
+                    let typeDTE = el.invoice.type
+                    if(el.invoice.invoiceSubTotal==0){
+                        typeDTE = 0
+                    }
                     internals.invoices.push({
                         id: el.invoice._id,
                         lectures: el.invoice.lectures._id,
                         member: el.invoice.members,
                         memberType: el.members.type,
-                        type: el.invoice.type,
+                        type: typeDTE,
                         date: moment.utc(el.invoice.date).format('YYYY-MM-DD'),
                         dateExpire: moment.utc(el.invoice.dateExpire).format('YYYY-MM-DD'),
                         charge: el.invoice.charge,
@@ -612,6 +616,9 @@ async function calculate(){
                 expireDate = moment(expireDate).utc().format('YYYY-MM-DD')
             }
 
+            if(subTotal==0){
+                typeDTE = 0
+            }
             
             internals.invoices.push({
                 lectures: array[i]._id,
@@ -1587,8 +1594,9 @@ async function sendData(type,memberID,invoiceID) {
     let parameters = parametersData.data
 
     console.log('receiptstate',parameters.receiptState)
+    console.log('invoicetype', invoice.type)
 
-    if(parameters.receiptState){
+    if(parameters.receiptState || invoice.type==0){
 
         let dteData = {
             id: invoiceID,
