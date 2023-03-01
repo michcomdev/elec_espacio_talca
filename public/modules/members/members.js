@@ -298,6 +298,7 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
         const res = validateMemberData(memberData)
         if (res.ok) {
             loadingHandler('start')
+            console.log(memberData)
             let saveMember = await axios.post('/api/memberSave', memberData)
             loadingHandler('stop')
             if (saveMember.data) {

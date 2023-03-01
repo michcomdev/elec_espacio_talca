@@ -680,10 +680,21 @@ async function saveMultiple(){
         console.log(internals.invoices.length)
         progressValue = 0
         progressTotal = totalRows
+        //let progressIndex = 1
         $('#modalProgress').modal('show')
         progressBar()
+        
         for(let i=0; i<internals.invoices.length; i++){
             if($("#chk"+internals.invoices[i].member).prop('checked')){
+                /*console.log(progressIndex,progressIndex%10)
+                if(progressIndex%10==0){
+                    setTimeout(() => {
+                        console.log('waiting 10 seconds...')
+                    }, 10000)
+                }
+                progressIndex++
+                progressBar()*/
+                
                 console.log(internals.invoices[i])
                 if(!internals.invoices[i].id){
 
@@ -691,6 +702,7 @@ async function saveMultiple(){
                     console.log(saveInvoice.data)
                     if (saveInvoice.data) {
                         if (saveInvoice.data._id) {
+                            progressIndex++
                             sendData(internals.invoices[i].memberType,internals.invoices[i].member,saveInvoice.data._id)
                         }
                     }
@@ -699,6 +711,7 @@ async function saveMultiple(){
                     console.log(updateInvoice.data)
                     if (updateInvoice.data) {
                         if (updateInvoice.data._id) {
+                            progressIndex++
                             sendData(internals.invoices[i].memberType,internals.invoices[i].member,updateInvoice.data._id)
                         }
                     }
@@ -706,17 +719,10 @@ async function saveMultiple(){
             }
 
             if(i+1==internals.invoices.length){
-                //loadingHandler('stop')
-                /*$('#modal_title').html(`Almacenado`)
-                $('#modal_body').html(`<h6 class="alert-heading">Se han generado las boletas, favor recargar para revisar</h6>`)
-                $('#modal').modal('show')*/
                 toastr.success('Se están generando las boletas, favor esperar mensaje de confirmación')
             }
         }
     }else{
-        /*$('#modal_title').html(`Error`)
-        $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
-        $('#modal').modal('show')*/
         toastr.warning('Debe seleccionar al menos un socio')
     }
 }
@@ -741,9 +747,6 @@ async function sendMultiple(){
         })
         
     }else{
-        /*$('#modal_title').html(`Error`)
-        $('#modal_body').html(`<h6 class="alert-heading">Debe seleccionar al menos un socio</h6>`)
-        $('#modal').modal('show')*/
         toastr.warning('Debe seleccionar al menos un socio')
     }
 
