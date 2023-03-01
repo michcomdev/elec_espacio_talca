@@ -702,7 +702,7 @@ async function saveMultiple(){
                     console.log(saveInvoice.data)
                     if (saveInvoice.data) {
                         if (saveInvoice.data._id) {
-                            progressIndex++
+                            //progressIndex++
                             sendData(internals.invoices[i].memberType,internals.invoices[i].member,saveInvoice.data._id)
                         }
                     }
