@@ -373,6 +373,18 @@ export default [
                 try {
                     let payload = request.payload
 
+                    let queryLectures = {
+                        month: payload.month,
+                        year: payload.year
+                    }
+
+                    let lectures = await Lectures.find(queryLectures)
+                    let arrayLectures = []
+                    for(let i=0; i<lectures.length ; i++){
+                        arrayLectures.push(lectures[i]._id)
+                    }
+
+
                     let querySector = {}
                     if(payload.sector!='0'){
                         querySector = {
@@ -386,15 +398,11 @@ export default [
                         array.push(members[i]._id)
                     }
 
-                    let query = {
-                        members: { $in: array }/*,
-                        month: payload.month,
-                        year: payload.year*/
-                    }
                     let queryInvoice = {
                         members: { $in: array },
                         typeInvoice: { $exists : false },
-                        lectures: { $ne: null }
+                        /*lectures: { $ne: null }*/
+                        lectures: { $in: arrayLectures }
                     }
                     let queryPayment = {
                         members: { $in: array }
@@ -411,14 +419,17 @@ export default [
                             invoices[i].name = invoices[i].members.enterprise.name
                         }
 
-                        let paymentsMember = payments.find(x => x.members.toString() == invoices[i].members._id.toString())
+                        let paymentsMember = payments.filter(x => x.members.toString() == invoices[i].members._id.toString())
+
                         if(paymentsMember){
 
-                            for(let j=0;j<paymentsMember.invoices.length;j++){
-                                if(paymentsMember.invoices[j].invoices){
-                                    if(paymentsMember.invoices[j].invoices.toString()==invoices[i]._id.toString()){
-                                        invoices[i].paymentVoucher = paymentsMember
-                                        invoices[i].payment = paymentsMember.invoices[j]
+                            for(let k=0;k<paymentsMember.length;k++){
+                                for(let j=0;j<paymentsMember[k].invoices.length;j++){
+                                    if(paymentsMember[k].invoices[j].invoices){
+                                        if(paymentsMember[k].invoices[j].invoices.toString()==invoices[i]._id.toString()){
+                                            invoices[i].paymentVoucher = paymentsMember[k]
+                                            invoices[i].payment = paymentsMember[k].invoices[j]
+                                        }
                                     }
                                 }
                             }

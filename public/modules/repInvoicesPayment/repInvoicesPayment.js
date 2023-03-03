@@ -57,8 +57,6 @@ async function getParameters() {
         }
     }
 
-    setYear = 2022
-    setMonth = '12'
     $("#searchYear").val(setYear)
     $("#searchMonth").val(setMonth)
 
