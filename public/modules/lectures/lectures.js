@@ -2630,7 +2630,6 @@ async function createPayment(memberID,paymentID) {
                     goSave = true
 
                     let invoiceAmount = parseInt($($($(this).children()[7]).children()[0]).val()) - parseInt(replaceAll($($(this).children()[8]).text(), '.',''))
-                    amountInvoices += invoiceAmount
 
                     let amountMonth = 0
                     if($($($(this).children()[4]).children()[0]).prop('checked')){
@@ -2640,6 +2639,12 @@ async function createPayment(memberID,paymentID) {
                     if($($($(this).children()[5]).children()[0]).prop('checked')){
                         amountAgreement = parseInt($($($(this).children()[5]).children()[1]).val())
                     }
+
+                    if(amountMonth>0 || amountAgreement>0){
+                        invoiceAmount = amountMonth + amountAgreement
+                    }
+
+                    amountInvoices += invoiceAmount
 
                     invoices.push({
                         invoices: $($($(this).children()[0]).children()[1]).val(),

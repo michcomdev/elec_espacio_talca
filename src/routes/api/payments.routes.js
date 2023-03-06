@@ -272,16 +272,16 @@ export default [
                             }
                         }
 
-
-                        /////EN DESARROLLO - NO SUMAR MONTO DE PAGO ACTUAL, PARA EVITAR REPETICIÓN DE VALOR
                         for(let k=0; k<invoicePayments.length; k++){
-                            for(let l=0; l<invoicePayments[k].invoices.length; l++){
-                                if(invoicePayments[k].invoices[l].invoices){
-                                    if(invoicePayments[k].invoices[l].invoices.toString() == invoicesOld[i].invoices.toString()){
-                                        if(invoicePayments[k].invoices[l].amountMonth || invoicePayments[k].invoices[l].amountAgreement){
-                                            invoice.invoicePaid += (invoicePayments[k].invoices[l].amountMonth + invoicePayments[k].invoices[l].amountAgreement)
-                                        }else{
-                                            invoice.invoicePaid += invoicePayments[k].invoices[l].amount
+                            if(invoicePayments[k]._id.toString()!=payload.id){
+                                for(let l=0; l<invoicePayments[k].invoices.length; l++){
+                                    if(invoicePayments[k].invoices[l].invoices){
+                                        if(invoicePayments[k].invoices[l].invoices.toString() == invoicesOld[i].invoices.toString()){
+                                            if(invoicePayments[k].invoices[l].amountMonth || invoicePayments[k].invoices[l].amountAgreement){
+                                                invoice.invoicePaid += (invoicePayments[k].invoices[l].amountMonth + invoicePayments[k].invoices[l].amountAgreement)
+                                            }else{
+                                                invoice.invoicePaid += invoicePayments[k].invoices[l].amount
+                                            }
                                         }
                                     }
                                 }
@@ -310,7 +310,6 @@ export default [
 
                     for(let i=0; i<invoices.length; i++){
                         if(invoices[i].invoices){
-                            console.log(invoices[i].amountMonth, invoices[i].amountAgreement)
                             let invoice = await Invoices.findById(invoices[i].invoices)
                             if(invoices[i].amountMonth || invoices[i].amountAgreement){
                                 invoice.invoicePaid += (invoices[i].amountMonth + invoices[i].amountAgreement)
