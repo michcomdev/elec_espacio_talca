@@ -2306,7 +2306,22 @@ function createModalPayment(member) {
                                             </div>
                                             <div class="col-md-1" style="text-align: center"></div>
                                             <div class="col-md-6">
-                                                <input id="paymentToPay" type="text" class="form-control form-control-sm border-input numericValues">
+                                                <input id="paymentToPay" type="text" class="form-control form-control-sm border-input numericValues" disabled>
+                                            </div>
+
+                                            <div class="col-md-5">
+                                                Consumo
+                                            </div>
+                                            <div class="col-md-1" style="text-align: center"></div>
+                                            <div class="col-md-6">
+                                                <input id="paymentAmountMonth" type="text" class="form-control form-control-sm border-input numericValues">
+                                            </div>
+                                            <div class="col-md-5">
+                                                Convenio/Multa
+                                            </div>
+                                            <div class="col-md-1" style="text-align: center"></div>
+                                            <div class="col-md-6">
+                                                <input id="paymentAmountAgreement" type="text" class="form-control form-control-sm border-input numericValues">
                                             </div>
 
                                             <div class="col-md-5">
@@ -2411,13 +2426,32 @@ async function createPayment(memberID,paymentID) {
                         agreements += invoicesPayment.invoices[i].invoices.agreements[j].amount
                     }
                 }
+
+                let checkedMonth = '', checkedAgreement = ''
+                if(invoicesPayment.invoices[i].amountMonth){
+                    if(invoicesPayment.invoices[i].amountMonth>0){
+                        checkedMonth = 'checked'
+                    }
+                }
+                if(invoicesPayment.invoices[i].amountAgreement){
+                    if(invoicesPayment.invoices[i].amountAgreement>0){
+                        checkedAgreement = 'checked'
+                    }
+                }
+
                 $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
                     <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
                     <td style="text-align: center">${(invoicesPayment.invoices[i].invoices.number) ? invoicesPayment.invoices[i].invoices.number : ''}</td>
                     <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
                     <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
-                    <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements)}</td>
-                    <td style="text-align: right">${dot_separators(agreements)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal)}
+                        <input class="checkInvoiceDetail" type="checkbox" ${checkedMonth}/>
+                        <input value="${invoicesPayment.invoices[i].invoices.invoiceSubTotal}" style="display: none;"/>
+                    </td>
+                    <td style="text-align: right">${dot_separators(agreements)}
+                        <input class="checkInvoiceDetail" type="checkbox" ${checkedAgreement}/>
+                        <input value="${agreements}" style="display: none;"/>
+                    </td>
                     <td style="text-align: right">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements)}</td>
                     <td style="text-align: right">${dot_separators((invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount)}
                         <input value="${(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements) - invoicesPayment.invoices[i].invoices.invoicePaid + invoicesPayment.invoices[i].amount}" style="display: none;"/>
@@ -2454,8 +2488,14 @@ async function createPayment(memberID,paymentID) {
                     <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                     <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
-                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
-                    <td style="text-align: right">${dot_separators(agreements)}</td>
+                    <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}
+                        <input class="checkInvoiceDetail" type="checkbox"/>
+                        <input value="${invoicesDebt[i].invoiceSubTotal}" style="display: none;"/>
+                    </td>
+                    <td style="text-align: right">${dot_separators(agreements)}
+                        <input class="checkInvoiceDetail" type="checkbox"/>
+                        <input value="${agreements}" style="display: none;"/>
+                    </td>
                     <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
                     <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid)}
                         <input value="${(invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid}" style="display: none;"/>
@@ -2490,8 +2530,14 @@ async function createPayment(memberID,paymentID) {
                             <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
                             <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                             <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
-                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}</td>
-                            <td style="text-align: right">${dot_separators(agreements)}</td>
+                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}
+                                <input class="checkInvoiceDetail" type="checkbox"/>
+                                <input value="${invoicesDebt[i].invoiceSubTotal}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: right">${dot_separators(agreements)}
+                                <input class="checkInvoiceDetail" type="checkbox"/>
+                                <input value="${agreements}" style="display: none;"/>
+                            </td>
                             <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
                             <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid)}
                                 <input value="${(invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid}" style="display: none;"/>
@@ -2507,8 +2553,14 @@ async function createPayment(memberID,paymentID) {
                             <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : '' }</td>
                             <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
                             <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
-                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal)}</td>
-                            <td style="text-align: right">${dot_separators(agreements)}</td>
+                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}
+                                <input class="checkInvoiceDetail" type="checkbox"/>
+                                <input value="${invoicesDebt[i].invoiceSubTotal}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: right">${dot_separators(agreements)}
+                                <input class="checkInvoiceDetail" type="checkbox"/>
+                                <input value="${agreements}" style="display: none;"/>
+                            </td>
                             <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal + agreements)}</td>
                             <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceTotal + agreements) - paid)}
                                 <input value="${(invoicesDebt[i].invoiceTotal + agreements) - paid}" style="display: none;"/>
@@ -2523,9 +2575,7 @@ async function createPayment(memberID,paymentID) {
             //$('#modal_body').html(`<h7 class="alert-heading">Socio no tiene deuda activa</h7>`)
             toastr.success('Socio no tiene deuda activa')
         }
-
     }
-
     
     $('.paymentDateClass').daterangepicker({
         opens: 'right',
@@ -2535,6 +2585,24 @@ async function createPayment(memberID,paymentID) {
     })
 
     $('.checkInvoice').change(function () {
+        if($(this).prop('checked')){
+            $($($(this).parent().parent().children()[4]).children()[0]).prop('checked',true)
+            $($($(this).parent().parent().children()[5]).children()[0]).prop('checked',true)
+        }else{
+            $($($(this).parent().parent().children()[4]).children()[0]).prop('checked',false)
+            $($($(this).parent().parent().children()[5]).children()[0]).prop('checked',false)
+        }
+        calculatePaymentBalance()
+    })
+
+    $('.checkInvoiceDetail').change(function () {
+        if(!$(this).prop('checked')){
+            if(!$($($(this).parent().parent().children()[4]).children()[0]).prop('checked') && !$($($(this).parent().parent().children()[5]).children()[0]).prop('checked')){
+                $($($(this).parent().parent().children()[0]).children()[0]).prop('checked',false)
+            }
+        }else{
+            $($($(this).parent().parent().children()[0]).children()[0]).prop('checked',true)
+        }
         calculatePaymentBalance()
     })
 
@@ -2563,9 +2631,21 @@ async function createPayment(memberID,paymentID) {
 
                     let invoiceAmount = parseInt($($($(this).children()[7]).children()[0]).val()) - parseInt(replaceAll($($(this).children()[8]).text(), '.',''))
                     amountInvoices += invoiceAmount
+
+                    let amountMonth = 0
+                    if($($($(this).children()[4]).children()[0]).prop('checked')){
+                        amountMonth = parseInt($($($(this).children()[4]).children()[1]).val())
+                    }
+                    let amountAgreement = 0
+                    if($($($(this).children()[5]).children()[0]).prop('checked')){
+                        amountAgreement = parseInt($($($(this).children()[5]).children()[1]).val())
+                    }
+
                     invoices.push({
                         invoices: $($($(this).children()[0]).children()[1]).val(),
-                        amount: invoiceAmount
+                        amount: invoiceAmount,
+                        amountMonth: amountMonth,
+                        amountAgreement: amountAgreement
                     })
                 }
             })    
@@ -2693,17 +2773,33 @@ async function createPayment(memberID,paymentID) {
 
 function calculatePaymentBalance(paymentAmount) {
 
-    let totalSelected = 0
+    let totalSelected = 0, totalMonth = 0,  totalAgreement = 0
     $("#tableBodyDebtInvoices > tr").each(function() {
-        let value = 0
-        if($($($(this).children()[0]).children()[0]).prop('checked')){
-            value = $($($(this).children()[7]).children()[0]).val()
+        let valueSelected = 0, valueMonth = 0,  valueAgreement = 0
+
+        if($($($(this).children()[4]).children()[0]).prop('checked')){
+            valueMonth = $($($(this).children()[4]).children()[1]).val()
         }
-        totalSelected += parseInt(value)
+        if($($($(this).children()[5]).children()[0]).prop('checked')){
+            valueAgreement = $($($(this).children()[5]).children()[1]).val()
+        }
+        if($($($(this).children()[0]).children()[0]).prop('checked')){
+            if(valueMonth>0 & valueAgreement>0){
+                valueSelected = $($($(this).children()[7]).children()[0]).val()
+            }else{
+                valueSelected = parseInt(valueMonth) + parseInt(valueAgreement)
+            }
+        }
+
+        totalMonth += parseInt(valueMonth)
+        totalAgreement += parseInt(valueAgreement)
+        totalSelected += parseInt(valueSelected)
 
         $($(this).children()[8]).text(dot_separators($($($(this).children()[7]).children()[0]).val()))
     })
 
+    $("#paymentAmountMonth").val(dot_separators(totalMonth))
+    $("#paymentAmountAgreement").val(dot_separators(totalAgreement))
     $("#paymentToPay").val(dot_separators(totalSelected))
 
     if(!paymentAmount){
@@ -2739,6 +2835,26 @@ function calculatePaymentBalance(paymentAmount) {
         numeralDecimalMark: ",",
         delimiter: "."
     })*/
+
+    new Cleave($("#paymentAmountMonth"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })
+
+    new Cleave($("#paymentAmountAgreement"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })
 
     new Cleave($("#paymentAmount"), {
         prefix: '$',

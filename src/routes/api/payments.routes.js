@@ -225,6 +225,8 @@ export default [
                     invoices: Joi.array().items(Joi.object().keys({
                         invoices: Joi.string().optional().allow(''),
                         amount: Joi.number().optional().allow(0),
+                        amountMonth: Joi.number().optional().allow(0),
+                        amountAgreement: Joi.number().optional().allow(0),
                         positive: Joi.boolean().optional()
                     })).optional()
                 })
@@ -259,17 +261,29 @@ export default [
                         let invoicePayments = await Payments.find(invoiceQuery) //Obtención de todos los pagos realizados a la boleta
                         let invoice = await Invoices.findById(invoicesOld[i].invoices) //Obtención de registro de boleta
                         
+
                         for(let j=0; j<invoicePayments.length; j++){
-                            if(invoicePayments[j].invoices.invoices){
-                                if(invoicePayments[j].invoices.find(x => x.invoices == invoicesOld[i].invoices)){
-                                    invoice.invoicePaid = 0
+                            for(let l=0; l<invoicePayments[j].invoices.length; l++){
+                                if(invoicePayments[j].invoices[l].invoices){
+                                    if(invoicePayments[j].invoices[l].invoices.toString() == invoicesOld[i].invoices.toString()){
+                                        invoice.invoicePaid = 0
+                                    }
                                 }
                             }
                         }
+
+
+                        /////EN DESARROLLO - NO SUMAR MONTO DE PAGO ACTUAL, PARA EVITAR REPETICIÓN DE VALOR
                         for(let k=0; k<invoicePayments.length; k++){
-                            if(invoicePayments[k].invoices.invoices){
-                                if(invoicePayments[k].invoices.find(x => x.invoices == invoicesOld[i].invoices)){
-                                    invoice.invoicePaid += invoicePayments[k].invoices.find(x => x.invoices == invoicesOld[i].invoices).amount
+                            for(let l=0; l<invoicePayments[k].invoices.length; l++){
+                                if(invoicePayments[k].invoices[l].invoices){
+                                    if(invoicePayments[k].invoices[l].invoices.toString() == invoicesOld[i].invoices.toString()){
+                                        if(invoicePayments[k].invoices[l].amountMonth || invoicePayments[k].invoices[l].amountAgreement){
+                                            invoice.invoicePaid += (invoicePayments[k].invoices[l].amountMonth + invoicePayments[k].invoices[l].amountAgreement)
+                                        }else{
+                                            invoice.invoicePaid += invoicePayments[k].invoices[l].amount
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -293,6 +307,31 @@ export default [
                     const response = await payment.save()
 
                     //Actualización de montos pagados boletas asociadas a pago
+
+                    for(let i=0; i<invoices.length; i++){
+                        if(invoices[i].invoices){
+                            console.log(invoices[i].amountMonth, invoices[i].amountAgreement)
+                            let invoice = await Invoices.findById(invoices[i].invoices)
+                            if(invoices[i].amountMonth || invoices[i].amountAgreement){
+                                invoice.invoicePaid += (invoices[i].amountMonth + invoices[i].amountAgreement)
+                            }else{
+                                invoice.invoicePaid += invoices[i].amount
+                            }
+                            await invoice.save()
+                        }else{
+                            if(invoices[i].positive){
+                                let member = await Member.findById(payload.member)
+                                if(member.positiveBalance){
+                                    member.positiveBalance += invoices[i].amount
+                                }else{
+                                    member.positiveBalance = invoices[i].amount
+                                }
+                                await member.save()
+                            }
+                        }
+                    }
+
+/*
                     for(let i=0; i<invoices.length; i++){
 
                         let invoiceQuery = {
@@ -303,10 +342,9 @@ export default [
                             }
                         }
 
-                        //console.log('invoiceQuery',invoiceQuery)
                         let invoicePayments = await Payments.find(invoiceQuery) //Obtención de todos los pagos realizados a la boleta
                         let invoice = await Invoices.findById(invoices[i].invoices) //Obtención de registro de boleta
-                        //console.log(invoice)
+
                         for(let j=0; j<invoicePayments.length; j++){
                             if(invoicePayments[j].invoices.invoices){
                                 if(invoicePayments[j].invoices.find(x => x.invoices == invoices[i].invoices)){
@@ -316,14 +354,20 @@ export default [
                         }
                         for(let k=0; k<invoicePayments.length; k++){
                             if(invoicePayments[k].invoices.invoices){
-                                if(invoicePayments[k].invoices.find(x => x.invoices == invoices[i].invoices)){
-                                    invoice.invoicePaid += invoicePayments[k].invoices.find(x => x.invoices == invoices[i].invoices).amount
+                                let invoiceSelected = invoicePayments[k].invoices.find(x => x.invoices == invoices[i].invoices)
+                                console.log(invoiceSelected)
+                                if(invoiceSelected){
+                                    if(invoiceSelected.amountMonth || invoiceSelected.amountAgreement){
+                                        invoice.invoicePaid += (invoiceSelected.amountMonth + invoiceSelected.amountAgreement)
+                                    }else{
+                                        invoice.invoicePaid += invoiceSelected.amount
+                                    }
                                 }
                             }
                         }
                         
                         await invoice.save()
-                    }
+                    }*/
 
                     return response
 
@@ -345,7 +389,9 @@ export default [
                     amount: Joi.number().allow(0),
                     invoices: Joi.array().items(Joi.object().keys({
                         invoices: Joi.string().optional().allow(''),
-                        amount: Joi.number().optional().allow(0)
+                        amount: Joi.number().optional().allow(0),
+                        amountMonth: Joi.number().optional().allow(0),
+                        amountAgreement: Joi.number().optional().allow(0)
                     })).optional()
                 })
             }
@@ -368,7 +414,12 @@ export default [
                         for(let i=0; i<payment.invoices.length; i++){
                             if(payment.invoices[i].invoices){
                                 let invoice = await Invoices.findById(payment.invoices[i].invoices)
-                                invoice.invoicePaid -= payment.invoices[i].amount
+                                //invoice.invoicePaid -= payment.invoices[i].amount
+                                if(payment.invoices[i].amountMonth || payment.invoices[i].amountAgreement){
+                                    invoice.invoicePaid -= (payment.invoices[i].amountMonth + payment.invoices[i].amountAgreement)
+                                }else{
+                                    invoice.invoicePaid -= payment.invoices[i].amount
+                                }
                                 await invoice.save()
                             }else{
                                 //CÓDIGO PARA QUITAR SALDO A FAVOR EN CASO QUE CORRESPONDA

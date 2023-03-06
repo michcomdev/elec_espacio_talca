@@ -11,6 +11,8 @@ const paymentsSchema = new Schema({
     invoices: [{
         invoices: { type: Schema.Types.ObjectId, ref: 'invoices' },
         amount: { type: Number },
+        amountMonth: { type: Number },
+        amountAgreement: { type: Number },
         positive: { type: Boolean }
     }]
 }, {
