@@ -2164,206 +2164,209 @@ async function loadPayments(member) {
             </tr>
         `)
     }
-
 }
-
 
 function createModalPayment(member) {
 
-    let body = /*html*/ `
+    let firstYear = 2022, selectYear = ''
+    for (let i = firstYear; i <= moment().format('YYYY'); i++) {
+        if(i==moment().format('YYYY')){
+            selectYear += `<option value="${i}" selected>${i}</option>`
+        }else{
+            selectYear += `<option value="${i}">${i}</option>`
+        }
+    }
+    let body = `
     <div class="row">
-    <div class="col-md-12">
-    <h5>Datos de socio</h5>
-        <div class="row">
-            <div class="col-md-2">
-                RUT
-                <input id="memberPaymentRUT" type="text" class="form-control form-control-sm border-input" disabled>
-            </div>
-            <div class="col-md-3">
-                Nombre
-                <input id="memberPaymentName" type="text" class="form-control form-control-sm border-input" disabled>
-            </div>
-            <div class="col-md-1">
-                N° Medidor
-                <input id="memberPaymentWaterMeter" type="text" class="form-control form-control-sm border-input" disabled>
-            </div>
-            <div class="col-md-2">
-                Tipo
-                <input id="memberPaymentType" type="text" class="form-control form-control-sm border-input" disabled>
-            </div>
-            <div class="col-md-4">
-                Dirección
-                <input id="memberPaymentAddress" type="text" class="form-control form-control-sm border-input" disabled>
-            </div>
-            
+        <div class="col-md-9">
+            <h6>Datos de socio</h6>
+        </div>
+        <div class="col-md-1">
+            <select id="reportYear" class="searchClass form-control form-select-sm form-select" disabled>
+                ${selectYear}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button style="border-radius: 5px;" class="btn btn-info" onclick="reportPayment('${member._id}')" title="En construcción" disabled><i class="fas fa-file"></i> Reporte Anual</button>
+        </div>
+        <div class="col-md-2">
+            RUT
+            <input id="memberPaymentRUT" type="text" class="form-control form-control-sm border-input" disabled>
+        </div>
+        <div class="col-md-3">
+            Nombre
+            <input id="memberPaymentName" type="text" class="form-control form-control-sm border-input" disabled>
+        </div>
+        <div class="col-md-1">
+            N° Medidor
+            <input id="memberPaymentWaterMeter" type="text" class="form-control form-control-sm border-input" disabled>
+        </div>
+        <div class="col-md-2">
+            Tipo
+            <input id="memberPaymentType" type="text" class="form-control form-control-sm border-input" disabled>
+        </div>
+        <div class="col-md-4">
+            Dirección
+            <input id="memberPaymentAddress" type="text" class="form-control form-control-sm border-input" disabled>
         </div>
     </div>
-</div>
-<br />
-<br />
-<div class="row">
+    <br />
+    <div class="row">
+        <h6>Pagos realizados</h6>
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-8 table-responsive">
+                    <br/>
+                    <button style="border-radius: 5px;" class="btn btn-primary" onclick="createPayment('${member._id}')"><i class="fas fa-plus-circle"></i> Agregar pago</button>
+                    <br />
+                    <br />
+                    <table id="tablePayments" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
+                        <thead id="tablePaymentsHead">
+                            <tr class="table-info">
+                                <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Fecha</th>
+                                <th style="text-align: center; background-color: #3B6FC9;">Medio Pago</th>
+                                <th style="text-align: center; background-color: #3B6FC9;">N° Transacción</th>
+                                <th style="text-align: center; background-color: #3B6FC9;">Monto</th>
+                                <th style="text-align: center; background-color: #3B6FC9;">Editar</th>
+                                <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Comprobante</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablePaymentsBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-4">
+                    
+                </div>
 
+                <div class="col-md-12">
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <div id="divPayment" class="card border-primary" style="display: none;">
+                        <div class="card-header text-white bg-primary" style="text-align: center">
+                            <b id="paymentTitle">Registro de Pago</b>
+                        </div>
 
-<h5>Pagos realizados</h5>
-    <div class="col-md-12">
-        <div class="row">
-            <div class="col-md-8 table-responsive">
-                <br/>
-                <button style="border-radius: 5px;" class="btn btn-primary" onclick="createPayment('${member._id}')"><i class="fas fa-plus-circle"></i> Agregar pago</button>
-                <br />
-                <br />
-                <table id="tablePayments" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
-                    <thead id="tablePaymentsHead">
-                        <tr class="table-info">
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Fecha</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Medio Pago</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">N° Transacción</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Monto</th>
-                            <th style="text-align: center; background-color: #3B6FC9;">Editar</th>
-                            <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Comprobante</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablePaymentsBody">
-                    </tbody>
-                </table>
-            </div>
-            <div class="col-md-4">
-                
-            </div>
-
-            <div class="col-md-12">
-                <br />
-                <br />
-                <br />
-                <br />
-                <div id="divPayment" class="card border-primary" style="display: none;">
-                    <div class="card-header text-white bg-primary" style="text-align: center">
-                        <b id="paymentTitle">Registro de Pago</b>
-                    </div>
-
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-7">
-                                <div class="card border-primary">
-                                    <div class="card-body">
-                                        <table id="tableDebtInvoices" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
-                                            <thead>
-                                                <tr>
-                                                    <th style="text-align: center">Sel</th>
-                                                    <th style="text-align: center">N° Boleta</th>
-                                                    <th style="text-align: center">Fecha</th>
-                                                    <th style="text-align: center">Vencimiento</th>
-                                                    <th style="text-align: center">Consumo</th>
-                                                    <th style="text-align: center">Convenios/Multas</th>
-                                                    <th style="text-align: center">Monto Total</th>
-                                                    <th style="text-align: center">Saldo Adeudado</th>
-                                                    <th style="text-align: center">Saldo Final</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tableBodyDebtInvoices">
-                                        
-                                            </tbody>
-                                        </table>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <table id="tableDebtInvoices" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="text-align: center">Sel</th>
+                                                        <th style="text-align: center">N° Boleta</th>
+                                                        <th style="text-align: center">Fecha</th>
+                                                        <th style="text-align: center">Vencimiento</th>
+                                                        <th style="text-align: center">Consumo</th>
+                                                        <th style="text-align: center">Convenios/Multas</th>
+                                                        <th style="text-align: center">Monto Total</th>
+                                                        <th style="text-align: center">Saldo Adeudado</th>
+                                                        <th style="text-align: center">Saldo Final</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tableBodyDebtInvoices">
+                                            
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-5">
-                                <div class="card border-primary">
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                Fecha
-                                            </div>
-                                            <div class="col-md-1" style="text-align: center"></div>
-                                            <div class="col-md-6">
-                                                <input id="paymentDate" type="text" class="form-control form-control-sm border-input paymentDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
-                                            </div>
+                                <div class="col-md-4">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-5">
+                                                    Fecha
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentDate" type="text" class="form-control form-control-sm border-input paymentDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
+                                                </div>
 
-                                            <div class="col-md-5">
-                                                Medio de Pago
-                                            </div>
-                                            <div class="col-md-1" style="text-align: center"></div>
-                                            <div class="col-md-6">
-                                                <select id="paymentType" class="form-control form-control-sm form-select form-select-sm">
-                                                    <option value="SELECCIONE">SELECCIONE</option>
-                                                    <option value="EFECTIVO">EFECTIVO</option>
-                                                    <option value="TRANSFERENCIA">TRANSFERENCIA</option>
-                                                    <option value="REDCOMPRA">REDCOMPRA</option>
-                                                    <option value="CHEQUE">CHEQUE</option>
-                                                </select>
-                                            </div>
+                                                <div class="col-md-5">
+                                                    Medio de Pago
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <select id="paymentType" class="form-control form-control-sm form-select form-select-sm">
+                                                        <option value="SELECCIONE">SELECCIONE</option>
+                                                        <option value="EFECTIVO">EFECTIVO</option>
+                                                        <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                                                        <option value="REDCOMPRA">REDCOMPRA</option>
+                                                        <option value="CHEQUE">CHEQUE</option>
+                                                    </select>
+                                                </div>
 
-                                            <div class="col-md-5">
-                                                N° Transacción
-                                            </div>
-                                            <div class="col-md-1" style="text-align: center"></div>
-                                            <div class="col-md-6">
-                                                <input id="paymentNumber" type="text" class="form-control form-control-sm border-input numericValues">
-                                            </div>
+                                                <div class="col-md-5">
+                                                    N° Transacción
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentNumber" type="text" class="form-control form-control-sm border-input numericValues">
+                                                </div>
 
-                                            <div class="col-md-5">
-                                                Saldo máximo a Cancelar
-                                            </div>
-                                            <div class="col-md-1" style="text-align: center"></div>
-                                            <div class="col-md-6">
-                                                <input id="paymentToPay" type="text" class="form-control form-control-sm border-input numericValues" disabled>
-                                            </div>
+                                                <div class="col-md-5">
+                                                    Saldo máximo a Cancelar
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentToPay" type="text" class="form-control form-control-sm border-input numericValues" disabled>
+                                                </div>
 
-                                            <div class="col-md-5">
-                                                Consumo
-                                            </div>
-                                            <div class="col-md-1" style="text-align: center"></div>
-                                            <div class="col-md-6">
-                                                <input id="paymentAmountMonth" type="text" class="form-control form-control-sm border-input numericValues">
-                                            </div>
-                                            <div class="col-md-5">
-                                                Convenio/Multa
-                                            </div>
-                                            <div class="col-md-1" style="text-align: center"></div>
-                                            <div class="col-md-6">
-                                                <input id="paymentAmountAgreement" type="text" class="form-control form-control-sm border-input numericValues">
-                                            </div>
+                                                <div class="col-md-5">
+                                                    Consumo
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentAmountMonth" type="text" class="form-control form-control-sm border-input numericValues">
+                                                </div>
+                                                <div class="col-md-5">
+                                                    Convenio/Multa
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentAmountAgreement" type="text" class="form-control form-control-sm border-input numericValues">
+                                                </div>
 
-                                            <div class="col-md-5">
-                                                Monto
-                                            </div>
-                                            <div class="col-md-1" style="text-align: center"></div>
-                                            <div class="col-md-6">
-                                                <input id="paymentAmount" type="text" class="form-control form-control-sm border-input numericValues">
-                                            </div>
+                                                <div class="col-md-5">
+                                                    Monto
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentAmount" type="text" class="form-control form-control-sm border-input numericValues">
+                                                </div>
 
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-3" style="text-align: center;">
-                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="paymentCancel"><i ="color:#3498db;" class="fas fa-arrow-left"></i> Atrás</button></td>
-                            </div>
-                            <div class="col-md-3" style="text-align: center;">
-                            </div>
-                            <div class="col-md-3" style="text-align: center;">
-                                <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="paymentSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
-                            </div>
+                            <div class="row">
+                                <div class="col-md-3" style="text-align: center;">
+                                    <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="paymentCancel"><i ="color:#3498db;" class="fas fa-arrow-left"></i> Atrás</button></td>
+                                </div>
+                                <div class="col-md-3" style="text-align: center;">
+                                </div>
+                                <div class="col-md-3" style="text-align: center;">
+                                    <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="paymentSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
+                                </div>
 
-                            <div class="col-md-3" style="text-align: center;">
-                                <button style="border-radius:5px;" class="btn btn-danger" id="paymentDelete"><i ="color:#3498db;" class="fas fa-times"></i> ELIMINAR</button></td>
-                            </div>
+                                <div class="col-md-3" style="text-align: center;">
+                                    <button style="border-radius:5px;" class="btn btn-danger" id="paymentDelete"><i ="color:#3498db;" class="fas fa-times"></i> ELIMINAR</button></td>
+                                </div>
 
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
         </div>
-    </div>
-
-    
-</div>
-    
-`
+    </div>`
 
     $('#modalPayment_body').html(body)
 
@@ -2525,6 +2528,7 @@ async function createPayment(memberID,paymentID) {
                 if(invoicesDebt[i].invoiceSubTotal + agreements != invoicesDebt[i].invoicePaid){
 
                     if(!invoicesDebt[i].typeInvoice){
+                        console.log('here1')
                         $("#tableBodyDebtInvoices").append(`<tr>
                             <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
                             <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
@@ -2545,6 +2549,7 @@ async function createPayment(memberID,paymentID) {
                             <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].invoicePaid)}</td>
                         </tr>`)
                     }else{
+                        console.log('here2')
 
                         let paid = (invoicesDebt[i].invoicePaid) ? invoicesDebt[i].invoicePaid : 0
 

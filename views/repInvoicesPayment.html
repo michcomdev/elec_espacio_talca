@@ -46,19 +46,32 @@
             <!--<option value="5">Dirección</option>-->
         </select>
     </div>
+    <div class="col-md-2">
+        <label style="font-size: 13px">Estado Pago</label>
+        <br/>
+        <select id="searchPaymentStatus" class="searchClass form-control form-select-sm form-select">
+            <option value="0">TODOS</option>
+            <option value="PAGADO">PAGADOS</option>
+            <option value="PARCIAL">PARCIALES</option>
+            <option value="IMPAGO">IMPAGOS</option>
+            <option value="PAGADO_PARCIAL">PAGADOS + PARCIAL</option>
+            <option value="IMPAGO_PARCIAL">IMPAGOS + PARCIAL</option>
+
+        </select>
+    </div>
     <div class="col-md-1">
         <button style="border-radius: 5px;" class="btn btn-sm btn-primary btn-block filterClass"
             id="searchMembers">
             <i class="fas fa-search"></i> Filtrar
         </button>
     </div>
-    <div class="col-md-3">
-        <button style="border-radius: 5px;" class="btn btn-success btn-block" onclick="ExportToExcel('xlsx')">
+    <div class="col-md-2">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-success btn-block" onclick="ExportToExcel('xlsx')">
             <i class="fas fa-file-excel"></i> Exportar a Excel
         </button>
     </div>
-    <div class="col-md-3">
-        <button style="border-radius: 5px;" class="btn btn-danger btn-block" onclick="exportToPDF()">
+    <div class="col-md-2">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-danger btn-block" onclick="exportToPDF()">
             <i class="fas fa-file-pdf"></i> Exportar a PDF
         </button>
     </div>
@@ -81,9 +94,10 @@
                         <th style="background-color: #3B6FC9">TOTAL</th>
                         <th style="background-color: #3B6FC9">MONTO PAGADO</th>
                         <th style="background-color: #3B6FC9">SALDO</th>
-                        <th style="background-color: #3B6FC9">ESTADO</th>
+                        <th style="background-color: #3B6FC9">ESTADO PAGO</th>
                         <th style="background-color: #3B6FC9">BOL/COMP</th>
                         <th style="background-color: #3B6FC9">PAGO</th>
+                        <th style="background-color: #3B6FC9">EST. BOLETA</th>
                         <th style="background-color: #3B6FC9">N° NC</th>
                         <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">NC</th>
                     </tr>
@@ -104,8 +118,9 @@
                         <th>CONVENIOS/MULTAS</th>
                         <th>MONTO PAGADO</th>
                         <th>SALDO</th>
-                        <th>ESTADO</th>
-                        <th>N° NC</th>
+                        <th>ESTADO PAGO</th>
+                        <!--<th>ESTADO BOLETA</th>
+                        <th>N° NC</th>-->
                     </tr>
                 </thead>
                 <tbody id="tableMembersExcelBody">
