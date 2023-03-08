@@ -134,6 +134,53 @@
                 <div class="container">
                     <div class="row">
                         <div class="col-md-3" style="text-align: center;">
+                        </div>
+                        <div class="col-md-3" style="text-align: center;">
+                            <button style="border-radius: 5px;" class="btn btn-sm btn-success btn-block" onclick="ExportToExcel('xlsx')">
+                                <i class="fas fa-file-excel"></i> Exportar a Excel
+                            </button>
+                        </div>
+                        <div class="col-md-3" style="text-align: center;">
+                            <button style="border-radius: 5px;" class="btn btn-sm btn-danger btn-block" onclick="exportToPDF()">
+                                <i class="fas fa-file-pdf"></i> Exportar a PDF
+                            </button>
+                        </div>
+                        <div class="col-md-3" style="text-align: center;">
+                            <table id="tableDetailExcel" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
+                                <thead>
+                                    <tr>
+                                        <th colspan="3">EFECTIVO</th>
+                                        <th></th>
+                                        <th colspan="3">CHEQUE</th>
+                                        <th></th>
+                                        <th colspan="3">REDCOMPRA</th>
+                                        <th></th>
+                                        <th colspan="3">TRANSFERENCIA</th>
+                                    </tr>
+                                    <tr>
+                                        <th>N° Socio</th>
+                                        <th>Boleta</th>
+                                        <th>Monto</th>
+                                        <th></th>
+                                        <th>N° Socio</th>
+                                        <th>Boleta</th>
+                                        <th>Monto</th>
+                                        <th></th>
+                                        <th>N° Socio</th>
+                                        <th>Boleta</th>
+                                        <th>Monto</th>
+                                        <th></th>
+                                        <th>N° Socio</th>
+                                        <th>Boleta</th>
+                                        <th>Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableDetailExcelBody">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="col-md-3" style="text-align: center;">
                             <label class="titleInvoice">Efectivo</label>
                         </div>
                         <div class="col-md-3" style="text-align: center;">
@@ -235,4 +282,5 @@
 
 {{#extend "js"}}
 <script src="/public/modules/monthSummary/monthSummary.js"></script>
+<script src="/public/js/xlsx.full.min.js"></script>
 {{/extend}}

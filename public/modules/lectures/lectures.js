@@ -2178,16 +2178,16 @@ function createModalPayment(member) {
     }
     let body = `
     <div class="row">
-        <div class="col-md-9">
+        <div class="col-md-8">
             <h6>Datos de socio</h6>
         </div>
-        <div class="col-md-1">
-            <select id="reportYear" class="searchClass form-control form-select-sm form-select" disabled>
+        <div class="col-md-2">
+            <select id="reportYear" class="searchClass form-control form-select-sm form-select">
                 ${selectYear}
             </select>
         </div>
         <div class="col-md-2">
-            <button style="border-radius: 5px;" class="btn btn-info" onclick="reportPayment('${member._id}')" title="En construcción" disabled><i class="fas fa-file"></i> Reporte Anual</button>
+            <button style="border-radius: 5px;" class="btn btn-info" onclick="reportPayment('${member._id}')" title="En construcción"><i class="fas fa-file"></i> Reporte Anual</button>
         </div>
         <div class="col-md-2">
             RUT
@@ -2886,4 +2886,36 @@ function calculatePaymentBalance(paymentAmount) {
         delimiter: "."
     })
 
+}
+
+async function reportPayment(id){
+    
+    var doc = new jsPDF('l','pt','letter')
+    doc.autoTable({ 
+        html: "#tableMembersExcel",
+        styles: {
+            fontSize: 6,
+            valign: 'middle',
+            halign: 'center'
+        },
+        columnStyles: {
+            //0: {cellWidth: 20},
+            //1: {cellWidth: 120, halign: 'left'},
+            6: { halign: 'left' },
+            7: { halign: 'right' },
+            8: { halign: 'right' },
+            9: { halign: 'right' },
+            10: { halign: 'right' }
+            
+        },
+        didParseCell: (hookData) => {
+            if (hookData.section === 'head') {
+                if (hookData.column.dataKey === '1') {
+                    hookData.cell.styles.halign = 'left';
+                }
+            }
+        }
+    })
+    doc.save("reporteSocio.pdf")
+    
 }

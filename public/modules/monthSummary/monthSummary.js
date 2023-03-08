@@ -291,7 +291,13 @@ function showInvoices(date){
     $("#tableInvoices2Body").html('')
     $("#tableInvoices3Body").html('')
     $("#tableInvoices4Body").html('')
+    $("#tableDetailExcelBody").html('')
     let total1 = 0, total2 = 0, total3 = 0, total4 = 0
+    let arrayExcel = new Array(4)
+    arrayExcel[0] = []
+    arrayExcel[1] = []
+    arrayExcel[2] = []
+    arrayExcel[3] = []
 
     for(let i=0; i<payments.length; i++){
         for(let j=0; j<payments[i].invoices.length; j++){
@@ -308,24 +314,28 @@ function showInvoices(date){
                 number = 'Saldo'
             }
 
-            let idBody = ''
+            let idBody = '', arrayIndex = 0
 
             switch (payments[i].paymentMethod) {
                 case 'EFECTIVO':
                     idBody = 'tableInvoices1Body'
                     total1 += payments[i].invoices[j].amount
+                    arrayIndex = 0
                     break
                 case 'CHEQUE':
                     idBody = 'tableInvoices2Body'
                     total2 += payments[i].invoices[j].amount
+                    arrayIndex = 1
                     break
                 case 'REDCOMPRA':
                     idBody = 'tableInvoices3Body'
                     total3 += payments[i].invoices[j].amount
+                    arrayIndex = 2
                     break
                 case 'TRANSFERENCIA':
                     idBody = 'tableInvoices4Body'
                     total4 += payments[i].invoices[j].amount
+                    arrayIndex = 3
                     break
                 default:
                     break
@@ -339,19 +349,124 @@ function showInvoices(date){
                 </tr>
             `)
 
+            arrayExcel[arrayIndex].push({
+                0: payments[i].members.number,
+                1: number,
+                2: payments[i].invoices[j].amount
+            })
+
             if(i+1==payments.length && j+1==payments[i].invoices.length){
                 $("#tableInvoices1Total").text('$ '+dot_separators(total1))
                 $("#tableInvoices2Total").text('$ '+dot_separators(total2))
                 $("#tableInvoices3Total").text('$ '+dot_separators(total3))
                 $("#tableInvoices4Total").text('$ '+dot_separators(total4))
+
+                //Composición Excel/PDF
+                let maxIndex = arrayExcel[0].length
+                if(maxIndex<arrayExcel[1].length) maxIndex = arrayExcel[1].length
+                if(maxIndex<arrayExcel[2].length) maxIndex = arrayExcel[2].length
+                if(maxIndex<arrayExcel[3].length) maxIndex = arrayExcel[3].length
+
+                for(let j=0; j<maxIndex; j++){
+
+                    let row1 = '<td></td><td></td><td></td><td></td>'
+                    let row2 = '<td></td><td></td><td></td><td></td>'
+                    let row3 = '<td></td><td></td><td></td><td></td>'
+                    let row4 = '<td></td><td></td><td></td>'
+
+                    if(arrayExcel[0][j]){
+                        row1 = `<td style="text-align: center">${arrayExcel[0][j][0]}</td>
+                                <td style="text-align: center">${arrayExcel[0][j][1]}</td>
+                                <td style="text-align: right">${arrayExcel[0][j][2]}</td>
+                                <td></td>`
+                    }
+                    if(arrayExcel[1][j]){
+                        row2 = `<td style="text-align: center">${arrayExcel[1][j][0]}</td>
+                                <td style="text-align: center">${arrayExcel[1][j][1]}</td>
+                                <td style="text-align: right">${arrayExcel[1][j][2]}</td>
+                                <td></td>`
+                    }
+                    if(arrayExcel[2][j]){
+                        row3 = `<td style="text-align: center">${arrayExcel[2][j][0]}</td>
+                                <td style="text-align: center">${arrayExcel[2][j][1]}</td>
+                                <td style="text-align: right">${arrayExcel[2][j][2]}</td>
+                                <td></td>`
+                    }
+                    if(arrayExcel[3][j]){
+                        row4 = `<td style="text-align: center">${arrayExcel[3][j][0]}</td>
+                                <td style="text-align: center">${arrayExcel[3][j][1]}</td>
+                                <td style="text-align: right">${arrayExcel[3][j][2]}</td>`
+                    }
+
+                    $("#tableDetailExcelBody").append(`
+                        <tr>
+                            ${row1}
+                            ${row2}
+                            ${row3}
+                            ${row4}
+                        </tr>
+                    `)
+
+                    if(j+1==maxIndex){
+                        $("#tableDetailExcelBody").append(`
+                            <tr>
+                                <td></td>
+                                <td style="text-align: right">TOTAL</td>
+                                <td style="text-align: right">${total1}</td>
+                                <td></td>
+                                <td></td>
+                                <td style="text-align: right">TOTAL</td>
+                                <td style="text-align: right">${total2}</td>
+                                <td></td>
+                                <td></td>
+                                <td style="text-align: right">TOTAL</td>
+                                <td style="text-align: right">${total3}</td>
+                                <td></td>
+                                <td></td>
+                                <td style="text-align: right">TOTAL</td>
+                                <td style="text-align: right">${total4}</td>
+                            </tr>
+                        `)
+                    }
+                }
+
             }
             
         }
 
     }
-    
 
     $("#modalInvoices").modal('show')
-    
 
+}
+
+function ExportToExcel(type, fn, dl) {
+    var elt = document.getElementById('tableDetailExcel')
+    var wb = XLSX.utils.table_to_book(elt, { sheet: "Hoja1" })
+    return dl ?
+      XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }):
+      XLSX.writeFile(wb, fn || ('Reporte.' + (type || 'xlsx')))
+}
+
+function exportToPDF(){
+    var doc = new jsPDF('l','pt','letter')
+    doc.autoTable({ 
+        html: "#tableDetailExcel",
+        styles: {
+            fontSize: 6,
+            valign: 'middle',
+            halign: 'center'
+        },
+        columnStyles: {
+            2: { halign: 'right' },
+        },
+        didParseCell: (hookData) => {
+            if (hookData.section === 'head') {
+                if (hookData.column.dataKey === '1') {
+                    hookData.cell.styles.halign = 'left';
+                }
+            }
+        }
+    })
+    doc.save("Detalle reporte.pdf")
 }
