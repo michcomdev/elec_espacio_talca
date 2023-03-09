@@ -277,9 +277,10 @@ async function getLectures() {
                     el.select = ''
                     //el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>`
                     if(el.members.sendEmail || el.members.sendWhatsapp){
-                        el.selectPrint = ''
+                        el.selectPrint = `<input style="display: none" type="checkbox" class="chkPrintClassFull" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>`
                     }else{
-                        el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>`
+                        el.selectPrint = `<input type="checkbox" class="chkPrintClass" id="chkPrint${el.members._id}" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>
+                        <input style="display: none" type="checkbox" class="chkPrintClassFull" data-member-id="${el.members._id}" data-invoice-id="${el.invoice._id}" data-member-type="${el.members.type}"/>`
                     }
 
                     el.pdf = `<button class="btn btn-sm btn-danger" onclick="printInvoicePortrait('pdf','${el.members.type}','${el.members._id}','${el.invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>N° ${dot_separators(el.invoice.number)}</button>`
@@ -1873,7 +1874,11 @@ async function printCancel() {
     internals.members.table.column(1).visible(false)
 }
 
-async function printMultiple() {
+async function printMultiple(chk) {
+    let full = ''
+    if(chk){
+        full = 'Full'
+    }
 
     if(!$.fn.DataTable.isDataTable('#tableMembers')) {
         toastr.warning('Debe filtrar un sector')
@@ -1885,7 +1890,7 @@ async function printMultiple() {
     let array = []
 
     let count = 0
-    $(".chkPrintClass").each(function() {
+    $(".chkPrintClass"+full).each(function() {
         //if($(this).prop('checked')){
             count++
         //}
@@ -1897,7 +1902,7 @@ async function printMultiple() {
     if(count>0){
         loadingHandler('start')
         let countIndex = 0
-        $(".chkPrintClass").each(async function() {
+        $(".chkPrintClass"+full).each(async function() {
             //if($(this).prop('checked')){
                 let object = {}
                 let memberData = await axios.post('/api/memberSingle', {id: $(this).attr('data-member-id') })

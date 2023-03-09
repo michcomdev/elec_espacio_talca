@@ -31,10 +31,8 @@ $(document).ready(async function () {
     getParameters()
 
     chargeMembersTable()
-    //printInvoice('pdf','personal','6321dfae8adffa8c6c36142f','63d7c0a92e1f62467010998b',false,'letter')
-    //printInvoice('pdf','personal','6321dfae8adffa8c6c36142f','63d7c0a92e1f62467010998b')
-    //printInvoicePortrait('pdf','personal','6321dfae8adffa8c6c36142f','63d7c0a92e1f62467010998b')
-    //printVoucher('631b595b386018341861418d','63b876e6a478533d6bfb17fd')
+    
+    //reportPayment('62631b789666da52dcc90718')
 })
 
 async function getParameters() {
@@ -2890,8 +2888,124 @@ function calculatePaymentBalance(paymentAmount) {
 
 async function reportPayment(id){
     
-    var doc = new jsPDF('l','pt','letter')
-    doc.autoTable({ 
+    var doc = new jsPDF('p','pt','letter')
+
+
+    let memberData = await axios.post('/api/memberSingle', {id: id})
+    let member = memberData.data
+    
+    let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  id})
+    let lectures = lecturesData.data
+
+
+    let memberName = ''
+    if (member.type == 'personal') {
+        memberName = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
+    } else {
+        memberName = member.enterprise.name
+    }
+    console.log(doc.internal.pageSize.getWidth())
+
+    let pdfX = 20
+    let pdfY = 25
+    doc.setFontType('bold')
+    doc.text(`REPORTE SOCIO`, doc.internal.pageSize.getWidth() / 2, pdfY, 'center')
+
+    pdfY += 24
+    doc.setFontSize(10)
+    doc.text('Socio N° ' + member.number, pdfX, pdfY)
+    doc.setFontType('normal')
+    doc.text('R.U.T.    ' + member.rut, pdfX + 100, pdfY)
+    doc.text('Sector', pdfX + 300, pdfY)
+    doc.text('Dirección', pdfX + 300, pdfY + 12)
+
+    doc.setFontType('bold')
+    doc.text(memberName, pdfX, pdfY + 12)
+    doc.setFontType('normal')
+    doc.text(member.address.sector.name, pdfX + 350, pdfY)
+    doc.text(member.address.address, pdfX + 350, pdfY + 12)
+
+    pdfY += 30
+    
+    doc.setFontType('bold')
+    doc.setFontSize(8)
+
+    doc.text('Aviso/', pdfX + 70, pdfY, 'center')
+    doc.text('M3', pdfX + 100, pdfY, 'center')
+    doc.text('Cargo', pdfX + 130, pdfY, 'center')
+    doc.text('Cons.', pdfX + 160, pdfY, 'center')
+    doc.text('Sobre', pdfX + 190, pdfY, 'center')
+    //
+    doc.text('Mult.', pdfX + 250, pdfY, 'center')
+    //
+    doc.text('Conv/', pdfX + 310, pdfY, 'center')
+
+
+    doc.text('Saldo', pdfX + 340, pdfY, 'center')
+    doc.text('Total a', pdfX + 380, pdfY, 'center')
+
+
+    pdfY += 12
+    doc.text('Año', pdfX, pdfY, 'center')
+    doc.text('Mes', pdfX + 14, pdfY)
+    doc.text('Boleta', pdfX + 70, pdfY, 'center')
+    doc.text('Cons', pdfX + 100, pdfY, 'center')
+    
+    doc.text('Fijo', pdfX + 130, pdfY, 'center')
+    doc.text('Mes', pdfX + 160, pdfY, 'center')
+    doc.text('Cons.', pdfX + 190, pdfY, 'center')
+    doc.text('Alca.', pdfX + 220, pdfY, 'center')
+    doc.text('Inter.', pdfX + 250, pdfY, 'center')
+    doc.text('Subs.', pdfX + 280, pdfY, 'center')
+    doc.text('Mult.', pdfX + 310, pdfY, 'center')
+
+    doc.text('Anterior', pdfX + 340, pdfY, 'center')
+    doc.text('Pagar', pdfX + 380, pdfY, 'center')
+
+
+    doc.setFontType('normal')
+    for(let i=lectures.length-1; i>=0; i--){
+        if(lectures[i].invoice){
+            pdfY += 12
+            doc.text(lectures[i].year.toString(), pdfX, pdfY, 'center')
+            doc.text(getMonthString(lectures[i].month), pdfX + 14, pdfY)
+            doc.text(((lectures[i].invoice.number===undefined || lectures[i].invoice.number==0) ? '-' : lectures[i].invoice.number.toString()), pdfX + 70, pdfY, 'center')
+            doc.text(lectures[i].invoice.lectureResult.toString(), pdfX + 100, pdfY, 'center')
+
+            //Cargo Fijo
+            //Consumo Mes
+            //Alcantarillado
+
+            //Multa Interés
+            let totalFine = 0
+            if(lectures[i].invoice.debtFine) totalFine += parseInt(lectures[i].invoice.debtFine)
+            if(lectures[i].invoice.fine) totalFine += parseInt(lectures[i].invoice.fine)
+            if(totalFine>0) doc.text(totalFine.toString(), pdfX + 250, pdfY, 'right')
+
+            //Convenio/Multa
+
+
+            //Convenio/Multa
+            if(lectures[i].invoice.agreements){
+                let totalAgreement = 0
+                for(let i=0; i<lectures[i].invoice.agreements.length; i++){
+                    totalAgreement += parseInt(lectures[i].invoice.agreements[i].amount)
+                    if(i+1==lectures[i].invoice.agreements.length && totalAgreement > 0){
+                        doc.text(totalAgreement, pdfX + 310, pdfY, 'right')
+                    }
+                }
+            }
+            
+            
+        
+
+
+
+        }
+    }
+
+
+    /*doc.autoTable({ 
         html: "#tableMembersExcel",
         styles: {
             fontSize: 6,
@@ -2915,7 +3029,7 @@ async function reportPayment(id){
                 }
             }
         }
-    })
-    doc.save("reporteSocio.pdf")
-    
+    })*/
+    //doc.save("reporteSocio.pdf")
+    window.open(doc.output('bloburl'), '_blank')
 }
