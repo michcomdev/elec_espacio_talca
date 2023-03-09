@@ -32,7 +32,7 @@ $(document).ready(async function () {
 
     chargeMembersTable()
     
-    //reportPayment('62631b789666da52dcc90718')
+    reportPayment('62631b789666da52dcc90718')
 })
 
 async function getParameters() {

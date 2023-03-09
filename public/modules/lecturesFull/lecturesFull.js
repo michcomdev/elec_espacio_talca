@@ -1918,7 +1918,11 @@ async function printMultiple(chk) {
                 countIndex++
                 if(countIndex==count){
                     loadingHandler('stop')
-                    array.sort((a,b) => (a.member.orderIndex > b.member.orderIndex) ? 1 : ((b.member.orderIndex > a.member.orderIndex) ? -1 : 0))
+                    if(!chk){
+                        array.sort((a,b) => (a.member.orderIndex > b.member.orderIndex) ? 1 : ((b.member.orderIndex > a.member.orderIndex) ? -1 : 0))
+                    }else{
+                        array.sort((a,b) => (a.invoice.number > b.invoice.number) ? 1 : ((b.invoice.number > a.invoice.number) ? -1 : 0))
+                    }
                     printFinal(array)
                 }
             //}
