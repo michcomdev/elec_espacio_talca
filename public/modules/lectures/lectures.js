@@ -246,8 +246,8 @@ async function loadLectures(member) {
             
             if(lectures[i].invoice.number || lectures[i].invoice.number==0){
                 //btnPrint = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-print" style="font-size: 14px;"></i> A5</button>`
-                btnPrint2 = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',false,'letter')"><i class="fas fa-print" style="font-size: 14px;"></i> CARTA</button>`
-                btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>${lectures[i].invoice.number}</button>`
+                //btnPrint2 = `<button class="btn btn-sm btn-primary btnLecture" onclick="printInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',false,'letter')"><i class="fas fa-print" style="font-size: 14px;"></i> CARTA</button>`
+                btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printSelection('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>${lectures[i].invoice.number}</button>`
                 //btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
                 btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
                 btnAnnulment = `<button class="btn btn-sm btn-info btnLecture" onclick="annulmentInvoice('${member.type}','${member._id}','${lectures[i].invoice._id}')">Anular Boleta</button>`
@@ -305,10 +305,6 @@ async function loadLectures(member) {
                     ${btnGenerate}
                 </td>
                 <td style="text-align: center;">
-                    ${btnPrint}
-                    ${btnPrint2}
-                </td>
-                <td style="text-align: center;">
                     ${btnEmail}
                 </td>
                 <td style="text-align: center;">
@@ -318,6 +314,10 @@ async function loadLectures(member) {
         `)
 
         /*
+        <td style="text-align: center;">
+                    ${btnPrint}
+                    ${btnPrint2}
+                </td>
         <td style="text-align: center;">
             ${btnSII}
         </td>
@@ -467,8 +467,8 @@ function createModalBody(member) {
                     <th style="text-align: center; background-color: #3B6FC9;">Valor Total</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Crear/Editar</th>
                     <th style="text-align: center; background-color: #3B6FC9;">Vista Previa</th>
-                    <th style="text-align: center; background-color: #3B6FC9;">PDF Boleta/Fact</th>
-                    <th style="text-align: center; background-color: #3B6FC9;">Imprimir</th>
+                    <th style="text-align: center; background-color: #3B6FC9;">PDF Boleta</th>
+                    <!--<th style="text-align: center; background-color: #3B6FC9;">Imprimir</th>-->
                     <!--<th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>-->
                     <th style="text-align: center; background-color: #3B6FC9;">Enviar</th>
                     <!--<th style="text-align: center; background-color: #3B6FC9;">Anular</th>-->

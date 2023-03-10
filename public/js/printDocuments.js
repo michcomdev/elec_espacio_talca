@@ -1,3 +1,55 @@
+async function printSelection(docType, type, memberID, invoiceID){
+
+
+
+    if(!$('#modalPrint').length){
+        
+        $('body').append(`
+            <div class="modal fade" id="modalPrint" role="dialog" aria-labelledby="modal"
+                data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h6 class="modal-title" id="modal_title"></h6>
+                            <button type="button" class="btn-close" data-dismiss="modal"
+                                aria-label="Close"> 
+                                <span aria-hidden="true"></span>
+                            </button>
+                        </div>
+                        <div class="modal-body" id="modal_body">
+                            <div class="row" style="text-align: center;">
+                                <div class="col-md-12">
+                                    <h6>Seleccione formato de impresión</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    
+                                    <button id="printVertical" style="border-radius: 5px;" class="btn btn-lg btn-primary">
+                                        <i class="fas fa-file-invoice fa-3x"></i>
+                                        <br/>
+                                        Vertical
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button id="printHorizontal" style="border-radius: 5px;" class="btn btn-lg btn-primary">
+                                        <i class="fas fa-file-invoice fa-3x fa-rotate-270"></i>
+                                        <br/>
+                                        Horizontal
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`)
+    }
+
+    $("#printVertical").attr('onclick',`printInvoicePortrait('${docType}','${type}','${memberID}','${invoiceID}')`)
+    $("#printHorizontal").attr('onclick',`printInvoice('${docType}','${type}','${memberID}','${invoiceID}')`)
+
+    $("#modalPrint").modal('show')
+}
+
+
 async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     loadingHandler('start')
     
@@ -131,7 +183,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     doc.rect(pdfX, pdfY - 262, 13, 265, 'F')
 
     pdfX += 10
-    doc.setFontSize(10)
+    doc.setFontSize(12)
     doc.setFontType('bold')
     doc.setTextColor(255, 255, 255)
     doc.text('Consumo en m3 (1m3 = 1.000 lts de agua)', pdfX, pdfY, 'left', 90)
@@ -579,6 +631,36 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     }
 
 
+    if(invoice.annulment){
+        doc.setTextColor(157, 0, 0)
+        doc.setDrawColor(157, 0, 0)
+        doc.setLineWidth(2)
+        //setLineDash([Largo Línea, largo espacio, largo línea, largo espacio, etc..], startPoint)
+        doc.setLineDash([10, 3], 0)
+        doc.line(550, 365, 550, 545)//Línea Superior
+        doc.line(605, 365, 605, 545)//Línea Inferior
+        doc.line(550, 545, 605, 545)//Línea Izquierda
+        doc.line(550, 365, 605, 365)//Línea Derecha
+
+
+        doc.setFontSize(11)
+        doc.setFontType('bold')
+
+        text = 'DOCUMENTO ANULADO'
+        doc.text(text, 565, offsetY('right', 387, null, text, doc), 'left', 90)
+
+        doc.setTextColor(0, 0, 0)
+        text = 'NOTA DE CRÉDITO N° ' + invoice.annulment.number
+        doc.text(text, 580, offsetY('right', 387, null, text, doc), 'left', 90)
+        text = 'CON FECHA ' + moment(invoice.annulment.date).utc().format('DD/MM/YYYY')
+        doc.text(text, 595, offsetY('right', 387, null, text, doc), 'left', 90)
+
+        //doc.text('DOCUMENTO ANULADO', 160, pdfY + 130, 'center')
+        //doc.text('NOTA DE CRÉDITO N° ' + invoice.annulment.number, 160, pdfY + 145, 'center')
+        //doc.text('CON FECHA ' + moment(invoice.annulment.date).utc().format('DD/MM/YYYY'), 160, pdfY + 160, 'center')
+    }
+
+
     pdfX = 635
     pdfY = 582
     doc.setFontSize(10)
@@ -681,6 +763,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     }
 
     loadingHandler('stop')
+
+    $("#modalPrint").modal('hide')
 }
 
 
@@ -1208,9 +1292,31 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
         pdfX -= 18
     }
 
+    if(invoice.annulment){
+        doc.setTextColor(157, 0, 0)
+        doc.setDrawColor(157, 0, 0)
+        doc.setLineWidth(2)
+        //setLineDash([Largo Línea, largo espacio, largo línea, largo espacio, etc..], startPoint)
+        doc.setLineDash([10, 3], 0)
+        doc.line(69, pdfY + 115, 251, pdfY + 115)//Línea Superior
+        doc.line(69, pdfY + 170, 251, pdfY + 170)//Línea Inferior
+        doc.line(70, pdfY + 115, 70, pdfY + 170)//Línea Izquierda
+        doc.line(250, pdfY + 115, 250, pdfY + 170)//Línea Derecha
+
+
+        doc.setFontSize(11)
+        doc.setFontType('bold')
+        doc.text('DOCUMENTO ANULADO', 160, pdfY + 130, 'center')
+        doc.setTextColor(0, 0, 0)
+        doc.text('NOTA DE CRÉDITO N° ' + invoice.annulment.number, 160, pdfY + 145, 'center')
+        doc.text('CON FECHA ' + moment(invoice.annulment.date).utc().format('DD/MM/YYYY'), 160, pdfY + 160, 'center')
+    }
+
+
     pdfX = 30
     pdfY += 200
     doc.setFontSize(10)
+    doc.setTextColor(0, 0, 0)
     doc.setFontType('bold')
     //doc.text('CORTE EN TRÁMITE A PARTIR DEL DÍA: ', pdfX, pdfY)
     if(invoice.text1){
@@ -1310,6 +1416,7 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     }
 
     loadingHandler('stop')
+    $("#modalPrint").modal('hide')
 }
 
 async function printAnnulment(docType,type,memberID,invoiceID) {
@@ -1855,7 +1962,7 @@ async function printFinal(array,letter){
         doc.rect(pdfX, pdfY - 262, 13, 265, 'F')
 
         pdfX += 10
-        doc.setFontSize(10)
+        doc.setFontSize(12)
         doc.setFontType('bold')
         doc.setTextColor(255, 255, 255)
         doc.text('Consumo en m3 (1m3 = 1.000 lts de agua)', pdfX, pdfY, 'left', 90)
@@ -2280,6 +2387,34 @@ async function printFinal(array,letter){
             doc.text(text, pdfX + 108, offsetY('center', (pdfY + 14), textMaxWidth, text, doc), 'left', 90)
             pdfY += 18
         }
+
+        if(array[k].invoice.annulment){
+            doc.setTextColor(157, 0, 0)
+            doc.setDrawColor(157, 0, 0)
+            doc.setLineWidth(2)
+            //setLineDash([Largo Línea, largo espacio, largo línea, largo espacio, etc..], startPoint)
+            doc.setLineDash([10, 3], 0)
+            doc.line(550, 365, 550, 545)//Línea Superior
+            doc.line(605, 365, 605, 545)//Línea Inferior
+            doc.line(550, 545, 605, 545)//Línea Izquierda
+            doc.line(550, 365, 605, 365)//Línea Derecha
+    
+    
+            doc.setFontSize(11)
+            doc.setFontType('bold')
+    
+            text = 'DOCUMENTO ANULADO'
+            doc.text(text, 565, offsetY('right', 387, null, text, doc), 'left', 90)
+    
+            doc.setTextColor(0, 0, 0)
+            text = 'NOTA DE CRÉDITO N° ' + array[k].invoice.annulment.number
+            doc.text(text, 580, offsetY('right', 387, null, text, doc), 'left', 90)
+            text = 'CON FECHA ' + moment(array[k].invoice.annulment.date).utc().format('DD/MM/YYYY')
+            doc.text(text, 595, offsetY('right', 387, null, text, doc), 'left', 90)
+    
+        }
+
+
 
         pdfX = 635
         pdfY = 582

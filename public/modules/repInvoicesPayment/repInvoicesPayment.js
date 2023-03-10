@@ -33,7 +33,8 @@ $(document).ready(async function () {
         //internals.endDate = end.format('YYYY-MM-DD')
     })
     getParameters()
-
+    //printInvoice('pdf','personal','631b9a63638604718876683a','63b6ce1c8b9c515860d2229a')
+    //printInvoicePortrait('pdf','personal','631b9a63638604718876683a','63b6ce1c8b9c515860d2229a')
     //chargeMembersTable()
     //getAllInvoices()
 })
@@ -193,7 +194,7 @@ async function getAllInvoices(){
             }
 
             el.status = status
-            el.invoicePDF = `<button class="btn btn-sm btn-danger" onclick="printInvoicePortrait('pdf','${el.members.type}','${el.members._id}','${el._id}')"><i class="far fa-file-pdf" style="font-size: 10px;"></i></button>`
+            el.invoicePDF = `<button class="btn btn-sm btn-danger" onclick="printSelection('pdf','${el.members.type}','${el.members._id}','${el._id}')"><i class="far fa-file-pdf" style="font-size: 10px;"></i></button>`
             el.paymentPDF = ''
             el.numberAnnulment = creditNote
             el.annulmentPDF = ''
@@ -1019,37 +1020,6 @@ function exportToPDF(){
     doc.save("table.pdf")
 }
 
-async function showInvoices(type,memberID,lecture){
-    let invoices = await axios.post('/api/invoicesByLecture', { lecture: lecture })
-    $("#tableInvoicesBody").html('')
-
-    for(let i=0; i<invoices.data.length; i++){
-        let row = `
-                <tr>
-                    <td>${invoices.data[i].number}</td>
-                    <td>${moment(invoices.data[i].date).utc().format('DD/MM/YYYY')}</td>
-                    <td><button class="btn btn-sm btn-danger btnLecture" onclick="printInvoicePortrait('pdf','${type}','${memberID}','${invoices.data[i]._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>`
-
-        if(invoices.data[i].annulment){
-            row += `<td>${invoices.data[i].annulment.number}</td>
-                    <td>${moment(invoices.data[i].annulment.date).utc().format('DD/MM/YYYY')}</td>
-                    <td><button class="btn btn-sm btn-danger btnLecture" onclick="showSIIPDF('${invoices.data[i].annulment.token}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i></button></td>
-                </tr>`
-        }else{
-            row += `<td></td>
-                    <td></td>
-                    <td></td>
-                </tr>`
-        }
-
-        $("#tableInvoicesBody").append(row)
-    }
-
-    $('#modalInvoices').modal('show')
-
-}
-
-
 async function printMultiple(state) {
     
     if(!$.fn.DataTable.isDataTable('#tableMembers')) {
@@ -1084,3 +1054,4 @@ async function printMultiple(state) {
     })
 
 }
+
