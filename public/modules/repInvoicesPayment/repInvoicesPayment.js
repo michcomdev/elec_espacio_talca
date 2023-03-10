@@ -40,7 +40,7 @@ $(document).ready(async function () {
 
 async function getParameters() {
 
-    let firstYear = 2021
+    let firstYear = 2022
     for (let i = firstYear; i <= moment().format('YYYY'); i++) {
         $("#searchYear").append(`<option value="${i}">${i}</option>`)
     }
@@ -167,8 +167,8 @@ async function getAllInvoices(){
                 paymentAmount = el.payment.amount
                 balance -= el.payment.amount 
             }
-            
-            el.year = el.lectures.year
+            el.year = `${el.lectures.year}<div data-member-id="${el.members._id}" data-invoice-id="${el._id}" data-member-type="${el.members.type}"></div>`
+
             el.month = el.lectures.month
             el.type = (el.type) ? 'BOLETA' : 'COMPROBANTE'
             el.numberInvoice = (el.number) ? el.number : 0
@@ -234,6 +234,8 @@ async function getAllInvoices(){
                         <td>${paymentAmount}</td>
                         <td>${balance}</td>
                         <td>${el.paymentStatus}</td>
+                        <td>${status}</td>
+                        <td>${creditNote}</td>
                     </tr>`)
 
                     /*<td>${status}</td>
@@ -242,6 +244,8 @@ async function getAllInvoices(){
                 return el
             }
         })
+
+        console.log(formatData)
 
         internals.members.table.rows.add(formatData).draw()
 
@@ -1042,5 +1046,41 @@ async function showInvoices(type,memberID,lecture){
     }
 
     $('#modalInvoices').modal('show')
+
+}
+
+
+async function printMultiple(state) {
+    
+    if(!$.fn.DataTable.isDataTable('#tableMembers')) {
+        toastr.warning('Primero debe filtrar')
+        return
+    }
+    loadingHandler('start')
+    let index = 0
+    let array = []
+    $("#tableMembers > tbody > tr").each(async function() {
+      
+        let object = {}
+        let memberData = await axios.post('/api/memberSingle', {id: $($($(this).children()[0]).children()[0]).attr('data-member-id') })
+        object.member = memberData.data
+
+        let invoiceData = await axios.post('/api/invoiceSingle', { id: $($($(this).children()[0]).children()[0]).attr('data-invoice-id') })
+        object.invoice = invoiceData.data
+
+        let lecturesData = await axios.post('/api/lecturesSingleMember', { member: $($($(this).children()[0]).children()[0]).attr('data-member-id') })
+        object.lectures = lecturesData.data
+        index++
+
+        if((state=='valid' && !object.invoice.annulment) || (state=='annulled' && object.invoice.annulment) ){
+            array.push(object)
+        }
+
+        if(index+1==$("#tableMembers > tbody > tr").length){
+            loadingHandler('stop')
+            array.sort((a,b) => (a.invoice.number > b.invoice.number) ? 1 : ((b.invoice.number > a.invoice.number) ? -1 : 0))
+            printFinal(array)
+        }
+    })
 
 }

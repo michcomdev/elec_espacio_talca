@@ -69,10 +69,17 @@
         <button style="border-radius: 5px;" class="btn btn-sm btn-success btn-block" onclick="ExportToExcel('xlsx')">
             <i class="fas fa-file-excel"></i> Exportar a Excel
         </button>
-    </div>
-    <div class="col-md-2">
         <button style="border-radius: 5px;" class="btn btn-sm btn-danger btn-block" onclick="exportToPDF()">
             <i class="fas fa-file-pdf"></i> Exportar a PDF
+        </button>
+    </div>
+
+    <div class="col-md-2">
+        <button style="border-radius: 5px;" class="btn btn-sm btn-warning btn-block" onclick="printMultiple('valid')">
+            <i class="fas fa-print"></i> Imprimir Boletas Válidas
+        </button>
+        <button style="border-radius: 5px;" class="btn btn-sm btn-danger btn-block" onclick="printMultiple('annulled')">
+            <i class="fas fa-print"></i> Imprimir Boletas Anuladas
         </button>
     </div>
    
@@ -119,8 +126,8 @@
                         <th>MONTO PAGADO</th>
                         <th>SALDO</th>
                         <th>ESTADO PAGO</th>
-                        <!--<th>ESTADO BOLETA</th>
-                        <th>N° NC</th>-->
+                        <th>ESTADO BOLETA</th>
+                        <th>N° NC</th>
                     </tr>
                 </thead>
                 <tbody id="tableMembersExcelBody">
@@ -225,4 +232,5 @@
     <script src="/public/modules/repInvoicesPayment/repInvoicesPayment.js"></script>
     <script src="/public/js/printDocuments.js"></script>
     <script src="/public/js/xlsx.full.min.js"></script>
+    <script src="/public/js/printDocuments.js"></script>
     {{/extend}}
