@@ -558,7 +558,79 @@ export default [
                     //console.log(invoices)
 
                     if(payload.paymentID){
+                        let payments = await Payments.findById(payload.paymentID).lean()
+                        for(let i=0; i<payments.invoices.length; i++){
+                            if(payments.invoices[i].invoices){
+                                let index = invoices.map(x => x._id.toString()).indexOf(payments.invoices[i].invoices.toString())
+                                invoices.splice(index,1)
+                            }
+                        }
+                    }
 
+                    return invoices
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    member: Joi.string().optional().allow(''),
+                    paymentID: Joi.string().optional().allow('')
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/invoicesDebtNew',
+        options: {
+            description: 'get unpaid invoices',
+            notes: 'get unpaid invoices',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+                    let query = {
+                        members: payload.member,
+                        $where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
+                        
+                    }
+
+                    let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
+
+                    let queryPayment = {
+                        members: payload.member
+                    }
+
+                    let payments = await Payments.find(queryPayment).lean()
+                    for(let i=0; i<payments.length; i++){ // Se recorren las boletas pagadas y se asigna su monto cancelado a las boletas generales
+                        for(let j=0; j<payments[i].invoices.length; j++){
+                            //invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).invoiceDebt += payments[i].invoices[j].amount
+                            if(payments[i].invoices[j].amountMonth){
+                                if(invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidConsumption){
+                                    invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidConsumption += payments[i].invoices[j].amountMonth
+                                }else{
+                                    invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidConsumption = payments[i].invoices[j].amountMonth
+                                }
+                            }
+                            if(payments[i].invoices[j].amountAgreement){
+                                if(invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidAgreement){
+                                    invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidAgreement += payments[i].invoices[j].amountAgreement
+                                }else{
+                                    invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidAgreement = payments[i].invoices[j].amountAgreement
+                                }
+                            }
+                        }
+                    }
+
+                    //console.log(invoices)
+
+                    if(payload.paymentID){
                         let payments = await Payments.findById(payload.paymentID).lean()
                         for(let i=0; i<payments.invoices.length; i++){
                             if(payments.invoices[i].invoices){

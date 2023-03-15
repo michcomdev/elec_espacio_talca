@@ -95,14 +95,53 @@ export default [
                 try {
                     let payload = request.payload   
 
+                    let query = {
+                        members: payload.member,
+                        $where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
+                    }
+                    let invoices = await Invoices.find(query).lean().populate()
+                    let queryPayment = {
+                        members: payload.member
+                    }
+
+                    let payments = await Payments.find(queryPayment).lean()
+                    for(let i=0; i<payments.length; i++){ // Se recorren las boletas pagadas y se asigna su monto cancelado a las boletas generales
+                        for(let j=0; j<payments[i].invoices.length; j++){
+                            //invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).invoiceDebt += payments[i].invoices[j].amount
+                            if(payments[i].invoices[j].amountMonth){
+                                if(invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidConsumption){
+                                    invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidConsumption += payments[i].invoices[j].amountMonth
+                                }else{
+                                    invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidConsumption = payments[i].invoices[j].amountMonth
+                                }
+                            }
+                            if(payments[i].invoices[j].amountAgreement){
+                                if(invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidAgreement){
+                                    invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidAgreement += payments[i].invoices[j].amountAgreement
+                                }else{
+                                    invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidAgreement = payments[i].invoices[j].amountAgreement
+                                }
+                            }
+                        }
+                    }
+
+
                     let payment = await Payments.findById(payload.id).lean().populate(['members','invoices.invoices'])
-                    for(let i=0; i<payment.invoices.length; i++){ // Se recorren las boletas pagadas y se asigna su monto cancelado a las boletas generales
-                        
+                    for(let i=0; i<payment.invoices.length; i++){
                         if(payment.invoices[i].invoices){
                             let lecture = await Lectures.findById(payment.invoices[i].invoices.lectures).lean()
                             payment.invoices[i].invoices.lectureData = lecture
                         }
+                        payment.invoices[i].invoices.paidConsumption = 0
+                        payment.invoices[i].invoices.paidAgreement = 0
+                        if(invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidConsumption){
+                            payment.invoices[i].invoices.paidConsumption += invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidConsumption
+                        }
+                        if(invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidAgreement){
+                            payment.invoices[i].invoices.paidAgreement += invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidAgreement
+                        }
                     }
+
 /*
                     let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
 
@@ -125,7 +164,8 @@ export default [
             },
             validate: {
                 payload: Joi.object().keys({
-                    id: Joi.string().optional().allow('')
+                    id: Joi.string().optional().allow(''),
+                    member: Joi.string().optional().allow('')
                 })
             }
         }

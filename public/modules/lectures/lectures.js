@@ -31,7 +31,7 @@ $(document).ready(async function () {
     getParameters()
 
     chargeMembersTable()
-    
+    //325
     //reportPayment('62631b789666da52dcc90718')
 })
 
@@ -2112,7 +2112,7 @@ $('#updatePayment').on('click', async function () {
     }
 
     $('#modalPayment_title').html(`Pagos Socio N° ${member.number} - ${member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2}`)
-    createModalPayment(member)
+    createModalPaymentNew(member)
 
     $('#modalPayment_footer').html(`
         <button style="border-radius: 5px;" class="btn btn-dark" data-dismiss="modal">
@@ -2154,10 +2154,10 @@ async function loadPayments(member) {
                     ${dot_separators(payments[i].amount)}
                 </td>
                 <td style="text-align: center;">
-                    <button class="btn btn-sm btn-warning btnLecture" onclick="createPayment('${member._id}','${payments[i]._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
+                    <button class="btn btn-sm btn-warning btnPayment" onclick="createPaymentNew('${member._id}','${payments[i]._id}')"><i class="far fa-edit" style="font-size: 14px;"></i></button>
                 </td>
                 <td style="text-align: center;">
-                    <button class="btn btn-sm btn-info btnLecture" onclick="printVoucher('${member._id}','${payments[i]._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>
+                    <button class="btn btn-sm btn-info btnPayment" onclick="printVoucher('${member._id}','${payments[i]._id}')"><i class="fas fa-print" style="font-size: 14px;"></i></button>
                 </td>
             </tr>
         `)
@@ -2215,7 +2215,7 @@ function createModalPayment(member) {
             <div class="row">
                 <div class="col-md-8 table-responsive">
                     <br/>
-                    <button style="border-radius: 5px;" class="btn btn-primary" onclick="createPayment('${member._id}')"><i class="fas fa-plus-circle"></i> Agregar pago</button>
+                    <button style="border-radius: 5px;" class="btn btn-primary" onclick="createPaymentNew('${member._id}')"><i class="fas fa-plus-circle"></i> Agregar pago</button>
                     <br />
                     <br />
                     <table id="tablePayments" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
@@ -2274,6 +2274,248 @@ function createModalPayment(member) {
                                     </div>
                                 </div>
                                 <div class="col-md-4">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-5">
+                                                    Fecha
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentDate" type="text" class="form-control form-control-sm border-input paymentDateClass" value="${moment.utc().format('DD/MM/YYYY')}">
+                                                </div>
+
+                                                <div class="col-md-5">
+                                                    Medio de Pago
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <select id="paymentType" class="form-control form-control-sm form-select form-select-sm">
+                                                        <option value="SELECCIONE">SELECCIONE</option>
+                                                        <option value="EFECTIVO">EFECTIVO</option>
+                                                        <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                                                        <option value="REDCOMPRA">REDCOMPRA</option>
+                                                        <option value="CHEQUE">CHEQUE</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-5">
+                                                    N° Transacción
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentNumber" type="text" class="form-control form-control-sm border-input numericValues">
+                                                </div>
+
+                                                <div class="col-md-5">
+                                                    Saldo máximo a Cancelar
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentToPay" type="text" class="form-control form-control-sm border-input numericValues" disabled>
+                                                </div>
+
+                                                <div class="col-md-5">
+                                                    Consumo
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentAmountMonth" type="text" class="form-control form-control-sm border-input numericValues">
+                                                </div>
+                                                <div class="col-md-5">
+                                                    Convenio/Multa
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentAmountAgreement" type="text" class="form-control form-control-sm border-input numericValues">
+                                                </div>
+
+                                                <div class="col-md-5">
+                                                    Monto
+                                                </div>
+                                                <div class="col-md-1" style="text-align: center"></div>
+                                                <div class="col-md-6">
+                                                    <input id="paymentAmount" type="text" class="form-control form-control-sm border-input numericValues">
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3" style="text-align: center;">
+                                    <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-warning" id="paymentCancel"><i ="color:#3498db;" class="fas fa-arrow-left"></i> Atrás</button></td>
+                                </div>
+                                <div class="col-md-3" style="text-align: center;">
+                                </div>
+                                <div class="col-md-3" style="text-align: center;">
+                                    <button style="background-color:#3B6FC9; border-radius:5px; " class="btn btn-info" id="paymentSave"><i ="color:#3498db;" class="fas fa-check"></i> GUARDAR</button></td>
+                                </div>
+
+                                <div class="col-md-3" style="text-align: center;">
+                                    <button style="border-radius:5px;" class="btn btn-danger" id="paymentDelete"><i ="color:#3498db;" class="fas fa-times"></i> ELIMINAR</button></td>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`
+
+    $('#modalPayment_body').html(body)
+
+
+    $("#paymentCancel").on('click', async function () {
+        cleanPayment()
+    })
+}
+
+function createModalPaymentNew(member) {
+
+    let firstYear = 2022, selectYear = ''
+    for (let i = firstYear; i <= moment().format('YYYY'); i++) {
+        if(i==moment().format('YYYY')){
+            selectYear += `<option value="${i}" selected>${i}</option>`
+        }else{
+            selectYear += `<option value="${i}">${i}</option>`
+        }
+    }
+    let body = `
+    <div class="row">
+        <div class="col-md-8">
+            <h6>Datos de socio</h6>
+        </div>
+        <div class="col-md-2">
+            <select id="reportYear" class="searchClass form-control form-select-sm form-select">
+                ${selectYear}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button style="border-radius: 5px;" class="btn btn-info" onclick="reportPayment('${member._id}')" title="En construcción"><i class="fas fa-file"></i> Reporte Anual</button>
+        </div>
+        <div class="col-md-2">
+            RUT
+            <input id="memberPaymentRUT" type="text" class="form-control form-control-sm border-input" disabled>
+        </div>
+        <div class="col-md-3">
+            Nombre
+            <input id="memberPaymentName" type="text" class="form-control form-control-sm border-input" disabled>
+        </div>
+        <div class="col-md-1">
+            N° Medidor
+            <input id="memberPaymentWaterMeter" type="text" class="form-control form-control-sm border-input" disabled>
+        </div>
+        <div class="col-md-2">
+            Tipo
+            <input id="memberPaymentType" type="text" class="form-control form-control-sm border-input" disabled>
+        </div>
+        <div class="col-md-4">
+            Dirección
+            <input id="memberPaymentAddress" type="text" class="form-control form-control-sm border-input" disabled>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <h6>Pagos realizados</h6>
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-8 table-responsive">
+                    <br/>
+                    <button style="border-radius: 5px;" class="btn btn-primary" onclick="createPaymentNew('${member._id}')"><i class="fas fa-plus-circle"></i> Agregar pago</button>
+                    <br />
+                    <br />
+                    <table id="tablePayments" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
+                        <thead id="tablePaymentsHead">
+                            <tr class="table-info">
+                                <th style="text-align: center; background-color: #3B6FC9; border-top-left-radius: 5px;">Fecha</th>
+                                <th style="text-align: center; background-color: #3B6FC9;">Medio Pago</th>
+                                <th style="text-align: center; background-color: #3B6FC9;">N° Transacción</th>
+                                <th style="text-align: center; background-color: #3B6FC9;">Monto</th>
+                                <th style="text-align: center; background-color: #3B6FC9;">Editar</th>
+                                <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Comprobante</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablePaymentsBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-4">
+                    
+                </div>
+
+                <div class="col-md-12">
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <div id="divPayment" class="card border-primary" style="display: none;">
+                        <div class="card-header text-white bg-primary" style="text-align: center">
+                            <b id="paymentTitle">Registro de Pago</b>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <table id="tableDebtInvoices" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="text-align: center"></th>
+                                                        <th style="text-align: center"></th>
+                                                        <th style="text-align: center"></th>
+                                                        <th style="text-align: center"></th>
+                                                        <th style="text-align: center" colspan="2">Consumo</th>
+                                                        <th style="text-align: center" colspan="2">Convenios/Multas</th>
+                                                        <th style="text-align: center" colspan="2">Monto Total</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th style="text-align: center">Sel</th>
+                                                        <th style="text-align: center">N° Boleta</th>
+                                                        <th style="text-align: center">Fecha</th>
+                                                        <th style="text-align: center">Vencimiento</th>
+                                                        <th style="text-align: center">Valor</th>
+                                                        <th style="text-align: center">Saldo</th>
+                                                        <th style="text-align: center">Valor</th>
+                                                        <th style="text-align: center">Saldo</th>
+                                                        <th style="text-align: center">Valor</th>
+                                                        <th style="text-align: center">Saldo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tableBodyDebtInvoices">
+                                            
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-7">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <table id="tableDebtInvoicesPayment" class="display nowrap table table-condensed cell-border" cellspacing="0" style="font-size: 12px">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="text-align: center">N° Boleta</th>
+                                                        <th style="text-align: center">Fecha</th>
+                                                        <th style="text-align: center">Consumo</th>
+                                                        <th style="text-align: center">Convenios/Multas</th>
+                                                        <th style="text-align: center">Monto Total</th>
+                                                        <th style="text-align: center">Saldo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tableBodyDebtInvoicesPayment">
+                                            
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
                                     <div class="card border-primary">
                                         <div class="card-body">
                                             <div class="row">
@@ -2779,6 +3021,456 @@ async function createPayment(memberID,paymentID) {
     })
 }
 
+async function createPaymentNew(memberID,paymentID) {
+
+    $('#tablePaymentsBody > tr').removeClass('table-primary')
+    if(paymentID){
+        $("#"+paymentID).addClass('table-primary')
+    }
+    $('#divPayment').css('display', 'block')
+    $('.btnPayment').attr('disabled',true)
+
+    let memberData = await axios.post('/api/memberSingle', {id: memberID})
+    let member = memberData.data
+
+    $("#tableBodyDebtInvoices").html('')
+    $("#tableBodyDebtInvoicesPayment").html('')
+
+    $("#paymentDate").val(moment.utc().format('DD/MM/YYYY'))
+    $("#paymentType").val('SELECCIONE')
+    $("#paymentToPay").val('')
+    $("#paymentAmount").val('')
+
+    if(paymentID){
+        $("#paymentDelete").css("display","block")
+
+        let invoicesPaymentData = await axios.post('/api/paymentSingle', { id: paymentID, member: memberID })
+        let invoicesPayment = invoicesPaymentData.data
+
+        $("#paymentDate").val(moment(invoicesPayment.date).utc().format('DD/MM/YYYY'))
+        $("#paymentType").val(invoicesPayment.paymentMethod)
+        $("#paymentNumber").val(invoicesPayment.transaction)
+        //$("#paymentToPay").val('')
+        $("#paymentAmount").val(invoicesPayment.amount)
+
+        for(let i=0; i<invoicesPayment.invoices.length; i++){
+            let agreements = 0
+            if(invoicesPayment.invoices[i].invoices){
+                if(invoicesPayment.invoices[i].invoices.agreements){
+                    for(let j=0; j<invoicesPayment.invoices[i].invoices.agreements.length; j++){
+                        agreements += invoicesPayment.invoices[i].invoices.agreements[j].amount
+                    }
+                }
+
+                console.log(invoicesPayment.invoices[i])
+
+                let subTotalBalance = (invoicesPayment.invoices[i].invoices.paidConsumption) ? invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.paidConsumption : invoicesPayment.invoices[i].invoices.invoiceSubTotal
+                let agreementBalance = (invoicesPayment.invoices[i].invoices.paidAgreement) ? agreements - invoicesPayment.invoices[i].invoices.paidAgreement : agreements
+
+                console.log(subTotalBalance, agreementBalance)
+
+                let amountMonth = 0, amountAgreement = 0
+                if(invoicesPayment.invoices[i].amountMonth){
+                    amountMonth = invoicesPayment.invoices[i].amountMonth
+                }
+                if(invoicesPayment.invoices[i].amountAgreement){
+                    amountAgreement = invoicesPayment.invoices[i].amountAgreement
+                }
+
+                $("#tableBodyDebtInvoices").append(`<tr class="table-primary">
+                    <td style="text-align: center"><input class="checkInvoice" type="checkbox" checked/><input value="${invoicesPayment.invoices[i].invoices._id}" style="display: none;"/></td>
+                    <td style="text-align: center">${(invoicesPayment.invoices[i].invoices.number) ? invoicesPayment.invoices[i].invoices.number : ''}</td>
+                    <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
+                    <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.dateExpire).utc().format('DD/MM/YYYY')}</td>
+                    <td style="text-align: center">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal)}
+                        <input value="${invoicesPayment.invoices[i].invoices.invoiceSubTotal}" style="display: none;"/>
+                    </td>
+                    <td style="text-align: center">${dot_separators(subTotalBalance + amountMonth)}
+                        <input value="${subTotalBalance}" style="display: none;"/>
+                    </td>
+                    <td style="text-align: center">${dot_separators(agreements)}
+                        <input value="${agreements}" style="display: none;"/>
+                    </td>
+                    <td style="text-align: center">${dot_separators(agreementBalance + amountAgreement)}
+                        <input value="${agreementBalance}" style="display: none;"/>
+                    </td>
+                    <td style="text-align: center">${dot_separators(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements)}</td>
+                    <td style="text-align: center">${dot_separators((invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements + amountMonth + amountAgreement) - invoicesPayment.invoices[i].invoices.invoicePaid)}
+                        <input value="${(invoicesPayment.invoices[i].invoices.invoiceSubTotal + agreements + amountMonth + amountAgreement) - invoicesPayment.invoices[i].invoices.invoicePaid}" style="display: none;"/>
+                    </td>
+                </tr>`)
+
+
+                $("#tableBodyDebtInvoicesPayment").append(`<tr id="tr_${invoicesPayment.invoices[i].invoices._id}">
+                    <td style="text-align: center">${(invoicesPayment.invoices[i].invoices.number) ? invoicesPayment.invoices[i].invoices.number : ''}
+                    </td>
+                    <td style="text-align: center">${moment(invoicesPayment.invoices[i].invoices.date).utc().format('DD/MM/YYYY')}</td>
+                    <td style="text-align: center">
+                        <input type="text" class="form-control form-control-sm border-input numericValues" onkeyup="calculatePaymentBalanceNew()" value="${amountMonth}"/>
+                    </td>
+                    <td style="text-align: center">
+                        <input type="text" class="form-control form-control-sm border-input numericValues" onkeyup="calculatePaymentBalanceNew()" value="${amountAgreement}"/>
+                    </td>
+                    <td style="text-align: center">${dot_separators(subTotalBalance + agreementBalance + amountMonth + amountAgreement)}</td>
+                    <td style="text-align: center">${dot_separators(subTotalBalance + agreementBalance + amountMonth + amountAgreement)}</td>
+                </tr>`)
+            }
+            calculatePaymentBalanceNew()
+        }
+
+
+        //Carga de boletas adeudadas sin boletas asociadas a pago
+        let invoicesDebtData = await axios.post('/api/invoicesDebtNew', { member: memberID, paymentID: paymentID})
+        let invoicesDebt = invoicesDebtData.data
+
+        if(invoicesDebt.length>0){
+            for(let i=0; i<invoicesDebt.length; i++){
+                let agreements = 0
+                if(invoicesDebt[i].agreements){
+                    for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                        agreements += invoicesDebt[i].agreements[j].amount
+                    }
+                }
+                if(invoicesDebt[i].invoiceSubTotal + agreements != invoicesDebt[i].invoicePaid){
+
+                    if(!invoicesDebt[i].typeInvoice){
+
+                        let subTotalBalance = (invoicesDebt[i].paidConsumption) ? invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].paidConsumption : invoicesDebt[i].invoiceSubTotal
+                        let agreementBalance = (invoicesDebt[i].paidAgreement) ? agreements - invoicesDebt[i].paidAgreement : agreements
+
+                        $("#tableBodyDebtInvoices").append(`<tr>
+                            <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
+                            <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: center">${dot_separators(invoicesDebt[i].invoiceSubTotal)}
+                                <input value="${invoicesDebt[i].invoiceSubTotal}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: center">${dot_separators(subTotalBalance)}
+                                <input value="${subTotalBalance}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: center">${dot_separators(agreements)}
+                                <input value="${agreements}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: center">${dot_separators(agreementBalance)}
+                                <input value="${agreementBalance}" style="display: none;"/>
+                            </td>
+
+                            <td style="text-align: center">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
+                            <td style="text-align: center">${dot_separators((invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid)}
+                                <input value="${(invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid}" style="display: none;"/>
+                            </td>
+                        </tr>`)
+                    }else{
+                        //SÓLO CASOS BOLETAS LIBRES, EN DESARROLLO
+
+                    }
+                }
+            }
+        }
+
+    }else{
+        
+        $("#paymentDelete").css("display","none")
+        //$("#paymentPositive").val((member.positiveBalance) ? member.positiveBalance : 0)
+
+        //Carga de boletas adeudadas
+        let invoicesDebtData = await axios.post('/api/invoicesDebtNew', { member: memberID })
+        let invoicesDebt = invoicesDebtData.data
+        if(invoicesDebt.length>0){
+            for(let i=0; i<invoicesDebt.length; i++){
+                let agreements = 0
+                if(invoicesDebt[i].agreements){
+                    for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                        agreements += invoicesDebt[i].agreements[j].amount
+                    }
+                }
+                if(invoicesDebt[i].invoiceSubTotal + agreements != invoicesDebt[i].invoicePaid){
+
+                    if(!invoicesDebt[i].typeInvoice){
+
+                        let subTotalBalance = (invoicesDebt[i].paidConsumption) ? invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].paidConsumption : invoicesDebt[i].invoiceSubTotal
+                        let agreementBalance = (invoicesDebt[i].paidAgreement) ? agreements - invoicesDebt[i].paidAgreement : agreements
+
+                        $("#tableBodyDebtInvoices").append(`<tr>
+                            <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
+                            <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : ''}</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: center">${dot_separators(invoicesDebt[i].invoiceSubTotal)}
+                                <input value="${invoicesDebt[i].invoiceSubTotal}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: center">${dot_separators(subTotalBalance)}
+                                <input value="${subTotalBalance}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: center">${dot_separators(agreements)}
+                                <input value="${agreements}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: center">${dot_separators(agreementBalance)}
+                                <input value="${agreementBalance}" style="display: none;"/>
+                            </td>
+
+                            <td style="text-align: center">${dot_separators(invoicesDebt[i].invoiceSubTotal + agreements)}</td>
+                            <td style="text-align: center">${dot_separators((invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid)}
+                                <input value="${(invoicesDebt[i].invoiceSubTotal + agreements) - invoicesDebt[i].invoicePaid}" style="display: none;"/>
+                            </td>
+                        </tr>`)
+                    }else{
+                        //SÓLO CASOS BOLETAS LIBRES, EN DESARROLLO
+
+                        let paid = (invoicesDebt[i].invoicePaid) ? invoicesDebt[i].invoicePaid : 0
+
+                        let subTotalBalance = (invoicesDebt[i].paidConsumption) ? invoicesDebt[i].invoiceSubTotal - invoicesDebt[i].paidConsumption : invoicesDebt[i].invoiceSubTotal
+                        let agreementBalance = (invoicesDebt[i].paidAgreement) ? agreements - invoicesDebt[i].paidAgreement : agreements
+
+
+                        $("#tableBodyDebtInvoices").append(`<tr>
+                            <td style="text-align: center"><input class="checkInvoice" type="checkbox" /><input value="${invoicesDebt[i]._id}" style="display: none;"/></td>
+                            <td style="text-align: center">${(invoicesDebt[i].number) ? invoicesDebt[i].number : '' }</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].date).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: center">${moment(invoicesDebt[i].dateExpire).utc().format('DD/MM/YYYY')}</td>
+                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceSubTotal)}
+                                <input value="${invoicesDebt[i].invoiceSubTotal}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: center">${dot_separators(subTotalBalance)}
+                                <input value="${subTotalBalance}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: right">${dot_separators(agreements)}
+                                <input value="${agreements}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: center">${dot_separators(agreementBalance)}
+                                <input value="${agreementBalance}" style="display: none;"/>
+                            </td>
+                            <td style="text-align: right">${dot_separators(invoicesDebt[i].invoiceTotal + agreements)}</td>
+                            <td style="text-align: right">${dot_separators((invoicesDebt[i].invoiceTotal + agreements) - paid)}
+                                <input value="${(invoicesDebt[i].invoiceTotal + agreements) - paid}" style="display: none;"/>
+                            </td>
+                        </tr>`)
+                    }
+                }
+            }
+        }else{
+            //$('#modal_title').html(`Al día`)
+            //$('#modal_body').html(`<h7 class="alert-heading">Socio no tiene deuda activa</h7>`)
+            toastr.success('Socio no tiene deuda activa')
+        }
+    }
+    
+    $('.paymentDateClass').daterangepicker({
+        opens: 'right',
+        locale: dateRangePickerDefaultLocale,
+        singleDatePicker: true,
+        autoApply: true
+    })
+
+    $('.checkInvoice').change(function () {
+        if($(this).prop('checked')){
+
+            let id = $($(this).parent().children()[1]).val()
+            let number = $($(this).parent().parent().children()[1]).text()
+            let date = $($(this).parent().parent().children()[2]).text()
+            let subTotalBalance = parseInt($($($(this).parent().parent().children()[5]).children()[0]).val())
+            let agreementBalance = parseInt($($($(this).parent().parent().children()[7]).children()[0]).val())
+            
+            $("#tableBodyDebtInvoicesPayment").append(`<tr id="tr_${id}">
+                <td style="text-align: center">${number}
+                </td>
+                <td style="text-align: center">${date}</td>
+                <td style="text-align: center">
+                    <input type="text" class="form-control form-control-sm border-input numericValues" onkeyup="calculatePaymentBalanceNew()" value="${subTotalBalance}"/>
+                </td>
+                <td style="text-align: center">
+                    <input type="text" class="form-control form-control-sm border-input numericValues" onkeyup="calculatePaymentBalanceNew()" value="${agreementBalance}"/>
+                </td>
+                <td style="text-align: center">${dot_separators(subTotalBalance + agreementBalance)}</td>
+                <td style="text-align: center">${dot_separators(subTotalBalance + agreementBalance)}</td>
+            </tr>`)
+
+        }else{
+
+            let id = $($(this).parent().children()[1]).val()
+            $('#tr_'+id).remove()
+
+        }
+        calculatePaymentBalanceNew()
+    })
+
+    /*$("#paymentAmount").keyup(function () {
+        calculatePaymentBalanceNew(true)
+    })
+
+    if(paymentID){
+        calculatePaymentBalanceNew(true)
+    }else{
+        calculatePaymentBalanceNew()
+    }*/
+
+    $('#paymentSave').off("click")
+
+    $("#paymentSave").on('click', async function () {
+
+        let goSave = false, goSaveValue = false
+        let invoices = []
+        let amountInvoices = 0
+
+        if($("#tableBodyDebtInvoicesPayment > tr").length>0){
+            goSave = true
+            $("#tableBodyDebtInvoicesPayment > tr").each(function() {
+
+                let amountMonth = 0, amountAgreement = 0
+
+                if($.isNumeric($($($(this).children()[2]).children()[0]).val())){
+                    amountMonth = parseInt($($($(this).children()[2]).children()[0]).val())
+                    goSaveValue = true
+                }
+                if($.isNumeric($($($(this).children()[3]).children()[0]).val())){
+                    amountAgreement = parseInt($($($(this).children()[3]).children()[0]).val())
+                    goSaveValue = true
+                }
+
+                let invoiceAmount = amountMonth + amountAgreement
+                amountInvoices += invoiceAmount
+
+                let invoiceID = $(this).attr('id').split('tr_')[1]
+
+                invoices.push({
+                    invoices: invoiceID,
+                    amount: invoiceAmount,
+                    amountMonth: amountMonth,
+                    amountAgreement: amountAgreement
+                })
+            })
+        }
+
+        if(!goSave){
+            toastr.warning('Debe seleccionar al menos 1 boleta a cancelar')
+            return
+        }
+
+        if(!goSaveValue){
+            toastr.warning('1 o más valores no son válidos')
+            return
+        }
+
+        let toPay = parseInt(replaceAll($("#paymentToPay").val(), '.', '').replace(' ', '').replace('$', ''))
+        let amount = parseInt(replaceAll($("#paymentAmount").val(), '.', '').replace(' ', '').replace('$', ''))
+
+        if(!$.isNumeric(amount)){
+            toastr.warning('Monto no válido')
+            return
+        }
+
+        if(amount<=0){
+            toastr.warning('Monto no válido')
+            return
+        }
+
+        if($("#paymentType").val()=='SELECCIONE'){
+            toastr.warning('Debe seleccionar medio de pago')
+            return
+        }
+
+        let goToSave = false
+
+        if(amount>toPay){
+            //toastr.warning('El monto a pagar no puede ser mayor al saldo')
+            //return
+            let savePaymentMessage = await Swal.fire({
+                title: 'Monto mayor',
+                customClass: 'swal-wide',
+                html: `El monto a pagar es mayor al adeudado, <br/>¿Desea que se guarde el valor restante como saldo a favor?<br/>Monto a favor: ${amount - amountInvoices}`,
+                showCloseButton: true,
+                showCancelButton: true,
+                showConfirmButton: true,
+                focusConfirm: false,
+                confirmButtonText: 'Aceptar',
+                cancelButtonText: 'Cancelar'
+            })
+        
+            if (savePaymentMessage.value) {
+                goToSave = true
+                invoices.push({
+                    amount: amount - amountInvoices,
+                    positive: true
+                })
+            }
+        }else{
+            goToSave = true
+        }
+        
+        console.log('goToSave', goToSave)
+        console.log(amount, invoices)
+
+        //return
+        if(goToSave==true){
+            let paymentData = {
+                member: member._id,
+                //number: replaceAll($("#invoiceNumber").val(), '.', '').replace(' ', ''),
+                date: $("#paymentDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+                paymentMethod: $("#paymentType").val(),
+                transaction: $("#paymentNumber").val(),
+                amount: amount,
+                invoices: invoices
+            }
+
+            let urlSave = 'paymentSave'
+            if(paymentID){
+                urlSave = 'paymentUpdate'
+                paymentData.id = paymentID
+            }
+            console.log('paymentData',paymentData)
+            let savePayment = await axios.post('/api/'+urlSave, paymentData)
+            if (savePayment.data) {
+                if (savePayment.data._id) {
+
+                    toastr.success('Pago almacenado correctamente')
+                    loadPayments(member)
+                    cleanPayment()
+                } else {
+                    toastr.error('Error al almacenar, favor reintente')
+                }
+            } else {
+                toastr.error('Error al almacenar, favor reintente')
+            }
+        }
+    })
+
+    $("#paymentDelete").on('click', async function () {
+        let deletePaymentMessage = await Swal.fire({
+            title: '¿Está seguro de eliminar este registro?',
+            customClass: 'swal-wide',
+            html: ``,
+            showCloseButton: true,
+            showCancelButton: true,
+            showConfirmButton: true,
+            focusConfirm: false,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar'
+        })
+    
+        if (deletePaymentMessage.value) {
+            let paymentData = {
+                id: paymentID
+            }
+
+            let deletePayment = await axios.post('/api/paymentDelete', paymentData)
+            if (deletePayment.data) {
+                //$('#modal_title').html(`Eliminado`)
+                //$('#modal_body').html(`<h7 class="alert-heading">Registro eliminado</h7>`)
+                toastr.success('Registro eliminado')
+                cleanPayment()
+                loadPayments(member)
+            } else {
+                //$('#modal_title').html(`Error`)
+                //$('#modal_body').html(`<h7 class="alert-heading">Error al eliminar, favor reintente</h7>`)
+                toastr.error('Error al eliminar, favor reintente')
+            }
+
+            //$('#modal').modal('show')
+        }
+    })
+}
+
 function calculatePaymentBalance(paymentAmount) {
 
     let totalSelected = 0, totalMonth = 0,  totalAgreement = 0
@@ -2886,6 +3578,115 @@ function calculatePaymentBalance(paymentAmount) {
 
 }
 
+function calculatePaymentBalanceNew(paymentAmount) {
+
+    let totalSelected = 0, totalMonth = 0,  totalAgreement = 0
+    $("#tableBodyDebtInvoicesPayment > tr").each(function() {
+        let valueSelected = 0, valueMonth = 0,  valueAgreement = 0
+
+        if($.isNumeric($($($(this).children()[2]).children()[0]).val())){
+            valueMonth = $($($(this).children()[2]).children()[0]).val()
+        }
+
+        if($.isNumeric($($($(this).children()[3]).children()[0]).val())){
+            valueAgreement = $($($(this).children()[3]).children()[0]).val()
+        }
+
+        totalMonth += parseInt(valueMonth)
+        totalAgreement += parseInt(valueAgreement)
+        totalSelected += parseInt(valueMonth) + parseInt(valueAgreement)
+
+    })
+
+    $("#paymentAmountMonth").val(dot_separators(totalMonth))
+    $("#paymentAmountAgreement").val(dot_separators(totalAgreement))
+    $("#paymentToPay").val(dot_separators(totalSelected))
+    $("#paymentAmount").val(dot_separators(totalSelected))
+
+    /*if(!paymentAmount){
+        $("#paymentAmount").val(dot_separators(totalSelected))
+    }else{
+        $("#paymentAmount").val(dot_separators($("#paymentAmount").val()))
+    }*/
+
+    $("#tableBodyDebtInvoicesPayment > tr").each(function() {
+        let value = 0
+        if($.isNumeric($($($(this).children()[2]).children()[0]).val())){
+            value += parseInt($($($(this).children()[2]).children()[0]).val())
+        }
+        if($.isNumeric($($($(this).children()[3]).children()[0]).val())){
+            value += parseInt($($($(this).children()[3]).children()[0]).val())
+        }
+
+        let amount = parseInt(replaceAll($($(this).children()[4]).text(), '.', '').replace(' ', '').replace('$', ''))
+        console.log(amount,value)
+        $($(this).children()[5]).text(dot_separators(amount-value))
+
+        /*if(value<=amount){
+            $($(this).children()[8]).text(0)
+            amount -= value
+        }else if(amount!=0){
+            $($(this).children()[8]).text(dot_separators(value-amount))
+        }*/
+        
+    })
+
+
+    
+    
+
+    /*new Cleave($("#paymentPositive"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })*/
+
+    new Cleave($("#paymentAmountMonth"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })
+
+    new Cleave($("#paymentAmountAgreement"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })
+
+    new Cleave($("#paymentAmount"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })
+
+    new Cleave($("#paymentToPay"), {
+        prefix: '$',
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 0,
+        numeralPositiveOnly: true,
+        numeralDecimalMark: ",",
+        delimiter: "."
+    })
+
+}
+
 async function reportPayment(id){
     
     var doc = new jsPDF('p','pt','letter')
@@ -2896,6 +3697,13 @@ async function reportPayment(id){
     
     let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  id})
     let lectures = lecturesData.data
+
+    let paymentData = await axios.post('/api/paymentsSingleMember', { member: member._id })
+    let payments = paymentData.data
+
+    console.log(payments)
+    //for(let i=0; i<payments.length; i++) {
+
 
 
     let memberName = ''
@@ -2961,29 +3769,33 @@ async function reportPayment(id){
 
     doc.text('Anterior', pdfX + 340, pdfY, 'center')
     doc.text('Pagar', pdfX + 380, pdfY, 'center')
+    
+    doc.line(pdfX + 400, pdfY - 24, pdfX + 400, pdfY + 176)
 
+    let paymentIndex = 0
 
     doc.setFontType('normal')
     for(let i=lectures.length-1; i>=0; i--){
         if(lectures[i].invoice){
+            console.log(lectures[i].invoice)
             pdfY += 12
             doc.text(lectures[i].year.toString(), pdfX, pdfY, 'center')
             doc.text(getMonthString(lectures[i].month), pdfX + 14, pdfY)
-            doc.text(((lectures[i].invoice.number===undefined || lectures[i].invoice.number==0) ? '-' : lectures[i].invoice.number.toString()), pdfX + 70, pdfY, 'center')
+            doc.text(((lectures[i].invoice.number===undefined || lectures[i].invoice.number==0) ? '-' : dot_separators(lectures[i].invoice.number)), pdfX + 70, pdfY, 'center')
             doc.text(lectures[i].invoice.lectureResult.toString(), pdfX + 100, pdfY, 'center')
 
-            //Cargo Fijo
-            //Consumo Mes
-            //Alcantarillado
+            doc.text(dot_separators(lectures[i].invoice.charge), pdfX + 130 + 12, pdfY, 'right')
+            doc.text(dot_separators(lectures[i].invoice.consumption), pdfX + 160 + 12, pdfY, 'right')
+            doc.text(dot_separators(lectures[i].invoice.consumptionLimitTotal), pdfX + 190 + 12, pdfY, 'right')
+            doc.text(dot_separators(lectures[i].invoice.sewerage), pdfX + 220 + 12, pdfY, 'right')
 
             //Multa Interés
             let totalFine = 0
             if(lectures[i].invoice.debtFine) totalFine += parseInt(lectures[i].invoice.debtFine)
             if(lectures[i].invoice.fine) totalFine += parseInt(lectures[i].invoice.fine)
-            if(totalFine>0) doc.text(totalFine.toString(), pdfX + 250, pdfY, 'right')
+            if(totalFine>0) doc.text(dot_separators(totalFine), pdfX + 250 + 12, pdfY, 'right')
 
-            //Convenio/Multa
-
+            doc.text(dot_separators(lectures[i].invoice.subsidyValue), pdfX + 280 + 12, pdfY, 'right')
 
             //Convenio/Multa
             if(lectures[i].invoice.agreements){
@@ -2991,14 +3803,32 @@ async function reportPayment(id){
                 for(let i=0; i<lectures[i].invoice.agreements.length; i++){
                     totalAgreement += parseInt(lectures[i].invoice.agreements[i].amount)
                     if(i+1==lectures[i].invoice.agreements.length && totalAgreement > 0){
-                        doc.text(totalAgreement, pdfX + 310, pdfY, 'right')
+                        doc.text(dot_separators(totalAgreement), pdfX + 310 + 12, pdfY, 'right')
                     }
                 }
-            }
+            }else{
+                doc.text("0", pdfX + 310 + 12, pdfY, 'right')
+           }
             
+            doc.text(dot_separators(lectures[i].invoice.invoiceDebt), pdfX + 340 + 12, pdfY, 'right')
+            doc.text(dot_separators(lectures[i].invoice.invoiceTotal), pdfX + 380 + 12, pdfY, 'right')
             
         
+            //ZONA PAGOS
 
+            let paymentYear = lectures[i].year
+            let paymentMonth = lectures[i].month
+            if(paymentMonth==12){
+                paymentYear++
+                paymentMonth = 1
+            }else{
+                paymentMonth++
+            }
+            console.log(paymentYear, paymentMonth, moment(payments[paymentIndex].date).format('YYYY'), parseInt(moment(payments[paymentIndex].date).format('MM')))
+
+            if(parseInt(moment(payments[paymentIndex].date).format('YYYY'))==paymentYear && parseInt(moment(payments[paymentIndex].date).format('MM'))==paymentMonth){
+                paymentIndex++
+            }
 
 
         }

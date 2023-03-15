@@ -1607,7 +1607,7 @@ async function printVoucher(memberID,paymentID) {
     let memberData = await axios.post('/api/memberSingle', {id: memberID})
     let member = memberData.data
 
-    let paymentData = await axios.post('/api/paymentSingle', { id: paymentID })
+    let paymentData = await axios.post('/api/paymentSingle', { id: paymentID, member: memberID })
     let payment = paymentData.data
     
 
