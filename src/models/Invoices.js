@@ -50,7 +50,7 @@ const invoicesSchema = new Schema({
         number: { type: Number },
         seal: { type: String },
         token: { type: String },
-        date: { type: Date, default: Date.now() },
+        date: { type: Date },
         resolution: {
             fecha: {type: String },
             numero: {type: Number }
