@@ -987,7 +987,7 @@ export default [
                             member.balance += invoices[i].invoiceSubTotal-invoices[i].invoicePaid
                             member.months++
                         }else{
-                            let name = invoices[i].members.personal.lastname1 + ' ' + invoices[i].members.personal.lastname1 + ' ' + invoices[i].members.personal.name
+                            let name = invoices[i].members.personal.lastname1 + ' ' + invoices[i].members.personal.lastname2 + ' ' + invoices[i].members.personal.name
                             if(invoices[i].members.type=='enterprise'){
                                 name = invoices[i].members.enterprise.name
                             }
