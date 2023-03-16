@@ -127,6 +127,42 @@
         </div>
     </div>
 
+
+    <div class="modal fade" id="invoiceAnnulment" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Anulación de boleta / aviso</h6>
+                    <button type="button" class="btn-close" data-dismiss="modal"
+                        aria-label="Close">
+                        <span aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            Fecha anulación
+                            <input id="invoiceAnnulmentDate" class="form-control form-control-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                             Número de Folio
+                            <input id="invoiceAnnulmentNumber" class="form-control form-control-sm"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" id="modalPaymentAnnulled_footer">
+                    <button id="invoiceAnnulmentSave" style="border-radius: 5px;" class="btn btn-primary btn-block">
+                        <i class="far fa-save"></i> Guardar Anulación
+                    </button>
+
+                    <button id="invoiceAnnulmentCancel" style="border-radius: 5px;" class="btn btn-secondary btn-block">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="paymentAnnulled" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">

@@ -660,6 +660,54 @@ export default [
     },
     {
         method: 'POST',
+        path: '/api/invoiceUpdateAnnulment',
+        options: {
+            description: 'update invoice',
+            notes: 'update invoice',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    let payload = request.payload
+
+                    let invoices = await Invoices.findById(payload.id)
+
+                    invoices.annulment = {
+                        type: payload.type,
+                        number: payload.number,
+                        date: payload.date
+                    }
+
+                    let agreements = 0
+                    for(let i=0; i<invoices.agreements.length; i++){
+                        agreements += parseInt(invoices.agreements[i].amount)
+                    }
+
+                    invoices.invoicePaid = invoices.invoiceSubTotal + agreements
+
+                    const response = await invoices.save()
+
+                    return response
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    id: Joi.string(),
+                    type: Joi.number().allow(0),
+                    number: Joi.number().allow(0),
+                    date: Joi.string()
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
         path: '/api/invoicesSingleMember',
         options: {
             description: 'get unpaid invoices',

@@ -250,7 +250,8 @@ async function loadLectures(member) {
                 btnGenerate = `<button class="btn btn-sm btn-danger btnLecture" onclick="printSelection('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="far fa-file-pdf" style="font-size: 14px;"></i>${lectures[i].invoice.number}</button>`
                 //btnPayment = `<button class="btn btn-sm btn-info btnLecture" onclick="payInvoice('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}')"><i class="fas fa-dollar-sign" style="font-size: 14px;"></i></button>`
                 btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
-                btnAnnulment = `<button class="btn btn-sm btn-info btnLecture" onclick="annulmentInvoice('${member.type}','${member._id}','${lectures[i].invoice._id}')">Anular Boleta</button>`
+                //btnAnnulment = `<button class="btn btn-sm btn-info btnLecture" onclick="annulmentInvoice('${member.type}','${member._id}','${lectures[i].invoice._id}')">Anular Boleta</button>`
+                btnAnnulment = `<button class="btn btn-sm btn-info btnLecture" onclick="annulmentInvoiceNew('${member._id}','${lectures[i].invoice._id}')">Anular Boleta</button>`
                 
                 //if(isEmail(member.email)){
                     btnEmail = `<button class="btn btn-sm btn-warning btnLecture" onclick="printInvoicePortrait('pdf','${member.type}','${member._id}','${lectures[i].invoice._id}',true)"><i class="fas fa-envelope" style="font-size: 14px;"></i></button>`
@@ -307,6 +308,9 @@ async function loadLectures(member) {
                 <td style="text-align: center;">
                     ${btnEmail}
                 </td>
+                <td style="text-align: center;">
+                    ${btnAnnulment}
+                </td> 
                 <td style="text-align: center;">
                     ${btnAnnulmentHistory}
                 </td>
@@ -447,16 +451,9 @@ function createModalBody(member) {
         </div>
     </div>
 </div>
-<br />
-<br />
 <div class="row">
-
-
-<h5>Lecturas realizadas</h5>
+    <h5>Lecturas realizadas</h5>
     <div class="col-md-12 table-responsive">
-        <br/>
-        <br />
-        <br />
         <table id="tableLectures" class="display nowrap table table-condensed cell-border" cellspacing="0">
             <thead id="tableLecturesHead">
                 <tr class="table-info">
@@ -471,7 +468,7 @@ function createModalBody(member) {
                     <!--<th style="text-align: center; background-color: #3B6FC9;">Imprimir</th>-->
                     <!--<th style="text-align: center; background-color: #3B6FC9;">DTE SII</th>-->
                     <th style="text-align: center; background-color: #3B6FC9;">Enviar</th>
-                    <!--<th style="text-align: center; background-color: #3B6FC9;">Anular</th>-->
+                    <th style="text-align: center; background-color: #3B6FC9;">Anular</th>
                     <th style="text-align: center; background-color: #3B6FC9; border-top-right-radius: 5px;">Anulados</th>
                 </tr>
             </thead>
@@ -1923,6 +1920,77 @@ async function sendData(type,memberID,invoiceID) {
 }
 
 
+async function annulmentInvoiceNew(memberID,invoiceID) {
+
+    $('#invoiceAnnulmentDate').daterangepicker({
+        opens: 'right',
+        locale: dateRangePickerDefaultLocale,
+        singleDatePicker: true,
+        autoApply: true
+    })
+
+    $("#invoiceAnnulmentDate").val(moment().format('DD/MM/YYYY'))
+
+    $("#invoiceAnnulment").modal('show')
+
+    $("#invoiceAnnulmentCancel").on('click', async function () {
+        $("#invoiceAnnulmentDate").val(moment().format('DD/MM/YYYY'))
+        $("#invoiceAnnulmentNumber").val('')
+        $("#invoiceAnnulment").modal('hide')
+    })
+
+    $("#invoiceAnnulmentSave").on('click', async function () {
+
+        if(!$.isNumeric($("#invoiceAnnulmentNumber").val())){
+            toastr.warning('Debe ingresar un n° de folio válido')
+            return
+        }
+
+        
+        let generateDTE = await Swal.fire({
+            title: '¿Está seguro de anular la boleta?',
+            customClass: 'swal-wide',
+            html: ``,
+            showCloseButton: true,
+            showCancelButton: true,
+            showConfirmButton: true,
+            focusConfirm: false,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar'
+        })
+
+        if (generateDTE.value) {
+
+          
+            loadingHandler('start')
+
+            let querySave = {
+                id: invoiceID,
+                type: 61,
+                number: parseInt($("#invoiceAnnulmentNumber").val()),
+                date: $("#invoiceAnnulmentDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
+            }
+
+            console.log(querySave)
+
+            let updateInvoice = await axios.post('/api/invoiceUpdateAnnulment', querySave)
+            if (updateInvoice.data) {
+                toastr.success('Almacenado correctamente')
+                $("#invoiceAnnulmentDate").val(moment().format('DD/MM/YYYY'))
+                $("#invoiceAnnulmentNumber").val('')
+                $("#invoiceAnnulment").modal('hide')
+                loadingHandler('stop')
+                loadLectures(memberID)
+            }else{
+                toastr.warning('Ocurrió un error al almacenar')
+                loadingHandler('stop')
+            }
+
+        }
+
+    })
+}
+
 async function annulmentInvoice(type,memberID,invoiceID) {
 
     let generateDTE = await Swal.fire({
@@ -1957,7 +2025,7 @@ async function annulmentInvoice(type,memberID,invoiceID) {
         let name = '', category = ''
         let document = ''
 
-
+        ////CÓDIGO DE ANULACIÓN INTEGRADO, A MODIFICAR///
         let Receptor
         if(type=='personal'){
             name = member.personal.name+' '+member.personal.lastname1+' '+member.personal.lastname2
@@ -2090,8 +2158,6 @@ async function annulmentInvoice(type,memberID,invoiceID) {
         })
     }
 }
-
-
 
 //////////////////ZONA PAGOS//////////////////
 
@@ -3062,12 +3128,8 @@ async function createPaymentNew(memberID,paymentID) {
                     }
                 }
 
-                console.log(invoicesPayment.invoices[i])
-
                 let subTotalBalance = (invoicesPayment.invoices[i].invoices.paidConsumption) ? invoicesPayment.invoices[i].invoices.invoiceSubTotal - invoicesPayment.invoices[i].invoices.paidConsumption : invoicesPayment.invoices[i].invoices.invoiceSubTotal
                 let agreementBalance = (invoicesPayment.invoices[i].invoices.paidAgreement) ? agreements - invoicesPayment.invoices[i].invoices.paidAgreement : agreements
-
-                console.log(subTotalBalance, agreementBalance)
 
                 let amountMonth = 0, amountAgreement = 0
                 if(invoicesPayment.invoices[i].amountMonth){
@@ -3816,7 +3878,7 @@ async function reportPayment(id){
         
             //ZONA PAGOS
 
-            let paymentYear = lectures[i].year
+            /*let paymentYear = lectures[i].year
             let paymentMonth = lectures[i].month
             if(paymentMonth==12){
                 paymentYear++
@@ -3828,7 +3890,7 @@ async function reportPayment(id){
 
             if(parseInt(moment(payments[paymentIndex].date).format('YYYY'))==paymentYear && parseInt(moment(payments[paymentIndex].date).format('MM'))==paymentMonth){
                 paymentIndex++
-            }
+            }*/
 
 
         }
