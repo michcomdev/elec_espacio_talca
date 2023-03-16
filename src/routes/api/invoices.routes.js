@@ -597,8 +597,7 @@ export default [
                     let payload = request.payload
                     let query = {
                         members: payload.member,
-                        $where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
-                        
+                        //$where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
                     }
 
                     let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])

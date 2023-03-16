@@ -44,7 +44,7 @@ async function printSelection(docType, type, memberID, invoiceID){
     }
 
     $("#printVertical").attr('onclick',`printInvoicePortrait('${docType}','${type}','${memberID}','${invoiceID}')`)
-    $("#printHorizontal").attr('onclick',`printInvoice('${docType}','${type}','${memberID}','${invoiceID}')`)
+    $("#printHorizontal").attr('onclick',`printInvoice('${docType}','${type}','${memberID}','${invoiceID}',false,true)`)
 
     $("#modalPrint").modal('show')
 }
