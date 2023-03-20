@@ -2628,14 +2628,14 @@ function createModalPaymentNew(member) {
                                                 </div>
                                                 <div class="col-md-1" style="text-align: center"></div>
                                                 <div class="col-md-6">
-                                                    <input id="paymentAmountMonth" type="text" class="form-control form-control-sm border-input numericValues">
+                                                    <input id="paymentAmountMonth" type="text" class="form-control form-control-sm border-input numericValues" readonly>
                                                 </div>
                                                 <div class="col-md-5">
                                                     Convenio/Multa
                                                 </div>
                                                 <div class="col-md-1" style="text-align: center"></div>
                                                 <div class="col-md-6">
-                                                    <input id="paymentAmountAgreement" type="text" class="form-control form-control-sm border-input numericValues">
+                                                    <input id="paymentAmountAgreement" type="text" class="form-control form-control-sm border-input numericValues" readonly>
                                                 </div>
 
                                                 <div class="col-md-5">
@@ -2643,7 +2643,7 @@ function createModalPaymentNew(member) {
                                                 </div>
                                                 <div class="col-md-1" style="text-align: center"></div>
                                                 <div class="col-md-6">
-                                                    <input id="paymentAmount" type="text" class="form-control form-control-sm border-input numericValues">
+                                                    <input id="paymentAmount" type="text" class="form-control form-control-sm border-input numericValues" readonly>
                                                 </div>
 
                                             </div>

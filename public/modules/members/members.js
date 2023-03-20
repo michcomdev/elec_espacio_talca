@@ -265,7 +265,7 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
         
 
         let memberData = {
-            number: $('#memberNumber').val(),
+            number: parseInt($('#memberNumber').val()),
             rut: $('#memberRUT').val(),
             type: $('#memberType').val(),
             personal: {
@@ -288,7 +288,7 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
             phone: $('#memberPhone').val(),
             dateStart: $('#memberDateStart').data('daterangepicker').startDate.format('YYYY-MM-DD'),
             dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD'),
-            subsidyNumber: $('#memberSubsidyNumber').val(),
+            subsidyNumber: parseInt($('#memberSubsidyNumber').val()),
             fine: $('#memberFine').prop('checked'),
             dte: $('#memberDTE').val(),
             sendEmail: $('#memberSendEmail').prop('checked'),
@@ -299,7 +299,7 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
         if (res.ok) {
             loadingHandler('start')
             console.log(memberData)
-            let saveMember = await axios.post('/api/memberSave', memberData)
+            let saveMember = await axios.post('api/memberSave', memberData)
             loadingHandler('stop')
             if (saveMember.data) {
                 if (saveMember.data._id) {
@@ -533,7 +533,7 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
             dateEnd: $('#memberDateEnd').data('daterangepicker').startDate.format('YYYY-MM-DD'),
             status: $("#memberStatus").val(),
             inactiveObservation: ($("#memberStatusObservation").val()) ? $("#memberStatusObservation").val() : '',
-            subsidyNumber: $('#memberSubsidyNumber').val(),
+            subsidyNumber: parseInt($('#memberSubsidyNumber').val()),
             services: services,
             fine: $('#memberFine').prop('checked'),
             dte: $('#memberDTE').val(),

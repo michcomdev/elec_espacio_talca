@@ -213,8 +213,8 @@ export default [
                     })).optional(),
                     fine: Joi.boolean().optional(),
                     dte: Joi.string().optional(),
-                    sendEmail: Joi.string().optional(),
-                    sendWhatsapp: Joi.string().optional()
+                    sendEmail: Joi.boolean().optional(),
+                    sendWhatsapp: Joi.boolean().optional()
                 })
             }
         }
