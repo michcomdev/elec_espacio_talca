@@ -1,4 +1,5 @@
 import Member from '../../models/Member'
+import Sector from '../../models/Sectors'
 import Lectures from '../../models/Lectures'
 import Invoices from '../../models/Invoices'
 import Payments from '../../models/Payments'
@@ -968,7 +969,9 @@ export default [
                         array.push(members[i]._id)
                     }*/
 
-                    let query = { $where: "this.invoicePaid < this.invoiceSubTotal"}
+                    let query = { 
+                        $where: 'this.invoicePaid < this.invoiceSubTotal'
+                    }
                     /*let queryInvoice = {
                         typeInvoice: { $exists : false },
                         lectures: { $ne: null }
@@ -976,8 +979,11 @@ export default [
                     let queryMembers = {
                         'subsidies.status' : 'active'
                     }*/
+                                                                                                // .populate([{ path: 'members', match: { 'address.sector': payload.sector }, populate: { path: 'address.sector'} }])
+                    let invoices = await Invoices.find(query).sort({'date' : 'descending'}).lean().populate(['lectures', 'members', { path: 'members.address.sector', model: 'sectors'}])
 
-                    let invoices = await Invoices.find(query).sort({'date' : 'descending'}).lean().populate(['lectures','members'])
+                    console.log('invoices', invoices[0])
+
 
                     for(let i=0; i<invoices.length; i++){
                         let member = array.find(x => x.member_id.toString() === invoices[i].members._id.toString())
@@ -996,6 +1002,7 @@ export default [
                                 member_id: invoices[i].members._id,
                                 name: name,
                                 address: invoices[i].members.address.address,
+                                sector:  invoices[i].members.address.sector,
                                 rut: invoices[i].members.rut,
                                 toPay: invoices[i].invoiceSubTotal,
                                 paid: invoices[i].invoicePaid,
@@ -1008,7 +1015,25 @@ export default [
                     }
 
 
-                    return array
+                    //filtro meses
+                    let arrayMonths = []
+                    array.forEach(el => {
+                        if (payload.months !== '0') {//con filtro
+                            if (payload.months == '6' && el.months >= payload.months) { //>5
+                                arrayMonths.push(el)
+                            } else if (payload.months == el.months) { //valor mandado
+                                console.log('el', el);
+                                arrayMonths.push(el) 
+                            }
+                        } else { //todos
+                            arrayMonths.push(el)
+                        }
+                    })
+
+
+                    //filtro sector
+
+                    return arrayMonths
 
                     /*let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
                     let members = await Member.find(queryMembers).lean()
@@ -1048,7 +1073,8 @@ export default [
             },
             validate: {
                 payload: Joi.object().keys({
-                    sector: Joi.string().allow('').optional()
+                    sector: Joi.string().allow('').optional(),
+                    months: Joi.string().allow('').optional()
                 })
             }
         }

@@ -151,7 +151,9 @@ async function getParameters() {
 async function getDefaulter() {
 
     let query = {
-        sector: $("#searchSector").val()/*, 
+        sector: $("#searchSector").val(),
+        months: $("#searchMonths").val(),
+        /*
         paymentMethod: $("#searchPaymentMethod").val(),
         dateStart: $("#searchDate").data('daterangepicker').startDate.format('YYYY-MM-DD'),
         dateEnd: $("#searchDate").data('daterangepicker').endDate.format('YYYY-MM-DD')*/
