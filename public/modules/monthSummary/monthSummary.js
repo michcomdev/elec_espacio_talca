@@ -309,9 +309,15 @@ function showInvoices(date){
                 name = payments[i].members.enterprise.fullName
             }
 
-            let number = payments[i].invoices[j].invoices.number
-            if(!$.isNumeric(payments[i].invoices[j].invoices.number)){
-                number = 'Saldo'
+            let number = 'Saldo'
+            if(payments[i].invoices[j].invoices){
+                if(payments[i].invoices[j].invoices.number){
+                    if($.isNumeric(payments[i].invoices[j].invoices.number)){
+                        number = payments[i].invoices[j].invoices.number
+                    }
+                }
+            }else{
+                number = 'Saldo a favor'
             }
 
             let idBody = '', arrayIndex = 0
