@@ -1627,7 +1627,7 @@ async function sendData(type,memberID,invoiceID) {
 
         return
     }else{
-        return //Deshabilitar si se reutilizan boletas
+        //return //Deshabilitar si se reutilizan boletas
 
         if(invoice.invoiceSubTotal==0){
             let generateDoc = await Swal.fire({

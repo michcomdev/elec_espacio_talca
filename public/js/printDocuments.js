@@ -1723,8 +1723,8 @@ async function printVoucher(memberID,paymentID) {
                     doc.setFontSize(7)
                     doc.text('   • CONSUMO   $ ' + dot_separators(payment.invoices[i].invoices.invoiceSubTotal), pdfX, pdfY)
 
-                    pdfY += 11
                     for(let j=0; j<payment.invoices[i].invoices.agreements.length; j++){
+                        pdfY += 11
                         doc.text('   • ' + payment.invoices[i].invoices.agreements[j].text + '   $ ' + dot_separators(payment.invoices[i].invoices.agreements[j].amount), pdfX, pdfY)
                     }
                     doc.setFontSize(9)

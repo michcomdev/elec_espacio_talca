@@ -155,8 +155,7 @@ export default [
                         }else if(payload.order=="5"){
                             order = {'address.address': 'asc'}
                         }
-                    }
-                    console.log(order)*/
+                    }*/
                     if(payload.order){
                         if(payload.order=="1"){
                             lectures.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
@@ -437,10 +436,6 @@ export default [
                             
 
                             /*let payment = paymentsMember.invoices.find(x => (x.invoices.toString()) ? x.invoices.toString() : '' == invoices[i]._id.toString())
-                            if(invoices[i].number==60437){
-                                console.log(paymentsMember)
-                                console.log(payment)
-                            }
                             
                             if(payment){
                                 invoices[i].paymentVoucher = paymentsMember
@@ -913,10 +908,7 @@ export default [
                                 
                                 let invoicesMember = invoices.filter(x => x.members.toString() === lectures[i].members._id.toString())
                                 if(invoicesMember){
-                                    //console.log(lectures[i].members._id.toString(),invoicesMember,invoicesMember.length)
                                     for(let j=0; j<invoicesMember.length; j++){
-
-                                        //console.log(invoicesMember[j].invoicePaid,invoicesMember[j].invoiceSubTotal)
                                         if(invoicesMember[j].invoicePaid<invoicesMember[j].invoiceSubTotal){
                                             lectures[i].invoiceDebts++
                                         }
@@ -982,9 +974,6 @@ export default [
                                                                                                 // .populate([{ path: 'members', match: { 'address.sector': payload.sector }, populate: { path: 'address.sector'} }])
                     let invoices = await Invoices.find(query).sort({'date' : 'descending'}).lean().populate(['lectures', 'members', { path: 'members.address.sector', model: 'sectors'}])
 
-                    console.log('invoices', invoices[0])
-
-
                     for(let i=0; i<invoices.length; i++){
                         let member = array.find(x => x.member_id.toString() === invoices[i].members._id.toString())
                         if(member){
@@ -1022,7 +1011,6 @@ export default [
                             if (payload.months == '6' && el.months >= payload.months) { //>5
                                 arrayMonths.push(el)
                             } else if (payload.months == el.months) { //valor mandado
-                                console.log('el', el);
                                 arrayMonths.push(el) 
                             }
                         } else { //todos
@@ -1046,10 +1034,8 @@ export default [
                                 
                                 let invoicesMember = invoices.filter(x => x.members.toString() === lectures[i].members._id.toString())
                                 if(invoicesMember){
-                                    console.log(lectures[i].members._id.toString(),invoicesMember,invoicesMember.length)
                                     for(let j=0; j<invoicesMember.length; j++){
 
-                                        console.log(invoicesMember[j].invoicePaid,invoicesMember[j].invoiceSubTotal)
                                         if(invoicesMember[j].invoicePaid<invoicesMember[j].invoiceSubTotal){
                                             lectures[i].invoiceDebts++
                                         }

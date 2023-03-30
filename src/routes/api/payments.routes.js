@@ -112,7 +112,6 @@ export default [
                         for(let j=0; j<payments[i].invoices.length; j++){
                             //invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).invoiceDebt += payments[i].invoices[j].amount
                             if(payments[i].invoices[j].amountMonth){
-                                console.log(invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()))
                                 if(invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidConsumption){
                                     invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).paidConsumption += payments[i].invoices[j].amountMonth
                                 }else{

@@ -543,7 +543,7 @@ export default [
                     }*/
 
                     let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
-                    /*console.log(invoices)
+                    /*
                     let queryPayment = {
                         members: payload.member
                     }
@@ -626,8 +626,6 @@ export default [
                             }
                         }
                     }
-
-                    //console.log(invoices)
 
                     if(payload.paymentID){
                         let payments = await Payments.findById(payload.paymentID).lean()

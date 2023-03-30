@@ -8,9 +8,9 @@ let internals = {
 
 let sectors, services
 let parametersGeneral
+let months = [[],[],[],[],[],[]]
 
 $(document).ready(async function () {
-    console.log('here')
     $('#searchDate').daterangepicker({
         opens: 'left',
         locale: dateRangePickerDefaultLocale,
@@ -90,7 +90,6 @@ function loadDefaulter() {
             },
             rowCallback: function (row, data) {
 
-                console.log(row)
                 if($(row).find('td:eq(0)').text()=='10000'){
                     $(row).find('td:eq(0)').html(``)
                     $(row).find('td:eq(3)').html(`<label style="font-weight: bold">$ ${dot_separators(data.rut)}</label>`)
@@ -149,6 +148,7 @@ async function getParameters() {
 }
 
 async function getDefaulter() {
+    months = [[],[],[],[],[],[]]
 
     let query = {
         sector: $("#searchSector").val(),
@@ -203,11 +203,17 @@ async function getDefaulter() {
             toPay += el.toPay
             paid += el.paid
             balance += el.balance
+
+            if(el.months>5){
+                months[5].push(el)
+            }else{
+                months[el.months-1].push(el)
+            }
+
+            
             
             return el
         })
-
-        console.log(toPay, paid, balance)
 
         if(formatData.length>0){
             formatData.push({
@@ -221,7 +227,7 @@ async function getDefaulter() {
                 months: '',
             })
 
-
+            console.log(months)
             internals.defaulter.table.rows.add(formatData).draw()
         }else{
             toastr.warning('No se han encontrado datos de pagos')
@@ -230,4 +236,67 @@ async function getDefaulter() {
         toastr.warning('No se han encontrado datos de pagos')
     }
     $('#loadingDefaulter').empty()
+}
+
+
+function exportTo(to){
+
+    for(let i=0; i<months.length; i++){
+        for(let j=0; j<months[i].length; j++){
+            $("#tableDefaulterExcelBody").append(`
+                <tr>
+                    <td>${months[i][j]['number']}</td>
+                    <td>${months[i][j]['name']}</td>
+                    <td>${months[i][j]['address']}</td>
+                    <td>${months[i][j]['rut']}</td>
+                    <td>${months[i][j]['toPay']}</td>
+                    <td>${months[i][j]['paid']}</td>
+                    <td>${months[i][j]['balance']}</td>
+                    <td>${months[i][j]['months']}</td>
+                </tr>`)
+        }
+    }
+
+//    setTimeout(() => {
+        if(to=='excel'){
+            ExportToExcel('xlsx')
+        }else{
+            exportToPDF()
+        }
+    //}, 2000)
+
+}
+
+
+function ExportToExcel(type, fn, dl) {
+    var elt = document.getElementById('tableDefaulterExcel')
+    var wb = XLSX.utils.table_to_book(elt, { sheet: "Hoja1" })
+    return dl ?
+      XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }):
+      XLSX.writeFile(wb, fn || ('Reporte.' + (type || 'xlsx')))
+}
+
+function exportToPDF(){
+    var doc = new jsPDF('l','pt','letter')
+    doc.autoTable({ 
+        html: "#tableDefaulterExcel",
+        styles: {
+            fontSize: 6,
+            valign: 'middle',
+            halign: 'right'
+        },
+        columnStyles: {
+            0: {cellWidth: 20},
+            1: {cellWidth: 120, halign: 'left'},
+            
+        },
+        didParseCell: (hookData) => {
+            if (hookData.section === 'head') {
+                if (hookData.column.dataKey === '1') {
+                    hookData.cell.styles.halign = 'left';
+                }
+            }
+        }
+    })
+    doc.save("table.pdf")
 }

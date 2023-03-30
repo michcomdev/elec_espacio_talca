@@ -27,17 +27,21 @@
             <option value="6">Mayor a 5 meses</option>
         </select>
     </div>
-    <div class="col-md-2" style="text-align: right;">
-       
-    </div>
-
-    <div class="col-md-3">
-        <button style="border-radius: 5px;" class="btn btn-sm btn-primary
+    <div class="col-md-2">
+        <button style="border-radius: 5px;" class="btn btn-primary
             btn-block" id="searchDefaulter">
             <i class="fas fa-search"></i> FILTRAR
         </button>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
+        <button style="border-radius: 5px;" class="btn btn-success btn-block" onclick="exportTo('excel')">
+            <i class="fas fa-file-excel"></i> Exportar a Excel
+        </button>
+    </div>
+    <div class="col-md-2">
+        <button style="border-radius: 5px;" class="btn btn-danger btn-block" onclick="exportTo('pdf')">
+            <i class="fas fa-file-pdf"></i> Exportar a PDF
+        </button>
     </div>
     <div class="col-md-12">
         <br/>
@@ -57,6 +61,24 @@
                     <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">MESES</th>
                 </tr>
             </thead>
+        </table>
+
+        <table id="tableDefaulterExcel" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
+            <thead>
+                <tr>
+                    <th>N° SOCIO</th>
+                    <th>NOMBRE</th>
+                    <th>DIRECCIÓN</th>
+                    <th>RUT</th>
+                    <th>TOTAL A PAGAR</th>
+                    <th>PAGADO</th>
+                    <th>SALDO</th>
+                    <th>MESES</th>
+                </tr>
+            </thead>
+            <tbody id="tableDefaulterExcelBody">
+
+            </tbody>
         </table>
         <div id="loadingDefaulter">
             <center>
@@ -101,4 +123,5 @@
 </div>
 {{#extend "js"}}
 <script src="/public/modules/defaulter/defaulter.js"></script>
+<script src="/public/js/xlsx.full.min.js"></script>
 {{/extend}}
