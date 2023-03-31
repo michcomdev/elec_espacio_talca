@@ -694,6 +694,41 @@ async function saveMultiple(){
         
         for(let i=0; i<internals.invoices.length; i++){
             if($("#chk"+internals.invoices[i].member).prop('checked')){
+
+
+                //TEST DELAY 2 SEGUNDOS POR PETICIÓN
+                console.log(internals.invoices[i])
+                if(!internals.invoices[i].id){
+
+                    let saveInvoice = await axios.post('/api/invoiceSave', internals.invoices[i])
+                    console.log(saveInvoice.data)
+                    if (saveInvoice.data) {
+                        if (saveInvoice.data._id) {
+                            //progressIndex++
+                            setTimeout(async () => {
+                                console.log('waited 2 seconds...')
+                                progressBar()
+                                //await sendData(internals.invoices[i].memberType,internals.invoices[i].member,saveInvoice.data._id)
+
+                            }, 2000)
+                        }
+                    }
+                }else{
+                    let updateInvoice = await axios.post('/api/invoiceUpdate', internals.invoices[i])
+                    console.log(updateInvoice.data)
+                    if (updateInvoice.data) {
+                        if (updateInvoice.data._id) {
+                            //progressIndex++
+                            setTimeout(async () => {
+                                console.log('waited 2 seconds...')
+                                progressBar()
+                                //await sendData(internals.invoices[i].memberType,internals.invoices[i].member,updateInvoice.data._id)
+                            }, 2000)
+                        }
+                    }
+                }
+
+
                 /*console.log(progressIndex,progressIndex%10)
                 if(progressIndex%10==0){
                     setTimeout(() => {
@@ -703,6 +738,7 @@ async function saveMultiple(){
                 progressIndex++
                 progressBar()*/
                 
+                /*CÓDIGO ORIGINAL
                 console.log(internals.invoices[i])
                 if(!internals.invoices[i].id){
 
@@ -724,6 +760,7 @@ async function saveMultiple(){
                         }
                     }
                 }
+                */
             }
 
             if(i+1==internals.invoices.length){

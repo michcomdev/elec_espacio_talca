@@ -39,6 +39,8 @@ function chargeSummaryTable() {
             internals.cartola.table.clear().destroy()
         }
 
+$('#tutabla').DataTable()
+
         internals.cartola.table = $('#tableSummary')
         .DataTable( {
             dom: 'Bfrtip',
@@ -302,12 +304,12 @@ function showInvoices(date){
     for(let i=0; i<payments.length; i++){
         for(let j=0; j<payments[i].invoices.length; j++){
 
-            let name = ''
+            /*let name = ''
             if(payments[i].members.type=='personal'){
                 name = payments[i].members.personal.name+' '+payments[i].members.personal.lastname1+' '+payments[i].members.personal.lastname2
             }else{
                 name = payments[i].members.enterprise.fullName
-            }
+            }*/
 
             let number = 'Saldo'
             if(payments[i].invoices[j].invoices){
@@ -351,6 +353,7 @@ function showInvoices(date){
                 <tr>
                     <td style="text-align: center">${payments[i].members.number}</td>
                     <td style="text-align: center">${number}</td>
+                    <td style="text-align: center">${payments[i].transaction}</td>
                     <td style="text-align: right">${dot_separators(payments[i].invoices[j].amount)}</td>
                 </tr>
             `)
@@ -358,7 +361,8 @@ function showInvoices(date){
             arrayExcel[arrayIndex].push({
                 0: payments[i].members.number,
                 1: number,
-                2: payments[i].invoices[j].amount
+                2: payments[i].transaction,
+                3: payments[i].invoices[j].amount
             })
 
             if(i+1==payments.length && j+1==payments[i].invoices.length){
@@ -375,33 +379,37 @@ function showInvoices(date){
 
                 for(let j=0; j<maxIndex; j++){
 
-                    let row1 = '<td></td><td></td><td></td><td></td>'
-                    let row2 = '<td></td><td></td><td></td><td></td>'
-                    let row3 = '<td></td><td></td><td></td><td></td>'
-                    let row4 = '<td></td><td></td><td></td>'
+                    let row1 = '<td></td><td></td><td></td><td></td><td></td>'
+                    let row2 = '<td></td><td></td><td></td><td></td><td></td>'
+                    let row3 = '<td></td><td></td><td></td><td></td><td></td>'
+                    let row4 = '<td></td><td></td><td></td><td></td>'
 
                     if(arrayExcel[0][j]){
                         row1 = `<td style="text-align: center">${arrayExcel[0][j][0]}</td>
                                 <td style="text-align: center">${arrayExcel[0][j][1]}</td>
-                                <td style="text-align: right">${arrayExcel[0][j][2]}</td>
+                                <td style="text-align: center">${arrayExcel[0][j][2]}</td>
+                                <td style="text-align: right">${arrayExcel[0][j][3]}</td>
                                 <td></td>`
                     }
                     if(arrayExcel[1][j]){
                         row2 = `<td style="text-align: center">${arrayExcel[1][j][0]}</td>
                                 <td style="text-align: center">${arrayExcel[1][j][1]}</td>
-                                <td style="text-align: right">${arrayExcel[1][j][2]}</td>
+                                <td style="text-align: center">${arrayExcel[1][j][2]}</td>
+                                <td style="text-align: right">${arrayExcel[1][j][3]}</td>
                                 <td></td>`
                     }
                     if(arrayExcel[2][j]){
                         row3 = `<td style="text-align: center">${arrayExcel[2][j][0]}</td>
                                 <td style="text-align: center">${arrayExcel[2][j][1]}</td>
-                                <td style="text-align: right">${arrayExcel[2][j][2]}</td>
+                                <td style="text-align: center">${arrayExcel[2][j][2]}</td>
+                                <td style="text-align: right">${arrayExcel[2][j][3]}</td>
                                 <td></td>`
                     }
                     if(arrayExcel[3][j]){
                         row4 = `<td style="text-align: center">${arrayExcel[3][j][0]}</td>
                                 <td style="text-align: center">${arrayExcel[3][j][1]}</td>
-                                <td style="text-align: right">${arrayExcel[3][j][2]}</td>`
+                                <td style="text-align: center">${arrayExcel[3][j][2]}</td>
+                                <td style="text-align: right">${arrayExcel[3][j][3]}</td>`
                     }
 
                     $("#tableDetailExcelBody").append(`
@@ -416,19 +424,19 @@ function showInvoices(date){
                     if(j+1==maxIndex){
                         $("#tableDetailExcelBody").append(`
                             <tr>
-                                <td></td>
+                                <td colspan="2"></td>
                                 <td style="text-align: right">TOTAL</td>
                                 <td style="text-align: right">${total1}</td>
                                 <td></td>
-                                <td></td>
+                                <td colspan="2"></td>
                                 <td style="text-align: right">TOTAL</td>
                                 <td style="text-align: right">${total2}</td>
                                 <td></td>
-                                <td></td>
+                                <td colspan="2"></td>
                                 <td style="text-align: right">TOTAL</td>
                                 <td style="text-align: right">${total3}</td>
                                 <td></td>
-                                <td></td>
+                                <td colspan="2"></td>
                                 <td style="text-align: right">TOTAL</td>
                                 <td style="text-align: right">${total4}</td>
                             </tr>

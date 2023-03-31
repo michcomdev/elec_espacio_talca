@@ -1782,7 +1782,6 @@ async function sendData(type,memberID,invoiceID) {
                     }
                 }
 
-
             }else{
                 name = member.enterprise.fullName
                 category = member.enterprise.category
