@@ -691,6 +691,7 @@ async function saveMultiple(){
         //let progressIndex = 1
         $('#modalProgress').modal('show')
         progressBar()
+        let arraySend = []
         
         for(let i=0; i<internals.invoices.length; i++){
             if($("#chk"+internals.invoices[i].member).prop('checked')){
@@ -704,13 +705,11 @@ async function saveMultiple(){
                     console.log(saveInvoice.data)
                     if (saveInvoice.data) {
                         if (saveInvoice.data._id) {
-                            //progressIndex++
-                            setTimeout(async () => {
-                                console.log('waited 2 seconds...')
-                                progressBar()
-                                //await sendData(internals.invoices[i].memberType,internals.invoices[i].member,saveInvoice.data._id)
-
-                            }, 2000)
+                            arraySend.push({
+                                memberType: internals.invoices[i].memberType,
+                                member: internals.invoices[i].member,
+                                id: saveInvoice.data._id
+                            })
                         }
                     }
                 }else{
@@ -718,25 +717,29 @@ async function saveMultiple(){
                     console.log(updateInvoice.data)
                     if (updateInvoice.data) {
                         if (updateInvoice.data._id) {
-                            //progressIndex++
-                            setTimeout(async () => {
-                                console.log('waited 2 seconds...')
-                                progressBar()
-                                //await sendData(internals.invoices[i].memberType,internals.invoices[i].member,updateInvoice.data._id)
-                            }, 2000)
+                            arraySend.push({
+                                memberType: internals.invoices[i].memberType,
+                                member: internals.invoices[i].member,
+                                id: updateInvoice.data._id
+                            })
                         }
                     }
                 }
 
-
-                /*console.log(progressIndex,progressIndex%10)
-                if(progressIndex%10==0){
-                    setTimeout(() => {
-                        console.log('waiting 10 seconds...')
-                    }, 10000)
+                if(i+1==internals.invoices.length){
+                    console.log(arraySend)
+                    let j = 0
+                    let interval = setInterval(async () => {
+                        await sendData(arraySend[j].memberType,arraySend[j].member,arraySend[j].id)
+                        console.log(j,arraySend[j].memberType,arraySend[j].member,arraySend[j].id)
+                        progressValue++
+                        progressBar()
+                        j++
+                        if(j==arraySend.length){
+                            clearInterval(interval)
+                        }
+                    }, 2000)
                 }
-                progressIndex++
-                progressBar()*/
                 
                 /*CÓDIGO ORIGINAL
                 console.log(internals.invoices[i])
@@ -1649,6 +1652,7 @@ async function sendData(type,memberID,invoiceID) {
         }
             
         let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
+        progressValue++
         progressBar()
 
     }else{
@@ -1699,6 +1703,7 @@ async function sendData(type,memberID,invoiceID) {
             }
                 
             let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
+            progressValue++
             progressBar()
 
 
@@ -1884,6 +1889,7 @@ async function sendData(type,memberID,invoiceID) {
 
             let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
             //loadingHandler('stop')
+            progressValue++
             progressBar()
             console.log('Generado Folio:',response.FOLIO)
             /*$('#modal_title').html(`Almacenado`)
@@ -1998,14 +2004,17 @@ function selectAll(btn){
 }
 
 function progressBar(){
-    progressValue++
 
     $("#progressTitle").text('Generando boleta ' + progressValue + ' de '+ progressTotal)
     let percentage = parseInt(100 / progressTotal * progressValue)
     $("#progressBar").css('width', percentage + '%')
 
     if(progressTotal==progressValue){
-        toastr.success('Boletas generadas, favor recargar para mostrar')
+        toastr.success('Boletas generadas, se recargarán los registros en 3 segundos')
+        setTimeout(async () => {
+            $('#modalProgress').modal('hide')
+            chargeMembersTable()
+        }, 3000)
     }
 
 }
