@@ -523,8 +523,14 @@ async function calculate(){
             }
 
             //Carga de boletas adeudadas
-            let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: array[i].members._id })
+            let invoicesDebtData = await axios.post('/api/invoicesDebt', { 
+                member: array[i].members._id,
+                year: parseInt(array[i].year),
+                month: parseInt(array[i].month)
+            })
             let invoicesDebt = invoicesDebtData.data
+
+            console.log(array[i].members.number, invoicesDebt)
 
             let debt = 0
             if(invoicesDebt.length>0){
@@ -1465,8 +1471,14 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         }
 
         //Carga de boletas adeudadas
-        let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
+        let invoicesDebtData = await axios.post('/api/invoicesDebt', { 
+            member: memberID,
+            year: parseInt(year),
+            month: parseInt(monthDue)
+        })
         let invoicesDebt = invoicesDebtData.data
+
+        console.log(memberID, invoicesDebt, parseInt(year), parseInt(month))
 
         let debt = 0
         if(invoicesDebt.length>0){
@@ -1956,6 +1968,32 @@ async function printMultiple(chk) {
 
                 let lecturesData = await axios.post('/api/lecturesSingleMember', { member: $(this).attr('data-member-id') })
                 object.lectures = lecturesData.data
+
+                let invoicesDebtData = await axios.post('/api/invoicesDebt', { 
+                    member: $(this).attr('data-member-id'),
+                    year: parseInt(object.invoice.lectures.year),
+                    month: parseInt(object.invoice.lectures.month),
+                    print: object.invoice.date, //Fecha de boleta
+                    invoiceID: $(this).attr('data-invoice-id')
+                })
+                let invoicesDebt = invoicesDebtData.data
+                let debt = 0
+                if(invoicesDebt.length>0){
+                    for(let i=0; i<invoicesDebt.length; i++){
+                        let agreementValue = 0
+                        for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                            agreementValue += invoicesDebt[i].agreements[j].amount
+                        }
+                        if(invoicesDebt[i].invoicePaid){
+                            debt += (invoicesDebt[i].invoiceSubTotal + agreementValue) - invoicesDebt[i].invoicePaid
+                        }else{
+                            debt += invoicesDebt[i].invoiceSubTotal + agreementValue
+                        }
+                    }
+                }
+                object.invoice.debt = debt
+
+
                 
                 array.push(object)
                 countIndex++

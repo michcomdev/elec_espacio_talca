@@ -65,6 +65,28 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     let parametersData = await axios.get('/api/parameters')
     let parameters = parametersData.data
 
+    let invoicesDebtData = await axios.post('/api/invoicesDebt', { 
+        member: memberID,
+        year: parseInt(invoice.lectures.year),
+        month: parseInt(invoice.lectures.month),
+        print: invoice.date, //Fecha de boleta
+        invoiceID: invoiceID
+    })
+    let invoicesDebt = invoicesDebtData.data
+    let debt = 0
+    if(invoicesDebt.length>0){
+        for(let i=0; i<invoicesDebt.length; i++){
+            let agreementValue = 0
+            for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                agreementValue += invoicesDebt[i].agreements[j].amount
+            }
+            if(invoicesDebt[i].invoicePaid){
+                debt += (invoicesDebt[i].invoiceSubTotal + agreementValue) - invoicesDebt[i].invoicePaid
+            }else{
+                debt += invoicesDebt[i].invoiceSubTotal + agreementValue
+            }
+        }
+    }
 
     let docName1 = '', docName2 = 'EXENTA ELECTRÓNICA', memberName = '', siiValue = 'S.I.I. - CURICO'
     if (type == 'personal') {
@@ -394,9 +416,12 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     }
 
     doc.setFontType('bold')
-    text = dot_separators(invoice.invoiceDebt)
+    text = dot_separators(debt)
     doc.text(text, pdfX + index + 14, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
-    value3 = invoice.invoiceDebt
+    value3 = debt
+    //text = dot_separators(invoice.invoiceDebt)
+    //doc.text(text, pdfX + index + 14, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+    //value3 = invoice.invoiceDebt
 
     if(invoice.invoicePositive){
         doc.setTextColor(249, 51, 6)
@@ -437,7 +462,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     doc.text('TOTAL A PAGAR', pdfX + 181, pdfY, 'left', 90)
     doc.text('$ ', pdfX + 181, offsetY('center', pdfY - 80, textMaxWidth, text, doc), 'left', 90)
     doc.setFontSize(20)
-    text = dot_separators(invoice.invoiceTotal)
+    //text = dot_separators(invoice.invoiceTotal)
+    text = dot_separators(value1 + value2 + value3)
     doc.text(text, pdfX + 181, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
 
     doc.setFontSize(13)
@@ -783,6 +809,28 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     let parametersData = await axios.get('/api/parameters')
     let parameters = parametersData.data
 
+    let invoicesDebtData = await axios.post('/api/invoicesDebt', { 
+        member: memberID,
+        year: parseInt(invoice.lectures.year),
+        month: parseInt(invoice.lectures.month),
+        print: invoice.date, //Fecha de boleta
+        invoiceID: invoiceID
+    })
+    let invoicesDebt = invoicesDebtData.data
+    let debt = 0
+    if(invoicesDebt.length>0){
+        for(let i=0; i<invoicesDebt.length; i++){
+            let agreementValue = 0
+            for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                agreementValue += invoicesDebt[i].agreements[j].amount
+            }
+            if(invoicesDebt[i].invoicePaid){
+                debt += (invoicesDebt[i].invoiceSubTotal + agreementValue) - invoicesDebt[i].invoicePaid
+            }else{
+                debt += invoicesDebt[i].invoiceSubTotal + agreementValue
+            }
+        }
+    }
 
     let docName1 = '', docName2 = 'EXENTA ELECTRÓNICA', memberName = '', siiValue = 'S.I.I. - CURICO'
     if (type == 'personal') {
@@ -1087,8 +1135,10 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     //doc.setFontType('bold')
     //doc.text(dot_separators(parseInt(invoice.invoiceSubTotal) + parseInt(totalAgreement)), pdfX + 250, pdfY + index, 'right')
     doc.setFontType('bold')
-    doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 14, 'right')
-    value3 = invoice.invoiceDebt
+    doc.text(dot_separators(debt), pdfX + 250, pdfY + index + 14, 'right')
+    value3 = debt
+    //doc.text(dot_separators(invoice.invoiceDebt), pdfX + 250, pdfY + index + 14, 'right')
+    //value3 = invoice.invoiceDebt
 
     if(invoice.invoicePositive){
         doc.setTextColor(249, 51, 6)
@@ -1126,7 +1176,8 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.text('TOTAL A PAGAR', pdfX, pdfY + 185)
     doc.text('$ ', pdfX + 155, pdfY + 185, 'center')
     doc.setFontSize(20)
-    doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 185, 'right')
+    //doc.text(dot_separators(invoice.invoiceTotal), pdfX + 250, pdfY + 185, 'right')
+    doc.text(dot_separators(value1 + value2 + value3), pdfX + 250, pdfY + 185, 'right')
     
     doc.setFontSize(13)
     doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 203)
@@ -2172,9 +2223,12 @@ async function printFinal(array,letter){
         }
     
         doc.setFontType('bold')
-        text = dot_separators(array[k].invoice.invoiceDebt)
+        text = dot_separators(array[k].invoice.debt)
         doc.text(text, pdfX + index + 14, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
-        value3 = array[k].invoice.invoiceDebt
+        value3 = array[k].invoice.debt
+        //text = dot_separators(array[k].invoice.invoiceDebt)
+        //doc.text(text, pdfX + index + 14, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
+        //value3 = array[k].invoice.invoiceDebt
     
         if(array[k].invoice.invoicePositive){
             doc.setTextColor(249, 51, 6)
@@ -2197,7 +2251,8 @@ async function printFinal(array,letter){
         doc.text('TOTAL A PAGAR', pdfX + 181, pdfY, 'left', 90)
         doc.text('$ ', pdfX + 181, offsetY('center', pdfY - 80, textMaxWidth, text, doc), 'left', 90)
         doc.setFontSize(20)
-        text = dot_separators(array[k].invoice.invoiceTotal)
+        //text = dot_separators(array[k].invoice.invoiceTotal)
+        text = dot_separators(value1 + value2 + value3)
         doc.text(text, pdfX + 181, offsetY('right', pdfY - 250, null, text, doc), 'left', 90)
     
         doc.setFontSize(13)
@@ -2746,8 +2801,10 @@ async function printFinalPortrait(array){
         }
 
         doc.setFontType('bold')
-        doc.text(dot_separators(array[k].invoice.invoiceDebt), pdfX + 250, pdfY + index + 14, 'right')
-        value3 = array[k].invoice.invoiceDebt
+        doc.text(dot_separators(array[k].invoice.debt), pdfX + 250, pdfY + index + 14, 'right')
+        value3 = array[k].invoice.debt
+        //doc.text(dot_separators(array[k].invoice.invoiceDebt), pdfX + 250, pdfY + index + 14, 'right')
+        //value3 = array[k].invoice.invoiceDebt
 
         if(array[k].invoice.invoicePositive){
             doc.setTextColor(249, 51, 6)
@@ -2779,7 +2836,8 @@ async function printFinalPortrait(array){
         doc.text('TOTAL A PAGAR', pdfX, pdfY + 185)
         doc.text('$ ', pdfX + 155, pdfY + 185, 'center')
         doc.setFontSize(20)
-        doc.text(dot_separators(array[k].invoice.invoiceTotal), pdfX + 250, pdfY + 185, 'right')
+        //doc.text(dot_separators(array[k].invoice.invoiceTotal), pdfX + 250, pdfY + 185, 'right')
+        doc.text(dot_separators(value1 + value2 + value3), pdfX + 250, pdfY + 185, 'right')
 
         doc.setFontSize(13)
         doc.text('FECHA VENCIMIENTO', pdfX, pdfY + 203)

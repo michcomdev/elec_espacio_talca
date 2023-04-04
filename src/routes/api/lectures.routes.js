@@ -1008,7 +1008,8 @@ export default [
                     let arrayMonths = []
                     array.forEach(el => {
                         if (payload.months !== '0') {//con filtro
-                            if (payload.months == '6' && el.months >= payload.months) { //>5
+                            if(payload.months[1]=='A' && el.months >= parseInt(payload.months[0])){
+                            //if (payload.months == '6' && el.months >= payload.months) { //>5
                                 arrayMonths.push(el)
                             } else if (payload.months == el.months) { //valor mandado
                                 arrayMonths.push(el) 

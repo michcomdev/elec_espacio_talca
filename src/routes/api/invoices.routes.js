@@ -528,46 +528,114 @@ export default [
             handler: async (request, h) => {
                 try {
                     let payload = request.payload
-                    let query = {
-                        members: payload.member,
-                        /*number: {
-                            $exists: true,
-                            $ne: 0
-                        },*/
-                        //$where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
-                        $where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
-                        
-                    }
-                    /*if(payload.paymentID){
-                        query._id = { $ne: payload.paymentID }
-                    }*/
 
-                    let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
-                    /*
-                    let queryPayment = {
-                        members: payload.member
-                    }
-
-                    let payments = await Payments.find(queryPayment).lean()
-                    for(let i=0; i<payments.length; i++){ // Se recorren las boletas pagadas y se asigna su monto cancelado a las boletas generales
-                        for(let j=0; j<payments[i].invoices.length; j++){
-                            invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).invoiceDebt += payments[i].invoices[j].amount
+                    if(!payload.month){
+                        let query = {
+                            members: payload.member,
+                            /*number: {
+                                $exists: true,
+                                $ne: 0
+                            },*/
+                            //$where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
+                            $where: "this.invoiceTotal != this.invoicePaid" //Si el valor de pago no es igual al pago total, la boleta se omitirá
+                            
                         }
-                    }*/
+                        /*if(payload.paymentID){
+                            query._id = { $ne: payload.paymentID }
+                        }*/
+                        let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
+                        
+                        /*
+                        let queryPayment = {
+                            members: payload.member
+                        }
 
-                    //console.log(invoices)
+                        let payments = await Payments.find(queryPayment).lean()
+                        for(let i=0; i<payments.length; i++){ // Se recorren las boletas pagadas y se asigna su monto cancelado a las boletas generales
+                            for(let j=0; j<payments[i].invoices.length; j++){
+                                invoices.find(x => x._id.toString() == payments[i].invoices[j].invoices.toString()).invoiceDebt += payments[i].invoices[j].amount
+                            }
+                        }*/
 
-                    if(payload.paymentID){
-                        let payments = await Payments.findById(payload.paymentID).lean()
-                        for(let i=0; i<payments.invoices.length; i++){
-                            if(payments.invoices[i].invoices){
-                                let index = invoices.map(x => x._id.toString()).indexOf(payments.invoices[i].invoices.toString())
-                                invoices.splice(index,1)
+                        //console.log(invoices)
+
+                        if(payload.paymentID){
+                            let payments = await Payments.findById(payload.paymentID).lean()
+                            for(let i=0; i<payments.invoices.length; i++){
+                                if(payments.invoices[i].invoices){
+                                    let index = invoices.map(x => x._id.toString()).indexOf(payments.invoices[i].invoices.toString())
+                                    invoices.splice(index,1)
+                                }
                             }
                         }
-                    }
 
-                    return invoices
+                        return invoices
+                    }else{
+                        let query = {
+                            members: payload.member
+                        }
+                        if(payload.invoiceID){
+                            query._id = { $ne: payload.invoiceID }
+                        }
+
+                        let invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
+                        let lastDate = ''
+
+                        let lastMonth = (payload.month==1) ? 12 : payload.month - 1
+                        let lastYear = (payload.month==1) ? payload.year - 1 : payload.year
+
+                        for(let i=0; i<invoices.length; i++){
+                            if(invoices[i].lectures.month==lastMonth && invoices[i].lectures.year==lastYear){
+                                lastDate = new Date(invoices[i].dateExpire)
+                                lastDate.setDate(lastDate.getDate() + 1)
+                            }
+                        }
+                        
+                        if(lastDate==''){
+                            invoices = await Invoices.find({members: payload.member, $where: "this.invoiceTotal != this.invoicePaid"}).lean().populate(['lectures','services.services'])
+                        }else{
+                            if(payload.print){
+                                lastDate = payload.print
+                            }
+                            let payments = await Payments.find({
+                                members: payload.member, 
+                                date: {$lt: lastDate}
+                            }).lean()
+                            
+                            for(let l=0; l<invoices.length; l++){
+                                if(invoices[l].annulment){
+                                    invoices.splice(l,1)
+                                    l--
+                                }else if(invoices[l].invoicePaid!=0){
+                                    invoices[l].invoicePaid = 0
+                                    let flagOut = false
+                                    for(let j=0; j<payments.length; j++){
+                                        if(flagOut){
+                                            j = payments.length
+                                        }else{
+                                            for(let k=0; k<payments[j].invoices.length; k++){
+                                                if(payments[j].invoices[k].invoices){
+                                                    if(payments[j].invoices[k].invoices.toString()==invoices[l]._id.toString()){
+                                                        invoices[l].invoicePaid += payments[j].invoices[k].amount
+                                                        if(invoices[l].invoicePaid==invoices[l].invoiceTotal){
+                                                            invoices.splice(l,1)
+                                                            l--
+                                                            k = payments[j].invoices.length
+                                                            flagOut = true
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                            }
+
+                        }
+
+                        return invoices
+                    }
 
                 } catch (error) {
                     console.log(error)
@@ -580,7 +648,11 @@ export default [
             validate: {
                 payload: Joi.object().keys({
                     member: Joi.string().optional().allow(''),
-                    paymentID: Joi.string().optional().allow('')
+                    paymentID: Joi.string().optional().allow(''),
+                    year: Joi.number().optional(),
+                    month: Joi.number().optional(),
+                    print: Joi.string().optional(), //Impresión de deuda
+                    invoiceID: Joi.string().optional() //Impresión de deuda
                 })
             }
         }

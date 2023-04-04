@@ -1100,7 +1100,11 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         }
 
         //Carga de boletas adeudadas
-        let invoicesDebtData = await axios.post('/api/invoicesDebt', { member: memberID })
+        let invoicesDebtData = await axios.post('/api/invoicesDebt', { 
+            member: memberID,
+            year: parseInt(yearDue),
+            month: parseInt(monthDue)
+        })
         let invoicesDebt = invoicesDebtData.data
         let debt = 0
         if(invoicesDebt.length>0){

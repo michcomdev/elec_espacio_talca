@@ -273,7 +273,8 @@ return
 
 async function loadAgreements(member) {
 
-    let agreementData = await axios.post('/api/agreementsSingleMember', { member: internals.dataRowSelected._id })
+    //let agreementData = await axios.post('/api/agreementsSingleMember', { member: internals.dataRowSelected._id })
+    let agreementData = await axios.post('/api/agreementsSingleMember', { member: member })
     let agreements = agreementData.data
 
     console.log(agreements)
