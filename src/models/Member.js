@@ -64,7 +64,8 @@ const memberSchema = new Schema({
     orderIndex: { type: Number }, //Para orden en lista de lectura masiva/manual por sector
     positiveBalance: { type: Number },
     sendEmail: { type: Boolean },
-    sendWhatsapp: { type: Boolean }
+    sendWhatsapp: { type: Boolean },
+    interimCode: { type: Boolean }
 }, {
     versionKey: false
 })

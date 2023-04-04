@@ -1786,6 +1786,11 @@ async function sendData(type,memberID,invoiceID) {
                     }
                 }
 
+                if(member.interimCode){
+                    document.dte.Encabezado.Receptor.RUTRecep = '66666666-6'
+                    document.dte.Encabezado.Receptor.CdgIntRecep = member.number.toString()
+                }
+
             }else{
                 name = member.enterprise.fullName
                 category = member.enterprise.category
@@ -1874,6 +1879,7 @@ async function sendData(type,memberID,invoiceID) {
                 }
             }
 
+            console.log(document)
             
             var settings = {
                 "url": "https://"+parameters.emisor.link+"/v2/dte/document",

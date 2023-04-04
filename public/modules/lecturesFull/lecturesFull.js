@@ -1736,6 +1736,7 @@ async function sendData(type,memberID,invoiceID) {
                 CmnaOrigen: parameters.emisor.CmnaOrigen,
                 CdgSIISucur: parameters.emisor.CdgSIISucur
             }
+            
 
             /////////////////////////
             let debt = 0
@@ -1780,7 +1781,11 @@ async function sendData(type,memberID,invoiceID) {
                     Detalle: detail
                 }
             }
-
+            
+            if(member.interimCode){
+                document.dte.Encabezado.Receptor.RUTRecep = '66666666-6'
+                document.dte.Encabezado.Receptor.CdgIntRecep = member.number.toString()
+            }
         
         }else{
             name = member.enterprise.fullName
