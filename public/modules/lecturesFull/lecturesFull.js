@@ -733,13 +733,15 @@ async function saveMultiple(){
                 }
 
                 if(i+1==internals.invoices.length){
-                    console.log(arraySend)
+                    //console.log(arraySend)
                     let j = 0
                     let interval = setInterval(async () => {
+                        console.log('Enviado índice: '+j)
                         await sendData(arraySend[j].memberType,arraySend[j].member,arraySend[j].id)
+                        //console.log(j,arraySend[j].memberType,arraySend[j].member,arraySend[j].id)
                         console.log(j,arraySend[j].memberType,arraySend[j].member,arraySend[j].id)
-                        progressValue++
-                        progressBar()
+                        //progressValue++
+                        //progressBar()
                         j++
                         if(j==arraySend.length){
                             clearInterval(interval)
@@ -1450,8 +1452,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         let agreements = agreementData.data
 
-        console.log('agreements',agreements)
-
         $("#tableBodyAgreements").html('')
         
 
@@ -1477,8 +1477,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
             month: parseInt(monthDue)
         })
         let invoicesDebt = invoicesDebtData.data
-
-        console.log(memberID, invoicesDebt, parseInt(year), parseInt(month))
 
         let debt = 0
         if(invoicesDebt.length>0){
@@ -1575,8 +1573,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         })
 
         let agreements = agreementData.data
-        console.log(agreements)
-
+        
         $("#tableBodyAgreements").html('')
 
         if (agreements.length > 0) {
@@ -1645,9 +1642,6 @@ async function sendData(type,memberID,invoiceID) {
 
     let parametersData = await axios.get('/api/parameters')
     let parameters = parametersData.data
-
-    console.log('receiptstate',parameters.receiptState)
-    console.log('invoicetype', invoice.type)
 
     if(parameters.receiptState || invoice.type==0){
 
@@ -1868,8 +1862,8 @@ async function sendData(type,memberID,invoiceID) {
             }
         }
 
-        console.log(document)
-        console.log(JSON.stringify(document))
+        //console.log(document)
+        //console.log(JSON.stringify(document))
         var settings = {
             "url": "https://"+parameters.emisor.link+"/v2/dte/document",
             "method": "POST",
@@ -1891,7 +1885,7 @@ async function sendData(type,memberID,invoiceID) {
 
         }).done(async function (response) {
             
-            console.log(response)
+            //console.log(response)
             
             let dteData = {
                 id: invoiceID,
@@ -1902,7 +1896,7 @@ async function sendData(type,memberID,invoiceID) {
                 resolution: response.RESOLUCION
             }
 
-            console.log(dteData)
+            //console.log(dteData)
 
             let setDTEInvoice = await axios.post('/api/invoiceUpdateDTE', dteData)
             //loadingHandler('stop')
