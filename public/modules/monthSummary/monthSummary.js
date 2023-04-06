@@ -196,6 +196,7 @@ async function getSummary() {
     let lastDay = parseInt(moment($("#searchYear").val()+''+$("#searchMonth").val()+'01', "YYYYMMDD").endOf('month').format('DD'))
 
     for(let i = 1; i <= lastDay; i++){
+        console.log(i)
         let prefix = ''
         if(i<10){
             prefix = '0'
@@ -217,16 +218,22 @@ async function getSummary() {
             TOTAL: 0
         })
     }
-    
+
     arrayObjects.push({
-        date: '2023-03-24',
-        number: '62011',
-        total: 16893,
-        paymentAmount: 16893,
-        balance: 0,
-        status: 'VÁLIDA'
+        date: 'TOTAL',
+        payments: [],
+        invoices: [],
+        first: 0,
+        last: 0,
+        quantity: 0,
+        voucher: '',
+        EFECTIVO: 0,
+        CHEQUE: 0,
+        REDCOMPRA: 0,
+        TRANSFERENCIA: 0,
+        TOTAL: 0
     })
-    
+        
     let last = arrayObjects[arrayObjects.length-1]
     
     if (payments.length > 0) {
@@ -240,10 +247,9 @@ async function getSummary() {
         }).map(el => {
 
             //let actual = arrayObjects[moment(el.date).utc().format('DD-MM-YYYY')]
-            
             let actual = arrayObjects.find(x => x.date == moment(el.date).utc().format('DD-MM-YYYY'))
-            actual.first = 1
-            actual.last = 2
+            actual.first = ''
+            actual.last = ''
             actual.quantity += el.invoices.length
             actual.voucher = ''
             actual[el.paymentMethod] += el.amount
@@ -252,7 +258,7 @@ async function getSummary() {
             actual.payments.push(el)
             actual.invoices.push(el.invoices)
 
-
+            last.date = 'TOTAL'
             last.first = ''
             last.last = ''
             last.quantity += el.invoices.length

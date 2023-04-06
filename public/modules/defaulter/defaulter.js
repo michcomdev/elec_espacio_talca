@@ -240,10 +240,12 @@ async function getDefaulter() {
 
 
 function exportTo(to){
+    
+    loadingHandler('start')
 
     for(let i=0; i<months.length; i++){
         for(let j=0; j<months[i].length; j++){
-            $("#tableDefaulterExcelBody").append(`
+            $("#tableDefaulterExcelBody"+(i+1)).append(`
                 <tr>
                     <td>${months[i][j]['number']}</td>
                     <td>${months[i][j]['name']}</td>
@@ -263,6 +265,8 @@ function exportTo(to){
         }else{
             exportToPDF()
         }
+
+        loadingHandler('stop')
     //}, 2000)
 
 }
@@ -277,26 +281,38 @@ function ExportToExcel(type, fn, dl) {
 }
 
 function exportToPDF(){
-    var doc = new jsPDF('l','pt','letter')
-    doc.autoTable({ 
-        html: "#tableDefaulterExcel",
-        styles: {
-            fontSize: 6,
-            valign: 'middle',
-            halign: 'right'
-        },
-        columnStyles: {
-            0: {cellWidth: 20},
-            1: {cellWidth: 120, halign: 'left'},
-            
-        },
-        didParseCell: (hookData) => {
-            if (hookData.section === 'head') {
-                if (hookData.column.dataKey === '1') {
-                    hookData.cell.styles.halign = 'left';
+    var doc = new jsPDF('p','pt','letter')
+    let actualPositionY = 0
+
+    for(let i=0; i<months.length; i++){
+        //console.log("#tableDefaulterExcel"+(i+1))
+        //let tableHeight = null
+
+        if(months[i].length>0){
+            doc.text("Meses adeudados "+(i+1), 1, 1)
+            doc.autoTable({ 
+                html: "#tableDefaulterExcel"+(i+1),
+                styles: {
+                    fontSize: 6,
+                    valign: 'middle',
+                    halign: 'right'
+                },
+                columnStyles: {
+                    0: {cellWidth: 20},
+                    1: {cellWidth: 120, halign: 'left'},
+                    
+                },
+                didParseCell: (hookData) => {
+                    if (hookData.section === 'head') {
+                        if (hookData.column.dataKey === '1') {
+                            hookData.cell.styles.halign = 'left';
+                        }
+                    }
                 }
-            }
+            })
+
+            //console.log(tableFinal)
         }
-    })
+    }
     doc.save("table.pdf")
 }

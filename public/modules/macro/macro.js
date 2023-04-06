@@ -299,7 +299,8 @@ async function getMembers() {
 
         $('#loadingMembers').empty()
     } else {
-        //toastr.warning('No se han encontrado ventas en el rango seleccionado')
+        toastr.warning('No hay boletas creadas en este período')
+        loadingHandler('stop')
         $('#loadingMembers').empty()
     }
 }
