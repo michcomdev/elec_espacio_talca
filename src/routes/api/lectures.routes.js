@@ -404,10 +404,12 @@ export default [
                         /*lectures: { $ne: null }*/
                         lectures: { $in: arrayLectures }
                     }
+                    if(payload.onlyToken){
+                        queryInvoice.token = { $exists: true }
+                    }
                     let queryPayment = {
                         members: { $in: array }
                     }
-
 
                     let invoices = await Invoices.find(queryInvoice).sort({'number' : 'ascending'}).lean().populate(['lectures','members','services.services'])
                     let payments = await Payments.find(queryPayment).lean()
@@ -444,6 +446,13 @@ export default [
                         }
 
                     }
+
+                    if(payload.order){
+                        if(payload.order=="2"){
+                            invoices.sort((a,b) => (a.number > b.number) ? 1 : ((b.number > a.number) ? -1 : 0))
+                        }
+                    }
+
                     return invoices
                     for(let i=0;i<lectures.length;i++){
                         
@@ -491,7 +500,188 @@ export default [
                     sector: Joi.string().optional().allow(''),
                     month: Joi.number().allow(0),
                     year: Joi.number().allow(0),
-                    order: Joi.string().optional().allow('')
+                    order: Joi.string().optional().allow(''),
+                    onlyToken: Joi.boolean().optional()
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/lecturesAllPayments',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+
+                    //////////CARGA DE BOLETAS DE CONSUMO/////////////////
+                    let payload = request.payload
+
+
+                    let dateStart = new Date(payload.yearPayment+'-'+payload.monthPayment+'-01')
+                    dateStart.setTime(dateStart.getTime() - dateStart.getTimezoneOffset()*60*1000 )
+
+                    let datePivot = new Date(payload.yearPayment+'-'+payload.monthPayment+'-01')
+                    var dateEnd = new Date(datePivot.getFullYear(), datePivot.getMonth()+1, 0)
+
+
+
+                    let queryLectures = {
+                        month: payload.month,
+                        year: payload.year
+                    }
+
+                    let lectures = await Lectures.find(queryLectures)
+                    let arrayLectures = []
+                    for(let i=0; i<lectures.length ; i++){
+                        arrayLectures.push(lectures[i]._id)
+                    }
+
+
+                    let querySector = {}
+                    if(payload.sector!='0'){
+                        querySector = {
+                            'address.sector': payload.sector
+                        }
+                    }
+
+                    let members = await Member.find(querySector).populate(['address.sector'])
+                    let array = []
+                    for(let i=0; i<members.length ; i++){
+                        array.push(members[i]._id)
+                    }
+
+                    let queryInvoice = {
+                        members: { $in: array },
+                        typeInvoice: { $exists : false },
+                        /*lectures: { $ne: null }*/
+                        lectures: { $in: arrayLectures }
+                    }
+                    if(payload.onlyToken){
+                        //queryInvoice.token = { $exists: true }
+                        queryInvoice.type = { $ne: 0 }
+                    }
+                    let queryPayment = {
+                        members: { $in: array },
+                        date: { 
+                            $lt: dateEnd
+                        }
+                    }
+
+                    let invoices = await Invoices.find(queryInvoice).sort({'number' : 'ascending'}).lean().populate(['lectures','members','services.services'])
+                    let payments = await Payments.find(queryPayment).lean()
+                    
+                    for(let i=0;i<invoices.length;i++){
+                        if (invoices[i].members.type == 'personal') {
+                            invoices[i].name = invoices[i].members.personal.name + ' ' + invoices[i].members.personal.lastname1 + ' ' + invoices[i].members.personal.lastname2
+                        } else {
+                            invoices[i].name = invoices[i].members.enterprise.name
+                        }
+
+                        let paymentsMember = payments.filter(x => x.members.toString() == invoices[i].members._id.toString())
+
+                        if(paymentsMember){
+
+                            for(let k=0;k<paymentsMember.length;k++){
+                                for(let j=0;j<paymentsMember[k].invoices.length;j++){
+                                    if(paymentsMember[k].invoices[j].invoices){
+                                        if(paymentsMember[k].invoices[j].invoices.toString()==invoices[i]._id.toString()){
+                                            invoices[i].paymentVoucher = paymentsMember[k]
+                                            invoices[i].payment = paymentsMember[k].invoices[j]
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+
+                    }
+
+
+                    //////////PAGOS//////////
+                    
+                    let queryPaymentExt = {
+                        members: { $in: array },
+                        date: { 
+                            $gte: dateStart, 
+                            $lt: dateEnd
+                        }
+                    }
+
+                    let paymentsExt = await Payments.find(queryPaymentExt).lean().populate(['invoices.invoices'])
+                    //let invoices = []
+                    
+                    for(let i=0;i<paymentsExt.length;i++){
+                        for(let j=0;j<paymentsExt[i].invoices.length;j++){
+                            if(paymentsExt[i].invoices[j].invoices){
+                                if(!paymentsExt[i].invoices[j].invoices.token || paymentsExt[i].invoices[j].invoices.token==''){
+
+                                    let amount = (paymentsExt[i].invoices[j].amountMonth) ? paymentsExt[i].invoices[j].amountMonth : paymentsExt[i].amount
+
+                                    invoices.push({
+                                        date: paymentsExt[i].date,
+                                        number: paymentsExt[i].transaction,
+                                        total: amount,
+                                        paymentAmount: amount,
+                                        //total: paymentsExt[i].amount,
+                                        //paymentAmount: paymentsExt[i].amount,
+                                        balance: 0,
+                                        status: 'VÁLIDA'
+                                    })
+                                }
+                            }
+                        }
+                    }
+
+                    ////REGISTROS MANUALES TEMPORALES, SE DEBEN INGRESAR POR BASE DE DATOS////
+                    invoices.push({
+                        date: '2023-03-14',
+                        number: '61964',
+                        total: 18570,
+                        paymentAmount: 0,
+                        balance: 18570,
+                        status: 'ANULADA'
+                    },{
+                        date: '2023-03-23',
+                        number: '62006',
+                        total: 6600,
+                        paymentAmount: 0,
+                        balance: 6600,
+                        status: 'ANULADA'
+                    },{
+                        date: '2023-03-24',
+                        number: '62011',
+                        total: 16893,
+                        paymentAmount: 0,
+                        balance: 16893,
+                        status: 'VÁLIDA'
+                    })
+
+                    invoices.sort((a,b) => (parseInt(a.number) > parseInt(b.number)) ? 1 : ((parseInt(b.number) > parseInt(a.number)) ? -1 : 0))
+                    //invoices.sort((a,b) => (a.date > b.date) ? 1 : ((b.date > a.date) ? -1 : 0))
+
+
+                    return invoices
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    sector: Joi.string().optional().allow(''),
+                    month: Joi.number().allow(0),
+                    year: Joi.number().allow(0),
+                    monthPayment: Joi.number().allow(0),
+                    yearPayment: Joi.number().allow(0),
+                    order: Joi.string().optional().allow(''),
+                    onlyToken: Joi.boolean().optional()
                 })
             }
         }

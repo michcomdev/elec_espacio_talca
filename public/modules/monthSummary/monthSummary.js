@@ -217,19 +217,14 @@ async function getSummary() {
             TOTAL: 0
         })
     }
+    
     arrayObjects.push({
-        date: 'TOTAL',
-        payments: [],
-        invoices: [],
-        first: 0,
-        last: 0,
-        quantity: 0,
-        voucher: '',
-        EFECTIVO: 0,
-        CHEQUE: 0,
-        REDCOMPRA: 0,
-        TRANSFERENCIA: 0,
-        TOTAL: 0
+        date: '2023-03-24',
+        number: '62011',
+        total: 16893,
+        paymentAmount: 16893,
+        balance: 0,
+        status: 'VÁLIDA'
     })
     
     let last = arrayObjects[arrayObjects.length-1]
