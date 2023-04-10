@@ -326,7 +326,7 @@ function exportTo(to){
 
                 $("#tableDefaulterExcel").append(`
                     <tr>
-                        <td colspan="5">TOTAL</td>
+                        <td colspan="4">TOTAL</td>
                         <td>${toPay}</td>
                         <td>${paid}</td>
                         <td>${balance}</td>
