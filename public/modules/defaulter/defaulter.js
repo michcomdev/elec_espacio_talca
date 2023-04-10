@@ -227,7 +227,6 @@ async function getDefaulter() {
                 months: '',
             })
 
-            console.log(months)
             internals.defaulter.table.rows.add(formatData).draw()
         }else{
             toastr.warning('No se han encontrado datos de pagos')
@@ -242,8 +241,49 @@ async function getDefaulter() {
 function exportTo(to){
     
     loadingHandler('start')
+    let first = true
+    $("#tableDefaulterExcel").html('')
 
     for(let i=0; i<months.length; i++){
+
+        $("#tableDefaulterExcelBody"+(i+1)).html('')
+
+        if(months[i].length>0){
+            let text = "Meses adeudados: "+(i+1)
+            if(i+1>=5){
+                text += " y más"
+            }
+
+            space = `<tr>
+                        <th colspan="8"></th>
+                    </tr>`
+
+            if(first){
+                space = ''
+                first = false
+            }
+
+
+            $("#tableDefaulterExcel").append(`
+                ${space}
+                <tr>
+                    <th colspan="8">${text}</th>
+                </tr>
+                <tr>
+                    <th>N° SOCIO</th>
+                    <th>NOMBRE</th>
+                    <th>DIRECCIÓN</th>
+                    <th>RUT</th>
+                    <th>TOTAL A PAGAR</th>
+                    <th>PAGADO</th>
+                    <th>SALDO</th>
+                    <th>MESES</th>
+                </tr>
+            `)
+        }
+
+        let toPay = 0, paid = 0, balance = 0
+
         for(let j=0; j<months[i].length; j++){
             $("#tableDefaulterExcelBody"+(i+1)).append(`
                 <tr>
@@ -256,6 +296,43 @@ function exportTo(to){
                     <td>${months[i][j]['balance']}</td>
                     <td>${months[i][j]['months']}</td>
                 </tr>`)
+
+
+            $("#tableDefaulterExcel").append(`
+                <tr>
+                    <td>${months[i][j]['number']}</td>
+                    <td>${months[i][j]['name']}</td>
+                    <td>${months[i][j]['address']}</td>
+                    <td>${months[i][j]['rut']}</td>
+                    <td>${months[i][j]['toPay']}</td>
+                    <td>${months[i][j]['paid']}</td>
+                    <td>${months[i][j]['balance']}</td>
+                    <td>${months[i][j]['months']}</td>
+                </tr>`)
+
+            toPay += months[i][j]['toPay']
+            paid += months[i][j]['paid']
+            balance += months[i][j]['balance']
+
+            if(j+1==months[i].length){
+                $("#tableDefaulterExcelBody"+(i+1)).append(`
+                    <tr>
+                        <td colspan="4">TOTAL</td>
+                        <td>${toPay}</td>
+                        <td>${paid}</td>
+                        <td>${balance}</td>
+                        <td></td>
+                    </tr>`)
+
+                $("#tableDefaulterExcel").append(`
+                    <tr>
+                        <td colspan="5">TOTAL</td>
+                        <td>${toPay}</td>
+                        <td>${paid}</td>
+                        <td>${balance}</td>
+                        <td></td>
+                    </tr>`)
+            }
         }
     }
 
@@ -273,41 +350,6 @@ function exportTo(to){
 
 
 function ExportToExcel(type, fn, dl) {
-    console.log(months)
-
-
-    $("#tableDefaulterExcel").append(`${$("#tableDefaulterExcel"+(i+1)).html()}`)
-    return
-
-    for(let i=0; i<months.length; i++){
-
-        if(months[i].length>0){
-
-            console.log('here')
-
-            let text = "Meses adeudados: "+(i+1)
-            if(i+1>=5){
-                text += " y más"
-            }
-            console.log($("#tableDefaulterExcel"+(i+1)).html())
-
-            $("#tableDefaulterExcel").append(`
-                <tr>
-                    <td colspan="8"></td>
-                </tr>
-                <tr>
-                    <th colspan="8">${text}</th>
-                </tr>
-                ${$("#tableDefaulterExcel"+(i+1)).html()}
-            `)
-
-            //
-        }
-    }
-
-    return
-
-
     var elt = document.getElementById('tableDefaulterExcel')
     var wb = XLSX.utils.table_to_book(elt, { sheet: "Hoja1" })
     return dl ?
