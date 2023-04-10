@@ -592,7 +592,15 @@ export default [
                         }
                         
                         if(lastDate==''){
-                            invoices = await Invoices.find({members: payload.member, $where: "this.invoiceTotal != this.invoicePaid"}).lean().populate(['lectures','services.services'])
+                            let query = {
+                                members: payload.member, 
+                                $where: "this.invoiceTotal != this.invoicePaid"
+                            }
+                            if(payload.print){
+                                query.date = { $ne: payload.print }
+                            }
+
+                            invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
                         }else{
                             if(payload.print){
                                 lastDate = payload.print

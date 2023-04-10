@@ -273,6 +273,41 @@ function exportTo(to){
 
 
 function ExportToExcel(type, fn, dl) {
+    console.log(months)
+
+
+    $("#tableDefaulterExcel").append(`${$("#tableDefaulterExcel"+(i+1)).html()}`)
+    return
+
+    for(let i=0; i<months.length; i++){
+
+        if(months[i].length>0){
+
+            console.log('here')
+
+            let text = "Meses adeudados: "+(i+1)
+            if(i+1>=5){
+                text += " y más"
+            }
+            console.log($("#tableDefaulterExcel"+(i+1)).html())
+
+            $("#tableDefaulterExcel").append(`
+                <tr>
+                    <td colspan="8"></td>
+                </tr>
+                <tr>
+                    <th colspan="8">${text}</th>
+                </tr>
+                ${$("#tableDefaulterExcel"+(i+1)).html()}
+            `)
+
+            //
+        }
+    }
+
+    return
+
+
     var elt = document.getElementById('tableDefaulterExcel')
     var wb = XLSX.utils.table_to_book(elt, { sheet: "Hoja1" })
     return dl ?
@@ -282,16 +317,30 @@ function ExportToExcel(type, fn, dl) {
 
 function exportToPDF(){
     var doc = new jsPDF('p','pt','letter')
-    let actualPositionY = 0
+
+    doc.setFontSize(10)
 
     for(let i=0; i<months.length; i++){
-        //console.log("#tableDefaulterExcel"+(i+1))
-        //let tableHeight = null
+        let finalY = doc.previousAutoTable.finalY
+        let startY = 30
 
         if(months[i].length>0){
-            doc.text("Meses adeudados "+(i+1), 1, 1)
+
+            let text = "Meses adeudados: "+(i+1)
+            if(i+1>=5){
+                text += " y más"
+            }
+            if(finalY){
+                finalY += 20
+                startY = finalY + 10
+                doc.text(text, 40, finalY)
+            }else{
+                doc.text(text, 40, 20)
+            }
+
             doc.autoTable({ 
                 html: "#tableDefaulterExcel"+(i+1),
+                startY: startY,
                 styles: {
                     fontSize: 6,
                     valign: 'middle',
@@ -310,9 +359,8 @@ function exportToPDF(){
                     }
                 }
             })
-
-            //console.log(tableFinal)
         }
     }
-    doc.save("table.pdf")
+    //doc.save("table.pdf")
+    window.open(doc.output('bloburl'), '_blank')
 }
