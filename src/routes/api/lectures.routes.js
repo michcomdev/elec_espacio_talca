@@ -557,8 +557,16 @@ export default [
                         members: { $in: array },
                         typeInvoice: { $exists : false },
                         /*lectures: { $ne: null }*/
-                        lectures: { $in: arrayLectures }
+                        lectures: { $in: arrayLectures },
+                        date: { //Editado
+                            $gte: dateStart, 
+                            $lt: dateEnd
+                        }
                     }
+
+
+                    
+
                     if(payload.onlyToken){
                         //queryInvoice.token = { $exists: true }
                         queryInvoice.type = { $ne: 0 }

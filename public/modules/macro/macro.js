@@ -34,7 +34,20 @@ $(document).ready(async function () {
     getParameters()
 
     //loadMacro()
+    //getExcel()
+
+    input_dom_element.addEventListener("change", handleFileAsync, false)
 })
+
+async function handleFileAsync(e) {
+    const file = e.target.files[0];
+    const data = await file.arrayBuffer();
+    /* data is an ArrayBuffer */
+    const workbook = XLSX.read(data);
+  
+    /* DO SOMETHING WITH workbook HERE */
+    console.log(workbook)
+}
 
 async function getParameters() {
 
@@ -1014,4 +1027,15 @@ function ExportToExcel(type, fn, dl) {
     return dl ?
       XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }):
       XLSX.writeFile(wb, fn || ('Macro Subsidios.' + (type || 'xlsx')));
+}
+
+function getExcel(){
+
+    $("#hello").attr('src','/public/modules/macro/knuckles.jpg')
+    //var XLSX = require("xlsx")
+    var workbook = XLSX.readFile("/public/modules/macro/macro.xls")
+
+    
+
+    console.log(workbook)
 }
