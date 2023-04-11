@@ -383,15 +383,26 @@ function exportToPDF(){
             doc.autoTable({ 
                 html: "#tableDefaulterExcel"+(i+1),
                 startY: startY,
+                //headStyles: {lineWidth: 0.1, lineColor: [0, 0, 0]},
+                bodyStyles: {lineColor: [0, 0, 0], textColor: '#000000'},
                 styles: {
+                    fontSize: 7
+                    /*fillColor: 'rgb(107,165,57)',
+                    textColor: '#000000',
+                    halign: 'center'*/
+                },
+                /*styles: {
                     fontSize: 6,
                     valign: 'middle',
                     halign: 'right'
-                },
+                },*/
                 columnStyles: {
-                    0: {cellWidth: 20},
-                    1: {cellWidth: 120, halign: 'left'},
-                    
+                    0: {cellWidth: 20, halign: 'center'},
+                    1: {cellWidth: 140, halign: 'left'},
+                    4: {halign: 'right'},
+                    5: {halign: 'right'},
+                    6: {halign: 'right'},
+                    7: {halign: 'center'},
                 },
                 didParseCell: (hookData) => {
                     if (hookData.section === 'head') {
