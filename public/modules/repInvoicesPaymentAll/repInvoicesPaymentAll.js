@@ -110,7 +110,7 @@ function chargeMembersTable() {
                     { data: 'total' },
                     { data: 'paymentAmount' },
                     { data: 'balance' },
-                    //{ data: 'originType' },
+                    { data: 'originType' },
                     { data: 'status' }
                 ],
                 initComplete: function (settings, json) {
@@ -271,9 +271,9 @@ async function getAllInvoices(){
                         <td>${replaceAll(el.total.toString(), '.', '')}</td>
                         <td>${replaceAll(el.paymentAmount.toString(), '.', '')}</td>
                         <td>${replaceAll(el.balance.toString(), '.', '')}</td>
+                        <td>${el.originType}</td>
                         <td>${el.status}</td>
                     </tr>`)
-                    //<td>${el.originType}</td>
 
                 return el
             }

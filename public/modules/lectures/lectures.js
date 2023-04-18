@@ -33,6 +33,7 @@ $(document).ready(async function () {
     chargeMembersTable()
     //325
     //reportPayment('62631b789666da52dcc90718')
+    //reportPayment('62759b895b56a741a10c70e0')
 })
 
 async function getParameters() {
@@ -3777,10 +3778,229 @@ async function reportPayment(id){
     let paymentData = await axios.post('/api/paymentsSingleMember', { member: member._id })
     let payments = paymentData.data
 
+    let memberName = ''
+    if (member.type == 'personal') {
+        memberName = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
+    } else {
+        memberName = member.enterprise.name
+    }
+
+    let pdfX = 20
+    let pdfY = 25
+    doc.setFontType('bold')
+    doc.text(`CARTOLA SOCIO`, doc.internal.pageSize.getWidth() / 2, pdfY, 'center')
+
+    pdfY += 24
+    doc.setFontSize(10)
+    doc.text('Socio N° ' + member.number, pdfX, pdfY)
+    doc.setFontType('normal')
+    doc.text('R.U.T.    ' + member.rut, pdfX + 100, pdfY)
+    doc.text('Sector:', pdfX + 300, pdfY)
+    doc.text('Dirección:', pdfX + 300, pdfY + 12)
+
+    doc.setFontType('bold')
+    doc.text(memberName, pdfX, pdfY + 12)
+    doc.setFontType('normal')
+    doc.text(member.address.sector.name, pdfX + 350, pdfY)
+    doc.text(member.address.address, pdfX + 350, pdfY + 12)
+
+    pdfY += 30
+
+    doc.setFillColor(18,30,44)
+    doc.rect(pdfX - 10, pdfY - 10, 590, 26, 'F')
+    
+    doc.setFontType('bold')
+    doc.setFontSize(8)
+    doc.setTextColor(255, 255, 255)
+
+    doc.text('Aviso/', pdfX + 70, pdfY, 'center')
+    doc.text('M3', pdfX + 105, pdfY, 'center')
+    //doc.text('Cargo', pdfX + 130, pdfY, 'center')
+    doc.text('Consumo', pdfX + 150, pdfY, 'center')
+    //doc.text('Sobre', pdfX + 190, pdfY, 'center')
+    //
+    doc.text('Mult.', pdfX + 190, pdfY, 'center')
+    //
+    doc.text('Conv/', pdfX + 270, pdfY, 'center')
+
+
+    doc.text('Saldo', pdfX + 310, pdfY, 'center')
+    doc.text('Total a', pdfX + 370, pdfY, 'center')
+
+
+    pdfY += 12
+    doc.text('Año', pdfX, pdfY, 'center')
+    doc.text('Mes', pdfX + 14, pdfY)
+    doc.text('Boleta', pdfX + 70, pdfY, 'center')
+    doc.text('Cons', pdfX + 105, pdfY, 'center')
+    
+    //doc.text('Fijo', pdfX + 130, pdfY, 'center')
+    doc.text('Mes', pdfX + 150, pdfY, 'center')
+    //doc.text('Cons.', pdfX + 190, pdfY, 'center')
+    //doc.text('Alca.', pdfX + 220, pdfY, 'center')
+    doc.text('Inter.', pdfX + 190, pdfY, 'center')
+    doc.text('Subs.', pdfX + 230, pdfY, 'center')
+    doc.text('Mult.', pdfX + 270, pdfY, 'center')
+
+    doc.text('Anterior', pdfX + 310, pdfY, 'center')
+    doc.text('Pagar', pdfX + 370, pdfY, 'center')
+
+    doc.text('N° Trans.', pdfX + 420, pdfY, 'center')
+    doc.text('Fecha', pdfX + 460, pdfY, 'center')
+    doc.text('Pagado', pdfX + 510, pdfY, 'center')
+    doc.text('Saldo', pdfX + 560, pdfY, 'center')
+
+    //doc.line(pdfX + 400, pdfY - 24, pdfX + 400, pdfY + 176)
+    
+    pdfY += 4
+    doc.line(pdfX - 10, pdfY, pdfX + 580, pdfY)
+
+
+    doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+
+    let balanceTotal = 0, backColor = false
+    
+    for(let i=lectures.length-1; i>=0; i--){
+        if(lectures[i].invoice){
+            pdfY += 12
+
+            //////////PREZONA PAGOS//////
+            let paymentMonth = lectures[i].month + 1
+            let paymentYear = lectures[i].year
+            if(paymentMonth == 13){
+                paymentMonth = 1
+                paymentYear++
+            }
+            if(paymentMonth<10){
+                paymentMonth = '0' + paymentMonth.toString()
+            }else{
+                paymentMonth = paymentMonth.toString()
+            }
+            
+            let paymentsActual = payments.filter(x => moment(x.date).format('YYYYMM') == paymentYear+paymentMonth)
+
+            if(backColor){
+                doc.setFillColor(229, 236, 245)
+                doc.rect(pdfX - 10, pdfY - 10, 590, 13 * ((paymentsActual.length>0) ? paymentsActual.length : 1 ), 'F')
+                backColor = false
+            }else{
+                backColor = true
+            }
+            /////////////
+            doc.text(lectures[i].year.toString(), pdfX, pdfY, 'center')
+            doc.text(getMonthString(lectures[i].month), pdfX + 14, pdfY)
+            doc.text(((lectures[i].invoice.number===undefined || lectures[i].invoice.number==0) ? '-' : dot_separators(lectures[i].invoice.number)), pdfX + 70, pdfY, 'center')
+            doc.text(lectures[i].invoice.lectureResult.toString(), pdfX + 105, pdfY, 'center')
+
+            //doc.text(dot_separators(lectures[i].invoice.charge), pdfX + 130 + 12, pdfY, 'right')
+            doc.text(dot_separators(lectures[i].invoice.consumption), pdfX + 150 + 12, pdfY, 'right')
+            //doc.text(dot_separators(lectures[i].invoice.consumptionLimitTotal), pdfX + 190 + 12, pdfY, 'right')
+            //doc.text(dot_separators(lectures[i].invoice.sewerage), pdfX + 220 + 12, pdfY, 'right')
+
+            //Multa Interés
+            let totalFine = 0
+            if(lectures[i].invoice.debtFine) totalFine += parseInt(lectures[i].invoice.debtFine)
+            if(lectures[i].invoice.fine) totalFine += parseInt(lectures[i].invoice.fine)
+            if(totalFine>0) doc.text(dot_separators(totalFine), pdfX + 190 + 12, pdfY, 'right')
+
+            if(lectures[i].invoice.subsidyValue>0){
+                doc.text('-'+dot_separators(lectures[i].invoice.subsidyValue), pdfX + 230 + 12, pdfY, 'right')
+            }else{
+                doc.text(dot_separators(lectures[i].invoice.subsidyValue), pdfX + 230 + 12, pdfY, 'right')
+            }
+
+            //Convenio/Multa
+            if(lectures[i].invoice.agreements.length>0){
+                let totalAgreement = 0
+                for(let i=0; i<lectures[i].invoice.agreements.length; i++){
+                    totalAgreement += parseInt(lectures[i].invoice.agreements[i].amount)
+                    if(i+1==lectures[i].invoice.agreements.length && totalAgreement > 0){
+                        doc.text(dot_separators(totalAgreement), pdfX + 270 + 12, pdfY, 'right')
+                    }
+                }
+            }else{
+                doc.text("0", pdfX + 270 + 12, pdfY, 'right')
+            }
+            
+            doc.text(dot_separators(lectures[i].invoice.invoiceDebt), pdfX + 310 + 12, pdfY, 'right')
+            doc.setFontType('bold')
+            doc.text(dot_separators(lectures[i].invoice.invoiceTotal), pdfX + 370 + 12, pdfY, 'right')
+            doc.setFontType('normal')
+
+            balanceTotal = lectures[i].invoice.invoiceTotal
+            
+        
+            //ZONA PAGOS
+            
+            let actualY = pdfY
+            for(let j=0; j<paymentsActual.length; j++){
+                if(j>0){
+                    pdfY += 12
+                }
+                doc.text(paymentsActual[j].transaction, pdfX + 420 + 12, pdfY, 'right')
+                doc.text(moment(paymentsActual[j].date).format('DD/MM/YY'), pdfX + 460, pdfY, 'center')
+                doc.text(dot_separators(paymentsActual[j].amount), pdfX + 510 + 12, pdfY, 'right')
+                balanceTotal -= paymentsActual[j].amount
+            
+            }
+            doc.setFontType('bold')
+            doc.text(dot_separators(balanceTotal), pdfX + 560 + 12, actualY, 'right')
+            doc.setFontType('normal')
+
+        }
+    }
+
+    doc.line(pdfX + 400, 70, pdfX + 400, pdfY + 7)
+
+
+    /*doc.autoTable({ 
+        html: "#tableMembersExcel",
+        styles: {
+            fontSize: 6,
+            valign: 'middle',
+            halign: 'center'
+        },
+        columnStyles: {
+            //0: {cellWidth: 20},
+            //1: {cellWidth: 120, halign: 'left'},
+            6: { halign: 'left' },
+            7: { halign: 'right' },
+            8: { halign: 'right' },
+            9: { halign: 'right' },
+            10: { halign: 'right' }
+            
+        },
+        didParseCell: (hookData) => {
+            if (hookData.section === 'head') {
+                if (hookData.column.dataKey === '1') {
+                    hookData.cell.styles.halign = 'left';
+                }
+            }
+        }
+    })*/
+    //doc.save("reporteSocio.pdf")
+    window.open(doc.output('bloburl'), '_blank')
+}
+
+
+///REPORTE CON MAYOR DETALLE, EN DESUSO//
+/*
+async function reportPayment(id){
+    
+    var doc = new jsPDF('p','pt','letter')
+
+
+    let memberData = await axios.post('/api/memberSingle', {id: id})
+    let member = memberData.data
+    
+    let lecturesData = await axios.post('/api/lecturesSingleMember', {member:  id})
+    let lectures = lecturesData.data
+
+    let paymentData = await axios.post('/api/paymentsSingleMember', { member: member._id })
+    let payments = paymentData.data
+
     console.log(payments)
-    //for(let i=0; i<payments.length; i++) {
-
-
 
     let memberName = ''
     if (member.type == 'personal') {
@@ -3793,15 +4013,15 @@ async function reportPayment(id){
     let pdfX = 20
     let pdfY = 25
     doc.setFontType('bold')
-    doc.text(`REPORTE SOCIO`, doc.internal.pageSize.getWidth() / 2, pdfY, 'center')
+    doc.text(`CARTOLA SOCIO`, doc.internal.pageSize.getWidth() / 2, pdfY, 'center')
 
     pdfY += 24
     doc.setFontSize(10)
     doc.text('Socio N° ' + member.number, pdfX, pdfY)
     doc.setFontType('normal')
     doc.text('R.U.T.    ' + member.rut, pdfX + 100, pdfY)
-    doc.text('Sector', pdfX + 300, pdfY)
-    doc.text('Dirección', pdfX + 300, pdfY + 12)
+    doc.text('Sector:', pdfX + 300, pdfY)
+    doc.text('Dirección:', pdfX + 300, pdfY + 12)
 
     doc.setFontType('bold')
     doc.text(memberName, pdfX, pdfY + 12)
@@ -3810,9 +4030,13 @@ async function reportPayment(id){
     doc.text(member.address.address, pdfX + 350, pdfY + 12)
 
     pdfY += 30
+
+    doc.setFillColor(18,30,44)
+    doc.rect(pdfX - 10, pdfY - 10, 590, 26, 'F')
     
     doc.setFontType('bold')
     doc.setFontSize(8)
+    doc.setTextColor(255, 255, 255)
 
     doc.text('Aviso/', pdfX + 70, pdfY, 'center')
     doc.text('M3', pdfX + 100, pdfY, 'center')
@@ -3845,16 +4069,50 @@ async function reportPayment(id){
 
     doc.text('Anterior', pdfX + 340, pdfY, 'center')
     doc.text('Pagar', pdfX + 380, pdfY, 'center')
-    
-    doc.line(pdfX + 400, pdfY - 24, pdfX + 400, pdfY + 176)
 
-    let paymentIndex = 0
+    doc.text('N° Trans.', pdfX + 440, pdfY, 'center')
+    doc.text('Fecha', pdfX + 480, pdfY, 'center')
+    doc.text('Pagado', pdfX + 520, pdfY, 'center')
+    doc.text('Saldo', pdfX + 560, pdfY, 'center')
+
+    //doc.line(pdfX + 400, pdfY - 24, pdfX + 400, pdfY + 176)
+    
+    pdfY += 4
+    doc.line(pdfX - 10, pdfY, pdfX + 580, pdfY)
+
 
     doc.setFontType('normal')
+    doc.setTextColor(0, 0, 0)
+
+    let balanceTotal = 0, backColor = false
+    
     for(let i=lectures.length-1; i>=0; i--){
         if(lectures[i].invoice){
-            console.log(lectures[i].invoice)
             pdfY += 12
+
+            //////////PREZONA PAGOS//////
+            let paymentMonth = lectures[i].month + 1
+            let paymentYear = lectures[i].year
+            if(paymentMonth == 13){
+                paymentMonth = 1
+                paymentYear++
+            }
+            if(paymentMonth<10){
+                paymentMonth = '0' + paymentMonth.toString()
+            }else{
+                paymentMonth = paymentMonth.toString()
+            }
+            
+            let paymentsActual = payments.filter(x => moment(x.date).format('YYYYMM') == paymentYear+paymentMonth)
+
+            if(backColor){
+                doc.setFillColor(229, 236, 245)
+                doc.rect(pdfX - 10, pdfY - 10, 590, 13 * ((paymentsActual.length>0) ? paymentsActual.length : 1 ), 'F')
+                backColor = false
+            }else{
+                backColor = true
+            }
+            /////////////
             doc.text(lectures[i].year.toString(), pdfX, pdfY, 'center')
             doc.text(getMonthString(lectures[i].month), pdfX + 14, pdfY)
             doc.text(((lectures[i].invoice.number===undefined || lectures[i].invoice.number==0) ? '-' : dot_separators(lectures[i].invoice.number)), pdfX + 70, pdfY, 'center')
@@ -3884,58 +4142,38 @@ async function reportPayment(id){
                 }
             }else{
                 doc.text("0", pdfX + 310 + 12, pdfY, 'right')
-           }
+            }
             
             doc.text(dot_separators(lectures[i].invoice.invoiceDebt), pdfX + 340 + 12, pdfY, 'right')
+            doc.setFontType('bold')
             doc.text(dot_separators(lectures[i].invoice.invoiceTotal), pdfX + 380 + 12, pdfY, 'right')
+            doc.setFontType('normal')
+
+            balanceTotal = lectures[i].invoice.invoiceTotal
             
         
             //ZONA PAGOS
-
-            /*let paymentYear = lectures[i].year
-            let paymentMonth = lectures[i].month
-            if(paymentMonth==12){
-                paymentYear++
-                paymentMonth = 1
-            }else{
-                paymentMonth++
+            
+            let actualY = pdfY
+            for(let j=0; j<paymentsActual.length; j++){
+                if(j>0){
+                    pdfY += 12
+                }
+                doc.text(paymentsActual[j].transaction, pdfX + 440 + 12, pdfY, 'right')
+                doc.text(moment(paymentsActual[j].date).format('DD/MM/YY'), pdfX + 480, pdfY, 'center')
+                doc.text(dot_separators(paymentsActual[j].amount), pdfX + 520 + 12, pdfY, 'right')
+                balanceTotal -= paymentsActual[j].amount
+            
             }
-            console.log(paymentYear, paymentMonth, moment(payments[paymentIndex].date).format('YYYY'), parseInt(moment(payments[paymentIndex].date).format('MM')))
-
-            if(parseInt(moment(payments[paymentIndex].date).format('YYYY'))==paymentYear && parseInt(moment(payments[paymentIndex].date).format('MM'))==paymentMonth){
-                paymentIndex++
-            }*/
-
+            doc.setFontType('bold')
+            doc.text(dot_separators(balanceTotal), pdfX + 560 + 12, actualY, 'right')
+            doc.setFontType('normal')
 
         }
     }
 
+    doc.line(pdfX + 400, 70, pdfX + 400, pdfY + 7)
 
-    /*doc.autoTable({ 
-        html: "#tableMembersExcel",
-        styles: {
-            fontSize: 6,
-            valign: 'middle',
-            halign: 'center'
-        },
-        columnStyles: {
-            //0: {cellWidth: 20},
-            //1: {cellWidth: 120, halign: 'left'},
-            6: { halign: 'left' },
-            7: { halign: 'right' },
-            8: { halign: 'right' },
-            9: { halign: 'right' },
-            10: { halign: 'right' }
-            
-        },
-        didParseCell: (hookData) => {
-            if (hookData.section === 'head') {
-                if (hookData.column.dataKey === '1') {
-                    hookData.cell.styles.halign = 'left';
-                }
-            }
-        }
-    })*/
-    //doc.save("reporteSocio.pdf")
+
     window.open(doc.output('bloburl'), '_blank')
-}
+}*/

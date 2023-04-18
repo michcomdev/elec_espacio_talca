@@ -426,16 +426,17 @@ $('#optionModMember').on('click', async function () { // CREAR SOCIO
     }
 
     if (member.services.length > 0) {
+        console.log(services)
         for(let i=0; i<member.services.length; i++){
             $("#tableBodyServices").append(`<tr>
                 <td>
-                    <select class="form-select form-select-sm custom-select">
+                    <select class="form-select form-select-sm custom-select" onchange="updatePrice(this)">
                         ${
                             services.reduce((acc, el) => {
                                 if(el._id==member.services[i].services._id){
-                                    acc += '<option value="' + el._id + '" selected>' + el.name + '</option>'
+                                    acc += '<option value="'+el._id+'" data-value="'+el.value+'" selected>' + el.name + '</option>'
                                 }else{
-                                    acc += '<option value="' + el._id + '">' + el.name + '</option>'
+                                    acc += '<option value="'+el._id+'" data-value="'+el.value+'">' + el.name + '</option>'
                                 }
                                 return acc
                             }, '')
@@ -1286,24 +1287,32 @@ async function deactivateSubsidy(id){
 }
 
 function addService(){
+    let first = true, firstValue = 0
     $("#tableBodyServices").append(`<tr>
                     <td>
-                        <select class="form-select form-select-sm custom-select">
+                        <select class="form-select form-select-sm custom-select" onchange="updatePrice(this)">
                             ${
                                 services.reduce((acc, el) => {
-                                    acc += '<option value="' + el._id + '">' + el.name + '</option>'
+                                    acc += '<option value="'+el._id+'" data-value="'+el.value+'">' + el.name + '</option>'
+                                    if(first){
+                                        firstValue = el.value
+                                        first = false
+                                    }
                                     return acc
                                 }, '')
                             }
                         </select>
                     </td>
-                    <td><input type="text" class="form-control form-control-sm" /></td>
+                    <td><input type="text" class="form-control form-control-sm" value="${firstValue}" /></td>
                     <td><button class="btn btn-sm btn-danger" style="border-radius:5px;" onclick="deleteService(this)"><i class="fas fa-times"></i></button></td>
                 </tr>`)
 }
 
 async function deleteService(btn){
     $(btn).parent().parent().remove()
-   
     toastr.success('Registro eliminado correctamente')
+}
+
+function updatePrice(select){
+    $($($(select).parent().parent().children()[1]).children()[0]).val($(select).find(":selected").attr('data-value'))
 }

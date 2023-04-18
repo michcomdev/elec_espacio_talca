@@ -491,6 +491,8 @@ export default [
                         resolution: payload.resolution
                     }
 
+                    invoices.invoicePaid = invoices.invoiceSubTotal
+
                     const response = await invoices.save()
 
                     return response
