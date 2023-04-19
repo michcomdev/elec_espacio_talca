@@ -73,6 +73,7 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
         invoiceID: invoiceID
     })
     let invoicesDebt = invoicesDebtData.data
+    console.log(invoicesDebt)
     let debt = 0
     if(invoicesDebt.length>0){
         for(let i=0; i<invoicesDebt.length; i++){

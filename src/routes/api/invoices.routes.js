@@ -587,10 +587,17 @@ export default [
                         let lastYear = (payload.month==1) ? payload.year - 1 : payload.year
 
                         for(let i=0; i<invoices.length; i++){
-                            if(invoices[i].lectures.month==lastMonth && invoices[i].lectures.year==lastYear){
-                                lastDate = new Date(invoices[i].dateExpire)
-                                lastDate.setDate(lastDate.getDate() + 1)
+
+                            if(invoices[i].lectures.year>payload.year || (invoices[i].lectures.year==payload.year && invoices[i].lectures.month>payload.month) ){
+                                invoices.splice(i,1)
+                                i--
+                            }else{
+                                if(invoices[i].lectures.month==lastMonth && invoices[i].lectures.year==lastYear){
+                                    lastDate = new Date(invoices[i].dateExpire)
+                                    lastDate.setDate(lastDate.getDate() + 1)
+                                }
                             }
+
                         }
                         
                         if(lastDate==''){
