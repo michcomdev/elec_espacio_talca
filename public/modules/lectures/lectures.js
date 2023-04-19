@@ -3824,7 +3824,7 @@ async function reportPayment(id){
     doc.text('Conv/', pdfX + 270, pdfY, 'center')
 
 
-    doc.text('Saldo', pdfX + 310, pdfY, 'center')
+    doc.text('Saldo', pdfX + 315, pdfY, 'center')
     doc.text('Total a', pdfX + 370, pdfY, 'center')
 
 
@@ -3842,7 +3842,7 @@ async function reportPayment(id){
     doc.text('Subs.', pdfX + 230, pdfY, 'center')
     doc.text('Mult.', pdfX + 270, pdfY, 'center')
 
-    doc.text('Anterior', pdfX + 310, pdfY, 'center')
+    doc.text('Anterior', pdfX + 315, pdfY, 'center')
     doc.text('Pagar', pdfX + 370, pdfY, 'center')
 
     doc.text('N° Trans.', pdfX + 420, pdfY, 'center')
@@ -3913,9 +3913,9 @@ async function reportPayment(id){
             //Convenio/Multa
             if(lectures[i].invoice.agreements.length>0){
                 let totalAgreement = 0
-                for(let i=0; i<lectures[i].invoice.agreements.length; i++){
-                    totalAgreement += parseInt(lectures[i].invoice.agreements[i].amount)
-                    if(i+1==lectures[i].invoice.agreements.length && totalAgreement > 0){
+                for(let k=0; k<lectures[i].invoice.agreements.length; k++){
+                    totalAgreement += parseInt(lectures[i].invoice.agreements[k].amount)
+                    if(k+1==lectures[i].invoice.agreements.length && totalAgreement > 0){
                         doc.text(dot_separators(totalAgreement), pdfX + 270 + 12, pdfY, 'right')
                     }
                 }
@@ -3923,7 +3923,7 @@ async function reportPayment(id){
                 doc.text("0", pdfX + 270 + 12, pdfY, 'right')
             }
             
-            doc.text(dot_separators(lectures[i].invoice.invoiceDebt), pdfX + 310 + 12, pdfY, 'right')
+            doc.text(dot_separators(lectures[i].invoice.invoiceDebt), pdfX + 315 + 12, pdfY, 'right')
             doc.setFontType('bold')
             doc.text(dot_separators(lectures[i].invoice.invoiceTotal), pdfX + 370 + 12, pdfY, 'right')
             doc.setFontType('normal')
