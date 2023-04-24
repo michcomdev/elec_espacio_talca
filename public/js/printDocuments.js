@@ -198,6 +198,8 @@ async function printInvoice(docType,type,memberID,invoiceID,sendEmail,letter) {
     //Caso especial
     if(member.number==18){
         doc.text('Dirección: Sitio N° 32 camino al cerro Los Cristales', pdfX + 24, pdfY - 300, 'left', 90)
+    }else if(member.number==490){
+        doc.text('Dirección: Sitio 11 Los Cristales', pdfX + 24, pdfY - 300, 'left', 90)
     }
     doc.text('Sector: ' + member.address.sector.name, pdfX + 36, pdfY - 300, 'left', 90)
     doc.setFontType('bold')
@@ -926,6 +928,8 @@ async function printInvoicePortrait(docType,type,memberID,invoiceID,sendEmail) {
     doc.text('MIDEPLAN ' + subsidyNumber, pdfX, pdfY + 36)
     if(member.number==18){
         doc.text('Dirección: Sitio N° 32 camino al cerro Los Cristales', pdfX + 300, pdfY + 24)
+    }else if(member.number==490){
+        doc.text('Dirección: Sitio 11 Los Cristales', pdfX + 300, pdfY + 24)
     }
     doc.text('Sector: ' + member.address.sector.name, pdfX + 300, pdfY + 36)
     doc.setFontType('bold')

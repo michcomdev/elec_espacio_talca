@@ -51,6 +51,7 @@
     "nodemailer": "^6.6.1",
     "rut.js": "^1.0.2",
     "transbank-sdk": "^3.0.0",
-    "uuidv4": "^6.2.7"
+    "uuidv4": "^6.2.7",
+    "xlsx": "^0.18.5"
   }
 }

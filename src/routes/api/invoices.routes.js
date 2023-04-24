@@ -587,7 +587,6 @@ export default [
                         let lastYear = (payload.month==1) ? payload.year - 1 : payload.year
 
                         for(let i=0; i<invoices.length; i++){
-
                             if(invoices[i].lectures.year>payload.year || (invoices[i].lectures.year==payload.year && invoices[i].lectures.month>payload.month) ){
                                 invoices.splice(i,1)
                                 i--
@@ -597,19 +596,20 @@ export default [
                                     lastDate.setDate(lastDate.getDate() + 1)
                                 }
                             }
-
                         }
                         
                         if(lastDate==''){
-                            let query = {
-                                members: payload.member, 
-                                $where: "this.invoiceTotal != this.invoicePaid"
-                            }
-                            if(payload.print){
-                                query.date = { $ne: payload.print }
-                            }
+                            if(invoices.length>0){
+                                let query = {
+                                    members: payload.member, 
+                                    $where: "this.invoiceTotal != this.invoicePaid"
+                                }
+                                if(payload.print){
+                                    query.date = { $ne: payload.print }
+                                }
 
-                            invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
+                                invoices = await Invoices.find(query).lean().populate(['lectures','services.services'])
+                            }
                         }else{
                             if(payload.print){
                                 lastDate = payload.print

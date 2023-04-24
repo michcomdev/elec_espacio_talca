@@ -32,7 +32,7 @@ $(document).ready(async function () {
 
     chargeMembersTable()
     //325
-    //reportPayment('62757a827c8dee09d465e3d2')
+    //reportPayment('631b4f680c8e560b7c31180d')
     //reportPayment('62759b895b56a741a10c70e0')
     //printInvoice('pdf','personal','62631b789666da52dcc90718','63b5c5af92af4e044d4cb385',false,true)
 })
@@ -3779,6 +3779,10 @@ async function reportPayment(id){
     let paymentData = await axios.post('/api/paymentsSingleMember', { member: member._id })
     let payments = paymentData.data
 
+    
+
+
+
     let memberName = ''
     if (member.type == 'personal') {
         memberName = member.personal.name + ' ' + member.personal.lastname1 + ' ' + member.personal.lastname2
@@ -3867,6 +3871,30 @@ async function reportPayment(id){
         if(lectures[i].invoice){
             pdfY += 12
 
+            /////PRECÁLCULO DE DEUDA//
+            let invoicesDebtData = await axios.post('/api/invoicesDebt', { 
+                member: id,
+                year: parseInt(lectures[i].year),
+                month: parseInt(lectures[i].month),
+                print: lectures[i].invoice.date, //Fecha de boleta
+                invoiceID: lectures[i].invoice._id
+            })
+            let invoicesDebt = invoicesDebtData.data
+            let debt = 0
+            if(invoicesDebt.length>0){
+                for(let i=0; i<invoicesDebt.length; i++){
+                    let agreementValue = 0
+                    for(let j=0; j<invoicesDebt[i].agreements.length; j++){
+                        agreementValue += invoicesDebt[i].agreements[j].amount
+                    }
+                    if(invoicesDebt[i].invoicePaid){
+                        debt += (invoicesDebt[i].invoiceSubTotal + agreementValue) - invoicesDebt[i].invoicePaid
+                    }else{
+                        debt += invoicesDebt[i].invoiceSubTotal + agreementValue
+                    }
+                }
+            }
+
             //////////PREZONA PAGOS//////
             let paymentMonth = lectures[i].month + 1
             let paymentYear = lectures[i].year
@@ -3929,16 +3957,24 @@ async function reportPayment(id){
             doc.setFontType('bold')
             doc.text(dot_separators(lectures[i].invoice.consumption + totalAgreement), pdfX + 300 + 12, pdfY, 'right')
             doc.setFontType('normal')
-            doc.text(dot_separators(lectures[i].invoice.invoiceDebt), pdfX + 340 + 12, pdfY, 'right')
+
+            
+
+
+            //doc.text(dot_separators(lectures[i].invoice.invoiceDebt), pdfX + 340 + 12, pdfY, 'right')
+            doc.text(dot_separators(debt), pdfX + 340 + 12, pdfY, 'right')
             doc.setFontType('bold')
-            doc.text(dot_separators(lectures[i].invoice.invoiceTotal), pdfX + 380 + 12, pdfY, 'right')
+            let total = lectures[i].invoice.invoiceTotal
+            if(debt == 0){
+                total = lectures[i].invoice.invoiceTotal - lectures[i].invoice.invoiceDebt
+            }
+            doc.text(dot_separators(total), pdfX + 380 + 12, pdfY, 'right')
             doc.setFontType('normal')
 
-            balanceTotal = lectures[i].invoice.invoiceTotal
+            balanceTotal = total
             
         
             //ZONA PAGOS
-            
             let actualY = pdfY
             for(let j=0; j<paymentsActual.length; j++){
                 if(j>0){
@@ -3960,32 +3996,6 @@ async function reportPayment(id){
     doc.line(pdfX + 400, 70, pdfX + 400, pdfY + 7)
 
 
-    /*doc.autoTable({ 
-        html: "#tableMembersExcel",
-        styles: {
-            fontSize: 6,
-            valign: 'middle',
-            halign: 'center'
-        },
-        columnStyles: {
-            //0: {cellWidth: 20},
-            //1: {cellWidth: 120, halign: 'left'},
-            6: { halign: 'left' },
-            7: { halign: 'right' },
-            8: { halign: 'right' },
-            9: { halign: 'right' },
-            10: { halign: 'right' }
-            
-        },
-        didParseCell: (hookData) => {
-            if (hookData.section === 'head') {
-                if (hookData.column.dataKey === '1') {
-                    hookData.cell.styles.halign = 'left';
-                }
-            }
-        }
-    })*/
-    //doc.save("reporteSocio.pdf")
     window.open(doc.output('bloburl'), '_blank')
 }
 

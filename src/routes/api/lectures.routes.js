@@ -609,63 +609,67 @@ export default [
 
 
                     //////////PAGOS//////////
+                    if(!payload.noPayment){
                     
-                    let queryPaymentExt = {
-                        members: { $in: array },
-                        date: { 
-                            $gte: dateStart, 
-                            $lt: dateEnd
+                        let queryPaymentExt = {
+                            members: { $in: array },
+                            date: { 
+                                $gte: dateStart, 
+                                $lt: dateEnd
+                            }
                         }
-                    }
 
-                    let paymentsExt = await Payments.find(queryPaymentExt).lean().populate(['invoices.invoices'])
-                    //let invoices = []
-                    
-                    for(let i=0;i<paymentsExt.length;i++){
-                        for(let j=0;j<paymentsExt[i].invoices.length;j++){
-                            if(paymentsExt[i].invoices[j].invoices){
-                                if(!paymentsExt[i].invoices[j].invoices.token || paymentsExt[i].invoices[j].invoices.token==''){
+                        let paymentsExt = await Payments.find(queryPaymentExt).lean().populate(['invoices.invoices'])
+                        //let invoices = []
+                        
+                        for(let i=0;i<paymentsExt.length;i++){
+                            for(let j=0;j<paymentsExt[i].invoices.length;j++){
+                                if(paymentsExt[i].invoices[j].invoices){
+                                    if(!paymentsExt[i].invoices[j].invoices.token || paymentsExt[i].invoices[j].invoices.token==''){
 
-                                    let amount = (paymentsExt[i].invoices[j].amountMonth) ? paymentsExt[i].invoices[j].amountMonth : paymentsExt[i].amount
+                                        let amount = (paymentsExt[i].invoices[j].amountMonth) ? paymentsExt[i].invoices[j].amountMonth : paymentsExt[i].amount
 
-                                    invoices.push({
-                                        date: paymentsExt[i].date,
-                                        number: paymentsExt[i].transaction,
-                                        total: amount,
-                                        paymentAmount: amount,
-                                        //total: paymentsExt[i].amount,
-                                        //paymentAmount: paymentsExt[i].amount,
-                                        balance: 0,
-                                        status: 'VÁLIDA'
-                                    })
+                                        invoices.push({
+                                            date: paymentsExt[i].date,
+                                            number: paymentsExt[i].transaction,
+                                            total: amount,
+                                            paymentAmount: amount,
+                                            //total: paymentsExt[i].amount,
+                                            //paymentAmount: paymentsExt[i].amount,
+                                            balance: 0,
+                                            status: 'VÁLIDA'
+                                        })
+                                    }
                                 }
                             }
                         }
+                        
+                        ////REGISTROS MANUALES TEMPORALES, SE DEBEN INGRESAR POR BASE DE DATOS////
+                        invoices.push({
+                            date: '2023-03-14',
+                            number: '61964',
+                            total: 18570,
+                            paymentAmount: 0,
+                            balance: 18570,
+                            status: 'ANULADA'
+                        },{
+                            date: '2023-03-23',
+                            number: '62006',
+                            total: 6600,
+                            paymentAmount: 0,
+                            balance: 6600,
+                            status: 'ANULADA'
+                        },{
+                            date: '2023-03-24',
+                            number: '62011',
+                            total: 16893,
+                            paymentAmount: 0,
+                            balance: 16893,
+                            status: 'VÁLIDA'
+                        })
                     }
 
-                    ////REGISTROS MANUALES TEMPORALES, SE DEBEN INGRESAR POR BASE DE DATOS////
-                    invoices.push({
-                        date: '2023-03-14',
-                        number: '61964',
-                        total: 18570,
-                        paymentAmount: 0,
-                        balance: 18570,
-                        status: 'ANULADA'
-                    },{
-                        date: '2023-03-23',
-                        number: '62006',
-                        total: 6600,
-                        paymentAmount: 0,
-                        balance: 6600,
-                        status: 'ANULADA'
-                    },{
-                        date: '2023-03-24',
-                        number: '62011',
-                        total: 16893,
-                        paymentAmount: 0,
-                        balance: 16893,
-                        status: 'VÁLIDA'
-                    })
+
 
                     invoices.sort((a,b) => (parseInt(a.number) > parseInt(b.number)) ? 1 : ((parseInt(b.number) > parseInt(a.number)) ? -1 : 0))
                     //invoices.sort((a,b) => (a.date > b.date) ? 1 : ((b.date > a.date) ? -1 : 0))
@@ -689,7 +693,8 @@ export default [
                     monthPayment: Joi.number().allow(0),
                     yearPayment: Joi.number().allow(0),
                     order: Joi.string().optional().allow(''),
-                    onlyToken: Joi.boolean().optional()
+                    onlyToken: Joi.boolean().optional(),
+                    noPayment: Joi.boolean().optional()
                 })
             }
         }
@@ -1294,6 +1299,96 @@ export default [
                     member: Joi.string(),
                     year: Joi.number(),
                     month: Joi.number()
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/lecturesMacroXLS',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    
+                    var XLSX = require('xlsx')
+                    console.log("Current directory:", __dirname);
+                    //var wb = XLSX.readFile("/../../../public/js/macro.xls")
+                    var wb = XLSX.readFile(__dirname+"/macro.xls")
+    
+                    //change_workbook(wb) // ***
+
+                    XLSX.writeFile(wb, __dirname+"/macroNew.xls")
+                    return 'test'
+
+
+                    let payload = request.payload
+
+                    let array = []
+                    /*for(let i=0; i<members.length ; i++){
+                        array.push(members[i]._id)
+                    }*/
+
+                    let query = {
+                        month: payload.month,
+                        year: payload.year
+                    }
+                    let queryInvoice = {
+                        typeInvoice: { $exists : false },
+                        lectures: { $ne: null }
+                    }
+                    let queryMembers = {
+                        'subsidies.status' : 'active',
+                        'subsidies.type': 1
+                    }
+
+                    let lectures = await Lectures.find(query).populate([{ path: 'members', populate: { path: 'services.services'} }]).sort({'members.number' : 'ascending'}).lean()
+                    let invoices = await Invoices.find(queryInvoice).sort({'date' : 'descending'}).lean().populate(['lectures','services.services'])
+                    let members = await Member.find(queryMembers).lean()
+                    for(let i=0;i<lectures.length;i++){
+                        
+                        if(members.find(x => x._id.toString() === lectures[i].members._id.toString())){
+                            lectures[i].invoiceDebts = 0
+                            if(invoices){
+                                lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                                
+                                let invoicesMember = invoices.filter(x => x.members.toString() === lectures[i].members._id.toString())
+                                if(invoicesMember){
+                                    for(let j=0; j<invoicesMember.length; j++){
+                                        if(invoicesMember[j].invoicePaid<invoicesMember[j].invoiceSubTotal){
+                                            lectures[i].invoiceDebts++
+                                        }
+                                    }
+                                }
+
+                            }
+                            array.push(lectures[i])
+                        }
+                    }
+                    return array
+
+                    /*for(let i=0;i<lectures.length;i++){
+                        if(invoices){
+                            lectures[i].invoice = invoices.find(x => x.lectures._id.toString() === lectures[i]._id.toString())
+                        }
+                    }*/
+
+                    //return lectures
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    month: Joi.number().allow(0),
+                    year: Joi.number().allow(0)
                 })
             }
         }

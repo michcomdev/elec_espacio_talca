@@ -189,8 +189,13 @@ async function getAllInvoices(){
 
                 let paymentAmount = 0, balance = el.invoiceSubTotal// + agreementsTotal
                 if(el.payment){
-                    paymentAmount = el.payment.amount
-                    balance -= el.payment.amount
+                    if(el.payment.amountMonth){
+                        paymentAmount = el.payment.amountMonth
+                        balance -= el.payment.amountMonth
+                    }else{
+                        paymentAmount = el.payment.amount
+                        balance -= el.payment.amount
+                    }
                 }
                 /*if(el.annulment){
                     paymentAmount = 0

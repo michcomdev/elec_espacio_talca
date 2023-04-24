@@ -35,18 +35,31 @@ $(document).ready(async function () {
 
     //loadMacro()
     //getExcel()
-
-    input_dom_element.addEventListener("change", handleFileAsync, false)
+    //handleFile()
 })
 
-async function handleFileAsync(e) {
-    const file = e.target.files[0];
-    const data = await file.arrayBuffer();
-    /* data is an ArrayBuffer */
-    const workbook = XLSX.read(data);
+async function handleFile() {
+
+    let lecturesData = await axios.post('api/lecturesMacroXLS', { year: $("#searchYear").val(), month: $("#searchMonth").val() })
+    return
+    //var XLSX = require('xlsx')
+    var wb = XLSX.readFile("/public/js/macro.xls")
+    
+    //change_workbook(wb) // ***
+    
+    XLSX.writeFile(wb, "/public/js/modules/macro/new.xls")
+}
+
+function change_workbook(wb) {
+    // get the first worksheet
+    var ws_name = wb.SheetNames[0];
+    var ws = wb.Sheets[ws_name];
   
-    /* DO SOMETHING WITH workbook HERE */
-    console.log(workbook)
+    // Change cell A1 to the text "HI"
+    ws["A1"] = {
+      t: 's', // <-- t: 's' indicates the cell is a text cell
+      v: "HI" // <-- v holds the value
+    };
 }
 
 async function getParameters() {
