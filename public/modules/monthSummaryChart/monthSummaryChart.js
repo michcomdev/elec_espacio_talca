@@ -28,7 +28,7 @@ $(document).ready(async function () {
     })
     getParameters()
 
-    setChart('actualPayment')
+    setChart('sectors')
     //setChart('sectors')
 })
 
