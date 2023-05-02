@@ -64,6 +64,12 @@
         </button>
     </div>
 
+    <div class="col-md-3">
+        <button style="border-radius: 5px;" class="btn btn-danger btn-block" onclick="exportToPDF()">
+            <i class="fas fa-file-pdf"></i> PDF por Sector
+        </button>
+    </div>
+
     <div class="col-md-12 table-responsive">
         <br/>
             <table id="tableMembers" class="display nowrap cell-border
@@ -89,6 +95,20 @@
                     </tr>
                 </thead>
                 <tbody id="tableMembersExcelBody">
+
+                </tbody>
+            </table>
+
+            <table id="tableMembersExcel2" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
+                <thead>
+                    <tr id="trHeadExcel2">
+                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">ORDEN</th>
+                        <th style="background-color: #3B6FC9">N° SOCIO</th>
+                        <th style="background-color: #3B6FC9">NOMBRE</th>
+                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+                    </tr>
+                </thead>
+                <tbody id="tableMembersExcel2Body">
 
                 </tbody>
             </table>

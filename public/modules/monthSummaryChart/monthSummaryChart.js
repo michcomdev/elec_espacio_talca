@@ -29,7 +29,6 @@ $(document).ready(async function () {
     getParameters()
 
     setChart('sectors')
-    //setChart('sectors')
 })
 
 async function getParameters() {

@@ -274,7 +274,8 @@ return
 async function loadAgreements(member) {
 
     //let agreementData = await axios.post('/api/agreementsSingleMember', { member: internals.dataRowSelected._id })
-    let agreementData = await axios.post('/api/agreementsSingleMember', { member: member })
+    console.log(member)
+    let agreementData = await axios.post('/api/agreementsSingleMember', { member: member._id })
     let agreements = agreementData.data
 
     console.log(agreements)
@@ -984,7 +985,6 @@ async function createAgreement(agreementID, memberID) {
             } else {
                 toastr.error('Error al almacenar, favor reintente')
             }
-            $('#modal').modal('show')
 
         })
     } else {
@@ -1119,7 +1119,6 @@ async function createAgreement(agreementID, memberID) {
             } else {
                 toastr.error('Error al almacenar, favor reintente')
             }
-            $('#modal').modal('show')
 
         })
 
@@ -1151,7 +1150,6 @@ async function createAgreement(agreementID, memberID) {
                     toastr.error('Error al eliminar, favor reintente')
                 }
 
-                //$('#modal').modal('show')
             }
         })
 

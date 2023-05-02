@@ -148,18 +148,14 @@ $('#createService').on('click', function () { // CREAR MOVIMIENTO
                 if(saveService.data._id){
                     $('#serviceModal').modal('hide')
 
-                    $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Servicio almacenado correctamente</h5>`)
+                    toastr.success('Servicio almacenado correctamente')
                     chargeServiceTable()
                 }else{
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                    toastr.error('Error al almacenar, favor reintente')
                 }
             }else{
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                toastr.error('Error al almacenar, favor reintente')
             }
-            $('#modal').modal('show');
         }
 
     })
@@ -212,16 +208,13 @@ $('#updateService').on('click', async function () {
                 if(saveService.data._id){
                     $('#serviceModal').modal('hide')
 
-                    $('#modal_title').html(`Almacenado`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Datos actualizados correctamente</h5>`)
+                    toastr.success('Servicio almacenado correctamente')
                     chargeServiceTable()
                 }else{
-                    $('#modal_title').html(`Error`)
-                    $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                    toastr.error('Error al almacenar, favor reintente')
                 }
             }else{
-                $('#modal_title').html(`Error`)
-                $('#modal_body').html(`<h5 class="alert-heading">Error al almacenar, favor reintente</h5>`)
+                toastr.error('Error al almacenar, favor reintente')
             }
             $('#modal').modal('show');
         }

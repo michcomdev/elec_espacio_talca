@@ -87,7 +87,6 @@ async function getParameters() {
         },'')
     )
 
-    $("#searchSector").val('62cde501ddcc8b2d6c958339')
 
     let servicesData = await axios.post('/api/servicesByFilter', {invoice: 'INGRESO'})
     let services = servicesData.data
@@ -384,7 +383,6 @@ async function getMembers() {
     let query = {
         by: 'month',
         type: type,
-        sector: sectorSelected, 
         month: monthSelected,
         order: $("#searchOrder").val()
     }
@@ -393,10 +391,13 @@ async function getMembers() {
         query = {
             by: 'year',
             type: type,
-            sector: sectorSelected, 
             year: yearSelected, 
             order: $("#searchOrder").val()
         }
+    }
+
+    if(sectorSelected!=0){
+        query.sector = sectorSelected
     }
 
     let lecturesData = await axios.post('api/lecturesReport', query)
@@ -515,16 +516,14 @@ async function getMembers() {
 }
 
 $('#searchMembers').on('click', async function () {
-    if($("#searchSector").val()!=0){
-        yearSelected = $("#searchYear").val()
-        monthSelected = $("#searchMonth").val()
-        sectorSelected = $("#searchSector").val()
-        monthNameSelected = $("#searchMonth option:selected").text()
-        sectorNameSelected = $("#searchSector option:selected").text()
-        chargeMembersTable()
-    }else{
-        toastr.warning('Debe seleccionar un sector')
-    }
+
+    yearSelected = $("#searchYear").val()
+    monthSelected = $("#searchMonth").val()
+    sectorSelected = $("#searchSector").val()
+    monthNameSelected = $("#searchMonth option:selected").text()
+    sectorNameSelected = $("#searchSector option:selected").text()
+    chargeMembersTable()
+
 })
 
 function getMonth(type,lastMonth,index){
@@ -615,4 +614,66 @@ function exportToPDF(){
         }
     })
     doc.save("table.pdf")
+}
+
+
+function exportToPDFSeparate(){
+    var doc = new jsPDF('p','pt','letter')
+
+    doc.setFontSize(10)
+
+    for(let i=0; i<months.length; i++){
+        let finalY = doc.previousAutoTable.finalY
+        let startY = 30
+
+        if(months[i].length>0){
+
+            let text = "Sector: "+(i+1)
+            if(i+1>=5){
+                text += " y más"
+            }
+            if(finalY){
+                finalY += 20
+                startY = finalY + 10
+                doc.text(text, 40, finalY)
+            }else{
+                doc.text(text, 40, 20)
+            }
+
+            doc.autoTable({ 
+                html: "#tableDefaulterExcel"+(i+1),
+                startY: startY,
+                //headStyles: {lineWidth: 0.1, lineColor: [0, 0, 0]},
+                bodyStyles: {lineColor: [0, 0, 0], textColor: '#000000'},
+                styles: {
+                    fontSize: 7
+                    /*fillColor: 'rgb(107,165,57)',
+                    textColor: '#000000',
+                    halign: 'center'*/
+                },
+                /*styles: {
+                    fontSize: 6,
+                    valign: 'middle',
+                    halign: 'right'
+                },*/
+                columnStyles: {
+                    0: {cellWidth: 20, halign: 'center'},
+                    1: {cellWidth: 140, halign: 'left'},
+                    4: {halign: 'right'},
+                    5: {halign: 'right'},
+                    6: {halign: 'right'},
+                    7: {halign: 'center'},
+                },
+                didParseCell: (hookData) => {
+                    if (hookData.section === 'head') {
+                        if (hookData.column.dataKey === '1') {
+                            hookData.cell.styles.halign = 'left';
+                        }
+                    }
+                }
+            })
+        }
+    }
+    //doc.save("table.pdf")
+    window.open(doc.output('bloburl'), '_blank')
 }

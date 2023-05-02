@@ -108,8 +108,14 @@ export default [
                             order = {'address.address': 'asc'}
                         }
                     }
+                    let querySector = {}
+                    if(payload.sector){
+                        querySector = {
+                            'address.sector': payload.sector
+                        }
+                    }
 
-                    let members = await Member.find({'address.sector': payload.sector}).populate(['address.sector']).sort(order).lean()
+                    let members = await Member.find(querySector).populate(['address.sector']).sort(order).lean()
                     let array = []
                     for(let i=0; i<members.length ; i++){
                         array.push(members[i]._id)
