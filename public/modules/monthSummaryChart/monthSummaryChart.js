@@ -28,7 +28,7 @@ $(document).ready(async function () {
     })
     getParameters()
 
-    setChart('sectors')
+    setChart('debts')
 })
 
 async function getParameters() {
@@ -85,7 +85,24 @@ async function setChart(type){
         order: '0'
     }
 
-    if(type=='actualPayment'){
+    if(type=='debts'){
+        $("#btnDebts").removeClass('btn-primary').addClass('btn-success')
+        $("#divDebts").css('display','block')
+        query = {
+            sector: $("#searchSector").val(), 
+            year: 0, 
+            month: 0,
+            order: '0'
+        }
+        
+
+    }else if(type=='sectors'){
+        $("#btnSectors").removeClass('btn-primary').addClass('btn-success')
+        $("#divSectors").css('display','block')
+        $("#btnExcel").css('display','block')
+        $("#btnPDF").css('display','block')
+
+    }else if(type=='actualPayment'){
         $("#btnActualPayment").removeClass('btn-primary').addClass('btn-success')
         $("#divActualPayment").css('display','block')
     
@@ -109,16 +126,12 @@ async function setChart(type){
             onlyToken: true,
             noPayment: true
         }
-    }else if(type=='sectors'){
-        $("#btnSectors").removeClass('btn-primary').addClass('btn-success')
-        $("#divSectors").css('display','block')
-        $("#btnExcel").css('display','block')
-        $("#btnPDF").css('display','block')
     }
 
     let allInvoices = await axios.post(postLink, query)
 
     let totalInvoices = 0, paid = 0, parcial = 0, unpaid = 0
+    let debts = [], debtsToPay = 0, debtsPaid = 0, debtBalance = 0
     let sectors = []
     
     $("#searchSector > option").each(async function() {
@@ -146,7 +159,6 @@ async function setChart(type){
     })
 
     if (allInvoices.data.length > 0) {
-        console.log(allInvoices.data)
 
         let formatData = allInvoices.data.filter(el => {
 
@@ -164,7 +176,6 @@ async function setChart(type){
             }else{
                 totalInvoices++
 
-                console.log(totalInvoices, el.number)
                 let actualSector = sectors.find(x => x.sector==el.members.address.sector)
                 actualSector.members++
                 actualSector.meters += el.lectureResult
@@ -201,16 +212,117 @@ async function setChart(type){
                 if(!el.annulment) paid++
             }
 
+            let actualMonth = debts.find(x => x.month==el.lectures.month && x.year==el.lectures.year)
+
+            if(!actualMonth){
+                debts.push({
+                    month: el.lectures.month,
+                    year: el.lectures.year,
+                    toPay: el.invoiceSubTotal + agreementsTotal,
+                    paid: (el.payment) ? el.payment.amount : 0,
+                    balance: balance
+                })
+            }else{
+                actualMonth.toPay += el.invoiceSubTotal + agreementsTotal
+                actualMonth.paid += (el.payment) ? el.payment.amount : 0
+                actualMonth.balance += balance
+            }
+
+            debtsToPay += el.invoiceSubTotal + agreementsTotal
+            debtsPaid += (el.payment) ? el.payment.amount : 0
+            debtBalance += balance
+
             return el
         })
 
-        console.log(formatData)
+        debts.sort((a,b) => (a.month > b.month) ? 1 : ((b.month > a.month) ? -1 : 0))
+        debts.sort((a,b) => (a.year > b.year) ? 1 : ((b.year > a.year) ? -1 : 0))
 
+        debts.push({
+            month: 'TOTAL',
+            year: '',
+            toPay: debtsToPay,
+            paid: debtsPaid,
+            balance: debtBalance
+        })
+        //console.log(formatData)
+        //console.log('total: '+totalInvoices, 'paid: '+paid, 'parcial: '+parcial, 'unpaid: '+ unpaid)
+        //console.log(sectors)
+        console.log(debts)
 
-        console.log('total: '+totalInvoices, 'paid: '+paid, 'parcial: '+parcial, 'unpaid: '+ unpaid)
-        console.log(sectors)
+        if(type=='debts'){
+            $("#tableDebts").css('display','block')
 
-        if(type=='actualPayment'){
+            for(let j=0; j<debts.length; j++){
+                if(j+1<debts.length){
+                    $("#tableDebtsBody").append(`
+                        <tr>
+                            <td style="text-align: left">${debts[j].year} / ${debts[j].month}</td>
+                            <td style="text-align: right">${dot_separators(debts[j].toPay)}</td>
+                            <td style="text-align: right">${dot_separators(debts[j].paid)}</td>
+                            <td style="text-align: right">${dot_separators(debts[j].balance)}</td>
+                        </tr>
+                    `)
+                }else{
+                    $("#tableDebtsBody").append(`
+                        <tr>
+                            <th style="text-align: left">${debts[j].month}</th>
+                            <th style="text-align: right">${dot_separators(debts[j].toPay)}</th>
+                            <th style="text-align: right">${dot_separators(debts[j].paid)}</th>
+                            <th style="text-align: right">${dot_separators(debts[j].balance)}</th>
+                        </tr>
+                    `)
+                }
+                $("#tableDebtsExcelBody").append(`
+                    <tr>
+                        <td>${debts[j].year} / ${debts[j].month}</td>
+                        <td>${debts[j].month}</td>
+                        <td>${debts[j].toPay}</td>
+                        <td>${debts[j].paid}</td>
+                        <td>${debts[j].balance}</td>
+                    </tr>
+                `)
+            }
+        
+        }else if(type=='sectors'){
+            $("#tableSectors").css('display','block')
+
+            for(let j=0; j<sectors.length; j++){
+                if(j+1<sectors.length){
+                    $("#tableSectorsBody").append(`
+                        <tr>
+                            <td style="text-align: left">${sectors[j].name}</td>
+                            <td style="text-align: center">${sectors[j].members}</td>
+                            <td style="text-align: right">${dot_separators(sectors[j].meters)}</td>
+                            <td style="text-align: right">${dot_separators(sectors[j].consumption)}</td>
+                            <td style="text-align: right">${dot_separators(sectors[j].charge)}</td>
+                            <td style="text-align: right">${dot_separators(sectors[j].sewerage)}</td>
+                        </tr>
+                    `)
+                }else{
+                    $("#tableSectorsBody").append(`
+                        <tr>
+                            <th style="text-align: left">${sectors[j].name}</th>
+                            <th style="text-align: center">${sectors[j].members}</th>
+                            <th style="text-align: right">${dot_separators(sectors[j].meters)}</th>
+                            <th style="text-align: right">${dot_separators(sectors[j].consumption)}</th>
+                            <th style="text-align: right">${dot_separators(sectors[j].charge)}</th>
+                            <th style="text-align: right">${dot_separators(sectors[j].sewerage)}</th>
+                        </tr>
+                    `)
+                }
+                $("#tableSectorsExcelBody").append(`
+                    <tr>
+                        <td>${sectors[j].name}</td>
+                        <td>${sectors[j].members}</td>
+                        <td>${sectors[j].meters}</td>
+                        <td>${sectors[j].consumption}</td>
+                        <td>${sectors[j].charge}</td>
+                        <td>${sectors[j].sewerage}</td>
+                    </tr>
+                `)
+            }
+        }else if(type=='actualPayment'){
             $("#chartActualPayment").css('display','block')
 
             $("#tableActualPaymentBody").html(`
@@ -334,44 +446,6 @@ async function setChart(type){
                 }]
             })
 
-        }else if(type=='sectors'){
-            $("#tableSectors").css('display','block')
-
-            for(let j=0; j<sectors.length; j++){
-                if(j+1<sectors.length){
-                    $("#tableSectorsBody").append(`
-                        <tr>
-                            <td style="text-align: left">${sectors[j].name}</td>
-                            <td style="text-align: center">${sectors[j].members}</td>
-                            <td style="text-align: right">${dot_separators(sectors[j].meters)}</td>
-                            <td style="text-align: right">${dot_separators(sectors[j].consumption)}</td>
-                            <td style="text-align: right">${dot_separators(sectors[j].charge)}</td>
-                            <td style="text-align: right">${dot_separators(sectors[j].sewerage)}</td>
-                        </tr>
-                    `)
-                }else{
-                    $("#tableSectorsBody").append(`
-                        <tr>
-                            <th style="text-align: left">${sectors[j].name}</th>
-                            <th style="text-align: center">${sectors[j].members}</th>
-                            <th style="text-align: right">${dot_separators(sectors[j].meters)}</th>
-                            <th style="text-align: right">${dot_separators(sectors[j].consumption)}</th>
-                            <th style="text-align: right">${dot_separators(sectors[j].charge)}</th>
-                            <th style="text-align: right">${dot_separators(sectors[j].sewerage)}</th>
-                        </tr>
-                    `)
-                }
-                $("#tableSectorsExcelBody").append(`
-                    <tr>
-                        <td>${sectors[j].name}</td>
-                        <td>${sectors[j].members}</td>
-                        <td>${sectors[j].meters}</td>
-                        <td>${sectors[j].consumption}</td>
-                        <td>${sectors[j].charge}</td>
-                        <td>${sectors[j].sewerage}</td>
-                    </tr>
-                `)
-            }
         }
 
 

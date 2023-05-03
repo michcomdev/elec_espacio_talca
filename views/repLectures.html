@@ -14,7 +14,7 @@
     <div class="col-md-2">
         <label style="font-size: 13px; display: inline-block; width: 25%">Sector</label>
         <select id="searchSector" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
-            <option value="0">Seleccione</option>
+            <option value="0">Todos</option>
         </select>
         <br/>
         <label style="font-size: 13px; display: inline-block; width: 25%">Ordenar</label>
@@ -35,6 +35,7 @@
     </div>
     <div class="col-md-2">
         <select id="searchMonth" class="searchClass form-control form-select-sm form-select" style="display: inline-block; width: 70%">
+            <option value="1">SÓLO EL ÚLTIMO</option>
             <option value="3">3 ÚLTIMOS</option>
             <option value="6">6 ÚLTIMOS</option>
             <option value="12">12 ÚLTIMOS</option>
@@ -58,60 +59,50 @@
         </button>
     </div>
 
-    <div class="col-md-3">
+    <div class="col-md-2">
         <button style="border-radius: 5px;" class="btn btn-danger btn-block" onclick="exportToPDF()">
             <i class="fas fa-file-pdf"></i> Exportar a PDF
         </button>
     </div>
 
-    <div class="col-md-3">
-        <button style="border-radius: 5px;" class="btn btn-danger btn-block" onclick="exportToPDF()">
+    <div class="col-md-2">
+        <button style="border-radius: 5px;" class="btn btn-danger btn-block" onclick="exportToPDFSeparate()">
             <i class="fas fa-file-pdf"></i> PDF por Sector
         </button>
     </div>
 
     <div class="col-md-12 table-responsive">
         <br/>
-            <table id="tableMembers" class="display nowrap cell-border
-                table-condensed" cellspacing="0" width="100%">
-                <thead>
-                    <tr class="table-info" id="trHead">
-                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">ORDEN</th>
-                        <th style="background-color: #3B6FC9">N° SOCIO</th>
-                        <th style="background-color: #3B6FC9">NOMBRE</th>
-                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
-                    </tr>
-                </thead>
-            </table>
+        <table id="tableMembers" class="display nowrap cell-border
+            table-condensed" cellspacing="0" width="100%">
+            <thead>
+                <tr class="table-info" id="trHead">
+                    <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">ORDEN</th>
+                    <th style="background-color: #3B6FC9">N° SOCIO</th>
+                    <th style="background-color: #3B6FC9">NOMBRE</th>
+                    <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+                </tr>
+            </thead>
+        </table>
 
 
-            <table id="tableMembersExcel" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
-                <thead>
-                    <tr id="trHeadExcel">
-                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">ORDEN</th>
-                        <th style="background-color: #3B6FC9">N° SOCIO</th>
-                        <th style="background-color: #3B6FC9">NOMBRE</th>
-                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
-                    </tr>
-                </thead>
-                <tbody id="tableMembersExcelBody">
+        <table id="tableMembersExcel" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
+            <thead>
+                <tr id="trHeadExcel">
+                    <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">ORDEN</th>
+                    <th style="background-color: #3B6FC9">N° SOCIO</th>
+                    <th style="background-color: #3B6FC9">NOMBRE</th>
+                    <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
+                </tr>
+            </thead>
+            <tbody id="tableMembersExcelBody">
 
-                </tbody>
-            </table>
+            </tbody>
+        </table>
 
-            <table id="tableMembersExcel2" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
-                <thead>
-                    <tr id="trHeadExcel2">
-                        <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">ORDEN</th>
-                        <th style="background-color: #3B6FC9">N° SOCIO</th>
-                        <th style="background-color: #3B6FC9">NOMBRE</th>
-                        <th style="background-color: #3B6FC9; border-top-right-radius: 5px; display: none;">PROMEDIO</th>
-                    </tr>
-                </thead>
-                <tbody id="tableMembersExcel2Body">
+        <div id="divSectors">
 
-                </tbody>
-            </table>
+        </div>
     </div>
 
     <div class="modal fade" id="lectureModal" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">

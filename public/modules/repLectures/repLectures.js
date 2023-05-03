@@ -20,6 +20,7 @@ let monthNameSelected = ''
 let sectorSelected = 0
 let sectorNameSelected = ''
 let lastMonth = 0
+let sectorsExcel = []
 
 let parameters
 
@@ -142,22 +143,43 @@ async function chargeMembersTable() {
             <th style="background-color: #3B6FC9">DICIEMBRE</th>
             <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PROMEDIO</th>
         `
-
         targets = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
     }else{
 
         let getLastMonth = await axios.post('api/lecturesReportCheckLast',{})
         lastMonth = getLastMonth.data
 
-        let month01 = getMonth('number',lastMonth,2)
-        let month02 = getMonth('number',lastMonth,1)
-        let month03 = getMonth('number',lastMonth,0)
+        if($("#searchMonth").val()==1){
 
-        let month01String = getMonth('string',lastMonth,2)
-        let month02String = getMonth('string',lastMonth,1)
-        let month03String = getMonth('string',lastMonth,0)
+            let month01 = getMonth('number',lastMonth,0)
+    
+            let month01String = getMonth('string',lastMonth,0)
 
-        if($("#searchMonth").val()==3){
+            columns.push(
+                { data: 'number' },
+                { data: 'name' },
+                { data: month01 }
+            )
+
+            header = `
+                <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">N°</th>
+                <th style="background-color: #3B6FC9">NOMBRE</th>
+                <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">${month01String}</th>
+            `
+            
+            targets = [0, 2]
+
+        }else if($("#searchMonth").val()==3){
+
+            let month01 = getMonth('number',lastMonth,2)
+            let month02 = getMonth('number',lastMonth,1)
+            let month03 = getMonth('number',lastMonth,0)
+    
+            let month01String = getMonth('string',lastMonth,2)
+            let month02String = getMonth('string',lastMonth,1)
+            let month03String = getMonth('string',lastMonth,0)
+
             columns.push(
                 { data: 'number' },
                 { data: 'name' },
@@ -175,11 +197,10 @@ async function chargeMembersTable() {
                 <th style="background-color: #3B6FC9">${month03String}</th>
                 <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PROMEDIO</th>
             `
+            
             targets = [0, 2, 3, 4, 5]
-        }else if($("#searchMonth").val()==6){
 
-            let getLastMonth = await axios.post('api/lecturesReportCheckLast',{})
-            let lastMonth = getLastMonth.data
+        }else if($("#searchMonth").val()==6){
 
             let month01 = getMonth('number',lastMonth,5)
             let month02 = getMonth('number',lastMonth,4)
@@ -219,12 +240,11 @@ async function chargeMembersTable() {
                 <th style="background-color: #3B6FC9">${month06String}</th>
                 <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PROMEDIO</th>
             `
+
             targets = [0, 2, 3, 4, 5, 6, 7, 8]
 
         }else if($("#searchMonth").val()==12){
 
-            let getLastMonth = await axios.post('api/lecturesReportCheckLast',{})
-            let lastMonth = getLastMonth.data
 
             let month01 = getMonth('number',lastMonth,11)
             let month02 = getMonth('number',lastMonth,10)
@@ -287,8 +307,8 @@ async function chargeMembersTable() {
                 <th style="background-color: #3B6FC9">${month12String}</th>
                 <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">PROMEDIO</th>
             `
-            targets = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
+            targets = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
         }
     }
 
@@ -348,7 +368,7 @@ async function chargeMembersTable() {
                 },
                 columns: columns,
                 initComplete: function (settings, json) {
-                    getMembers()
+                    getMembers(header)
                 },
                 draw: function (){
                     $(".lectureValue").each(function() {
@@ -375,7 +395,7 @@ async function chargeMembersTable() {
 
 }
 
-async function getMembers() {
+async function getMembers(header) {
 
     let type = ($("#rbConsumption").prop('checked')) ? 'consumption' : 'lecture'
     let order = 1, rowIndex = 0
@@ -399,6 +419,8 @@ async function getMembers() {
     if(sectorSelected!=0){
         query.sector = sectorSelected
     }
+    
+    sectorsExcel = []
 
     let lecturesData = await axios.post('api/lecturesReport', query)
 
@@ -469,19 +491,28 @@ async function getMembers() {
                         <td>${el.month09}</td>
                         <td>${el.month10}</td>
                         <td>${el.month11}</td>
-                        <td>${el.month12}</td>`
+                        <td>${el.month12}</td>
+                        <td>${el.prom}</td>
+                    </tr>`
             }else{
-                if($("#searchMonth").val()==3){
+                if($("#searchMonth").val()==1){
+                    row += `<td>${eval('el.'+getMonth('number',lastMonth,0))}</td>
+                        </tr>`
+                }else if($("#searchMonth").val()==3){
                     row += `<td>${eval('el.'+getMonth('number',lastMonth,2))}</td>
                         <td>${eval('el.'+getMonth('number',lastMonth,1))}</td>
-                        <td>${eval('el.'+getMonth('number',lastMonth,0))}</td>`
+                        <td>${eval('el.'+getMonth('number',lastMonth,0))}</td>
+                        <td>${el.prom}</td>
+                    </tr>`
                 }else if($("#searchMonth").val()==6){
                     row += `<td>${eval('el.'+getMonth('number',lastMonth,5))}</td>
                         <td>${eval('el.'+getMonth('number',lastMonth,4))}</td>
                         <td>${eval('el.'+getMonth('number',lastMonth,3))}</td>
                         <td>${eval('el.'+getMonth('number',lastMonth,2))}</td>
                         <td>${eval('el.'+getMonth('number',lastMonth,1))}</td>
-                        <td>${eval('el.'+getMonth('number',lastMonth,0))}</td>`
+                        <td>${eval('el.'+getMonth('number',lastMonth,0))}</td>
+                        <td>${el.prom}</td>
+                    </tr>`
 
                 }else if($("#searchMonth").val()==12){
                     row += `<td>${eval('el.'+getMonth('number',lastMonth,11))}</td>
@@ -495,14 +526,28 @@ async function getMembers() {
                         <td>${eval('el.'+getMonth('number',lastMonth,3))}</td>
                         <td>${eval('el.'+getMonth('number',lastMonth,2))}</td>
                         <td>${eval('el.'+getMonth('number',lastMonth,1))}</td>
-                        <td>${eval('el.'+getMonth('number',lastMonth,0))}</td>`
+                        <td>${eval('el.'+getMonth('number',lastMonth,0))}</td>
+                        <td>${el.prom}</td>
+                    </tr>`
                 }   
             }
 
-            row += `<td>${el.prom}</td>
-                </tr>`
-
             $("#tableMembersExcelBody").append(row)
+
+            
+            let memberSector = sectorsExcel.find(x => x.id==el.address.sector._id)
+            if(!memberSector){
+                sectorsExcel.push({
+                    id: el.address.sector._id,
+                    name: el.address.sector.name,
+                    headers: header,
+                    rows: row
+                    //rows: [row]
+                })
+            }else{
+                //memberSector.rows.push(row)
+                memberSector.rows += row
+            }
 
             return el
         })
@@ -622,57 +667,60 @@ function exportToPDFSeparate(){
 
     doc.setFontSize(10)
 
-    for(let i=0; i<months.length; i++){
+    console.log(sectorsExcel)
+
+    for(let i=0; i<sectorsExcel.length; i++){
         let finalY = doc.previousAutoTable.finalY
         let startY = 30
 
-        if(months[i].length>0){
+        $("#divSectors").append(`
+            <table id="tableSectorsExcel_${sectorsExcel[i].id}" cellspacing="0" width="100%" style="display: none; font-size: 7px;">
+                <thead>${sectorsExcel[i].headers}</thead>
+                <tbody>${sectorsExcel[i].rows}</tbody>
+            </table>
+        `)
 
-            let text = "Sector: "+(i+1)
-            if(i+1>=5){
-                text += " y más"
-            }
-            if(finalY){
-                finalY += 20
-                startY = finalY + 10
-                doc.text(text, 40, finalY)
-            }else{
-                doc.text(text, 40, 20)
-            }
+        let columnStyles = {
+            0: {cellWidth: 20, halign: 'center'},
+            1: {cellWidth: 140, halign: 'left'}
+        }
 
-            doc.autoTable({ 
-                html: "#tableDefaulterExcel"+(i+1),
-                startY: startY,
-                //headStyles: {lineWidth: 0.1, lineColor: [0, 0, 0]},
-                bodyStyles: {lineColor: [0, 0, 0], textColor: '#000000'},
-                styles: {
-                    fontSize: 7
-                    /*fillColor: 'rgb(107,165,57)',
-                    textColor: '#000000',
-                    halign: 'center'*/
-                },
-                /*styles: {
-                    fontSize: 6,
-                    valign: 'middle',
-                    halign: 'right'
-                },*/
-                columnStyles: {
-                    0: {cellWidth: 20, halign: 'center'},
-                    1: {cellWidth: 140, halign: 'left'},
-                    4: {halign: 'right'},
-                    5: {halign: 'right'},
-                    6: {halign: 'right'},
-                    7: {halign: 'center'},
-                },
-                didParseCell: (hookData) => {
-                    if (hookData.section === 'head') {
-                        if (hookData.column.dataKey === '1') {
-                            hookData.cell.styles.halign = 'left';
-                        }
+        let text = "Sector: "+sectorsExcel[i].name
+        if(i+1>=5){
+            text += " y más"
+        }
+        if(finalY){
+            finalY += 20
+            startY = finalY + 10
+            doc.text(text, 40, finalY)
+        }else{
+            doc.text(text, 40, 20)
+        }
+
+        doc.autoTable({ 
+            html: "#tableSectorsExcel_"+sectorsExcel[i].id,
+            startY: startY,
+            //headStyles: {lineWidth: 0.1, lineColor: [0, 0, 0]},
+            bodyStyles: {lineColor: [0, 0, 0], textColor: '#000000'},
+            styles: {
+                fontSize: 7,
+                halign: 'right'
+                /*fillColor: 'rgb(107,165,57)',
+                textColor: '#000000',
+                valign: 'middle',
+                halign: 'center'*/
+            },
+            columnStyles: columnStyles,
+            didParseCell: (hookData) => {
+                if (hookData.section === 'head') {
+                    if (hookData.column.dataKey === '0') {
+                        hookData.cell.styles.halign = 'center'
+                    } else if (hookData.column.dataKey === '1') {
+                        hookData.cell.styles.halign = 'left'
                     }
                 }
-            })
-        }
+            }
+        })
     }
     //doc.save("table.pdf")
     window.open(doc.output('bloburl'), '_blank')

@@ -377,6 +377,9 @@ export default [
                         month: payload.month,
                         year: payload.year
                     }
+                    if(payload.month==0 && payload.year==0){
+                        queryLectures = {}
+                    }
 
                     let lectures = await Lectures.find(queryLectures)
                     let arrayLectures = []
