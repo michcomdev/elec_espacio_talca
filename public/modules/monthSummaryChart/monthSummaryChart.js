@@ -88,6 +88,8 @@ async function setChart(type){
     if(type=='debts'){
         $("#btnDebts").removeClass('btn-primary').addClass('btn-success')
         $("#divDebts").css('display','block')
+        $("#btnExcel").css('display','block')
+        $("#btnPDF").css('display','block')
         query = {
             sector: $("#searchSector").val(), 
             year: 0, 
@@ -168,11 +170,19 @@ async function setChart(type){
                     agreementsTotal += parseInt(el.agreements[i].amount)
                 }
             }
+
+            let paymentAmount = 0, balance = el.invoiceSubTotal + agreementsTotal
+            if(el.payment){
+                paymentAmount = el.payment.amount
+                balance -= el.payment.amount
+            }
             
             let creditNote = '', status = 'VÁLIDA'
             if(el.annulment){
                 creditNote = el.annulment.number
                 status = 'ANULADA'
+                paymentAmount = el.invoiceSubTotal + agreementsTotal
+                balance = 0
             }else{
                 totalInvoices++
 
@@ -191,12 +201,6 @@ async function setChart(type){
                 totalSector.sewerage += el.sewerage
             }
 
-            let paymentAmount = 0, balance = el.invoiceSubTotal + agreementsTotal
-            if(el.payment){
-                paymentAmount = el.payment.amount
-                balance -= el.payment.amount 
-            }
-           
             el.paymentStatus = ''
 
             if(balance>=paymentAmount){
@@ -214,23 +218,25 @@ async function setChart(type){
 
             let actualMonth = debts.find(x => x.month==el.lectures.month && x.year==el.lectures.year)
 
-            if(!actualMonth){
-                debts.push({
-                    month: el.lectures.month,
-                    year: el.lectures.year,
-                    toPay: el.invoiceSubTotal + agreementsTotal,
-                    paid: (el.payment) ? el.payment.amount : 0,
-                    balance: balance
-                })
-            }else{
-                actualMonth.toPay += el.invoiceSubTotal + agreementsTotal
-                actualMonth.paid += (el.payment) ? el.payment.amount : 0
-                actualMonth.balance += balance
-            }
+            if(!el.annulment){
+                if(!actualMonth){
+                    debts.push({
+                        month: el.lectures.month,
+                        year: el.lectures.year,
+                        toPay: el.invoiceSubTotal + agreementsTotal,
+                        paid: (el.payment) ? el.payment.amount : 0,
+                        balance: balance
+                    })
+                }else{
+                    actualMonth.toPay += el.invoiceSubTotal + agreementsTotal
+                    actualMonth.paid += (el.payment) ? el.payment.amount : 0
+                    actualMonth.balance += balance
+                }
 
-            debtsToPay += el.invoiceSubTotal + agreementsTotal
-            debtsPaid += (el.payment) ? el.payment.amount : 0
-            debtBalance += balance
+                debtsToPay += el.invoiceSubTotal + agreementsTotal
+                debtsPaid += (el.payment) ? el.payment.amount : 0
+                debtBalance += balance
+            }
 
             return el
         })
@@ -251,13 +257,20 @@ async function setChart(type){
         console.log(debts)
 
         if(type=='debts'){
+            $("#tableDebtsBody").html('')
             $("#tableDebts").css('display','block')
 
             for(let j=0; j<debts.length; j++){
+
+                let month = 'TOTAL'
+                if(debts[j].month!='TOTAL'){
+                    month = debts[j].year + ' / ' + getMonthString(debts[j].month)
+                }
+                
                 if(j+1<debts.length){
                     $("#tableDebtsBody").append(`
                         <tr>
-                            <td style="text-align: left">${debts[j].year} / ${debts[j].month}</td>
+                            <td style="text-align: left">${month}</td>
                             <td style="text-align: right">${dot_separators(debts[j].toPay)}</td>
                             <td style="text-align: right">${dot_separators(debts[j].paid)}</td>
                             <td style="text-align: right">${dot_separators(debts[j].balance)}</td>
@@ -266,7 +279,7 @@ async function setChart(type){
                 }else{
                     $("#tableDebtsBody").append(`
                         <tr>
-                            <th style="text-align: left">${debts[j].month}</th>
+                            <th style="text-align: left">${month}</th>
                             <th style="text-align: right">${dot_separators(debts[j].toPay)}</th>
                             <th style="text-align: right">${dot_separators(debts[j].paid)}</th>
                             <th style="text-align: right">${dot_separators(debts[j].balance)}</th>
@@ -275,8 +288,8 @@ async function setChart(type){
                 }
                 $("#tableDebtsExcelBody").append(`
                     <tr>
-                        <td>${debts[j].year} / ${debts[j].month}</td>
-                        <td>${debts[j].month}</td>
+                        <td>${(month=='TOTAL') ? 'TOTAL' : debts[j].year}</td>
+                        <td>${(month=='TOTAL') ? '' : getMonthString(debts[j].month)}</td>
                         <td>${debts[j].toPay}</td>
                         <td>${debts[j].paid}</td>
                         <td>${debts[j].balance}</td>
@@ -464,7 +477,9 @@ $('#searchMembers').on('click', async function () {
 
 function ExportToExcel(type, fn, dl) {
     let tableName = ''
-    if(activeChart=='sectors'){
+    if(activeChart=='debts'){
+        tableName = 'tableDebtsExcel'
+    }else if(activeChart=='sectors'){
         tableName = 'tableSectorsExcel'
     }else{
         toastr.warning('No se puede exportar tabla/gráfico seleccionado')
@@ -483,7 +498,16 @@ function exportToPDF(){
 
     let tableName = ''
     let columnStyles 
-    if(activeChart=='sectors'){
+    if(activeChart=='debts'){
+        tableName = 'tableDebtsExcel'
+        columnStyles = {
+            0: { halign: 'center' },
+            1: { halign: 'center' },
+            2: { halign: 'right' },
+            3: { halign: 'right' },
+            4: { halign: 'right' }
+        }
+    }else if(activeChart=='sectors'){
         tableName = 'tableSectorsExcel'
         columnStyles = {
             //0: {cellWidth: 20},
@@ -498,13 +522,13 @@ function exportToPDF(){
         return
     }
 
-    var doc = new jsPDF('l','pt','letter')
+    var doc = new jsPDF('p','pt','letter')
     doc.autoTable({ 
         html: "#"+tableName,
         styles: {
             fontSize: 6,
-            valign: 'middle'
-            //halign: 'center'
+            valign: 'middle',
+            halign: 'center'
         },
         columnStyles: columnStyles,
         /*didParseCell: (hookData) => {

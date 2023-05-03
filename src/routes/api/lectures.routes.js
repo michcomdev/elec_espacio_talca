@@ -410,6 +410,7 @@ export default [
                     if(payload.onlyToken){
                         queryInvoice.token = { $exists: true }
                     }
+                    
                     let queryPayment = {
                         members: { $in: array }
                     }

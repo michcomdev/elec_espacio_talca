@@ -156,18 +156,21 @@ async function getAllInvoices(){
                     agreementsTotal += parseInt(el.agreements[i].amount)
                 }
             }
-            
-            let creditNote = '', status = 'VÁLIDA'
-            if(el.annulment){
-                creditNote = el.annulment.number
-                status = 'ANULADA'
-            }
 
             let paymentAmount = 0, balance = el.invoiceSubTotal + agreementsTotal
             if(el.payment){
                 paymentAmount = el.payment.amount
                 balance -= el.payment.amount 
             }
+
+            let creditNote = '', status = 'VÁLIDA'
+            if(el.annulment){
+                creditNote = el.annulment.number
+                status = 'ANULADA'
+                paymentAmount = el.invoiceSubTotal + agreementsTotal
+                balance = 0
+            }
+
             el.year = `${el.lectures.year}<div data-member-id="${el.members._id}" data-invoice-id="${el._id}" data-member-type="${el.members.type}"></div>`
 
             el.month = el.lectures.month
