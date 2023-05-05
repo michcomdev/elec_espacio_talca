@@ -185,8 +185,9 @@ async function getAllInvoices(){
             el.paymentAmount = dot_separators(paymentAmount)
             el.balance = dot_separators(balance)
             el.paymentStatus = ''
+            
 
-            if(balance>=paymentAmount){
+            if(el.invoiceSubTotal + agreementsTotal>paymentAmount){
                 if(paymentAmount==0){
                     el.paymentStatus = 'IMPAGO'
                 }else{
@@ -248,8 +249,6 @@ async function getAllInvoices(){
                 return el
             }
         })
-
-        console.log(formatData)
 
         internals.members.table.rows.add(formatData).draw()
 
@@ -841,8 +840,6 @@ async function createInvoice(lectureID, invoiceID, memberID) {
 
         let agreements = agreementData.data
 
-        console.log('agreements',agreements)
-
         $("#tableBodyAgreements").html('')
         
 
@@ -944,8 +941,7 @@ async function createInvoice(lectureID, invoiceID, memberID) {
         })
 
         let agreements = agreementData.data
-        console.log(agreements)
-
+        
         $("#tableBodyAgreements").html('')
 
         if (agreements.length > 0) {

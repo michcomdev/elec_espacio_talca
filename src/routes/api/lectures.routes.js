@@ -434,7 +434,13 @@ export default [
                                     if(paymentsMember[k].invoices[j].invoices){
                                         if(paymentsMember[k].invoices[j].invoices.toString()==invoices[i]._id.toString()){
                                             invoices[i].paymentVoucher = paymentsMember[k]
-                                            invoices[i].payment = paymentsMember[k].invoices[j]
+                                            if(!invoices[i].payment){
+                                                invoices[i].payment = paymentsMember[k].invoices[j]
+                                            }else{
+                                                invoices[i].payment.amount += paymentsMember[k].invoices[j].amount
+                                                invoices[i].payment.amountMonth += paymentsMember[k].invoices[j].amountMonth
+                                                invoices[i].payment.amountAgreement += paymentsMember[k].invoices[j].amountAgreement
+                                            }
                                         }
                                     }
                                 }
@@ -649,28 +655,23 @@ export default [
                         }
                         
                         ////REGISTROS MANUALES TEMPORALES, SE DEBEN INGRESAR POR BASE DE DATOS////
-                        invoices.push({
-                            date: '2023-03-14',
-                            number: '61964',
-                            total: 18570,
-                            paymentAmount: 0,
-                            balance: 18570,
-                            status: 'ANULADA'
-                        },{
-                            date: '2023-03-23',
-                            number: '62006',
-                            total: 6600,
-                            paymentAmount: 0,
-                            balance: 6600,
-                            status: 'ANULADA'
-                        },{
-                            date: '2023-03-24',
-                            number: '62011',
-                            total: 16893,
-                            paymentAmount: 0,
-                            balance: 16893,
-                            status: 'VÁLIDA'
-                        })
+                        if(payload.monthPayment=='03'){
+                            invoices.push({
+                                date: '2023-03-14',
+                                number: '61964',
+                                total: 18570,
+                                paymentAmount: 0,
+                                balance: 18570,
+                                status: 'ANULADA'
+                            },{
+                                date: '2023-03-23',
+                                number: '62006',
+                                total: 6600,
+                                paymentAmount: 0,
+                                balance: 6600,
+                                status: 'ANULADA'
+                            })
+                        }
                     }
 
 

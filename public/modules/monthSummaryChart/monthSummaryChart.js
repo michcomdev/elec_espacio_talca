@@ -203,7 +203,7 @@ async function setChart(type){
 
             el.paymentStatus = ''
 
-            if(balance>=paymentAmount){
+            if(el.invoiceSubTotal + agreementsTotal>paymentAmount){
                 if(paymentAmount==0){
                     el.paymentStatus = 'IMPAGO'
                     if(!el.annulment) unpaid++
