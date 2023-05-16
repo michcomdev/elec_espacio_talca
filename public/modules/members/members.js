@@ -222,7 +222,11 @@ $('#optionCreateMember').on('click', async function () { // CREAR SOCIO
     $("#memberStatus").attr('disabled','disabled')
     $(".divDateEnd").css('visibility','hidden')
 
-    $("#memberSubsidyNumber").val(parametersGeneral.municipality.subsidyCode)
+    let subsidyNumber = parametersGeneral.municipality.subsidyCode + '' + parameters.memberNumber
+    while (subsidyNumber.length<11) {
+        subsidyNumber = '0' + subsidyNumber
+    }
+    $("#memberSubsidyNumber").val(subsidyNumber)
 
     setTimeout(() => {
         $('#memberRUT').focus()
