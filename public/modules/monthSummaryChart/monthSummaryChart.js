@@ -28,7 +28,8 @@ $(document).ready(async function () {
     })
     getParameters()
 
-    setChart('debts')
+    //setChart('debts')
+    setChart('fullMonth')
 })
 
 async function getParameters() {
@@ -85,7 +86,31 @@ async function setChart(type){
         order: '0'
     }
 
-    if(type=='debts'){
+    if(type=='fullMonth'){
+        $("#btnFullMonth").removeClass('btn-primary').addClass('btn-success')
+        $("#divFullMonth").css('display','block')
+        $("#btnExcel").css('display','block')
+        $("#btnPDF").css('display','block')
+        postLink = 'api/lecturesAllPayments'
+        
+        let yearInvoice = parseInt($("#searchYear").val())
+        let monthInvoice = parseInt($("#searchMonth").val()) - 1
+        /*if(monthInvoice<1){
+            yearInvoice--
+            monthInvoice = 12
+        }*/
+        query = {
+            sector: $("#searchSector").val(), 
+            year: yearInvoice,
+            //month: monthInvoice,
+            yearPayment: parseInt($("#searchYear").val()),
+            monthPayment: parseInt($("#searchMonth").val()),
+            order: $("#searchOrder").val(),
+            onlyToken: true,
+            noPayment: true
+        }
+
+    }else if(type=='debts'){
         $("#btnDebts").removeClass('btn-primary').addClass('btn-success')
         $("#divDebts").css('display','block')
         $("#btnExcel").css('display','block')
@@ -97,7 +122,6 @@ async function setChart(type){
             order: '0'
         }
         
-
     }else if(type=='sectors'){
         $("#btnSectors").removeClass('btn-primary').addClass('btn-success')
         $("#divSectors").css('display','block')
@@ -130,7 +154,11 @@ async function setChart(type){
         }
     }
 
+    console.log(moment().format('hh:mm:ss'))
     let allInvoices = await axios.post(postLink, query)
+    console.log(allInvoices.data)
+    console.log(moment().format('hh:mm:ss'))
+
 
     let totalInvoices = 0, paid = 0, parcial = 0, unpaid = 0
     let debts = [], debtsToPay = 0, debtsPaid = 0, debtBalance = 0
@@ -256,7 +284,48 @@ async function setChart(type){
         //console.log(sectors)
         console.log(debts)
 
-        if(type=='debts'){
+        if(type=='fullMonth'){
+            $("#tableFullMonthBody").html('')
+            $("#tableFullMonth").css('display','block')
+
+            for(let j=0; j<debts.length; j++){
+
+                let month = 'TOTAL'
+                if(debts[j].month!='TOTAL'){
+                    month = debts[j].year + ' / ' + getMonthString(debts[j].month)
+                }
+                
+                if(j+1<debts.length){
+                    $("#tableFullMonthBody").append(`
+                        <tr>
+                            <td style="text-align: left">${month}</td>
+                            <td style="text-align: right">${dot_separators(debts[j].toPay)}</td>
+                            <td style="text-align: right">${dot_separators(debts[j].paid)}</td>
+                            <td style="text-align: right">${dot_separators(debts[j].balance)}</td>
+                        </tr>
+                    `)
+                }else{
+                    $("#tableFullMonthBody").append(`
+                        <tr>
+                            <th style="text-align: left">${month}</th>
+                            <th style="text-align: right">${dot_separators(debts[j].toPay)}</th>
+                            <th style="text-align: right">${dot_separators(debts[j].paid)}</th>
+                            <th style="text-align: right">${dot_separators(debts[j].balance)}</th>
+                        </tr>
+                    `)
+                }
+                $("#tableFullMonthExcelBody").append(`
+                    <tr>
+                        <td>${(month=='TOTAL') ? 'TOTAL' : debts[j].year}</td>
+                        <td>${(month=='TOTAL') ? '' : getMonthString(debts[j].month)}</td>
+                        <td>${debts[j].toPay}</td>
+                        <td>${debts[j].paid}</td>
+                        <td>${debts[j].balance}</td>
+                    </tr>
+                `)
+            }
+
+        }else if(type=='debts'){
             $("#tableDebtsBody").html('')
             $("#tableDebts").css('display','block')
 

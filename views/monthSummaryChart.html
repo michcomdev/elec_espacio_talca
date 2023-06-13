@@ -60,8 +60,13 @@
         <br/>
         <br/>
         <br/>
+        <button id="btnFullMonth" style="border-radius: 5px;" class="btnChart btn btn-sm btn-primary btn-block" onclick="setChart('fullMonth')">
+            <i class="fas fa-table"></i> Total Boletas
+        </button>
+        <br/>
+        <br/>
         <button id="btnDebts" style="border-radius: 5px;" class="btnChart btn btn-sm btn-primary btn-block" onclick="setChart('debts')">
-            <i class="fas fa-table"></i> Deudas por Mes
+            <i class="fas fa-table"></i> Deudas por Mes (sólo consumo)
         </button>
         <br/>
         <br/>
@@ -84,6 +89,37 @@
         <br/>
         <br/>
         <div class="container-fluid">
+            <div id="divFullMonth" class="col-md-12 classChart" style="display: none">
+                <table id="tableFullMonth" class="display nowrap cell-border table table-condensed" cellspacing="0"  style="font-size: 12px; width: 100%">
+                    <thead>
+                        <tr class="table-info">
+                            <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">Mes</th>
+                            <th style="background-color: #3B6FC9;">Total Mes</th>
+                            <th style="background-color: #3B6FC9;">Pagado</th>
+                            <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">Saldo Adeudado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableFullMonthBody">
+
+                    </tbody>
+                </table>
+                <table id="tableFullMonthExcel" class="display nowrap cell-border table table-condensed" cellspacing="0"  style="font-size: 12px; display: none; width: 100%">
+                    <thead>
+                        <tr class="table-info">
+                            <th style="background-color: #3B6FC9; border-top-left-radius: 5px;">Año</th>
+                            <th style="background-color: #3B6FC9;">Mes</th>
+                            <th style="background-color: #3B6FC9;">Total Mes</th>
+                            <th style="background-color: #3B6FC9;">Pagado</th>
+                            <th style="background-color: #3B6FC9; border-top-right-radius: 5px;">Saldo Adeudado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableFullMonthExcelBody">
+
+                    </tbody>
+                </table>
+            </div>
+
+
             <div id="divDebts" class="col-md-12 classChart" style="display: none">
                 <table id="tableDebts" class="display nowrap cell-border table table-condensed" cellspacing="0"  style="font-size: 12px; width: 100%">
                     <thead>

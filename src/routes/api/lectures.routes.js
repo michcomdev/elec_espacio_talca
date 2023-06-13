@@ -414,9 +414,13 @@ export default [
                     let queryPayment = {
                         members: { $in: array }
                     }
+                    const c = new Date();
+                    console.log('time1', c.getMinutes() + ':' + c.getSeconds())
 
                     let invoices = await Invoices.find(queryInvoice).sort({'number' : 'ascending'}).lean().populate(['lectures','members','services.services'])
                     let payments = await Payments.find(queryPayment).lean()
+                    const d = new Date();
+                    console.log('time2', d.getMinutes() + ':' + d.getSeconds())
                     
                     for(let i=0;i<invoices.length;i++){
                         if (invoices[i].members.type == 'personal') {
@@ -537,10 +541,12 @@ export default [
                     var dateEnd = new Date(datePivot.getFullYear(), datePivot.getMonth()+1, 0)
 
 
-
                     let queryLectures = {
-                        month: payload.month,
                         year: payload.year
+                    }
+
+                    if(payload.month){
+                        queryLectures.month = payload.month
                     }
 
                     let lectures = await Lectures.find(queryLectures)
@@ -700,6 +706,97 @@ export default [
                     order: Joi.string().optional().allow(''),
                     onlyToken: Joi.boolean().optional(),
                     noPayment: Joi.boolean().optional()
+                })
+            }
+        }
+    },
+    {
+        method: 'POST',
+        path: '/api/lecturesAllPaymentsConsumed',
+        options: {
+            description: 'get all lectures from single member',
+            notes: 'get all lectures from single member',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+
+                    //////////CARGA DE BOLETAS DE CONSUMO/////////////////
+                    let payload = request.payload
+
+                    let queryInvoices = {
+                        date: {
+                            $gte: payload.year + '-01-01',
+                            $lt: (payload.year + 1) + '-01-01'
+                        },
+                        annulment: { $exists : false },
+                        $and: [{token: { $exists : true }}, {token: {$ne: '' }}],
+                        number: { $exists : true }
+                    }
+
+                    let invoices = await Invoices.find(queryInvoices).lean()
+                    let array = []
+                    for(let a=0; a<12; a++){
+                        array.push({
+                            month: a+1,
+                            total: 0,
+                            paid: 0,
+                            balance: 0,
+                            data: []
+                        })
+                    }
+
+                    
+
+                    let queryPayment = {
+                        date: {
+                            $gte: payload.year + '-01-01',
+                            $lte: payload.datePayment
+                            //$lt: (payload.year + 1) + '-01-01'
+                        }
+                    }
+
+                    let payments = await Payments.find(queryPayment).lean()
+                    for(let i=0; i<invoices.length; i++){
+
+                        invoices[i].paid = 0
+                        invoices[i].balance = invoices[i].invoiceSubTotal
+                        let paymentsMember = payments.filter(x => x.members.toString() == invoices[i].members.toString())
+                        for(let j=0; j<paymentsMember.length; j++){
+                            for(let k=0; k<paymentsMember[j].invoices.length; k++){
+                                if(paymentsMember[j].invoices[k].invoices){
+                                    if(paymentsMember[j].invoices[k].invoices.toString()==invoices[i]._id){
+                                        invoices[i].paid += (paymentsMember[j].invoices[k].amountMonth || paymentsMember[j].invoices[k].amountMonth == 0) ? paymentsMember[j].invoices[k].amountMonth : paymentsMember[j].invoices[k].amount 
+                                        invoices[i].balance -= (paymentsMember[j].invoices[k].amountMonth || paymentsMember[j].invoices[k].amountMonth == 0) ? paymentsMember[j].invoices[k].amountMonth : paymentsMember[j].invoices[k].amount 
+                                    }
+                                }
+                            }
+                        }
+                        
+                        //Por desfase UTC
+                        let userTimezoneOffset = invoices[i].date.getTimezoneOffset() * 60000;
+                        let invoiceDate = new Date(invoices[i].date.getTime() + userTimezoneOffset);
+                        
+                        array[invoiceDate.getMonth()].data.push(invoices[i])
+                        array[invoiceDate.getMonth()].total += invoices[i].invoiceSubTotal
+                        array[invoiceDate.getMonth()].paid += invoices[i].paid
+                        array[invoiceDate.getMonth()].balance += (invoices[i].invoiceSubTotal - invoices[i].paid)
+                    }
+                    
+
+                    return array
+
+                } catch (error) {
+                    console.log(error)
+
+                    return h.response({
+                        error: 'Internal Server Error'
+                    }).code(500)
+                }
+            },
+            validate: {
+                payload: Joi.object().keys({
+                    year: Joi.number().allow(0),
+                    datePayment: Joi.string().allow('')
                 })
             }
         }

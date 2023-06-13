@@ -131,18 +131,22 @@ export default [
 
                     let payment = await Payments.findById(payload.id).lean().populate(['members','invoices.invoices'])
                     for(let i=0; i<payment.invoices.length; i++){
+                        
                         if(payment.invoices[i].invoices){
                             let lecture = await Lectures.findById(payment.invoices[i].invoices.lectures).lean()
                             payment.invoices[i].invoices.lectureData = lecture
+                            payment.invoices[i].invoices.paidConsumption = 0
+                            payment.invoices[i].invoices.paidAgreement = 0
+
+                            if(invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidConsumption){
+                                payment.invoices[i].invoices.paidConsumption += invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidConsumption
+                            }
+                            if(invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidAgreement){
+                                payment.invoices[i].invoices.paidAgreement += invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidAgreement
+                            }
                         }
-                        payment.invoices[i].invoices.paidConsumption = 0
-                        payment.invoices[i].invoices.paidAgreement = 0
-                        if(invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidConsumption){
-                            payment.invoices[i].invoices.paidConsumption += invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidConsumption
-                        }
-                        if(invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidAgreement){
-                            payment.invoices[i].invoices.paidAgreement += invoices.find(x => x._id.toString() == payment.invoices[i].invoices._id.toString()).paidAgreement
-                        }
+                        
+                        
                     }
 
 /*

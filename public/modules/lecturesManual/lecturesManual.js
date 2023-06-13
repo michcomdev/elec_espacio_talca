@@ -687,8 +687,6 @@ function removeLectureNew(btn,id){
     //saveOne(id)
 }
 
-
-
 async function printList() {
 
     let doc = new jsPDF('p', 'pt', 'letter')

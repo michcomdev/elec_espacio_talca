@@ -3,6 +3,10 @@ let internals = {
         table: {},
         data: []
     },
+    summary: {
+        table: {},
+        data: []
+    },
     lectures: {
         table: {},
         data: []
@@ -23,20 +27,21 @@ let cranes = {}
 let parameters
 
 $(document).ready(async function () {
-    $('#searchDate').daterangepicker({
-        opens: 'left',
+    $('#paymentDate').daterangepicker({
+        opens: 'right',
         locale: dateRangePickerDefaultLocale,
-        startDate: moment().add(-1, 'months')
-        //endDate: moment()
-    }, function (start, end, label) {
-        //internals.initDate = start.format('YYYY-MM-DD')
-        //internals.endDate = end.format('YYYY-MM-DD')
+        singleDatePicker: true,
+        autoApply: true
     })
+
+    $("#paymentDate").val(moment.utc().format('DD/MM/YYYY'))
     getParameters()
     //printInvoice('pdf','personal','631b9a63638604718876683a','63b6ce1c8b9c515860d2229a')
     //printInvoicePortrait('pdf','personal','631b9a63638604718876683a','63b6ce1c8b9c515860d2229a')
-    //chargeMembersTable()
+    //loadSummaryTable()
     //getAllInvoices()
+    
+    //loadSummaryTable()
 })
 
 async function getParameters() {
@@ -76,7 +81,76 @@ async function getParameters() {
 
 }
 
-function chargeMembersTable() {
+async function loadSummaryTable() {
+
+    
+    loadingHandler('start')
+
+    let yearInvoice = parseInt($("#searchYear").val())
+    
+    let queryPayment = {
+        year: yearInvoice,
+        datePayment: $("#paymentDate").data('daterangepicker').startDate.format('YYYY-MM-DD')
+    }
+    
+    let allInvoices = await axios.post('api/lecturesAllPaymentsConsumed', queryPayment)
+    internals.summary = allInvoices
+
+    console.log(allInvoices.data)
+    
+    $("#tableSummaryBody").html('')
+    $("#tableSummaryExcelBody").html('')
+    if ($.fn.DataTable.isDataTable('#tableMembers')) {
+        internals.members.table.clear().destroy()
+    }
+    $("#tableMembersExcelBody").html('')
+
+    let total1 = 0, total2 = 0, total3 = 0
+
+    if (allInvoices.data.length > 0) {
+
+        let formatData = allInvoices.data.filter(el => {
+            
+            $("#tableSummaryBody").append(`
+                <tr class="trSummary">
+                    <td>${getMonthString(el.month)}</td>
+                    <td style="text-align: right;">${dot_separators(el.total)}</td>
+                    <td style="text-align: right;">${dot_separators(el.paid)}</td>
+                    <td style="text-align: right;">${dot_separators(el.balance)}</td>
+                    <td style="text-align: center;">${`<button class="btn btn-sm btn-info" onclick="showInvoices(${el.month - 1}, this)"><i class="far fa-eye" style="font-size: 10px;"></i></button>`}</td>
+                </tr>`)
+
+            total1 += el.total
+            total2 += el.paid
+            total3 += el.balance
+
+            $("#tableSummaryExcelBody").append(`
+                <tr>
+                    <td>${getMonthString(el.month)}</td>
+                    <td>${el.total}</td>
+                    <td>${el.paid}</td>
+                    <td>${el.balance}</td>
+                </tr>`)
+
+            return el
+        })
+
+        loadingHandler('stop')
+        $('#loadingMembers').empty()
+    } else {
+        loadingHandler('stop')
+        //toastr.warning('No se han encontrado ventas en el rango seleccionado')
+        $('#loadingMembers').empty()
+    }
+
+}
+
+
+function showInvoices(month,btn) {
+
+    $('.trSummary').removeClass('table-primary')
+    $(btn).parent().parent().addClass('table-primary')
+
     try {
         if ($.fn.DataTable.isDataTable('#tableMembers')) {
             internals.members.table.clear().destroy()
@@ -108,13 +182,13 @@ function chargeMembersTable() {
                     { data: 'date' },
                     { data: 'numberInvoice' },
                     { data: 'total' },
-                    { data: 'paymentAmount' },
+                    { data: 'paid' },
                     { data: 'balance' },
                     { data: 'originType' },
                     { data: 'status' }
                 ],
                 initComplete: function (settings, json) {
-                    getAllInvoices()
+                    getAllInvoices(month)
                 }
             })
 
@@ -124,54 +198,17 @@ function chargeMembersTable() {
 
 }
 
-async function getAllInvoices(){
+async function getAllInvoices(month){
     loadingHandler('start')
-
-    let yearInvoice = parseInt($("#searchYear").val())
-    let monthInvoice = parseInt($("#searchMonth").val()) - 1
-    if(monthInvoice<1){
-        yearInvoice--
-        monthInvoice = 12
-    }
-
-    /*let query = {
-        sector: $("#searchSector").val(), 
-        year: yearInvoice,
-        month: monthInvoice,
-        order: $("#searchOrder").val(),
-        onlyToken: true
-    }*/
-    //let allInvoices = await axios.post('api/lecturesAllInvoices', query)
-
-    let queryPayment = {
-        sector: $("#searchSector").val(), 
-        year: yearInvoice,
-        month: monthInvoice,
-        yearPayment: parseInt($("#searchYear").val()),
-        monthPayment: parseInt($("#searchMonth").val()),
-        order: $("#searchOrder").val(),
-        onlyToken: true
-    }
-    let allInvoices = await axios.post('api/lecturesAllPayments', queryPayment)
-
     $("#tableMembersExcelBody").html('')
-
-    /*allInvoices.data.push({
-        date: 'TOTAL',
-        number: '',
-        total: 0,
-        paymentAmount: 0,
-        balance: 0,
-        status: ''
-    })*/
 
     let total1 = 0, total2 = 0, total3 = 0
 
-    if (allInvoices.data.length > 0) {
+    if (internals.summary.data[month].data.length > 0) {
 
-        let formatData = allInvoices.data.filter(el => {
+        let formatData = internals.summary.data[month].data.filter(el => {
             let goRow = false
-
+            console.log(el)
             if(el._id){
 
                 let agreementsTotal = 0
@@ -187,21 +224,6 @@ async function getAllInvoices(){
                     status = 'ANULADA'
                 }
 
-                let paymentAmount = 0, balance = el.invoiceSubTotal// + agreementsTotal
-                if(el.payment){
-                    if(el.payment.amountMonth){
-                        paymentAmount = el.payment.amountMonth
-                        balance -= el.payment.amountMonth
-                    }else{
-                        paymentAmount = el.payment.amount
-                        balance -= el.payment.amount
-                    }
-                }
-                /*if(el.annulment){
-                    paymentAmount = 0
-                    balance = 0
-                }*/
-
                 el.year = `${el.lectures.year}<div data-member-id="${el.members._id}" data-invoice-id="${el._id}" data-member-type="${el.members.type}"></div>`
 
                 el.month = el.lectures.month
@@ -213,12 +235,9 @@ async function getAllInvoices(){
                 el.consumptionValueFull = dot_separators(el.invoiceSubTotal)
                 el.others = dot_separators(agreementsTotal)
                 el.total = dot_separators(el.invoiceSubTotal)// + agreementsTotal)//SE MOSTRARÁ SÓLO VALOR TRIBUTABLE
-                el.paymentAmount = dot_separators(paymentAmount)
-                el.balance = dot_separators(balance)
-                el.paymentStatus = ''
-
-                if(balance>=paymentAmount){
-                    if(paymentAmount==0){
+                console.log(el)
+                if(el.balance>=el.paid){
+                    if(el.paid==0){
                         el.paymentStatus = 'IMPAGO'
                     }else{
                         el.paymentStatus = 'PARCIAL'
@@ -227,6 +246,11 @@ async function getAllInvoices(){
                     el.paymentStatus = 'PAGADO'
                 }
 
+                el.paid = dot_separators(el.paid)
+                el.balance = dot_separators(el.balance)
+                el.paymentStatus = ''
+
+                
                 el.status = status
                 el.invoicePDF = `<button class="btn btn-sm btn-danger" onclick="printSelection('pdf','${el.members.type}','${el.members._id}','${el._id}')"><i class="far fa-file-pdf" style="font-size: 10px;"></i></button>`
                 el.paymentPDF = ''
@@ -266,7 +290,7 @@ async function getAllInvoices(){
             if(goRow){
 
                 total1 += parseInt(replaceAll(el.total.toString(), '.', ''))
-                total2 += parseInt(replaceAll(el.paymentAmount.toString(), '.', ''))
+                total2 += parseInt(replaceAll(el.paid.toString(), '.', ''))
                 total3 += parseInt(replaceAll(el.balance.toString(), '.', ''))
 
                 $("#tableMembersExcelBody").append(`
@@ -274,7 +298,7 @@ async function getAllInvoices(){
                         <td>${moment.utc(el.date).add(1,'days').format('YYYY-MM-DD')}</td>
                         <td>${(el.numberInvoice) ? el.numberInvoice : 0}</td>
                         <td>${replaceAll(el.total.toString(), '.', '')}</td>
-                        <td>${replaceAll(el.paymentAmount.toString(), '.', '')}</td>
+                        <td>${replaceAll(el.paid.toString(), '.', '')}</td>
                         <td>${replaceAll(el.balance.toString(), '.', '')}</td>
                         <td>${el.originType}</td>
                         <td>${el.status}</td>
@@ -317,7 +341,7 @@ async function getAllInvoices(){
 }
 
 $('#searchMembers').on('click', async function () {
-    chargeMembersTable()
+    loadSummaryTable()
 })
 
 function createModalBody(member) {
@@ -1028,33 +1052,41 @@ function setPopover(title, values, text){
     return popover
 }
 
-function ExportToExcel(type, fn, dl) {
-    var elt = document.getElementById('tableMembersExcel')
+function ExportToExcel(type, table, fn, dl) {
+    var elt = document.getElementById(table)
     var wb = XLSX.utils.table_to_book(elt, { sheet: "Hoja1" })
     return dl ?
       XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }):
       XLSX.writeFile(wb, fn || ('Reporte.' + (type || 'xlsx')))
 }
 
-function exportToPDF(){
+function exportToPDF(table){
     var doc = new jsPDF('l','pt','letter')
+    let columnStyles = {
+        1: { halign: 'center' },
+        2: { halign: 'right' },
+        3: { halign: 'right' },
+        4: { halign: 'right' },
+        5: { halign: 'center' },
+        5: { halign: 'center' }
+    }
+    if(table=='tableSummaryExcel'){
+        columnStyles = {
+            0: { halign: 'left' },
+            1: { halign: 'right' },
+            2: { halign: 'right' },
+            3: { halign: 'right' }
+        }
+    }
+
     doc.autoTable({ 
-        html: "#tableMembersExcel",
+        html: "#"+table,
         styles: {
             fontSize: 6,
             valign: 'middle',
             halign: 'center'
         },
-        columnStyles: {
-            //0: {cellWidth: 20},
-            //1: {cellWidth: 120, halign: 'left'},
-            6: { halign: 'left' },
-            7: { halign: 'right' },
-            8: { halign: 'right' },
-            9: { halign: 'right' },
-            10: { halign: 'right' }
-            
-        },
+        columnStyles: columnStyles,
         didParseCell: (hookData) => {
             if (hookData.section === 'head') {
                 if (hookData.column.dataKey === '1') {
