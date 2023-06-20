@@ -22,16 +22,7 @@ function chargeUsersTable() {
             .DataTable({
 
                 dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'excel',
-                        className: 'btn-excel'
-                    },
-                    {
-                        extend: 'pdf',
-                        className: 'btn-pdf'
-                    },
-                ],
+                buttons: ['excel','pdf'],
                 iDisplayLength: 50,
                 oLanguage: {
                     sSearch: 'buscar: '

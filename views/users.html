@@ -10,15 +10,13 @@
 <div class="row animate__animated animate__fadeIn">
     <div class="col-md-2">
         <div class="col-md-12">
-            <button style="border-radius: 5px;" class="btn btn-info btn-block"
-                id="createUser">
+            <button class="btn btn-info btn-block" id="createUser">
                 <i class="fas fa-plus-circle"></i> NUEVO USUARIO
             </button>
         </div>
         <hr>
         <div class="col-md-12">
-            <button style="background-color: #3B6FC9; border-radius: 5px;"
-                class="btn btn-primary btn-block" id="updateUser" disabled>
+            <button class="btn btn-primary btn-block" id="updateUser" disabled>
                 <i class="fas fa-edit"></i> MODIFICAR USUARIO
             </button>
         </div>
@@ -26,27 +24,21 @@
     <div class="col-md-10">
         <div class="col-md-12 table-responsive">
             <br/>
-                <table id="tableUsers" class="display nowrap cell-border
-                    table-condensed"
-                    cellspacing="0" width="100%">
+                <table id="tableUsers" class="display nowrap cell-border table-condensed" cellspacing="0" width="100%">
                     <thead>
                         <tr class="table-info">
-                            <th style="background-color: #3B6FC9;
-                                border-top-left-radius: 5px;">RUT</th>
-                            <th style="background-color: #3B6FC9;">NOMBRE</th>
-                            <th style="background-color: #3B6FC9;">APELLIDO</th>
-                            <th style="background-color: #3B6FC9;">CORREO</th>
-                            <th style="background-color: #3B6FC9;">ROL</th>
-                            <th style="background-color: #3B6FC9;
-                                border-top-right-radius: 5px;">ESTADO</th>
+                            <th>RUT</th>
+                            <th>NOMBRE</th>
+                            <th>APELLIDO</th>
+                            <th>CORREO</th>
+                            <th>ROL</th>
+                            <th>ESTADO</th>
                         </tr>
                     </thead>
                 </table>
-                <div id="loadingUsers">
-                    <center>
-                        <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
-                        <span class="sr-only">Cargando...</span>
-                    </center>
+                <div id="loadingUsers" style="text-align: center;">
+                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+                    <span class="sr-only">Cargando...</span>
                 </div>
             </div>
         </div>
@@ -58,10 +50,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title" id="modal_title"></h4>
-                    <button type="button" class="btn-close" data-dismiss="modal"
-                        aria-label="Close">
-                        <span aria-hidden="true"></span>
-                    </button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
                 </div>
                 <div class="modal-body" id="modal_body"></div>
                 <div class="modal-footer" id="modal_footer"></div>

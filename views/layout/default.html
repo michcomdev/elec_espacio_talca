@@ -5,45 +5,38 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INTRANET AGUA</title>
+    <title>SGL - COMEX</title>
     <link rel="icon" type="image/x-icon" href="/public/img/favicon.ico">
     <!-- ESTILOS -->
     <link rel="stylesheet"
-      href="/public/bootstrap-4.5.3-dist/css/bootstrap-litera.css">
+      href="/public/bootstrap-4.5.3-dist/css/bootstrap-flatly.css">
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
-      rel="stylesheet">
-    <link rel="stylesheet" type="text/css"
-      href="/public/DataTables/datatables.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/public/DataTables/datatables.min.css">
     <link rel="stylesheet" href="/public/css/toastr.min.css">
     <link rel="stylesheet" href="/public/css/select2.min.css">
     <link rel="stylesheet" href="/public/css/daterangepicker.css">
     <link rel="stylesheet" href="/public/modules/default/default.css">
-    <link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-      />
     {{#block "css"}}
     {{/block}}
   </head>
 
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-agua">
-      <a class="navbar-brand" href="#"><img src="/public/img/logopng3.png"
-          alt="logo" width="70" height="50"></a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <a class="navbar-brand" href="#"><img src="/public/img/logopng3.png" alt="logo" width="92" height="50"></a>
       <button class="navbar-toggler collapsed" type="button"
-        data-toggle="collapse" data-target="#navbarColor03"
-        aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle
+        data-toggle="collapse" data-target="#navbarColor02"
+        aria-controls="navbarColor02" aria-expanded="false" aria-label="Toggle
         navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="navbar-collapse collapse" id="navbarColor03">
-        <ul class="navbar-nav me-auto">
-          
+      <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+        <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#"
               role="button" aria-haspopup="true"
-              aria-expanded="false"><i class="fas fa-file-invoice"></i> Proceso</a>
+              aria-expanded="false"><i class="fas fa-file-invoice"></i> Instructivo</a>
             <div class="dropdown-menu">
               <a class="dropdown-item" href="/parameters">1. Parámetros</a>
               <a class="dropdown-item" href="/members">2. Subsidios</a>
@@ -54,21 +47,8 @@
               <a class="dropdown-item" href="/macro">6. Macro</a>
             </div>
           </li>
-
           <li class="nav-item">
-            <a class="nav-link" href="/lectures"><i class="fas fa-chart-bar"></i>Consumos y Pagos</a>
-          </li>
-          <!--<li class="nav-item">
-            <a class="nav-link" href="/lecturesManual"><i class="fas fa-list-alt"></i>Planilla</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/lecturesFull"><i class="fas fa-file-invoice-dollar"></i>Mensual</a>
-          </li>-->
-          <li class="nav-item">
-            <a class="nav-link" href="/invoices"><i class="fas fa-receipt"></i>Ingresos</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/members"><i class="fas fa-user"></i>Socios</a>
+            <a class="nav-link" href="/clients"><i class="fas fa-user"></i>Empresas</a>
           </li>
           {{#if credentials.admin }}
           <li class="nav-item dropdown">
@@ -77,15 +57,6 @@
               aria-expanded="false"><i class="fas fa-file-invoice"></i> Reportes</a>
             <div class="dropdown-menu">
               <a class="dropdown-item" href="/cartola"> Cartola</a>
-              <a class="dropdown-item" href="/monthSummary"> Resumen Mensual</a>
-              <a class="dropdown-item" href="/monthSummaryChart"> Resumen General</a>
-              <!--<a class="dropdown-item" href="/membersReport"> Pagos por Socio</a>-->
-              <a class="dropdown-item" href="/macro"> Macro Subsidios</a>
-              <a class="dropdown-item" href="/defaulter"> Nómina Morosos</a>
-              <a class="dropdown-item" href="/repInvoices"> Avisos y Boletas</a>
-              <a class="dropdown-item" href="/repInvoicesPayment"> Pagos</a>
-              <a class="dropdown-item" href="/repInvoicesPaymentAll"> Pagos por Mes</a>
-              <a class="dropdown-item" href="/repLectures"> Lecturas</a>
             </div>
           </li>
           <li class="nav-item dropdown">
@@ -93,41 +64,29 @@
               role="button" aria-haspopup="true"
               aria-expanded="false"><i class="fas fa-user-shield"></i> Admin</a>
             <div class="dropdown-menu">
-              <!--<a class="dropdown-item" href="/clients"> Clientes</a>
-            <div class="dropdown-divider"></div>-->
               {{#if credentials.permissions.superadmin}}
-              <a class="dropdown-item" href="/users"> Usuarios</a>
-              <a class="dropdown-item" href="/sectors"> Sectores</a>
-              <a class="dropdown-item" href="/services"> Tipos de Servicios</a>
-              <a class="dropdown-item" href="/parameters"> Parámetros</a>
+                <a class="dropdown-item" href="/users"> Usuarios</a>
+                <a class="dropdown-item" href="/parameters"> Parámetros</a>
               {{/if}}
             </div>
           </li>
-
-          <!-- <li class="nav-item">
-            <a class="nav-link" href="#" onclick="alert('En construcción')"><img src="/public/img/powerbi.png" width="22"/>&nbsp;Reportería</a>
-
-          </li> -->
           {{/if}}
         </ul>
-        <div class="my-2 my-lg-0">
+        <form class="form-inline my-2 my-lg-0">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle dos" href="#"
-                id="userCredentialsDropdown" data-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="false">
+              <a class="nav-link dropdown-toggle dos" href="#" id="userCredentialsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fas fa-user"></i> <span id="userCredentials"></span>
               </a>
-              <div id="credentialsDropdownMenu" style="z-index:2000;"class="dropdown-menu"
-                aria-labelledby="userCredentialsDropdown">
+              <div id="credentialsDropdownMenu" style="z-index:2000;"class="dropdown-menu" aria-labelledby="userCredentialsDropdown">
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="/logout"><i class="fas fa-times"></i>
-                  Cerrar sesión</a>
+                <a class="dropdown-item" href="/logout"><i class="fas fa-times"></i>Cerrar sesión</a>
               </div>
             </li>
           </ul>
-        </div>
+        </form>
       </div>
+
     </nav>
 
     <div class="container-fluid">

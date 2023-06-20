@@ -22,7 +22,7 @@ dotEnv.config()
 const internals = {}
 const swaggerOptions = {
     info: {
-        title: 'AGUA API DOCUMENTATION',
+        title: 'SLGCOMEX API DOCUMENTATION',
         version: Pack.version
     }
 }
@@ -31,12 +31,12 @@ internals.server = async () => {
     try {
         let server = await Hapi.server({
             host: '0.0.0.0',
-            port: 4022,
+            port: 4023,
             cache: {
                 provider: {
                     constructor: catboxRedis,
                     options: {
-                        partition: 'aguaservercookies',
+                        partition: 'sglservercookies',
                         host: process.env.REDIS_HOST || '127.0.0.1',
                         port: 6379,
                         password: process.env.REDIS_PASSWORD,
@@ -79,7 +79,7 @@ internals.server = async () => {
 
         server.auth.strategy('session', 'cookie', {
             cookie: {
-                name: 'sid-agua',
+                name: 'sid-sgl',
                 password: process.env.SECRET_KEY,
                 isSecure: false,
             },
@@ -104,7 +104,7 @@ internals.server = async () => {
 
                 console.log("decoded",decoded)
                 if (decoded.aud && decoded.aud == 'mobileuser') {
-                    let tokenredis = await request.redis.client.hget('aguamobile',decoded.id)
+                    let tokenredis = await request.redis.client.hget('sglmobile',decoded.id)
 
                     if (!tokenredis) {
                         return { isValid: false }
