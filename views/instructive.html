@@ -1,0 +1,61 @@
+{{!<layout/default}}
+    {{#extend "css" }}
+<link rel="stylesheet" type="text/css" href="/public/modules/instructive/instructive.css">
+{{/extend}}
+<br />
+<h3 class="text-center animate__animated animate__fadeIn">INSTRUCTIVOS DE EMBARQUE</h3>
+
+<br>
+
+<div class="row animate__animated animate__fadeIn">
+    <div class="col-md-2">
+        <div class="col-md-12">
+            <button class="btn btn-info btn-block" id="createInstructive">
+                <i class="fas fa-plus-circle"></i> Nueva Instructivo
+            </button>
+        </div>
+        <hr>
+        <div class="col-md-12">
+            <button class="btn btn-primary btn-block" id="updateInstructive" disabled>
+                <i class="fas fa-edit"></i> Modificar Instructivo
+            </button>
+        </div>
+    </div>
+    <div class="col-md-10">
+        <div class="col-md-12 table-responsive">
+            <br/>
+                <table id="tableInstructives" class="display nowrap cell-border table-condensed" cellspacing="0" width="100%">
+                    <thead>
+                        <tr class="table-info">
+                            <th>FECHA CREACIÓN</th>
+                            <th>CLIENTE</th>
+                            <th>TIPO</th>
+                        </tr>
+                    </thead>
+                </table>
+                <div id="loadingInstructives" style="text-align: center;">
+                    <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+                    <span class="sr-only">Cargando...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <div class="modal fade" id="modal" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modal_title"></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                </div>
+                <div class="modal-body" id="modal_body"></div>
+                <div class="modal-footer" id="modal_footer"></div>
+            </div>
+        </div>
+    </div>
+    {{#extend "js"}}
+    <script src="/public/modules/instructive/instructive.js"></script>
+    {{/extend}}

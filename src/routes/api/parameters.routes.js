@@ -1,4 +1,3 @@
-import Sectors from '../../models/Sectors'
 import dotEnv from 'dotenv'
 import Joi from 'joi'
 import Parameters from '../../models/Parameters'

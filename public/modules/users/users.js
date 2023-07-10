@@ -107,20 +107,20 @@ async function getUsersEnabled() {
 $('#createUser').on('click', async function () { // CREAR USUARIO
     handleModal()
 
-    $('#userRut').on('keyup', function () {
-        let rut = $('#userRut').val()
+    $('#userRUT').on('keyup', function () {
+        let rut = $('#userRUT').val()
         if (validateRut(rut) && rut.length >= 6) {
-            $('#userRut').val(validateRut($('#userRut').val()))
+            $('#userRUT').val(validateRut($('#userRUT').val()))
         }
     })
 
     setTimeout(() => {
-        $('#userRut').focus()
+        $('#userRUT').focus()
     }, 500)
 
     $('#saveUser').on('click', async function () {
         let userData = {
-            rut: removeSpecials($('#userRut').val()),
+            rut: removeSpecials($('#userRUT').val()),
             name: $('#userName').val(),
             lastname: $('#userLastname').val(),
             password: $('#userPassword').val(),
@@ -185,7 +185,7 @@ $('#updateUser').on('click', function () { //MODIFICAR USUARIO
 
     $('#saveUser').on('click', async function () {
 
-        internals.users.data.rut = $('#userRut').val()
+        internals.users.data.rut = $('#userRUT').val()
         internals.users.data.name = $('#userName').val().trim()
         internals.users.data.lastname = $('#userLastname').val().trim()
         internals.users.data.password = $('#userPassword').val().trim()
@@ -246,8 +246,8 @@ function handleModal(userSelected) {
     $('#modal_body').html( /*html*/`
         <div class="row">
             <div class="col-md-4" style="margin-top:10px;">
-                Rut
-                <input id="userRut" type="text" placeholder="11.111.111-1" value="${(userSelected) ? userSelected.rut : ''}" class="form-control border-input">
+                RUT
+                <input id="userRUT" type="text" placeholder="11.111.111-1" value="${(userSelected) ? userSelected.rut : ''}" class="form-control border-input">
             </div>
 
             <div class="col-md-4" style="margin-top:10px;">
@@ -320,10 +320,10 @@ async function validateUserData(userData) { // VERIFICACION
     // 5 puntos
     if (userData.rut.length >= 6) { // 1
         validationCounter++
-        $('#userRut').css('border', '1px solid #3498db')
+        $('#userRUT').css('border', '1px solid #3498db')
     } else {
         errorMessage += `<br>* Debe ingresar un <b>rut válido`
-        $('#userRut').css('border', '1px solid #e74c3c')
+        $('#userRUT').css('border', '1px solid #e74c3c')
     }
 
     if (userData.name.length > 1) { // 2

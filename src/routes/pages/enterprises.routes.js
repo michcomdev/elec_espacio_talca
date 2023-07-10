@@ -1,12 +1,12 @@
 export default {
     method: ['GET'],
-    path: '/clients',
+    path: '/enterprises',
     options: {
         handler: (request, h) => {
             let credentials = request.auth.credentials
             credentials[credentials.scope] = true
 
-            return h.view('clients', { credentials })
+            return h.view('enterprises', { credentials })
         }
     }
 }
