@@ -5,7 +5,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGL - COMEX</title>
+    <title>Espacio Talca</title>
     <link rel="icon" type="image/x-icon" href="/public/img/favicon.ico">
     <!-- ESTILOS -->
     <link rel="stylesheet"
@@ -36,33 +36,19 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#"
               role="button" aria-haspopup="true"
-              aria-expanded="false"><i class="far fa-folder-open"></i> Instructivo</a>
+              aria-expanded="false"><i class="fas fa-weight fa-2x"></i> Lecturas</a>
             <div class="dropdown-menu">
-              <a class="dropdown-item" href="/instructive">Ins. Embarque</a>
-              <a class="dropdown-item" href="/packingList">Packing List</a>
-              <a class="dropdown-item" href="/proforma">Pro Forma</a>
+              <a class="dropdown-item" href="/actual">Actual</a>
             </div>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/enterprises"><i class="fas fa-industry"></i>Empresas</a>
           </li>
           {{#if credentials.admin }}
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#"
               role="button" aria-haspopup="true"
-              aria-expanded="false"><i class="fas fa-file-invoice"></i> Reportes</a>
-            <div class="dropdown-menu">
-              <a class="dropdown-item" href="/cartola"> Cartola</a>
-            </div>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#"
-              role="button" aria-haspopup="true"
-              aria-expanded="false"><i class="fas fa-user-shield"></i> Admin</a>
+              aria-expanded="false"><i class="fas fa-user-shield fa-2x"></i> Admin</a>
             <div class="dropdown-menu">
               {{#if credentials.permissions.superadmin}}
                 <a class="dropdown-item" href="/users"> Usuarios</a>
-                <a class="dropdown-item" href="/parameters"> Parámetros</a>
               {{/if}}
             </div>
           </li>

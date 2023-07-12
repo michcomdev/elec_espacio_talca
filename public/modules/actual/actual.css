@@ -1,8 +1,10 @@
 @font-face {
-    font-family: "Password";
-    src: url("/public/fonts/password.ttf") format("truetype")
+    font-family: "digital";
+    src: url("/public/fonts/DigitalNumbers-Regular.ttf") format("truetype")
+    /*src: url("/public/fonts/digital-7/digital-7.ttf") format("truetype")*/
         /* chrome firefox opera Safari, Android, iOS 4.2+*/
 }
+
 
 .inputUserForm {
     text-align: center;
@@ -46,4 +48,25 @@
 label {
     font-weight: bold;
     margin-bottom: 0;
+}
+
+#meterImg {
+    width: 200px;
+}
+
+#meterValue {
+    font-family: 'digital';
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 34px;
+}
+
+#meterText {
+    position: absolute;
+    top: 62%;
+    left: 55%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
 }

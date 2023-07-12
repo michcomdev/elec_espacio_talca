@@ -1,0 +1,82 @@
+{{!<layout/default}}
+    {{#extend "css" }}
+<link rel="stylesheet" type="text/css" href="/public/modules/actual/actual.css">
+{{/extend}}
+<br />
+<h3 class="text-center animate__animated animate__fadeIn">CENTRALES</h3>
+
+<br>
+
+<div class="row animate__animated animate__fadeIn">
+    
+    <div id="listSwitchboards" class="col-md-3">
+        
+    </div>
+    <div class="col-md-9 table-responsive">
+        <br/>
+        <table id="tableMeters" class="display nowrap cell-border table-condensed" cellspacing="0" width="100%">
+            <thead>
+                <tr class="table-danger">
+                    <th style="text-align: center;">N° Dirección</th>
+                    <th style="text-align: center;">Dispositivo</th>
+                    <th>Cliente</th>
+                    <th style="text-align: center;">Última lectura</th>
+                    <th style="text-align: center;">Estado</th>
+                    <th style="text-align: center;">Última Lectura (kW/h)</th>
+                </tr>
+            </thead>
+        </table>
+        <!--<div id="loadingMeters" style="text-align: center;">
+            <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+            <span class="sr-only">Cargando...</span>
+        </div>-->
+    </div>
+</div>
+
+<div class="modal fade" id="modalMeter" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modalMeter_title">N° 0 - CLIENTE</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4" style="text-align: center; position: relative;">
+                        <img id="meterImg" src="/public/img/meter.png"/>
+                        <div id="meterValue">0.15</div>
+                        <div id="meterText">kW&nbsp;&nbsp;&nbsp;h</div>
+                    </div>
+                    <div class="col-md-8">
+                        <table id="tableMeter" class="table" style="font-size: 14px;">
+                            
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!--<div class="modal-footer"></div>-->
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="modal" role="dialog" aria-labelledby="modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modal_title"></h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+            </div>
+            <div class="modal-body" id="modal_body"></div>
+            <div class="modal-footer" id="modal_footer"></div>
+        </div>
+    </div>
+</div>
+{{#extend "js"}}
+<script src="/public/modules/actual/actual.js"></script>
+{{/extend}}

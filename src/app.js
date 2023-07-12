@@ -31,12 +31,12 @@ internals.server = async () => {
     try {
         let server = await Hapi.server({
             host: '0.0.0.0',
-            port: 4023,
+            port: 5023,
             cache: {
                 provider: {
                     constructor: catboxRedis,
                     options: {
-                        partition: 'sglservercookies',
+                        partition: 'espacio_talcaservercookies',
                         host: process.env.REDIS_HOST || '127.0.0.1',
                         port: 6379,
                         password: process.env.REDIS_PASSWORD,

@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import Instructive from '../../models/Instructives'
+import Meters from '../../models/Meters'
 import Type from '../../models/Types'
 import dotEnv from 'dotenv'
 
@@ -8,18 +8,18 @@ dotEnv.config()
 export default [
     {
         method: 'GET',
-        path: '/api/instructives',
+        path: '/api/enterprises',
         options: {
-            description: 'get all instructives data',
-            notes: 'return all data from instructives',
+            description: 'get all enterprises data',
+            notes: 'return all data from enterprises',
             tags: ['api'],
             handler: async (request, h) => {
                 try {
-                    let instructives = await Instructive.find().lean().populate(['types'])
-                    for(let i=0; i<instructives.length; i++){
-                        instructives[i].type = instructives[i].types.name
+                    let enterprises = await Enterprise.find().lean().populate(['types'])
+                    for(let i=0; i<enterprises.length; i++){
+                        enterprises[i].type = enterprises[i].types.name
                     }
-                    return instructives
+                    return enterprises
                 } catch (error) {
                     console.log(error)
 
@@ -32,39 +32,41 @@ export default [
     },
     {
         method: 'POST',
-        path: '/api/instructives',
+        path: '/api/enterprises',
         options: {
-            description: 'save instructive',
-            notes: 'create or modify instructive',
+            description: 'save enterprise',
+            notes: 'create or modify enterprise',
             tags: ['api'],
             handler: async (request) => {
                 try {
                     let payload = request.payload
                     if (payload._id) { // modificar empresa
-                        let findInstructive = await Instructive.findById(payload._id)
+                        let findEnterprise = await Enterprise.findById(payload._id)
 
-                        findInstructive.rut = payload.rut
-                        findInstructive.fantasyName = payload.fantasyName
-                        findInstructive.name = payload.name
-                        findInstructive.address = payload.address
-                        findInstructive.types = payload.types
-                        findInstructive.phone = payload.phone
-                        findInstructive.email = payload.email
-                        findInstructive.status = payload.status
+                        findEnterprise.rut = payload.rut
+                        findEnterprise.fantasyName = payload.fantasyName
+                        findEnterprise.name = payload.name
+                        findEnterprise.address = payload.address
+                        findEnterprise.types = payload.types
+                        findEnterprise.phone = payload.phone
+                        findEnterprise.email = payload.email
+                        findEnterprise.representRUT = payload.representRUT
+                        findEnterprise.representName = payload.representName
+                        findEnterprise.status = payload.status
 
-                        await findInstructive.save()
+                        await findEnterprise.save()
 
-                        return findInstructive
+                        return findEnterprise
 
                     } else {  // crear empresa
                         // const originalPass = payload.password
                         payload.status = 'enabled'
 
-                        let newInstructive = new Instructive(payload)
+                        let newEnterprise = new Enterprise(payload)
 
-                        await newInstructive.save()
+                        await newEnterprise.save()
 
-                        return newInstructive
+                        return newEnterprise
                     }
 
                 } catch (error) {
@@ -85,6 +87,8 @@ export default [
                     types: Joi.string().optional().allow(''),
                     phone: Joi.string().optional().allow(''),
                     email: Joi.string().optional().allow(''),
+                    representRUT: Joi.string().required(),
+                    representName: Joi.string().required(),
                     status: Joi.string().required()
                 })
             }
