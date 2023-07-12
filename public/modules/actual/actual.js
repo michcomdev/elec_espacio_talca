@@ -125,7 +125,7 @@ async function getMeters(index) {
 
         tableMeters.rows.add(formatData).draw()
         console.log(formatData)
-        manualSave(index)
+        //manualSave(index)
         $("#switchboardButton"+index).removeAttr('disabled')
         $("#switchboardButton"+index).html('Mostrar Medidores')
     } else {
@@ -137,11 +137,8 @@ async function getMeters(index) {
 
 async function showMeterData(meter) {
 
-    //let meterData = await axios.get('api/meterByID/' + meter._id) //Para obtener datos guardados
-    //meter = meterData.data
+    ///////////HEADER///////////
     
-    //console.log(meter)
-
     //let statusIcon = '<i class="fas fa-check-circle" style="color: green"></i>'
     $("#meterImg").attr('src','/public/img/meter_light.png')
     if(meter.status == 'Desconectado'){
@@ -178,6 +175,23 @@ async function showMeterData(meter) {
             <td>Estado</td>
             <th>${meter.status}</th>
         </tr>`)
+
+    /////////TABLA HISTÓRICA/////////
+    let meterData = await axios.get('api/meterByID/' + meter._id) //Para obtener datos guardados
+    let meterHistory = meterData.data.lectures
+
+    console.log(meterHistory)
+    
+    $("#tableMeterHistoryBody").html('')
+
+    for(let i=0; i<meterHistory.length; i++){
+        $("#tableMeterHistoryBody").append(`
+            <tr>
+                <td style="text-align: center">${moment(meterHistory[i].date).format('DD/MM/YYYY HH:mm')}</td>
+                <td style="text-align: center">${meterHistory[i].value / 100}</td>
+            </tr>`)
+    }
+
     $("#modalMeter").modal('show')
 
 }
