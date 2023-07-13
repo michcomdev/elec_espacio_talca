@@ -1,5 +1,6 @@
 let switchboards
 let tableMeters
+let tableMeterHistory
 
 $(document).ready(async function () {
     loadSwitchboards()
@@ -12,7 +13,7 @@ $(document).ready(async function () {
 async function loadSwitchboards() {
     let switchboardsData = await axios.get('api/switchboards')
     switchboards = switchboardsData.data
-    //console.log(switchboards)
+    console.log(switchboards)
     for(let i=0; i<switchboards.length; i++){
         $("#listSwitchboards").append(`
             <div class="card col-md-12" style="text-align: center">
@@ -41,8 +42,8 @@ function showMeters(index) {
 
         tableMeters = $('#tableMeters')
             .DataTable({
-                //dom: 'Bfrtip',
-                //buttons: ['excel','pdf'],
+                dom: 'Bfrtip',
+                buttons: ['excel','pdf'],
                 iDisplayLength: 100,
                 responsive: false,
                 //order: [[0, 'desc']],
@@ -57,15 +58,18 @@ function showMeters(index) {
                     { data: 'address' },
                     { data: 'name' },
                     { data: 'client' },
-                    { data: 'last_date' },
+                    { data: 'lastDate' },
                     { data: 'status' },
-                    { data: 'lecture' }
+                    { data: 'lastLecture' }
 
                 ],
                 initComplete: function (settings, json) {
                     getMeters(index)
                 }
             })
+
+
+        $('#tableMeters tbody').off('click')
 
         $('#tableMeters tbody').on('click', 'tr', function () {
 
@@ -107,16 +111,17 @@ async function getMeters(index) {
         let formatData = switchboards[index].meters.map(el => {
             
             el.client = el.clients.lastname + ' ' + el.clients.name
-            el.last_date = '-'
 
             if(lectures){
                 let lecture = lectures.find(x => x.primaryAddress == el.address)
-                el.last_date = moment().format('DD/MM/YYYY HH:mm')
+                el.lastDate = moment().format('DD/MM/YYYY HH:mm')
                 el.status = '<i class="fas fa-check-circle" style="color: green"></i> Activo'
-                el.lecture = lecture.dataPoints[0].value / 100
+                el.lastLecture = (lecture.dataPoints[0].value / 100).toFixed(2)
             }else{
                 el.status = '<i class="fas fa-minus-circle" style="color: red"></i> Desconectado'
-                el.lecture = '-'
+                el.lastDate = moment(el.lastDate).format('DD/MM/YYYY HH:mm')
+                el.lastLecture = (el.lastLecture / 100).toFixed(2)
+
             }
 
             
@@ -141,13 +146,16 @@ async function showMeterData(meter) {
     
     //let statusIcon = '<i class="fas fa-check-circle" style="color: green"></i>'
     $("#meterImg").attr('src','/public/img/meter_light.png')
-    if(meter.status == 'Desconectado'){
+    if(meter.status == '<i class="fas fa-minus-circle" style="color: red"></i> Desconectado'){
         //statusIcon = '<i class="fas fa-minus-circle" style="color: red"></i>'
         $("#meterImg").attr('src','/public/img/meter.png')
     }
     $("#meterValue").css('font-size','34px')
 
-    let meterValue = meter.lecture// / 100
+
+    console.log(meter.lastLecture)
+
+    let meterValue = parseFloat(meter.lastLecture)// / 100
     //let meterValue = 100
     if(meterValue>=100){
         meterValue = meterValue.toFixed(1)
@@ -182,15 +190,44 @@ async function showMeterData(meter) {
 
     console.log(meterHistory)
     
-    $("#tableMeterHistoryBody").html('')
+    //$("#tableMeterHistoryBody").html('')
+
+    if ($.fn.DataTable.isDataTable('#tableMeterHistory')) {
+        console.log('here1')
+        tableMeterHistory.clear().destroy()
+        console.log('here2')
+    }
 
     for(let i=0; i<meterHistory.length; i++){
         $("#tableMeterHistoryBody").append(`
             <tr>
+                <td style="text-align: center">${i}</td>
                 <td style="text-align: center">${moment(meterHistory[i].date).format('DD/MM/YYYY HH:mm')}</td>
-                <td style="text-align: center">${meterHistory[i].value / 100}</td>
+                <td style="text-align: center">${(meterHistory[i].value / 100).toFixed(2)}</td>
             </tr>`)
     }
+
+
+    
+
+    tableMeterHistory = $('#tableMeterHistory')
+        .DataTable({
+            dom: 'Bfrtip',
+            buttons: ['excel','pdf'],
+            iDisplayLength: 10,
+            responsive: false,
+            order: [[0, 'desc']],
+            columnDefs: [
+                { targets: 0, visible: false },
+                { targets: [1, 2], className: 'dt-center' }
+                ],
+            //ordering: true,
+            rowCallback: function (row, data) {
+            },
+            language: {
+                url: spanishDataTableLang
+            }
+        })
 
     $("#modalMeter").modal('show')
 

@@ -23,7 +23,30 @@ export default [
                     //[{ path: 'members', populate: { path: 'address.sector'} }
 
                     let switchboards = await Switchboards.find().lean().populate([{ path: 'meters', populate: { path: 'clients'} }])
-                    
+
+
+                    const d = new Date();
+                    let queryMeter = { //Se buscará por mes, al menos para efectos de demo
+                        year: d.getFullYear(),
+                        month: d.getMonth() + 1
+                    }
+                    let lectures = await Lectures.find(queryMeter).lean()
+
+                    for(let i=0; i<switchboards.length;i++){
+                        for(let j=0; j<switchboards[i].meters.length;j++){
+                            let lecture = lectures.find(x => x.meters.toString() == switchboards[i].meters[j]._id.toString())
+                            if(lecture){
+                                switchboards[i].meters[j].lastDate = lecture.lectures[lecture.lectures.length - 1].date
+                                switchboards[i].meters[j].lastLecture = lecture.lectures[lecture.lectures.length - 1].value
+                            }else{
+                                switchboards[i].meters[j].lastDate = '-'
+                                switchboards[i].meters[j].lastLecture = '-'
+                            }
+
+                        }
+                    }
+
+                   
                     return switchboards
                 } catch (error) {
                     console.log(error)
@@ -106,6 +129,7 @@ export default [
         method: 'GET',
         path: '/api/allLecturesSave/{id}',
         options: {
+            auth: false,
             description: 'documentos asociados',
             notes: 'documentos asociados',
             tags: ['api'],
@@ -162,7 +186,9 @@ export default [
                     }
                     
 
-                    return true
+                    return {
+                        status: 'Almacenado correctamente'
+                    }
                 } catch (error) {
                     console.log(error)
 

@@ -7,7 +7,7 @@ const lectureSchema = new Schema({
     year: { type: Number, required: true },
     month: { type: Number, required: true },
     lectures: [{     
-        date: { type: Date, default: Date.now() },
+        date: { type: Date, default: Date.now },
         value: { type: Number, required: true }
     }]
 }, {
