@@ -23,6 +23,7 @@ export default [
                     //[{ path: 'members', populate: { path: 'address.sector'} }
 
                     let switchboards = await Switchboards.find().lean().populate([{ path: 'meters', populate: { path: 'clients'} }])
+                    console.log("switchboards", switchboards);
 
 
                     const d = new Date();
@@ -108,6 +109,7 @@ export default [
                         month: d.getMonth() + 1*/
                     }
                     let meterLecture = await Lectures.find(queryMeter).lean()
+                    console.log("meterLecture", meterLecture);
                     for(let i=0; i<meterLecture.length; i++){
                         for(let j=0; j<meterLecture[i].lectures.length; j++){
                             meter.lectures.push(meterLecture[i].lectures[j])
@@ -134,21 +136,24 @@ export default [
             notes: 'documentos asociados',
             tags: ['api'],
             handler: async (request, h) => {
+                
                 try {
+                    //forEach por cada central
                     let id = request.params.id
+                    console.log(id);
                     let switchboard = await Switchboards.findById(id).lean()
                     let ip = switchboard.ip_address
                     let token = switchboard.token
+                    //recordNumber=217088 es el codigo de los datos que deseo obtener
                     let res = await Axios.get(`http://${ip}/api/meters/all/values?recordNumber=217088`, {
                         headers: {
                           "Authorization": `Longterm ${token}`
                         }
                     })
-
                     let switchboards = await Switchboards.find().lean().populate(['meters'])
-                    
                     let meters = switchboards[0].meters
                     let lectures = res.data
+                    
                     for(let i=0; i<meters.length; i++){
 
                         let lecture = lectures.find(x => x.primaryAddress == meters[i].address)

@@ -1,0 +1,132 @@
+{{!<layout/default}} {{#extend "css" }}
+<link
+  rel="stylesheet"
+  type="text/css"
+  href="/public/modules/switchboard/switchboard.css"
+/>
+{{/extend}}
+<br />
+<h3 class="text-center animate__animated animate__fadeIn">CENTRALES</h3>
+
+<br />
+
+<div
+  class="animate__animated animate__fadeIn"
+  style="display: flex; flex-direction: column; align-items: center"
+>
+  <div class="card">
+    <div id="listSwitchBoard" class="card-left-bar">
+      <ul class="hover-list">
+        <li>
+          <a>Piso 1-5</a>
+          <i class="fas fa-caret-right"></i>
+        </li>
+        <li>
+          <a>Piso 6-10</a>
+          <i class="fas fa-caret-right"></i>
+        </li>
+        <li>
+          <a>Piso 11-15</a>
+          <i class="fas fa-caret-right"></i>
+        </li>
+        <li>
+          <a>Piso 16-20</a>
+          <i class="fas fa-caret-right"></i>
+        </li>
+      </ul>
+    </div>
+    <div id="contentSwitchBoard">content</div>
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="modalMeter"
+  role="dialog"
+  aria-labelledby="modal"
+  data-backdrop="static"
+  data-keyboard="false"
+>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="modalMeter_title">N° 0 - CLIENTE</h4>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-4" style="text-align: center; position: relative">
+            <img id="meterImg" src="/public/img/meter.png" />
+            <div id="meterValue">0.15</div>
+            <div id="meterText">kW&nbsp;&nbsp;&nbsp;h</div>
+          </div>
+          <div class="col-md-8">
+            <table
+              id="tableMeter"
+              class="table"
+              style="font-size: 14px"
+            ></table>
+          </div>
+
+          <div class="col-md-12">
+            <br />
+            <br />
+            <table
+              id="tableMeterHistory"
+              class="display nowrap cell-border table-condensed"
+              cellspacing="0"
+              width="100%"
+            >
+              <thead>
+                <tr class="table-danger">
+                  <th style="text-align: center">ID</th>
+                  <th style="text-align: center">Fecha</th>
+                  <th style="text-align: center">Lectura</th>
+                </tr>
+              </thead>
+              <tbody id="tableMeterHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!--<div class="modal-footer"></div>-->
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="modal"
+  role="dialog"
+  aria-labelledby="modal"
+  data-backdrop="static"
+  data-keyboard="false"
+>
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="modal_title"></h4>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modal_body"></div>
+      <div class="modal-footer" id="modal_footer"></div>
+    </div>
+  </div>
+</div>
+{{#extend "js"}}
+<script src="/public/modules/switchboard/switchboard.js"></script>
+{{/extend}}

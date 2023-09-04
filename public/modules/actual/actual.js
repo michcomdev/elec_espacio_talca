@@ -13,7 +13,7 @@ $(document).ready(async function () {
 async function loadSwitchboards() {
     let switchboardsData = await axios.get('api/switchboards')
     switchboards = switchboardsData.data
-    console.log(switchboards)
+    console.log("aaaaasdas",switchboards)
     for(let i=0; i<switchboards.length; i++){
         $("#listSwitchboards").append(`
             <div class="card col-md-12" style="text-align: center">
