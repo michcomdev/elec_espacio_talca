@@ -13,15 +13,15 @@ $(document).ready(async function () {
 async function loadSwitchboards() {
     let switchboardsData = await axios.get('api/switchboards')
     switchboards = switchboardsData.data
-    console.log("aaaaasdas",switchboards)
+    // console.log("aaaaasdas",switchboards)
     for(let i=0; i<switchboards.length; i++){
         $("#listSwitchboards").append(`
-            <div class="card col-md-12" style="text-align: center">
-                <img class="card-img-top mx-auto " src="/public/img/switchboard.png" style="width: 130px">
+            <div class="card col-md-12" style="text-align: center; margin-top:30px;margin-bottom:30px; width:300px; height:300px;">
+                <img class="card-img-top mx-auto " src="/public/img/switchboard.png" style="width: 100px">
                 <div class="card-body">
                     <h5 class="card-title">${switchboards[i].name}</h5>
                     <p class="card-text">${switchboards[i].ip_address}</p>
-                    <button id="switchboardButton${i}" class="btn btn-danger" onclick="showMeters(${i})" style="text-align: center;">
+                    <button id="switchboardButton${i}" class="btn"  onclick="showMeters(${i})" style="text-align: center; background-color:#F6511D;">
                         Mostrar Medidores
                     </button>
                 </div>

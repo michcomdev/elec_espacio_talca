@@ -3,52 +3,83 @@
   {{! Document Layout }}
 
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Espacio Talca</title>
-    <link rel="icon" type="image/x-icon" href="/public/img/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/public/img/favicon.ico" />
     <!-- ESTILOS -->
-    <link rel="stylesheet"
-      href="/public/bootstrap-4.5.3-dist/css/bootstrap-flatly.css">
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="/public/DataTables/datatables.min.css">
-    <link rel="stylesheet" href="/public/css/toastr.min.css">
-    <link rel="stylesheet" href="/public/css/select2.min.css">
-    <link rel="stylesheet" href="/public/css/daterangepicker.css">
-    <link rel="stylesheet" href="/public/modules/default/default.css">
-    {{#block "css"}}
-    {{/block}}
+    <link
+      rel="stylesheet"
+      href="/public/bootstrap-4.5.3-dist/css/bootstrap-flatly.css"
+    />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/public/DataTables/datatables.min.css"
+    />
+    <link rel="stylesheet" href="/public/css/toastr.min.css" />
+    <link rel="stylesheet" href="/public/css/select2.min.css" />
+    <link rel="stylesheet" href="/public/css/daterangepicker.css" />
+    <link rel="stylesheet" href="/public/modules/default/default.css" />
+
+    {{#block "css"}} {{/block}}
   </head>
 
-  <body>
+  <body style="background-color: rgba(10, 10, 10, 0.1)">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <a class="navbar-brand" href="#"><img src="/public/img/logopng3.png" alt="logo" width="92" height="50"></a>
-      <button class="navbar-toggler collapsed" type="button"
-        data-toggle="collapse" data-target="#navbarColor02"
-        aria-controls="navbarColor02" aria-expanded="false" aria-label="Toggle
-        navigation">
+      <a class="navbar-brand" href="#"
+        ><img src="/public/img/logopng3.png" alt="logo" width="92" height="50"
+      /></a>
+      <button
+        class="navbar-toggler collapsed"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarColor02"
+        aria-controls="navbarColor02"
+        aria-expanded="false"
+        aria-label="Toggle
+        navigation"
+      >
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
         <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#"
-              role="button" aria-haspopup="true"
-              aria-expanded="false"><i class="fas fa-weight fa-2x"></i> Lecturas</a>
+            <a
+              class="nav-link dropdown-toggle"
+              data-toggle="dropdown"
+              href="#"
+              role="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              ><i class="fas fa-weight fa-2x"></i> Lecturas</a
+            >
             <div class="dropdown-menu">
-              <a class="dropdown-item" href="/actual">Actual</a>
+              <a class="dropdown-item" href="/switchboard">Actual</a>
             </div>
           </li>
           {{#if credentials.admin }}
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#"
-              role="button" aria-haspopup="true"
-              aria-expanded="false"><i class="fas fa-user-shield fa-2x"></i> Admin</a>
+            <a
+              class="nav-link dropdown-toggle"
+              data-toggle="dropdown"
+              href="#"
+              role="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              ><i class="fas fa-user-shield fa-2x"></i> Admin</a
+            >
             <div class="dropdown-menu">
               {{#if credentials.permissions.superadmin}}
-                <a class="dropdown-item" href="/users"> Usuarios</a>
+              <a class="dropdown-item" href="/users"> Usuarios</a>
+              <a class="dropdown-item" href="/clients"> Clientes</a>
+
               {{/if}}
             </div>
           </li>
@@ -57,33 +88,46 @@
         <form class="form-inline my-2 my-lg-0">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle dos" href="#" id="userCredentialsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <a
+                class="nav-link dropdown-toggle dos"
+                href="#"
+                id="userCredentialsDropdown"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
                 <i class="fas fa-user"></i> <span id="userCredentials"></span>
               </a>
-              <div id="credentialsDropdownMenu" style="z-index:2000;"class="dropdown-menu" aria-labelledby="userCredentialsDropdown">
+              <div
+                id="credentialsDropdownMenu"
+                style="z-index: 2000"
+                class="dropdown-menu"
+                aria-labelledby="userCredentialsDropdown"
+              >
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="/logout"><i class="fas fa-times"></i>Cerrar sesión</a>
+                <a class="dropdown-item" href="/logout"
+                  ><i class="fas fa-times"></i>Cerrar sesión</a
+                >
               </div>
             </li>
           </ul>
         </form>
       </div>
-
     </nav>
 
-    <div class="container-fluid">
-      {{{ content }}}
-    </div>
+    <div class="container-fluid">{{{ content }}}</div>
 
     <div id="loadingScreen">
       <div>
-        <img src="/public/img/loading.svg" alt="loading">
+        <img src="/public/img/loading.svg" alt="loading" />
         <h3>Cargando...</h3>
         <div id="closeLoadingScreenContainer" class="alert alert-warning">
-          <p class="mb-0">Si los tiempos de carga tardan mas de lo normal puede
-            <a id="closeLoadingScreen" href="#"
-              class="alert-link">Cerrar pantalla de carga <i class="fas
-                fa-times"></i></a></p>
+          <p class="mb-0">
+            Si los tiempos de carga tardan mas de lo normal puede
+            <a id="closeLoadingScreen" href="#" class="alert-link"
+              >Cerrar pantalla de carga <i class="fas fa-times"></i
+            ></a>
+          </p>
         </div>
       </div>
     </div>
@@ -100,8 +144,11 @@
     <script src="/public/js/popper.min.js"></script>
     <script src="/public/js/sweetalert2.all.min.js"></script>
     <script src="/public/js/toastr.min.js"></script>
-    <script src="https://kit.fontawesome.com/48178f0b46.js"
-      crossorigin="anonymous"></script>
+    <script
+      src="https://kit.fontawesome.com/48178f0b46.js"
+      crossorigin="anonymous"
+    ></script>
+
     <!--Update From Web-->
     <script src="/public/js/daterangepicker.js"></script>
     <script src="/public/js/jspdf.min.js"></script>
@@ -110,8 +157,12 @@
     <script src="/public/modules/default/tools.js"></script>
     <script src="/public/js/nes.js"></script>
     <script src="/public/modules/default/default.js"></script>
-    {{#block "js"}}
-    {{/block}}
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"
+      integrity="sha512-6HrPqAvK+lZElIZ4mZ64fyxIBTsaX5zAFZg2V/2WT+iKPrFzTzvx6QAsLW2OaLwobhMYBog/+bvmIEEGXi0p1w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    {{#block "js"}} {{/block}}
   </body>
-
 </html>

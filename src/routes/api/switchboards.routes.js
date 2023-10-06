@@ -22,7 +22,7 @@ export default [
                     //let switchboards = await Switchboards.find().lean().populate(['meters'])
                     //[{ path: 'members', populate: { path: 'address.sector'} }
 
-                    let switchboards = await Switchboards.find().lean().populate([{ path: 'meters', populate: { path: 'clients'} }])
+                    let switchboards = await Switchboards.find().lean().populate([{ path: 'meters', populate: { path: 'clients' } }])
                     console.log("switchboards", switchboards);
 
 
@@ -33,13 +33,13 @@ export default [
                     }
                     let lectures = await Lectures.find(queryMeter).lean()
 
-                    for(let i=0; i<switchboards.length;i++){
-                        for(let j=0; j<switchboards[i].meters.length;j++){
+                    for (let i = 0; i < switchboards.length; i++) {
+                        for (let j = 0; j < switchboards[i].meters.length; j++) {
                             let lecture = lectures.find(x => x.meters.toString() == switchboards[i].meters[j]._id.toString())
-                            if(lecture){
+                            if (lecture) {
                                 switchboards[i].meters[j].lastDate = lecture.lectures[lecture.lectures.length - 1].date
                                 switchboards[i].meters[j].lastLecture = lecture.lectures[lecture.lectures.length - 1].value
-                            }else{
+                            } else {
                                 switchboards[i].meters[j].lastDate = '-'
                                 switchboards[i].meters[j].lastLecture = '-'
                             }
@@ -47,7 +47,7 @@ export default [
                         }
                     }
 
-                   
+
                     return switchboards
                 } catch (error) {
                     console.log(error)
@@ -75,7 +75,7 @@ export default [
                     //let res = await Axios.get(`http://192.168.0.14/api/meters/all/values?recordNumber=217088`, {
                     let res = await Axios.get(`http://${ip}/api/meters/all/values?recordNumber=217088`, {
                         headers: {
-                          "Authorization": `Longterm ${token}`
+                            "Authorization": `Longterm ${token}`
                         }
                     })
 
@@ -102,7 +102,7 @@ export default [
                     let id = request.params.id
                     let meter = await Meters.findById(id).lean()
                     meter.lectures = []
-                    
+
                     let queryMeter = {
                         meters: id/*,
                         year: d.getFullYear(),
@@ -110,8 +110,8 @@ export default [
                     }
                     let meterLecture = await Lectures.find(queryMeter).lean()
                     console.log("meterLecture", meterLecture);
-                    for(let i=0; i<meterLecture.length; i++){
-                        for(let j=0; j<meterLecture[i].lectures.length; j++){
+                    for (let i = 0; i < meterLecture.length; i++) {
+                        for (let j = 0; j < meterLecture[i].lectures.length; j++) {
                             meter.lectures.push(meterLecture[i].lectures[j])
                         }
                     }
@@ -127,6 +127,38 @@ export default [
             }
         }
     },
+
+
+
+    {
+        method: 'POST',
+        path: '/api/createSwitchBoard',
+        options: {
+            description: 'creating a new Switchboard',
+            notes: 'Switchborads',
+            tags: ['api'],
+            handler: async (request, h) => {
+                let query = request.payload
+
+                let lectureSave = new Switchboards(query)
+                const res = await lectureSave.save()
+                console.log("resss", res);
+                try {
+                    return true
+                } catch (error) {
+                    console.error(error);
+
+                    // Return an error response
+                    return h.response({
+                        error: 'Internal Server Error',
+                    }).code(500);
+                }
+            },
+        },
+    },
+
+
+
     {
         method: 'GET',
         path: '/api/allLecturesSave/{id}',
@@ -136,7 +168,7 @@ export default [
             notes: 'documentos asociados',
             tags: ['api'],
             handler: async (request, h) => {
-                
+
                 try {
                     //forEach por cada central
                     let id = request.params.id
@@ -147,14 +179,14 @@ export default [
                     //recordNumber=217088 es el codigo de los datos que deseo obtener
                     let res = await Axios.get(`http://${ip}/api/meters/all/values?recordNumber=217088`, {
                         headers: {
-                          "Authorization": `Longterm ${token}`
+                            "Authorization": `Longterm ${token}`
                         }
                     })
                     let switchboards = await Switchboards.find().lean().populate(['meters'])
                     let meters = switchboards[0].meters
                     let lectures = res.data
-                    
-                    for(let i=0; i<meters.length; i++){
+
+                    for (let i = 0; i < meters.length; i++) {
 
                         let lecture = lectures.find(x => x.primaryAddress == meters[i].address)
 
@@ -167,29 +199,29 @@ export default [
                         }
                         let meterLecture = await Lectures.find(queryMeter).lean()
 
-                        if(meterLecture.length==0){
+                        if (meterLecture.length == 0) {
                             let query = {
                                 meters: meters[i]._id,
                                 year: d.getFullYear(),
                                 month: d.getMonth() + 1,
-                                lectures: [{     
+                                lectures: [{
                                     value: lecture.dataPoints[0].value
                                 }]
                             }
 
                             let lectureSave = new Lectures(query)
                             await lectureSave.save()
-                        }else{
+                        } else {
 
                             let lectureUpdate = await Lectures.findById(meterLecture[0]._id)
-                            lectureUpdate.lectures.push({     
+                            lectureUpdate.lectures.push({
                                 value: lecture.dataPoints[0].value
                             })
 
                             await lectureUpdate.save()
                         }
                     }
-                    
+
 
                     return {
                         status: 'Almacenado correctamente'

@@ -1,11 +1,56 @@
 import Joi from 'joi'
 import Meters from '../../models/Meters'
+import Switchboards from '../../models/Switchboards'
 import Type from '../../models/Types'
 import dotEnv from 'dotenv'
 
 dotEnv.config()
 
 export default [
+
+    {
+        method: 'POST',
+        path: '/api/postMeter',
+        options: {
+            description: 'get all users data',
+            notes: 'return all data from users',
+            tags: ['api'],
+            handler: async (request, h) => {
+                console.log(request.payload);
+                let payload = request.payload
+                try {
+                    let dataQuery = {
+                        name: payload.name,
+                        address: payload.address,
+                        clients: payload.clients,
+                        serialNumber: payload.serialNumber
+                    }
+                    const newUser = new Meters(dataQuery)
+                    await newUser.save()
+
+                    let switchboartId = payload.switchId
+                    let member = await Switchboards.findById(switchboartId)
+
+                    member.meters.push(newUser._id)
+
+                    const response = await member.save()
+                    console.log("meter added", response);
+
+                    // Assuming Meters constructor returns a promise
+
+                    // If all goes well, you can return a success response here
+                    return { success: true };
+                } catch (error) {
+                    console.error(error);
+
+                    // Return an error response
+                    return h.response({
+                        error: 'Internal Server Error',
+                    }).code(500);
+                }
+            },
+        },
+    },
     {
         method: 'GET',
         path: '/api/enterprises',
@@ -16,7 +61,7 @@ export default [
             handler: async (request, h) => {
                 try {
                     let enterprises = await Enterprise.find().lean().populate(['types'])
-                    for(let i=0; i<enterprises.length; i++){
+                    for (let i = 0; i < enterprises.length; i++) {
                         enterprises[i].type = enterprises[i].types.name
                     }
                     return enterprises
