@@ -37,14 +37,19 @@ export default [
         method: 'POST',
         path: '/api/postClient',
         options: {
-            description: 'get all users data',
-            notes: 'return all data from users',
+            description: 'Create new client',
+            notes: 'return true or false if client is created',
             tags: ['api'],
             handler: async (request, h) => {
+                console.log("aqui estoy 3333", request.payload);
+
                 try {
-                    console.log(request.payload);
-                    // let users = await Clients.find().lean()
-                    return true
+                    let queryClient = request.payload
+                    console.log("aaaaaaaa", queryClient);
+                    let clientSave = new Clients(queryClient)
+                    const res = await clientSave.save()
+                    console.log("resss", res);
+                    return res
                 } catch (error) {
                     console.log(error)
                     return h.response({
@@ -83,4 +88,35 @@ export default [
             }
         }
     },
+    {
+        method: 'POST',
+        path: '/api/DeleteClientById',
+        options: {
+            description: 'Delete client',
+            notes: 'Client is deleted by _id',
+            tags: ['api'],
+            handler: async (request, h) => {
+                try {
+                    const idClient = request.payload;
+                    const result = await Clients.deleteOne({ _id: idClient });
+                    console.log("result", result);
+                    if (result.deletedCount === 1) {
+                        // Éxito: Se eliminó el cliente
+                        return true;
+                    } else {
+                        // El cliente no se encontró o no se eliminó
+                        return h.response({
+                            error: 'Cliente no encontrado o no se pudo eliminar'
+                        }).code(404);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    return h.response({
+                        error: 'Error interno del servidor'
+                    }).code(500);
+                }
+            }
+        }
+    }
+
 ]

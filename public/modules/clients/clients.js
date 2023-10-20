@@ -2,27 +2,25 @@ let clients;
 let containerData = document.getElementById("containerClientData");
 let containerGuia = document.getElementById("containerClientGuia");
 let clientList = document.getElementById("clientList");
-let handleSwitch = true
+let handleSwitch = true;
+
 $(document).ready(async function () {
-    loadSwitchboards();
-    //testAjax()
-    //loadInstructivesTable()
-    //$("#modalMeter").modal('show')
+  loadSwitchboards();
+  //testAjax()
+  //loadInstructivesTable()
+  //$("#modalMeter").modal('show')
 });
 
 async function loadSwitchboards() {
-    let clientsData = await axios.get("api/getAllClients");
-    clients = clientsData.data;
-    console.log("aaaaasdas", clients);
-
-
-    clients.forEach((e, index) => {
-
-        $("#clientList").append(`
+  let clientsData = await axios.get("api/getAllClients");
+  clients = clientsData.data;
+  console.log("aaaaasdas", clients);
+  clients.forEach((e, index) => {
+    $("#clientList").append(/*html*/ `
                 <button
                     id="meterButton${index}"
                     class="btn btn-list"
-                    onclick="handleShowMeterinfo(${index})" 
+                    onclick="handleShowClient'Info'(${index})" 
                     style="
                     margin-bottom:5px;
                     width: 17vw; 
@@ -39,18 +37,18 @@ async function loadSwitchboards() {
                     <i class="fas fa-caret-right"></i>
                 </button>
             `);
-    });
+  });
 }
 
-function handleShowMeterinfo(data) {
-    console.log('clientName' + data);
-    containerGuia.style.display = "none";
-    containerData.style.display = "flex";
-    containerData.innerHTML = "";
+function handleShowClientInfo(data) {
+  console.log("clientName" + data);
+  containerGuia.style.display = "none";
+  containerData.style.display = "flex";
+  containerData.innerHTML = "";
+  // console.log("los clientes", clients);
+  const client = clients[data];
 
-    const client = clients[data]; // Obtén el cliente correspondiente
-
-    $("#containerClientData").append(`
+  $("#containerClientData").append(/*html*/ `
         <div style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
             <h4 style="font-size:35px !important">${client.name} ${client.lastname}</h4>
             
@@ -74,137 +72,212 @@ function handleShowMeterinfo(data) {
                 <input id="clientPhoneNumber" type="text" class="form-control" style="width:30vw;font-size:20px" disabled readonly value="${client.phoneNumber}">
             </div>
 
-            <div style="margin-top: 5vh; display: flex; justify-content: flex-end; width: 100%;">
-            <button type="button" class="btn btn-danger" id="cancelButton" style="display: none; margin-right:1vw;">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="saveButton" style="display: none;">Guardar</button>
+            <div style="margin-top: 5vh;  width: 100%;">
             <button type="button" class="btn btn-primary" style="width:100%" id="editButton">Editar</button>
+            
+            <div style="display: flex; justify-content: flex-end;width: 100%;">
+            <div style="display: flex; justify-content: flex-start;width: 100%;">
+            <button type="button" class="btn btn-danger" id="deleteButton" style="display: none; margin-right:1vw;">Eliminar</button>
+            </div>
+            <button type="button" class="btn btn-warning" id="cancelButton" style="display: none; margin-right:1vw;">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="saveButton" style="display: none;">Guardar</button>
+            </div>
+         
         </div>
         </div>
     `);
 
-    // Asigna el manejador de eventos al botón de editar
-    $("#editButton").on("click", handleEditClient);
-    $("#cancelButton").on("click", function () {
-        handleCancelEdit(data);
-    });
-    $("#saveButton").on("click", function () {
-        handleSaveEdit(data);
-    });
+  // Asigna el manejador de eventos al botón de editar
+  $("#editButton").on("click", handleEditClient);
+  $("#cancelButton").on("click", function () {
+    handleCancelEdit(data);
+  });
+  $("#saveButton").on("click", function () {
+    handleSaveEdit(data);
+  });
+  $("#deleteButton").on("click", function () {
+    handleDeleteClient(data);
+  });
 }
-
 
 function handleEditClient() {
-    // handleSwitch = false;
+  // handleSwitch = false;
 
-    // Oculta el botón "Editar" y muestra "Cancelar" y "Guardar"
-    $("#editButton").hide();
-    $("#cancelButton, #saveButton").show();
+  // Oculta el botón "Editar" y muestra "Cancelar" y "Guardar"
+  $("#editButton").hide();
+  $("#cancelButton, #saveButton,#deleteButton").show();
 
-    // Habilita los campos de edición
-    $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop("disabled", false);
-    $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop("readonly", false);
-
+  // Habilita los campos de edición
+  $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop(
+    "disabled",
+    false
+  );
+  $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop(
+    "readonly",
+    false
+  );
 }
 
-function handleCancelEdit(index) {
-
-    // Muestra el botón "Editar" y oculta "Cancelar" y "Guardar"
-
-
-    $("#editButton").show();
-    $("#cancelButton, #saveButton").hide();
-    $("#clientName").prop("value", data.name);
-    $("#clientLastName").prop("value", data.lastname);
-    $("#clientRut").prop("value", data.rut);
-    $("#clientPhoneNumber").prop("value", data.phoneNumber);
-
-    // Deshabilita los campos de edición
-    $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop("disabled", true);
-    $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop("readonly", true);
-
-
+function handleCancelEdit(data) {
+  $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop(
+    "disabled",
+    true
+  );
+  $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop(
+    "readonly",
+    true
+  );
+  $("#cancelButton, #saveButton,#deleteButton").hide();
+  $("#editButton").show();
+  $("#clientName").prop("value", data.name);
+  $("#clientLastName").prop("value", data.lastname);
+  $("#clientRut").prop("value", data.rut);
+  $("#clientPhoneNumber").prop("value", data.phoneNumber);
+  // Deshabilita los campos de edición
 }
+async function handleDeleteClient(index) {
+  let clientId = clients[index];
+  lestIndex = 0;
+  console.log("client id", lestIndex);
 
-async function handleSaveEdit(index) {
-    let clientId = clients[index]
-    // console.log(data._id);
-    let dataName = $("#clientName").val()
-    let dataLastName = $("#clientLastName").val()
-    let dataRut = $("#clientRut").val()
-    let dataPhoneNumber = $("#clientPhoneNumber").val()
-    let data = {
-        name: dataName,
-        lastname: dataLastName,
-        rut: dataRut,
-        phoneNumber: dataPhoneNumber,
-        clientId: clientId
-    }
-    // Implementa lógica para guardar los cambios si es necesario
-    let response = await axios.post("api/updateClientById", data);
-    if (response.data) {
+  Swal.fire({
+    icon: "question",
+    title: "¿Estas seguro que desea eliminar a este cliente?",
+    text: "Esta acción no se puede revertir",
+    showCancelButton: true,
+    confirmButtonText: `Eliminar`,
+    cancelButtonText: `Cancelar`,
+  }).then(async (e) => {
+    console.log(e);
+    if (e.isConfirmed) {
+      const response = await axios.post("api/DeleteClientById", clientId);
+      console.log("response", response.data);
+      if (response.data) {
         Swal.fire({
-            icon: "success",
-            title: "Cliente actualizado",
-            text: "Los datos del cliente se actualizaron de manera exitosa"
-
+          icon: "success",
+          title: "Cliente eliminado",
+          text: "El cliente se ha eliminado de manera exitosa",
         }).then(async () => {
-            clientList.innerHTML = ""
-            await loadSwitchboards()
-            handleShowMeterinfo(index)
-
-        })
-    } else {
-        Swal.fire({
-            icon: "error",
-            title: "upss..",
-            text: "Los datos del cliente no se actualizaron correctamente"
-
-        })
+          clientList.innerHTML = "";
+          await loadSwitchboards();
+          handleShowClientInfo(lestIndex);
+        });
+      }
     }
-
-    // Muestra el botón "Editar" y oculta "Cancelar" y "Guardar"
-    $("#editButton").show();
-    $("#cancelButton, #saveButton").hide();
-
-    // Deshabilita los campos de edición
-    $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop("disabled", true);
+  });
 }
+async function handleSaveEdit(index) {
+  let clientId = clients[index];
+  let dataName = $("#clientName").val();
+  let dataLastName = $("#clientLastName").val();
+  let dataRut = $("#clientRut").val();
+  let dataPhoneNumber = $("#clientPhoneNumber").val();
+  let data = {
+    name: dataName,
+    lastname: dataLastName,
+    rut: dataRut,
+    phoneNumber: dataPhoneNumber,
+    clientId: clientId,
+  };
+  let response = await axios.post("api/updateClientById", data);
+  if (response.data) {
+    Swal.fire({
+      icon: "success",
+      title: "Cliente actualizado",
+      text: "Los datos del cliente se actualizaron de manera exitosa",
+    }).then(async () => {
+      clientList.innerHTML = "";
+      await loadSwitchboards();
+      handleShowClientInfo(index);
+    });
+  } else {
+    Swal.fire({
+      icon: "error",
+      title: "upss..",
+      text: "Los datos del cliente no se actualizaron correctamente",
+    });
+  }
+  $("#editButton").show();
+  $("#cancelButton, #saveButton").hide();
+  $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop(
+    "disabled",
+    true
+  );
+}
+
+async function handleNewClient() {
+  console.log("aqui estoy");
+  let dataName = $("#newClientName").val();
+  let dataLastName = $("#newClientLastName").val();
+  let dataRut = $("#newClientRut").val();
+  let dataPhoneNumber = $("#newClientphoneNumber").val();
+  let data = {
+    name: dataName,
+    lastname: dataLastName,
+    rut: dataRut,
+    phoneNumber: dataPhoneNumber,
+  };
+  try {
+    const response = await axios.post("api/postClient", data);
+    if (response.data._id) {
+      Swal.fire({
+        icon: "success",
+        title: "Cliente creado",
+        text: "El cliente se ha creado de manera exitosa",
+      }).then(() => {
+        clientList.innerHTML = "";
+        loadSwitchboards();
+        $("#modalAddClient").modal("hide");
+      });
+    }
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "upss..",
+      text: `El cliente no se ha creado correctamente, ${error}`,
+    }).then(() => {
+      clientList.innerHTML = "";
+      loadSwitchboards();
+      // $('#modalAddClient').modal('hide');
+    });
+  }
+}
+
 function HandleModalClient() {
-    console.log("aqui estoy");
-    $('#modalAddClient').modal('show');
-    $('#modal_title').html(`Añadir Cliente`);
-    $('#modal_body').html(/*html*/`
-        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
+  console.log("aqui estoy");
+  $("#modalAddClient").modal("show");
+  $("#modal_title").html(`Añadir Cliente`);
+  $("#modal_body").html(/*html*/ `
+        <div style="display:flex;flex-direction:column; justify-content:center; align-items:center;">
             <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-start;width:80%; margin-bottom:15px">
                 <label for="meterName" class="form-label">Nombre</label>
-                <input type="text" class="form-control" id="clientName" placeholder="">
+                <input type="text" class="form-control" id="newClientName" placeholder="">
             </div>
             <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-start;width:80%; margin-bottom:15px">
                 <label for="meterAddress" class="form-label">Apellido</label>
-                <input type="text" class="form-control" id="clientLastname" placeholder="">
+                <input type="text" class="form-control" id="newClientLastName" placeholder="">
             </div>
             <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-start;width:80%; margin-bottom:15px">
                 <label for="selectClients" class="form-label">Rut</label>
-                <input type="text" class="form-control" id="clientRut" placeholder="">
+                <input type="text" class="form-control" id="newClientRut" placeholder="">
             </div>
             <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-start;width:80%; margin-bottom:15px>
                 <label for="meterNumberSerie" class="form-label">Numero telefonico</label>
-                <input type="number" class="form-control" id="clientphoneNumber" placeholder="">
+                <input type="number" class="form-control" id="newClientphoneNumber" placeholder="">
             </div>
         </div>
     `);
 
-    $('#modal_footer').html(`
+  $("#modal_footer").html(/*html*/ `
         <button style="border-radius: 5px;" class="btn btn-dark" data-dismiss="modal">
             <i style="color:#e74c3c;" class="fas fa-times"></i> CANCELAR
         </button>
-
-        <button style="border-radius:5px;" class="btn btn-dark" onclick="handleNewMeter()">
+        <button style="border-radius:5px;" class="btn btn-dark" onclick="handleNewClient()">
             <i style="color:#3498db;" class="fas fa-check"></i> GUARDAR
         </button>
     `);
-
 }
+
 // function showMeters(index) {
 
 //     $("#switchboardButton" + index).attr('disabled', true)

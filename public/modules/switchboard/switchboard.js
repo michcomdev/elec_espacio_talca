@@ -23,66 +23,64 @@ async function getClients() {
     // console.log(tempData);
 }
 function HandleMeters(i) {
-    containerData.style.display = 'none'
-    containerGuia.style.display = "flex"
-    textIndex.innerHTML = 'Seleccione una central'
-    meterList.innerHTML = ''
-    meterDiv.style.display = 'flex'
-    meters = switchboards[i].meters
-    switchboardsId = switchboards[i]._id
+    containerData.style.display = 'none';
+    containerGuia.style.display = "flex";
+    textIndex.innerHTML = 'Seleccione una central';
+    meterList.innerHTML = '';
+    meterDiv.style.display = 'flex';
+    meters = switchboards[i].meters;
+    switchboardsId = switchboards[i]._id;
 
     console.log(switchboardsId);
-    // console.log("aaaaaadiasoduasdoi",i);
 
-    if (meters.length === 0) {
-        $("#meterList").append(`
-                <button
-                    id="meterButtonAdd"
-                    class="btn btn-list"
-                    onclick="HandleModalMeter(0)" 
-                    style="margin-bottom:5px;width: 18vw;">
-                    <div style="display:flex; flex-direction:column;align-items: flex-start;">
-                        <p style="margin-bottom: -3px;font-size: 18px;">Añade</p>
+    // Añadir el botón "Añadir nuevo cliente" al principio de la lista
+    $("#meterList").prepend(/*html*/`
+      <div style="
+        background-color: #2c3e50;
+        width: 100%;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
+
+      ">
+        <button id="meterButtonAdd" class="btn btn-list" style="
+          margin-bottom: 5px;
+          width: 17vw;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          color: #fff;
+          background-color: transparent;
+        " onfocus="this.blur();" onclick="HandleModalMeter(0)">
+          <div style="display: flex; flex-direction: column; align-items: flex-start;">
+            <p style="margin-bottom: -3px; font-size: 18px">Añadir nuevo cliente</p>
+          </div>
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+    `);
+
+    if (meters.length > 0) {
+        // Agregar los elementos generados por el forEach
+        meters.forEach((e, index) => {
+            $("#meterList").append(/*html*/`
+                <button id="meterButton${index}" class="btn btn-list" onclick="handleShowMeterinfo(${index})" style="margin-bottom: 5px; width: 18vw;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                        <p style="margin-bottom: -3px; font-size: 18px;">${e.name}</p>
                     </div>
-                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-caret-right"></i>
                 </button>
             `);
-    } else {
-        meters.forEach((e, index) => {
-            $("#meterList").append(`
-                    <button
-                        id="meterButton${index}"
-                        class="btn btn-list"
-                        onclick="handleShowMeterinfo(${index})" 
-                        style="margin-bottom:5px;width: 18vw;">
-                        <div style="display:flex; flex-direction:column;align-items: flex-start;">
-                            <p style="margin-bottom: -3px;font-size: 18px;">${e.name}</p>
-                        </div>
-                        <i class="fas fa-caret-right"></i>
-                    </button>
-                `);
-            if (meters.length === index + 1) {
-                $("#meterList").append(`
-                        <button
-                            id="meterButton${index}"
-                            class="btn btn-list"
-                            onclick="HandleModalMeter(${index + 1})" 
-                            style="margin-bottom:5px;width: 18vw;">
-                            <div style="display:flex; flex-direction:column;align-items: flex-start;">
-                                <p style="margin-bottom: -3px;font-size: 18px;">Añade</p>
-                            </div>
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    `);
-            }
         });
     }
-
 }
+
 async function getSwitchboards() {
     let TempSwitchboards = await axios.get("api/switchboards");
     switchboards = TempSwitchboards.data;
-    // console.log(switchboards);
+    console.log(switchboards);
 
     for (let i = 0; i < switchboards.length; i++) {
         // const switchboardData = JSON.stringify(switchboards[i]);
@@ -100,23 +98,7 @@ async function getSwitchboards() {
                 <i class="fas fa-caret-right"></i>
             </button>
         `);
-        // console.log("aaaaaadiasoduasdoi",i);
-        if (switchboards.length == (i + 1)) {
 
-            $("#SwitchBoardList").append(`
-            <button 
-            id="switchboardButton${i}" 
-            class="btn btn-list"  
-            onclick="HandleModalSwitchboard()" 
-            style="margin-bottom:5px;margin-right:3px;width:17vw">
-            <div style="display:flex; flex-direction:column;align-items: flex-start;">
-            <p style="margin-bottom: -3px;font-size: 18px;">Añade</p>
-        </div>
-        <i class="fas fa-plus"></i>
-        </button>
-        `)
-
-        }
     }
     console.log(switchboards[0]);
 }
@@ -260,31 +242,80 @@ function HandleModalSwitchboard(index) {
 
 function handleShowMeterinfo(data) {
 
-    console.log("accione", data);
+    console.log("accionehhhhjkgjhg", data);
     containerGuia.style.display = "none"
     containerData.style.display = 'flex'
     containerData.innerHTML = ''
+    meterId = meters[data]._id
     $("#containerData").append(`
         <div style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
         <h4>${meters[data].name}</h4>
         <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-start;">
             <label for="exampleFormControlInput1" class="form-label">Nombre del medidor</label>
-            <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="" style="width:30vw" disabled readonly value="${meters[data].name}">
+            <input type="email" class="form-control" id="meterName" placeholder="" style="width:30vw" disabled readonly value="${meters[data].name}">
         </div>
         <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-start;">
             <label for="exampleFormControlInput1" class="form-label">Direccion</label>
-            <input type="email" class="form-control" id="exampleFormControlInput1" placeholder=""style="width:30vw" disabled readonly value="${meters[data].address}"}>
+            <input type="email" class="form-control" id="meterAddress" placeholder=""style="width:30vw" disabled readonly value="${meters[data].address}"}>
         </div>
         <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-start;">
             <label for="exampleFormControlInput1" class="form-label">Cliente</label>
-            <input type="email" class="form-control" id="exampleFormControlInput1" placeholder=""style="width:30vw" disabled readonly value="${meters[data].clients.name} ${meters[data].clients.lastname}">
+            <input type="email" class="form-control" id="meterClientName" placeholder=""style="width:30vw" disabled readonly value="${meters[data].clients.name} ${meters[data].clients.lastname}">
         </div>
         <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-start;">
             <label for="exampleFormControlInput1" class="form-label">Numero de serie</label>
-            <input type="email" class="form-control" id="exampleFormControlInput1" placeholder=""style="width:30vw" disabled readonly value="${meters[data].serialNumber}">
+            <input type="email" class="form-control" id="meterSerialNumber" placeholder=""style="width:30vw" disabled readonly value="${meters[data].serialNumber}">
+        </div>
+
+        <div style="margin-top: 5vh;  width: 100%;">
+        <button type="button" class="btn btn-primary" style="width:100%" id="editMeterButton">Editar</button>
+        
+        <div style="display: flex; justify-content: flex-end;width: 100%;">
+        <div style="display: flex; justify-content: flex-start;width: 100%;">
+        <button type="button" class="btn btn-danger" id="removeMeterButton" style="display: none; margin-right:1vw;">Remover</button>
+        </div>
+        <button type="button" class="btn btn-warning" id="cancelMeterButton" style="display: none; margin-right:1vw;">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="saveMeterButton" style="display: none;">Guardar</button>
+        </div>
         </div>
     </div>
         `)
+    $("#editMeterButton").on("click", function () {
+        handleEditClient();
+    });
+    $("#cancelMeterButton").on("click", function () {
+        handleCancelEdit(data)
+    });
+    $("#saveMeterButton").on("click", function () {
+        console.log("save");
+    });
+    $("#removeMeterButton").on("click", function () {
+        console.log("remove");
+        handleRemoveMeter(data)
+    });
 }
 
+function handleEditClient() {
+    $("#editMeterButton").hide();
+    $("#cancelMeterButton, #saveMeterButton,#removeMeterButton").show();
+    $("#meterName, #meterAddress, #meterSerialNumber").prop("disabled", false);
+    $("#meterName, #meterAddress, #meterSerialNumber").prop("readonly", false);
+}
 
+function handleCancelEdit(data) {
+    $("#meterName, #meterAddress, #meterSerialNumber").prop("disabled", true);
+    $("#meterName, #meterAddress, #meterSerialNumber").prop("readonly", true);
+    $("#cancelMeterButton, #saveMeterButton,#removeMeterButton").hide();
+    $("#editMeterButton").show();
+    $("#meterName").prop("value", meters[data].name);
+    $("#meterAddress").prop("value", meters[data].address);
+    $("#meterSerialNumber").prop("value", meters[data].serialNumber);
+}
+
+async function handleRemoveMeter(index) {
+    console.log("central ID", switchboardsId, "meterId", meterId);
+
+    let remove = await axios.post('/api/removeMeterById', { switchboardsId, meterId })
+
+    console.log("remove", remove);
+}

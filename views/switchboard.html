@@ -14,14 +14,7 @@
     margin-top: 5vh;
   "
 >
-  <div
-    style="
-      display: flex;
-      background-color: white;
-      border-radius: 25px;
-      min-width: 90vw;
-    "
-  >
+  <div style="display: flex; background-color: white; min-width: 90vw">
     <div
       style="
         min-width: 18vw;
@@ -29,6 +22,45 @@
         border-right: 1px solid rgba(0, 0, 0, 0.3);
       "
     >
+      <div
+        style="
+          background-color: #2c3e50;
+          width: 100%;
+          height: 60px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        <button
+          id="clientAddButton"
+          class="btn btn-list"
+          style="
+            margin-bottom: 5px;
+            width: 17vw;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #fff;
+            background-color: transparent;
+          "
+          onfocus="this.blur();"
+          onclick="HandleModalSwitchboard()"
+        >
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+            "
+          >
+            <p style="margin-bottom: -3px; font-size: 18px">
+              Añadir nuevo cliente
+            </p>
+          </div>
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
       <div
         id="SwitchBoardList"
         style="
@@ -53,10 +85,10 @@
       <div
         id="meterList"
         style="
-          margin-top: 20px;
           display: flex;
           align-items: center;
           flex-direction: column;
+          width: 100%;
         "
       ></div>
     </div>

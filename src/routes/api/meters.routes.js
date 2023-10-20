@@ -52,6 +52,50 @@ export default [
         },
     },
     {
+        method: 'POST',
+        path: '/api/removeMeterById',
+        handler: (request, h) => {
+            const { switchboardId, meterId } = request.payload;
+
+            // Encuentra el switchboard por su ID
+            const switchboard = switchboards.find(s => s.id === switchboardId);
+
+            if (!switchboard) {
+                return { error: 'Switchboard no encontrado' };
+            }
+
+            // Elimina el medidor por su ID
+            const index = switchboard.meters.indexOf(meterId);
+            if (index !== -1) {
+                switchboard.meters.splice(index, 1);
+                return { message: 'Medidor eliminado con éxito' };
+            } else {
+                return { error: 'Medidor no encontrado en el switchboard' };
+            }
+        }
+    },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    {
         method: 'GET',
         path: '/api/enterprises',
         options: {

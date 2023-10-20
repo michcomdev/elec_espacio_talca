@@ -127,9 +127,6 @@ export default [
             }
         }
     },
-
-
-
     {
         method: 'POST',
         path: '/api/createSwitchBoard',
@@ -138,17 +135,14 @@ export default [
             notes: 'Switchborads',
             tags: ['api'],
             handler: async (request, h) => {
-                let query = request.payload
-
-                let lectureSave = new Switchboards(query)
-                const res = await lectureSave.save()
-                console.log("resss", res);
                 try {
+                    let query = request.payload
+                    let lectureSave = new Switchboards(query)
+                    const res = await lectureSave.save()
+                    console.log("resss", res);
                     return true
                 } catch (error) {
                     console.error(error);
-
-                    // Return an error response
                     return h.response({
                         error: 'Internal Server Error',
                     }).code(500);
@@ -156,9 +150,6 @@ export default [
             },
         },
     },
-
-
-
     {
         method: 'GET',
         path: '/api/allLecturesSave/{id}',
