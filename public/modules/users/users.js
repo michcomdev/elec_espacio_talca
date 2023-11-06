@@ -58,6 +58,7 @@ function chargeUsersTable() {
                 disAbleButt(false)
                 internals.users.data = internals.users.table.row($(this)).data()
                 internals.rowSelected = internals.users.table.row($(this))
+                
             }
         })
     } catch (error) {

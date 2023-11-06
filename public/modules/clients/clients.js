@@ -20,7 +20,7 @@ async function loadSwitchboards() {
                 <button
                     id="meterButton${index}"
                     class="btn btn-list"
-                    onclick="handleShowClient'Info'(${index})" 
+                    onclick="handleShowClientInfo(${index})" 
                     style="
                     margin-bottom:5px;
                     width: 17vw; 
@@ -101,21 +101,10 @@ function handleShowClientInfo(data) {
 }
 
 function handleEditClient() {
-  // handleSwitch = false;
-
-  // Oculta el botón "Editar" y muestra "Cancelar" y "Guardar"
   $("#editButton").hide();
   $("#cancelButton, #saveButton,#deleteButton").show();
-
-  // Habilita los campos de edición
-  $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop(
-    "disabled",
-    false
-  );
-  $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop(
-    "readonly",
-    false
-  );
+  $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop("disabled",false);
+  $("#clientName, #clientLastName, #clientRut, #clientPhoneNumber").prop("readonly",false);
 }
 
 function handleCancelEdit(data) {
