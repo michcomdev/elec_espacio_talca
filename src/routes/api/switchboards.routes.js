@@ -30,43 +30,34 @@ export default [
             month: d.getMonth() + 1,
           };
           let lectures = await Lectures.find(queryMeter).lean();
-          console.log("Lectures", lectures[0].lectures[0].value);
-          switchboards.forEach((switchboard) => {
-            console.log(
-              "i",
-              switchboards.indexOf(switchboard),
-              switchboard.meters.length
-            );
-
-            switchboard.meters.forEach((meter) => {
-              const lecture = lectures.find(
+          for (let i = 0; i < switchboards.length; i++) {
+            // console.log("Medidores", switchboards[i].meters);
+            for (let j = 0; j < switchboards[i].meters.length; j++) {
+              let lecture = lectures.find(
                 (x) =>
                   x.meters &&
-                  meter &&
-                  x.meters.toString() == meter._id.toString()
+                  switchboards[i].meters[j] &&
+                  x.meters.toString() ==
+                    switchboards[i].meters[j]._id.toString()
               );
-              console.log("soy yo 2", lecture);
-
               if (lecture) {
                 const lastLecture =
                   lecture.lectures[lecture.lectures.length - 1];
-                console.log("soy yo 3", lastLecture);
-
                 if (lastLecture) {
-                  meter.lastDate = lastLecture.date;
-                  meter.lastLecture = lastLecture.value;
+                  switchboards[i].meters[j].lastDate = lastLecture.date;
+                  switchboards[i].meters[j].lastLecture = lastLecture.value;
                 } else {
                   console.log("No lectures found for meter.");
-                  meter.lastDate = "-";
-                  meter.lastLecture = "-";
+                  switchboards[i].meters[j].lastDate = "-";
+                  switchboards[i].meters[j].lastLecture = "-";
                 }
               } else {
                 console.log("No lectures found for meter.");
-                meter.lastDate = "-";
-                meter.lastLecture = "-";
+                switchboards[i].meters[j].lastDate = "-";
+                switchboards[i].meters[j].lastLecture = "-";
               }
-            });
-          });
+            }
+          }
 
           return switchboards;
         } catch (error) {
