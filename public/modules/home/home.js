@@ -99,16 +99,19 @@ function HandleModalInfoCenter(data) {
       <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-around; width: 100%;">
         <div>
           <h2 style="font-size: 15px;">Dirección:</h2>
-          <h2 style="font-size: 15px;">Nombre:</h2>
-          <h2 style="font-size: 15px;">Cliente:</h2>
-          <h2 style="font-size: 15px;">Número de Serie:</h2>
-        </div>
-        <div>
           <p>${data.address}</p>
+
+          <h2 style="font-size: 15px;">Nombre:</h2>
           <p>${data.name}</p>
+
+          <h2 style="font-size: 15px;">Cliente:</h2>
           <p>${data.client}</p>
+
+          <h2 style="font-size: 15px;">Número de Serie:</h2>
           <p>${data.serialNumber}</p>
+
         </div>
+     
       </div>
     </div>
   `;

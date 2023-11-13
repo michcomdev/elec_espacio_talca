@@ -30,38 +30,33 @@ export default [
             month: d.getMonth() + 1,
           };
           let lectures = await Lectures.find(queryMeter).lean();
-          console.log("Lectures", lectures[0].lectures[0].value);
-
           for (let i = 0; i < switchboards.length; i++) {
-            console.log("i",i,switchboards[i].meters.length);
-          //   for (let j = 0; j < switchboards[i].meters.length; j++) {
-          //     let lecture = lectures.find(
-          //       (x) =>
-          //         x.meters &&
-          //         switchboards[i].meters[j] &&
-          //         x.meters.toString() ==
-          //           switchboards[i].meters[j]._id.toString()
-          //     );
-          //     console.log("soy yo 2", lecture);
-
-          //     if (lecture) {
-          //       const lastLecture =
-          //         lecture.lectures[lecture.lectures.length - 1];
-          //       console.log("soy yo 3", lastLecture);
-          //       if (lastLecture) {
-          //         switchboards[i].meters[j].lastDate = lastLecture.date;
-          //         switchboards[i].meters[j].lastLecture = lastLecture.value;
-          //       } else {
-          //         console.log("No lectures found for meter.");
-          //         switchboards[i].meters[j].lastDate = "-";
-          //         switchboards[i].meters[j].lastLecture = "-";
-          //       }
-          //     } else {
-          //       console.log("No lectures found for meter.");
-          //       switchboards[i].meters[j].lastDate = "-";
-          //       switchboards[i].meters[j].lastLecture = "-";
-          //     }
-          //   }
+            // console.log("Medidores", switchboards[i].meters);
+            for (let j = 0; j < switchboards[i].meters.length; j++) {
+              let lecture = lectures.find(
+                (x) =>
+                  x.meters &&
+                  switchboards[i].meters[j] &&
+                  x.meters.toString() ==
+                    switchboards[i].meters[j]._id.toString()
+              );
+              if (lecture) {
+                const lastLecture =
+                  lecture.lectures[lecture.lectures.length - 1];
+                if (lastLecture) {
+                  switchboards[i].meters[j].lastDate = lastLecture.date;
+                  switchboards[i].meters[j].lastLecture = lastLecture.value;
+                } else {
+                  console.log("No lectures found for meter.");
+                  switchboards[i].meters[j].lastDate = "-";
+                  switchboards[i].meters[j].lastLecture = "-";
+                }
+              } else {
+                console.log("No lectures found for meter.");
+                switchboards[i].meters[j].lastDate = "-";
+                switchboards[i].meters[j].lastLecture = "-";
+              }
+            }
           }
 
           return switchboards;
