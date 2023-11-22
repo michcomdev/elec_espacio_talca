@@ -30,6 +30,7 @@ export default [
             month: d.getMonth() + 1,
           };
           let lectures = await Lectures.find(queryMeter).lean();
+
           for (let i = 0; i < switchboards.length; i++) {
             // console.log("Medidores", switchboards[i].meters);
             for (let j = 0; j < switchboards[i].meters.length; j++) {
@@ -40,12 +41,16 @@ export default [
                   x.meters.toString() ==
                     switchboards[i].meters[j]._id.toString()
               );
+              // console.log("lectura", lecture);
               if (lecture) {
                 const lastLecture =
                   lecture.lectures[lecture.lectures.length - 1];
+                // console.log("lastLecture", lastLecture);
                 if (lastLecture) {
                   switchboards[i].meters[j].lastDate = lastLecture.date;
                   switchboards[i].meters[j].lastLecture = lastLecture.value;
+                  switchboards[i].meters[j].lectures = lecture.lectures;
+                  console.log("lastLecture", lecture.lectures);
                 } else {
                   console.log("No lectures found for meter.");
                   switchboards[i].meters[j].lastDate = "-";
@@ -116,9 +121,11 @@ export default [
       notes: "documentos asociados",
       tags: ["api"],
       handler: async (request, h) => {
+        console.log("request.params.id", request.params.id);
         try {
           let id = request.params.id;
           let meter = await Meters.findById(id).lean();
+          console.log("meter", meter);
           meter.lectures = [];
 
           let queryMeter = {
@@ -126,7 +133,7 @@ export default [
                         year: d.getFullYear(),
                         month: d.getMonth() + 1*/,
           };
-          let meterLecture = await Lectures.find(queryMeter).lean();
+          let meterLecture = await Lectures.findById(queryMeter.meters).lean();
           console.log("meterLecture", meterLecture);
           for (let i = 0; i < meterLecture.length; i++) {
             for (let j = 0; j < meterLecture[i].lectures.length; j++) {

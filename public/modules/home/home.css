@@ -12,3 +12,7 @@
 .btn-list:hover {
   background-color: RGBA(136, 208, 238, 0.5);
 }
+
+.modal-lg {
+  max-width: 1000px;
+}

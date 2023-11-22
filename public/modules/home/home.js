@@ -1,15 +1,16 @@
 let switchboards = [];
 let metersSelected = [];
-const data = [
-  { year: 2010, count: 10 },
-  { year: 2011, count: 20 },
-  { year: 2012, count: 15 },
-  { year: 2013, count: 25 },
-  { year: 2014, count: 22 },
-  { year: 2015, count: 30 },
-  { year: 2016, count: 28 },
-];
-// let meters
+let dataLectures = [];
+let lecturasChart;
+// const data = [
+//   { year: 2010, count: 10 },
+//   { year: 2011, count: 20 },
+//   { year: 2012, count: 15 },
+//   { year: 2013, count: 25 },
+//   { year: 2014, count: 22 },
+//   { year: 2015, count: 30 },
+//   { year: 2016, count: 28 },
+// ];
 $(document).ready(async function () {
   getSwitchboards();
 });
@@ -18,7 +19,7 @@ async function getSwitchboards() {
   let switchboardsData = await axios.get("api/switchboards");
 
   switchboards = switchboardsData.data;
-  console.log("switchboards", switchboards);
+  // console.log("switchboards", switchboards);
 
   for (let i = 0; i < switchboards.length; i++) {
     $("#SwitchBoardList").append(`
@@ -60,9 +61,11 @@ async function handleShowDataTable(index) {
     language: {
       url: spanishDataTableLang, // Asegúrate de que spanishDataTableLang esté definido
     },
-    data: switchboards[index].meters.map(function (element) {
-      console.log("ell", element);
+    data: switchboards[index].meters.map(function (element, i) {
+      // console.log("ell", element);
       return {
+        index: i,
+        id: element._id,
         address: element.address,
         name: element.name,
         client: element.clients.name + " " + element.clients.lastname, // Asegúrate de que coincida con la propiedad de datos
@@ -82,56 +85,138 @@ async function handleShowDataTable(index) {
   });
   $("#tableLectures tbody").on("click", "tr", function () {
     var data = tableMeters.row(this).data();
-    HandleModalInfoCenter(data);
+    dataLectures = switchboards[index].meters[data.index];
+    HandleModalInfoCenter(dataLectures);
+    chartLectures(dataLectures.lectures);
   });
 }
-function HandleModalInfoCenter(data) {
+
+function dateFilter() {
+  let fechaDesde = $("#fechaDesde").val();
+  let fechaHasta = $("#fechaHasta").val();
+
+  if (fechaDesde !== "" && fechaHasta !== "") {
+    // Convertir las fechas a objetos Date
+    const fechaDesdeObj = new Date(fechaDesde);
+    const fechaHastaObj = new Date(fechaHasta);
+
+    // Filtrar el array de datos
+    const datosFiltrados = dataLectures.lectures.filter((item) => {
+      const fechaItem = new Date(item.date);
+      return fechaItem >= fechaDesdeObj && fechaItem <= fechaHastaObj;
+    });
+    lecturasChart.data.labels = datosFiltrados.map((row) => row.date);
+    lecturasChart.data.datasets[0].data = datosFiltrados.map(
+      (row) => row.value
+    );
+
+    lecturasChart.update();
+  } else {
+    Swal.fire({
+      icon: "info",
+      title: "Oops...",
+      text: "Debe seleccionar ambas fechas para filtrar",
+    });
+  }
+}
+
+async function HandleModalInfoCenter(data) {
+  console.log("las lecturas", data);
   const modal = $("#modalInfoCentral");
   const modalTitle = $("#modal_title");
   const modalBody = $("#modal_body");
 
-  console.log("aqui estoy");
+  // console.log("aqui estoy", data);
   modal.modal("show");
   modalTitle.html("Información de central de medición");
 
   const infoHtml = /*html*/ `
-    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
-      <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-around; width: 100%;">
-        <div>
-          <h2 style="font-size: 15px;">Dirección:</h2>
-          <p>${data.address}</p>
+    <div style="">
+    <div style="display: flex; flex-direction: row; justify-content: space-evenly; align-items: center; width: 100%;">
+    <div class="form-group">
+    <label for="fechaDesde">Desde:</label>
+    <input type="date" class="form-control" id="fechaDesde" required>
+</div>
 
-          <h2 style="font-size: 15px;">Nombre:</h2>
-          <p>${data.name}</p>
+<div class="form-group">
+    <label for="fechaHasta" style="font-size: 18px;">Hasta:</label>
+    <input type="date" class="form-control" id="fechaHasta" required>
+</div>
 
-          <h2 style="font-size: 15px;">Cliente:</h2>
-          <p>${data.client}</p>
+<button type="button" class="btn btn-primary" onclick="dateFilter()">Filtrar</button>
 
-          <h2 style="font-size: 15px;">Número de Serie:</h2>
-          <p>${data.serialNumber}</p>
+    </div>
+    <br>
+
+      <div style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; width: 100%;">
+        <div style="display: flex; flex-direction: column; width:20%;">
+
+        <br>
+   
+        <label>Dirección:</label>
+        <input type="text" style="font-weight: bold; font-size: 15px;" value="${
+          data.address
+        }" disabled>
+    
+        <br>
+
+   
+        <label>Nombre:</label>
+        <input type="text" style="font-weight: bold; font-size: 15px;" value="${
+          data.name
+        }" disabled>
+
+
+        <br>
+
+        <label>Cliente:</label>
+        <input type="text" style="font-weight: bold; font-size: 15px;" value="${
+          data.clients.name + " " + data.clients.lastname
+        }" disabled>
+
+        <br>
+
+        <label>Número de Serie:</label>
+        <input type="text" style="font-weight: bold; font-size: 15px;" value="${
+          data.serialNumber
+        }" disabled>
+        <br>
+
 
         </div>
-     
+
+        <div
+          style="
+            height: 100%;
+            width: 75%;
+            display: flex;
+            justify-content: flex-end;
+            border-left: 1px solid rgba(0, 0, 0, 0.3);
+          ">
+          <canvas id="leChart" style="min-width: 50%"></canvas>
+        </div>
       </div>
+      <br>
     </div>
   `;
-
   modalBody.html(infoHtml);
 }
 
-async function hola(datos) {
-  datos.forEach((element) => {
-    console.log("el elemnto", element.lastLecture);
+async function chartLectures() {
+  dataLectures.lectures.forEach((element) => {
+    element.date = moment(element.date).format("YYYY-MM-DD");
+    element.hour = moment(element.date).format("HH:mm");
   });
 
-  new Chart(document.getElementById("leChart"), {
+  // Crear el gráfico
+  lecturasChart = new Chart(document.getElementById("leChart"), {
     type: "bar",
     data: {
-      labels: datos.map((row) => row.name),
+      labels: dataLectures.lectures.map((row) => row.date),
       datasets: [
         {
           label: "kw/h",
-          data: datos.map((row) => row.lastLecture),
+          data: dataLectures.lectures.map((row) => row.value),
         },
       ],
     },
