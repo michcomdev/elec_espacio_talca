@@ -50,8 +50,10 @@ function HandleModalReports() {
                     <tr class="table-danger">
                         <th style="text-align: center">Cliente</th>
                         <th style="text-align: center">Recinto</th>
-                        <th style="text-align: center">N° Dirección</th>
-                        <th style="text-align: center">Última Lectura obtenida (kW/h)</th>
+                        <th style="text-align: center">lectura (fecha)</th>
+                        <th style="text-align: center">lectura (fecha)</th>
+                        <th style="text-align: center">Total cosnumido (Kw/h)</th>
+                        <th style="text-align: center">Total a pagar</th>
                     </tr>
                   </thead>
                 </table>
