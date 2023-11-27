@@ -4,9 +4,39 @@ import Switchboards from "../../models/Switchboards";
 import Type from "../../models/Types";
 import dotEnv from "dotenv";
 import Client from "../../models/Clients";
+import Lectures from "../../models/Lectures";
 dotEnv.config();
 
 export default [
+  {
+    method: "GET",
+    path: "/api/getActiveMeters",
+    options: {
+      description: "get all active meters with client and lectures data",
+      notes: "return data from active meters with associated clients and lectures",
+      tags: ["api"],
+      handler: async (request, h) => {
+        try {
+          const allActiveMeters = await Meters.find({ status: "active" })
+            .populate("clients")
+            .lean();
+  
+          for (const meter of allActiveMeters) {
+            const lectures = await Lectures.find({ meters: meter._id });
+            meter.lectures = lectures;
+          }
+  
+          return allActiveMeters;
+        } catch (error) {
+          console.error(error);
+          return h.response({
+            error: "Internal Server Error",
+          }).code(500);
+        }
+      },
+    },
+  },
+  
   {
     method: "POST",
     path: "/api/postMeter",

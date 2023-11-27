@@ -1,4 +1,12 @@
-$(document).ready(async function () {});
+
+$(document).ready(async function () {
+  await getArrMeters();
+});
+
+async function getArrMeters() {
+  let tempData = await axios.get("/api/getActiveMeters");
+ console.log(tempData.data);
+}
 function handleCloseModal() {
   Swal.fire({
     title: "¿Estas seguro?",
@@ -16,25 +24,26 @@ function handleCloseModal() {
   });
 }
 
+
+
 function HandleModalReports() {
   $("#modalReports").modal("show");
   $("#modal_title").html(`Añadir EQmeter`);
   $("#modal_body").html(/*html*/ `
           <div style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
-
                 <div style="display:flex; flex-direction:row; justify-content:flex-start; align-items:center;width:80%">
                     <label for="modalMeterName" class="form-label" style="width:20%">Total valor CGE</label>
-                    <input type="number" class="form-control" id="modalMeterAddress" style="width:40%" placeholder="">
+                    <input type="number" class="form-control" id="inputCge" style="width:40%" placeholder="" onchange="calcKw()">
                 </div>
 
                 <div style="display:flex; flex-direction:row; justify-content:flex-start; align-items:center;width:80%">
                     <label for="modalMeterAddress" class="form-label" style="width:20%">Total K.W.H</label>
-                    <input type="number" class="form-control" id="modalMeterAddress" style="width:40%" placeholder="">
+                    <input type="number" class="form-control" id="inputTotalKw" style="width:40%" placeholder="" onchange="calcKw()">
                 </div>
          
                 <div style="display:flex; flex-direction:row; justify-content:flex-start; align-items:center;width:80%">
                     <label for="modalMeterAddress" class="form-label" style="width:20%">Valor X Kw</label>
-                    <input type="text" class="form-control" id="modalMeterAddress" style="width:40%" placeholder="">
+                    <input type="text" class="form-control" id="inputValorxKw" style="width:40%" placeholder="" disabled> 
                 </div>
 
 
