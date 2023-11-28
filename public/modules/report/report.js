@@ -1,11 +1,13 @@
+let fechaDesde;
+let fechaHasta;
 
 $(document).ready(async function () {
-  await getArrMeters();
+  //   await getArrMeters();.
 });
 
 async function getArrMeters() {
-  let tempData = await axios.get("/api/getActiveMeters");
- console.log(tempData.data);
+  let tempData = await axios.post("/api/getActiveMeters");
+  console.log(tempData.data);
 }
 function handleCloseModal() {
   Swal.fire({
@@ -23,14 +25,37 @@ function handleCloseModal() {
     }
   });
 }
-
-
-
+async function dateFilter() {
+  fechaDesde = $("#fechaDesde").val();
+  fechaHasta = $("#fechaHasta").val();
+  let tempData = await axios.post("/api/getActiveMeters", {
+    fechaDesde: fechaDesde,
+    fechaHasta: fechaHasta,
+  });
+  console.log("esta", tempData.data);
+}
 function HandleModalReports() {
   $("#modalReports").modal("show");
   $("#modal_title").html(`Añadir EQmeter`);
   $("#modal_body").html(/*html*/ `
           <div style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
+          <div style="display: flex; flex-direction: row; justify-content: space-evenly; align-items: center; width: 100%;">
+          <div class="form-group">
+            <label for="fechaDesde">Desde:</label>
+            <input type="date" class="form-control" id="fechaDesde" required>
+          </div>
+  
+          <div class="form-group">
+            <label for="fechaHasta" style="font-size: 18px;">Hasta:</label>
+            <input type="date" class="form-control" id="fechaHasta" required>
+          </div>
+  
+          <button type="button" class="btn btn-primary" onclick="dateFilter()">Filtrar</button>
+  
+        </div>
+    <br/>
+
+
                 <div style="display:flex; flex-direction:row; justify-content:flex-start; align-items:center;width:80%">
                     <label for="modalMeterName" class="form-label" style="width:20%">Total valor CGE</label>
                     <input type="number" class="form-control" id="inputCge" style="width:40%" placeholder="" onchange="calcKw()">

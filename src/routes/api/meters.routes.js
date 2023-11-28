@@ -9,34 +9,64 @@ dotEnv.config();
 
 export default [
   {
-    method: "GET",
+    method: "POST",
     path: "/api/getActiveMeters",
     options: {
-      description: "get all active meters with client and lectures data",
-      notes: "return data from active meters with associated clients and lectures",
+      description: "Get all active meters with client and lectures data",
+      notes:
+        "Return data from active meters with associated clients and lectures",
       tags: ["api"],
       handler: async (request, h) => {
+        let data;
         try {
+          const startDate = new Date(request.payload.fechaDesde);
+          const endDate = new Date(request.payload.fechaHasta);
+          const startMonth = startDate.getUTCMonth() + 1;
+          const startYear = startDate.getUTCFullYear();
+          const endMonth = endDate.getUTCMonth() + 1;
+          const endYear = endDate.getUTCFullYear();
+
           const allActiveMeters = await Meters.find({ status: "active" })
             .populate("clients")
             .lean();
-  
-          for (const meter of allActiveMeters) {
-            const lectures = await Lectures.find({ meters: meter._id });
-            meter.lectures = lectures;
+          // Corrige la consulta a la base de datos para obtener medidores activos en el rango de fechas
+          const lecture = await Lectures.find({
+            month: { $gte: startMonth, $lte: endMonth },
+            year: { $gte: startYear, $lte: endYear },
+          })
+            .populate("clients")
+            .lean();
+
+          if (allActiveMeters) {
+            for (let index = 0; index < allActiveMeters.length; index++) {
+              const element = allActiveMeters[index];
+              for (let j = 0; j < lecture.length; j++) {
+                const lecturas = lecture[j];
+                console.log("lecturas", lecturas.lectures);
+                let arrLectures = lecturas.lectures;
+                for (let k = 0; k < arrLectures.length; k++) {
+                  console.log("arrLectures", arrLectures[k]);
+                }
+                if (element._id.toString() === lecturas.meters.toString()) {
+                  element.meter = lecturas;
+                }
+              }
+            }
           }
-  
+
           return allActiveMeters;
         } catch (error) {
           console.error(error);
-          return h.response({
-            error: "Internal Server Error",
-          }).code(500);
+          return h
+            .response({
+              error: "Internal Server Error",
+            })
+            .code(500);
         }
       },
     },
   },
-  
+
   {
     method: "POST",
     path: "/api/postMeter",

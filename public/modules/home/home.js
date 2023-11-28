@@ -132,20 +132,20 @@ async function HandleModalInfoCenter(data) {
 
   const infoHtml = /*html*/ `
     <div style="">
-    <div style="display: flex; flex-direction: row; justify-content: space-evenly; align-items: center; width: 100%;">
-    <div class="form-group">
-    <label for="fechaDesde">Desde:</label>
-    <input type="date" class="form-control" id="fechaDesde" required>
-</div>
+      <div style="display: flex; flex-direction: row; justify-content: space-evenly; align-items: center; width: 100%;">
+        <div class="form-group">
+          <label for="fechaDesde">Desde:</label>
+          <input type="date" class="form-control" id="fechaDesde" required>
+        </div>
 
-<div class="form-group">
-    <label for="fechaHasta" style="font-size: 18px;">Hasta:</label>
-    <input type="date" class="form-control" id="fechaHasta" required>
-</div>
+        <div class="form-group">
+          <label for="fechaHasta" style="font-size: 18px;">Hasta:</label>
+          <input type="date" class="form-control" id="fechaHasta" required>
+        </div>
 
-<button type="button" class="btn btn-primary" onclick="dateFilter()">Filtrar</button>
+        <button type="button" class="btn btn-primary" onclick="dateFilter()">Filtrar</button>
 
-    </div>
+      </div>
     <br>
 
       <div style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; width: 100%;">

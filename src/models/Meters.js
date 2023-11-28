@@ -6,8 +6,7 @@ const metersSchema = new Schema({
     name: { type: String, required: true },
     address: { type: String, required: true },
     clients: { type: Schema.Types.ObjectId, ref: 'clients' },
-    serialNumber: { type: Number },
-    status: { type: String, default: 'active' },
+    serialNumber: { type: Number }
 }, {
     versionKey: false
 })
