@@ -191,11 +191,6 @@ export default [
           const endMonth = endDate.getUTCMonth() + 1;
           const endYear = endDate.getUTCFullYear();
 
-          console.log('startMonth',startMonth)
-          console.log('startYear',startYear)
-          console.log('endMonth',endMonth)
-          console.log('endYear',endYear)
-
           const switchboards = await Switchboards.find().populate("meters").lean()
 
           let queryLecture = { 
@@ -211,20 +206,27 @@ export default [
               for(let k=0; k<switchboards[j].meters.length; k++){
                   let lecture = lectures.filter(x=> x.meters.toString()==switchboards[j].meters[k]._id.toString())
                   
-                  for (let l = 0; l < lecture.length; l++) { 
-                      if(lecture[l].lectures){
-                          for (let m = 0; m < lecture[l].lectures.length; m++) { 
-                              if (lecture[l].lectures[m].date < startDate || lecture[l].lectures[m].date > endDate) { 
-                                  let spliced = lecture[l].lectures.splice(m, 1)
+                  let first = {}, last = {}
+
+                  if(lecture.length>0){
+                      for (let l = 0; l < lecture.length; l++) { 
+                          if(lecture[l].lectures){
+                              for (let m = 0; m < lecture[l].lectures.length; m++) { 
+                                  if (lecture[l].lectures[m].date < startDate || lecture[l].lectures[m].date > endDate) { 
+                                      let spliced = lecture[l].lectures.splice(m, 1)
+                                  }
                               }
                           }
                       }
+
+                      lecture.sort((a,b) => (a.month > b.month) ? 1 : ((b.month > a.month) ? -1 : 0))
+                      lecture.sort((a,b) => (a.year > b.year) ? 1 : ((b.year > a.year) ? -1 : 0))
+                      first = lecture[0].lectures[0]
+                      last = lecture[lecture.length-1].lectures[lecture[lecture.length-1].lectures.length-1]
                   }
-
-                  lecture.sort((a,b) => (a.month > b.month) ? 1 : ((b.month > a.month) ? -1 : 0))
-                  lecture.sort((a,b) => (a.year > b.year) ? 1 : ((b.year > a.year) ? -1 : 0))
-
-                  switchboards[j].meters[k].lectures = lecture
+                  switchboards[j].meters[k].lecturesAll = lecture
+                  switchboards[j].meters[k].lectureFirst = first
+                  switchboards[j].meters[k].lectureLast = last
               }
           }
 

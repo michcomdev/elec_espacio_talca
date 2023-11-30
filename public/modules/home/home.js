@@ -18,7 +18,7 @@ $(document).ready(async function () {
 async function getSwitchboards() {
 
   let query = {
-    fechaDesde: '2023-11-01',
+    fechaDesde: '2023-11-30',
     fechaHasta: '2024-04-28'
   }
 
