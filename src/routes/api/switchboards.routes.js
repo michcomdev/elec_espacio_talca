@@ -50,7 +50,7 @@ export default [
                   switchboards[i].meters[j].lastDate = lastLecture.date;
                   switchboards[i].meters[j].lastLecture = lastLecture.value;
                   switchboards[i].meters[j].lectures = lecture.lectures;
-                  console.log("lastLecture", lecture.lectures);
+                  //console.log("lastLecture", lecture.lectures);
                 } else {
                   console.log("No lectures found for meter.");
                   switchboards[i].meters[j].lastDate = "-";

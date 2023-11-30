@@ -1,5 +1,5 @@
 {
-  "name": "agua",
+  "name": "espacio_talca",
   "version": "0.0.1",
   "description": "",
   "main": "app.js",
@@ -7,8 +7,8 @@
     "dev": "nodemon --ignore 'public/' src/app.js --exec babel-node",
     "build": "babel src --out-dir dist",
     "start": "node dist/app.js",
-    "start:production": "pm2 start ./dist/app.js --name agua",
-    "stop:production": "pm2 stop agua",
+    "start:production": "pm2 start ./dist/app.js --name espacio_talca",
+    "stop:production": "pm2 stop espacio_talca",
     "restart:production": "npm run stop:production && npm run start:production"
   },
   "author": "",
@@ -19,7 +19,7 @@
     "@babel/node": "^7.12.10",
     "@babel/preset-env": "^7.12.10",
     "eslint": "^7.15.0",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.2",
     "md5": "^2.3.0",
     "nodemon": "^2.0.15"
   },
@@ -32,8 +32,8 @@
     "@hapi/nes": "^12.0.4",
     "@hapi/vision": "^6.0.1",
     "@hapi/wreck": "^17.1.0",
-    "@sendgrid/mail": "^7.4.2",
-    "axios": "^0.21.4",
+    "@sendgrid/mail": "^6.5.5",
+    "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",
     "cryptr": "^6.0.2",
     "dotenv": "^8.2.0",
@@ -42,7 +42,7 @@
     "handlebars-extend-block": "^1.0.0",
     "hapi-auth-jwt2": "^10.2.0",
     "hapi-redis2": "^3.0.1",
-    "hapi-router": "^4.0.1",
+    "hapi-router": "^5.1.0",
     "hapi-swagger": "^14.0.0",
     "joi": "^17.3.0",
     "moment": "^2.29.1",
@@ -50,7 +50,7 @@
     "mongoose": "^5.12.2",
     "nodemailer": "^6.6.1",
     "rut.js": "^1.0.2",
-    "transbank-sdk": "^3.0.0",
+    "transbank-sdk": "^1.0.4",
     "uuidv4": "^6.2.7",
     "xlsx": "^0.18.5"
   }

@@ -172,4 +172,152 @@ export default [
       },
     },
   },
+
+  {
+    method: "POST",
+    path: "/api/getLecturesByDate",
+    options: {
+      description: "Get all active meters with client and lectures data",
+      notes:
+        "Return data from active meters with associated clients and lectures",
+      tags: ["api"],
+      handler: async (request, h) => {
+        let data;
+        try {
+          const startDate = new Date(request.payload.fechaDesde);
+          const endDate = new Date(request.payload.fechaHasta);
+          const startMonth = startDate.getUTCMonth() + 1;
+          const startYear = startDate.getUTCFullYear();
+          const endMonth = endDate.getUTCMonth() + 1;
+          const endYear = endDate.getUTCFullYear();
+
+          console.log('startMonth',startMonth)
+          console.log('startYear',startYear)
+          console.log('endMonth',endMonth)
+          console.log('endYear',endYear)
+
+          const switchboards = await Switchboards.find().populate("meters").lean()
+
+          let queryLecture = { 
+              'lectures.date': {
+                  $gte: startDate,
+                  $lte: endDate
+              }
+          }
+
+          const lectures = await Lectures.find(queryLecture)
+
+          for(let j=0; j<switchboards.length; j++){
+            for(let k=0; k<switchboards[j].meters.length; k++){
+                let lecture = lectures.filter(x=> x.meters.toString()==switchboards[j].meters[k]._id.toString())
+                
+                for (let l = 0; l < lecture.length; l++) { 
+                    if(lecture[l].lectures){
+                        for (let m = 0; m < lecture[l].lectures.length; m++) { 
+                            if (lecture[l].lectures[m].date < startDate || lecture[l].lectures[m].date > endDate) { 
+                                let spliced = lecture[l].lectures.splice(m, 1)
+                                //console.log("Removed element: " + spliced); 
+                                //console.log("Remaining elements: " + arr); 
+                            }
+                        }
+                    }
+                }
+
+                lecture.sort((a,b) => (a.month > b.month) ? 1 : ((b.month > a.month) ? -1 : 0))
+                lecture.sort((a,b) => (a.year > b.year) ? 1 : ((b.year > a.year) ? -1 : 0))
+
+                switchboards[j].meters[k].lectures = lecture
+            }
+          }
+
+          /*let queryLecture = { $or: [
+            { year: startYear, month: startMonth },
+            { year: endYear, month: endMonth }
+          ]}
+
+          console.log(queryLecture)
+          const lectures = await Lectures.find(queryLecture)
+
+          for(let j=0; j<switchboards.length; j++){
+            for(let k=0; k<switchboards[j].meters.length; k++){
+                switchboards[j].meters[k].lectures = lectures.filter(x=> x.meters.toString()==switchboards[j].meters[k]._id.toString())
+            }
+          }*/
+
+          
+          /*let lectures = []
+          if(startYear==endYear){
+              let queryLecture = {
+                month: { $gte: startMonth, $lte: endMonth },
+                year: startYear
+              }
+              const lectures1 = await Lectures.find(queryLecture)
+              lectures = lectures1
+          }else{
+              for(let i=startYear; i<=endYear; i++){
+                  let queryLecture = {}
+                  if(i==startYear){
+                      queryLecture = { year: startYear, month: { $gte: startMonth } }
+                  }else if(i==endYear){
+                      queryLecture = { year: endYear, month: { $lte: endMonth } }
+                  }else{
+                      queryLecture = { year: i }
+                  }
+                  console.log(queryLecture)
+                  const lectures1 = await Lectures.find(queryLecture)
+                  lectures = lectures.concat(lectures1)
+
+                  if(i==endYear){
+                      for(let j=0; j<switchboards.length; j++){
+                          for(let k=0; k<switchboards[j].meters.length; k++){
+                              switchboards[j].meters[k].lectures = lectures.filter(x=> x.meters.toString()==switchboards[j].meters[k]._id.toString())
+                          }
+                      }
+                  }
+              }
+          }*/
+
+          //return lectures
+          return switchboards
+
+          const allActiveMeters = await Meters.find({ status: "active" })
+            .populate("clients")
+            .lean();
+          // Corrige la consulta a la base de datos para obtener medidores activos en el rango de fechas
+          const lecture = await Lectures.find({
+            month: { $gte: startMonth, $lte: endMonth },
+            year: { $gte: startYear, $lte: endYear },
+          })
+            .populate("clients")
+            .lean();
+
+          if (allActiveMeters) {
+            for (let index = 0; index < allActiveMeters.length; index++) {
+              const element = allActiveMeters[index];
+              for (let j = 0; j < lecture.length; j++) {
+                const lecturas = lecture[j];
+                console.log("lecturas", lecturas.lectures);
+                let arrLectures = lecturas.lectures;
+                for (let k = 0; k < arrLectures.length; k++) {
+                  console.log("arrLectures", arrLectures[k]);
+                }
+                if (element._id.toString() === lecturas.meters.toString()) {
+                  element.meter = lecturas;
+                }
+              }
+            }
+          }
+
+          return allActiveMeters;
+        } catch (error) {
+          console.error(error);
+          return h
+            .response({
+              error: "Internal Server Error",
+            })
+            .code(500);
+        }
+      },
+    },
+  }
 ];

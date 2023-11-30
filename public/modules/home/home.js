@@ -16,6 +16,16 @@ $(document).ready(async function () {
 });
 
 async function getSwitchboards() {
+
+  let query = {
+    fechaDesde: '2023-11-01',
+    fechaHasta: '2024-04-28'
+  }
+
+  let test = await axios.post("api/getLecturesByDate", query)
+  console.log(test.data)
+  
+  
   let switchboardsData = await axios.get("api/switchboards");
 
   switchboards = switchboardsData.data;
