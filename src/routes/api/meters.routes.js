@@ -208,26 +208,24 @@ export default [
           const lectures = await Lectures.find(queryLecture)
 
           for(let j=0; j<switchboards.length; j++){
-            for(let k=0; k<switchboards[j].meters.length; k++){
-                let lecture = lectures.filter(x=> x.meters.toString()==switchboards[j].meters[k]._id.toString())
-                
-                for (let l = 0; l < lecture.length; l++) { 
-                    if(lecture[l].lectures){
-                        for (let m = 0; m < lecture[l].lectures.length; m++) { 
-                            if (lecture[l].lectures[m].date < startDate || lecture[l].lectures[m].date > endDate) { 
-                                let spliced = lecture[l].lectures.splice(m, 1)
-                                //console.log("Removed element: " + spliced); 
-                                //console.log("Remaining elements: " + arr); 
-                            }
-                        }
-                    }
-                }
+              for(let k=0; k<switchboards[j].meters.length; k++){
+                  let lecture = lectures.filter(x=> x.meters.toString()==switchboards[j].meters[k]._id.toString())
+                  
+                  for (let l = 0; l < lecture.length; l++) { 
+                      if(lecture[l].lectures){
+                          for (let m = 0; m < lecture[l].lectures.length; m++) { 
+                              if (lecture[l].lectures[m].date < startDate || lecture[l].lectures[m].date > endDate) { 
+                                  let spliced = lecture[l].lectures.splice(m, 1)
+                              }
+                          }
+                      }
+                  }
 
-                lecture.sort((a,b) => (a.month > b.month) ? 1 : ((b.month > a.month) ? -1 : 0))
-                lecture.sort((a,b) => (a.year > b.year) ? 1 : ((b.year > a.year) ? -1 : 0))
+                  lecture.sort((a,b) => (a.month > b.month) ? 1 : ((b.month > a.month) ? -1 : 0))
+                  lecture.sort((a,b) => (a.year > b.year) ? 1 : ((b.year > a.year) ? -1 : 0))
 
-                switchboards[j].meters[k].lectures = lecture
-            }
+                  switchboards[j].meters[k].lectures = lecture
+              }
           }
 
           /*let queryLecture = { $or: [
